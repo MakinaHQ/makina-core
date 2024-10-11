@@ -20,6 +20,7 @@ contract CaliberTest is BaseTest {
     function test_caliber_getters() public view {
         assertEq(caliber.hubMachine(), address(0));
         assertEq(caliber.mechanic(), mechanic);
+        assertEq(caliber.oracleRegistry(), address(oracleRegistry));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 1);

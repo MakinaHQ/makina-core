@@ -12,6 +12,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     struct CaliberStorage {
         address _hubMachine;
         address _accountingToken;
+        address _oracleRegistry;
         address _mechanic;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
         mapping(uint256 posId => address bt) _positionIdToBaseToken;
@@ -36,6 +37,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         address hubMachine_,
         address accountingToken_,
         uint256 acountingTokenPosID_,
+        address oracleRegistry_,
         address initialMechanic_,
         address initialAuthority_
     ) public initializer {
@@ -43,6 +45,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._hubMachine = hubMachine_;
         $._accountingToken = accountingToken_;
         _addBaseToken(accountingToken_, acountingTokenPosID_);
+        $._oracleRegistry = oracleRegistry_;
         $._mechanic = initialMechanic_;
         __AccessManaged_init(initialAuthority_);
     }
@@ -62,6 +65,11 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function mechanic() public view override returns (address) {
         return _getCaliberStorage()._mechanic;
+    }
+
+    /// @inheritdoc ICaliber
+    function oracleRegistry() public view override returns (address) {
+        return _getCaliberStorage()._oracleRegistry;
     }
 
     /// @inheritdoc ICaliber

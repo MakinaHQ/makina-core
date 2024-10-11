@@ -7,6 +7,7 @@ import "forge-std/Test.sol";
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {Caliber} from "../src/Caliber.sol";
 
 abstract contract Base is Script, Test {
@@ -16,11 +17,22 @@ abstract contract Base is Script, Test {
     IERC20Metadata accountingToken;
     uint256 accountingTokenPosID;
 
+    OracleRegistry oracleRegistry;
     AccessManager accessManager;
     Caliber caliber;
 
     function _coreSetup() public {
         accessManager = new AccessManager(dao);
+
+        oracleRegistry = OracleRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new OracleRegistry()),
+                    address(this),
+                    abi.encodeWithSelector(OracleRegistry(address(0)).initialize.selector, accessManager)
+                )
+            )
+        );
 
         accountingTokenPosID = 1;
 
@@ -34,6 +46,7 @@ abstract contract Base is Script, Test {
                         address(0),
                         address(accountingToken),
                         accountingTokenPosID,
+                        address(oracleRegistry),
                         mechanic,
                         accessManager
                     )

@@ -22,6 +22,9 @@ interface ICaliber {
     /// @notice Address of the mechanic
     function mechanic() external view returns (address);
 
+    /// @notice Address of the oracle registry
+    function oracleRegistry() external view returns (address);
+
     /// @notice Address of the accounting token
     function accountingToken() external view returns (address);
 
