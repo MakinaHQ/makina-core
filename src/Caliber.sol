@@ -3,7 +3,10 @@ pragma solidity 0.8.27;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICaliber} from "./interfaces/ICaliber.sol";
+import {IOracleRegistry} from "./interfaces/IOracleRegistry.sol";
+import {AggregatorV2V3Interface} from "./interfaces/AggregatorV2V3Interface.sol";
 
 contract Caliber is AccessManagedUpgradeable, ICaliber {
     using EnumerableSet for EnumerableSet.UintSet;
@@ -103,6 +106,25 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function accountForBaseToken(uint256 posId) public {
+        CaliberStorage storage $ = _getCaliberStorage();
+        Position storage pos = $._positionById[posId];
+        if (!pos.isBaseToken) {
+            revert NotBaseTokenPosition();
+        }
+        address bt = $._positionIdToBaseToken[posId];
+        uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
+        if (btBal == 0) {
+            pos.value = 0;
+        } else if ($._positionIdToBaseToken[posId] == $._accountingToken) {
+            pos.value = btBal;
+        } else {
+            pos.value = _accountingValueOf(bt, btBal);
+        }
+        pos.lastAccountingTime = block.timestamp;
+    }
+
+    /// @inheritdoc ICaliber
     function setMechanic(address newMechanic) public override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         address currentMechanic = $._mechanic;
@@ -115,7 +137,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 
-        Position memory pos = Position({lastAccounted: 0, value: 0, isBaseToken: true});
+        Position memory pos = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
         _addPosition(pos, posId);
     }
 
@@ -130,5 +152,15 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._positionIds.add(posId);
         $._positionById[posId] = pos;
         emit PositionAdded(posId, pos.isBaseToken);
+    }
+
+    function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
+        CaliberStorage storage $ = _getCaliberStorage();
+        address priceFeed = IOracleRegistry($._oracleRegistry).getPriceFeed(token, $._accountingToken);
+        (, int256 price,,,) = AggregatorV2V3Interface(priceFeed).latestRoundData();
+        if (price < 0) {
+            revert NegativeTokenPrice();
+        }
+        return amount * uint256(price) / (10 ** IERC20Metadata(token).decimals());
     }
 }

@@ -2,16 +2,17 @@
 pragma solidity 0.8.27;
 
 interface ICaliber {
+    error NegativeTokenPrice();
+    error NotBaseTokenPosition();
     error NotMechanic();
     error PositionAlreadyExists();
-    error PositionIsBaseToken();
     error ZeroPositionID();
 
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event PositionAdded(uint256 indexed id, bool indexed isBaseToken);
 
     struct Position {
-        uint256 lastAccounted; // Last block number when the position was accounted
+        uint256 lastAccountingTime; // Last block timestamp when the position was accounted for
         uint256 value; // Value of the position expressed in accounting token
         bool isBaseToken; // Is the position a base token
     }
@@ -44,6 +45,10 @@ interface ICaliber {
     /// @param token Address of the base token
     /// @param positionId ID for the base token position
     function addBaseToken(address token, uint256 positionId) external;
+
+    /// @dev Account for a base token position
+    /// @param positionId ID of the base token position
+    function accountForBaseToken(uint256 positionId) external;
 
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
