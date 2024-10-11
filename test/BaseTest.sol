@@ -6,10 +6,10 @@ import {MockERC20} from "./mocks/MockERC20.sol";
 
 abstract contract BaseTest is Base {
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
-    string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
+    // string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
 
     function setUp() public {
-        vm.selectFork(vm.createFork(MAINNET_RPC_URL));
+        // vm.selectFork(vm.createFork(MAINNET_RPC_URL));
 
         _testSetupBefore();
         _coreSetup();
