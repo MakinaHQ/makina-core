@@ -7,6 +7,7 @@ on:
 
 env:
   FOUNDRY_PROFILE: ci
+  MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
 
 jobs:
   check:
@@ -43,3 +44,14 @@ jobs:
         run: |
           forge test -vvv
         id: test
+      
+      - name: Run Forge coverage
+        run: |
+          forge coverage --report lcov --gas-report --no-match-coverage '(script|test)'
+        id: coverage
+      
+      - name: Report coverage
+        uses: romeovs/lcov-reporter-action@v0.4.0
+        with:
+          lcov-file: ./lcov.info
+          github-token: ${{ secrets.GITHUB_TOKEN }}
