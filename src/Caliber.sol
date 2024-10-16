@@ -48,9 +48,9 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         $._hubMachine = hubMachine_;
         $._accountingToken = accountingToken_;
-        _addBaseToken(accountingToken_, acountingTokenPosID_);
         $._oracleRegistry = oracleRegistry_;
         $._mechanic = initialMechanic_;
+        _addBaseToken(accountingToken_, acountingTokenPosID_);
         __AccessManaged_init(initialAuthority_);
     }
 
@@ -135,6 +135,10 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
 
     function _addBaseToken(address token, uint256 posId) internal {
         CaliberStorage storage $ = _getCaliberStorage();
+
+        // reverts if no price feed is registered for token in the oracle registry
+        IOracleRegistry($._oracleRegistry).getTokenFeedData(token);
+
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 

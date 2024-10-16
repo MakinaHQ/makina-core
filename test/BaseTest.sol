@@ -46,8 +46,6 @@ abstract contract BaseTest is Base {
     function _testSetupAfter() public {
         accountingToken = new MockERC20("AccountingToken", "ACT", 18);
         accountingTokenPosID = 1;
-
-        _deployCaliber(address(accountingToken), accountingTokenPosID);
     }
 
     function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID) public returns (Caliber) {

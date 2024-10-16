@@ -5,6 +5,7 @@ import "./BaseTest.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
+import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
@@ -12,7 +13,7 @@ contract CaliberTest is BaseTest {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event PositionAdded(uint256 indexed id, bool indexed isBaseToken);
 
-    MockERC20 private baseToken1;
+    MockERC20 private baseToken;
 
     MockPriceFeed private b1PriceFeed1;
     MockPriceFeed private aPriceFeed1;
@@ -24,16 +25,14 @@ contract CaliberTest is BaseTest {
     uint256 private constant PRICE_B_A = 400;
 
     function _setUp() public override {
-        accountingToken = new MockERC20("AccountingToken", "ACT", 18);
-        baseToken1 = new MockERC20("BaseToken1", "BT1", 18);
-        accountingTokenPosID = 1;
+        baseToken = new MockERC20("Base Token", "BT", 18);
 
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         b1PriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(address(accountingToken), address(aPriceFeed1), address(0));
-        oracleRegistry.setTokenFeedData(address(baseToken1), address(b1PriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(address(baseToken), address(b1PriceFeed1), address(0));
         vm.stopPrank();
 
         caliber = _deployCaliber(address(accountingToken), accountingTokenPosID);
@@ -50,16 +49,16 @@ contract CaliberTest is BaseTest {
 
     function test_cannotAddBaseTokenWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.addBaseToken(address(baseToken1), 2);
+        caliber.addBaseToken(address(baseToken), 2);
     }
 
     function test_addBaseToken() public {
         uint256 posId = 2;
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken1), posId);
+        caliber.addBaseToken(address(baseToken), posId);
 
-        assertEq(caliber.isBaseToken(address(baseToken1)), true);
+        assertEq(caliber.isBaseToken(address(baseToken)), true);
         assertEq(caliber.getPositionsLength(), 2);
         assertEq(caliber.getPositionId(1), posId);
         assertEq(caliber.getPosition(posId).lastAccountingTime, 0);
@@ -71,31 +70,43 @@ contract CaliberTest is BaseTest {
         vm.startPrank(dao);
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken1), 1);
+        caliber.addBaseToken(address(baseToken), 1);
 
-        caliber.addBaseToken(address(baseToken1), 2);
-
-        vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken1), 2);
+        caliber.addBaseToken(address(baseToken), 2);
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken1), 2);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
+        caliber.addBaseToken(address(baseToken), 2);
     }
 
     function test_cannotAddBaseTokenWithZeroId() public {
         vm.expectRevert(ICaliber.ZeroPositionID.selector);
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken1), 0);
+        caliber.addBaseToken(address(baseToken), 0);
+    }
+
+    function test_cannotAddBaseTokenWithoutRegisteredFeed() public {
+        MockERC20 baseToken2;
+        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken2), 3);
     }
 
     function test_accountForATPosition() public {
         assertEq(caliber.getPosition(1).value, 0);
         assertEq(caliber.getPosition(1).lastAccountingTime, 0);
 
+        caliber.accountForBaseToken(1);
+
+        assertEq(caliber.getPosition(1).value, 0);
+        assertEq(caliber.getPosition(1).lastAccountingTime, block.timestamp);
+
         deal(address(accountingToken), address(caliber), 1e18, true);
 
         assertEq(caliber.getPosition(1).value, 0);
-        assertEq(caliber.getPosition(1).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(1).lastAccountingTime, block.timestamp);
 
         caliber.accountForBaseToken(1);
 
@@ -105,15 +116,20 @@ contract CaliberTest is BaseTest {
 
     function test_accountForBTPosition() public {
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken1), 2);
+        caliber.addBaseToken(address(baseToken), 2);
 
         assertEq(caliber.getPosition(2).value, 0);
         assertEq(caliber.getPosition(2).lastAccountingTime, 0);
 
-        deal(address(baseToken1), address(caliber), 1e18, true);
+        caliber.accountForBaseToken(2);
 
         assertEq(caliber.getPosition(2).value, 0);
-        assertEq(caliber.getPosition(2).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
+
+        deal(address(baseToken), address(caliber), 1e18, true);
+
+        assertEq(caliber.getPosition(2).value, 0);
+        assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
 
         caliber.accountForBaseToken(2);
 
@@ -123,7 +139,7 @@ contract CaliberTest is BaseTest {
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
 
-        deal(address(baseToken1), address(caliber), 3e18, true);
+        deal(address(baseToken), address(caliber), 3e18, true);
         deal(address(accountingToken), address(caliber), 10e18, true);
 
         caliber.accountForBaseToken(2);
