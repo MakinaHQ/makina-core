@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.27;
 
-import {BaseTest} from "./BaseTest.sol";
+import "./BaseTest.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
@@ -12,22 +13,30 @@ contract CaliberTest is BaseTest {
     event PositionAdded(uint256 indexed id, bool indexed isBaseToken);
 
     MockERC20 private baseToken1;
-    MockERC20 private baseToken2;
 
-    MockPriceFeed private priceFeed1;
-    MockPriceFeed private priceFeed2;
+    MockPriceFeed private b1PriceFeed1;
+    MockPriceFeed private aPriceFeed1;
+
+    /// @dev A is the accounting token, B is the base token
+    /// and E is the reference currency of the oracle registry
+    uint256 private constant PRICE_A_E = 150;
+    uint256 private constant PRICE_B_E = 60000;
+    uint256 private constant PRICE_B_A = 400;
 
     function _setUp() public override {
+        accountingToken = new MockERC20("AccountingToken", "ACT", 18);
         baseToken1 = new MockERC20("BaseToken1", "BT1", 18);
-        baseToken2 = new MockERC20("BaseToken2", "BT2", 18);
+        accountingTokenPosID = 1;
 
-        priceFeed1 = new MockPriceFeed(18, 1e18);
-        priceFeed2 = new MockPriceFeed(18, 1e18);
+        aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
+        b1PriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setPriceFeed(address(baseToken1), address(accountingToken), address(priceFeed1));
-        oracleRegistry.setPriceFeed(address(baseToken2), address(accountingToken), address(priceFeed2));
+        oracleRegistry.setTokenFeedData(address(accountingToken), address(aPriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(address(baseToken1), address(b1PriceFeed1), address(0));
         vm.stopPrank();
+
+        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID);
     }
 
     function test_caliber_getters() public view {
@@ -108,7 +117,7 @@ contract CaliberTest is BaseTest {
 
         caliber.accountForBaseToken(2);
 
-        assertEq(caliber.getPosition(2).value, 1e18);
+        assertEq(caliber.getPosition(2).value, 1e18 * PRICE_B_A);
         assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
 
         uint256 newTimestamp = block.timestamp + 1;
@@ -119,7 +128,7 @@ contract CaliberTest is BaseTest {
 
         caliber.accountForBaseToken(2);
 
-        assertEq(caliber.getPosition(2).value, 3e18);
+        assertEq(caliber.getPosition(2).value, 3e18 * PRICE_B_A);
         assertEq(caliber.getPosition(2).lastAccountingTime, newTimestamp);
     }
 
@@ -127,22 +136,6 @@ contract CaliberTest is BaseTest {
         vm.prank(dao);
 
         vm.expectRevert(ICaliber.NotBaseTokenPosition.selector);
-        caliber.accountForBaseToken(2);
-    }
-
-    function test_cannotAccountForPositiveBTPositionWithNegPrice() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken1), 2);
-
-        priceFeed1.setLatestAnswer(-1e18);
-
-        caliber.accountForBaseToken(2);
-        assertEq(caliber.getPosition(2).value, 0);
-        assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
-
-        deal(address(baseToken1), address(caliber), 1e18, true);
-
-        vm.expectRevert(ICaliber.NegativeTokenPrice.selector);
         caliber.accountForBaseToken(2);
     }
 

@@ -8,18 +8,15 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
-import {Caliber} from "../src/Caliber.sol";
 
 abstract contract Base is Script, Test {
     address dao;
     address mechanic;
 
-    IERC20Metadata accountingToken;
-    uint256 accountingTokenPosID;
+    AccessManager accessManager;
 
     OracleRegistry oracleRegistry;
-    AccessManager accessManager;
-    Caliber caliber;
+    uint256 defaultFeedStalenessThreshold;
 
     function _coreSetup() public {
         accessManager = new AccessManager(dao);
@@ -29,26 +26,8 @@ abstract contract Base is Script, Test {
                 new TransparentUpgradeableProxy(
                     address(new OracleRegistry()),
                     address(this),
-                    abi.encodeWithSelector(OracleRegistry(address(0)).initialize.selector, accessManager)
-                )
-            )
-        );
-
-        accountingTokenPosID = 1;
-
-        caliber = Caliber(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(new Caliber()),
-                    address(this),
                     abi.encodeWithSelector(
-                        Caliber(address(0)).initialize.selector,
-                        address(0),
-                        address(accountingToken),
-                        accountingTokenPosID,
-                        address(oracleRegistry),
-                        mechanic,
-                        accessManager
+                        OracleRegistry(address(0)).initialize.selector, defaultFeedStalenessThreshold, accessManager
                     )
                 )
             )

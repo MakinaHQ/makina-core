@@ -6,14 +6,20 @@ import {AggregatorV2V3Interface} from "../../src/interfaces/AggregatorV2V3Interf
 contract MockPriceFeed is AggregatorV2V3Interface {
     uint8 private _decimals;
     int256 private _latestAnswer;
+    uint256 private _latestTimestamp;
 
-    constructor(uint8 decimals_, int256 latestAnswer_) {
+    constructor(uint8 decimals_, int256 latestAnswer_, uint256 latestTimestamp_) {
         _decimals = decimals_;
         _latestAnswer = latestAnswer_;
+        _latestTimestamp = latestTimestamp_;
     }
 
     function setLatestAnswer(int256 latestAnswer_) external {
         _latestAnswer = latestAnswer_;
+    }
+
+    function setLatestTimestamp(uint256 latestTimestamp_) external {
+        _latestTimestamp = latestTimestamp_;
     }
 
     //
@@ -23,8 +29,8 @@ contract MockPriceFeed is AggregatorV2V3Interface {
         return _latestAnswer;
     }
 
-    function latestTimestamp() external pure returns (uint256) {
-        return 0;
+    function latestTimestamp() external view returns (uint256) {
+        return _latestTimestamp;
     }
 
     function latestRound() external pure returns (uint256) {
@@ -35,8 +41,8 @@ contract MockPriceFeed is AggregatorV2V3Interface {
         return _latestAnswer;
     }
 
-    function getTimestamp(uint256) external pure returns (uint256) {
-        return 0;
+    function getTimestamp(uint256) external view returns (uint256) {
+        return _latestTimestamp;
     }
 
     //
@@ -59,7 +65,7 @@ contract MockPriceFeed is AggregatorV2V3Interface {
         view
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        return (0, _latestAnswer, 0, 0, 0);
+        return (0, _latestAnswer, 0, _latestTimestamp, 0);
     }
 
     function latestRoundData()
@@ -67,6 +73,6 @@ contract MockPriceFeed is AggregatorV2V3Interface {
         view
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
-        return (0, _latestAnswer, 0, 0, 0);
+        return (0, _latestAnswer, 0, _latestTimestamp, 0);
     }
 }

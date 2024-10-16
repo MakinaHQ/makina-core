@@ -3,12 +3,13 @@ pragma solidity 0.8.27;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {ICaliber} from "./interfaces/ICaliber.sol";
 import {IOracleRegistry} from "./interfaces/IOracleRegistry.sol";
-import {AggregatorV2V3Interface} from "./interfaces/AggregatorV2V3Interface.sol";
 
 contract Caliber is AccessManagedUpgradeable, ICaliber {
+    using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
@@ -156,11 +157,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
 
     function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
-        address priceFeed = IOracleRegistry($._oracleRegistry).getPriceFeed(token, $._accountingToken);
-        (, int256 price,,,) = AggregatorV2V3Interface(priceFeed).latestRoundData();
-        if (price < 0) {
-            revert NegativeTokenPrice();
-        }
-        return amount * uint256(price) / (10 ** IERC20Metadata(token).decimals());
+        uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
+        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 }
