@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.27;
 
-import "forge-std/Test.sol";
-
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -17,7 +15,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @inheritdoc IOracleRegistry
     uint256 public defaultFeedStalenessThreshold;
 
-    mapping(address token => TokenFeedData feedData) private tokenFeedData;
+    mapping(address token => TokenFeedData feedData) private _tokenFeedData;
 
     function initialize(uint256 defaultFeedStalenessThreshold_, address initialAuthority_) public initializer {
         defaultFeedStalenessThreshold = defaultFeedStalenessThreshold_;
@@ -26,8 +24,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     function getPrice(address baseToken, address quoteToken) external view override returns (uint256) {
-        TokenFeedData memory baseFD = tokenFeedData[baseToken];
-        TokenFeedData memory quoteFD = tokenFeedData[quoteToken];
+        TokenFeedData memory baseFD = _tokenFeedData[baseToken];
+        TokenFeedData memory quoteFD = _tokenFeedData[quoteToken];
 
         if (baseFD.feed1 == address(0) || quoteFD.feed1 == address(0)) {
             revert FeedDataNotRegistered();
@@ -41,7 +39,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     function getTokenFeedData(address token) external view override returns (address, address, uint256) {
-        TokenFeedData memory data = tokenFeedData[token];
+        TokenFeedData memory data = _tokenFeedData[token];
         if (data.feed1 == address(0)) {
             revert FeedDataNotRegistered();
         }
@@ -53,7 +51,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (feed1 == address(0)) {
             revert InvalidFeedData();
         }
-        tokenFeedData[token] =
+        _tokenFeedData[token] =
             TokenFeedData({feed1: feed1, feed2: feed2, decimalsSum: _getFeedDecimals(feed1) + _getFeedDecimals(feed2)});
         if (feedStalenessThreshold[feed1] == 0) {
             feedStalenessThreshold[feed1] = defaultFeedStalenessThreshold;

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.27;
 
-import "./OracleRegistry.t.sol";
+import "./BaseTest.sol";
+import {MockERC20} from "./mocks/MockERC20.sol";
+import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
 contract OracleRegistryFuzzTest is BaseTest {
     MockERC20 internal baseToken;

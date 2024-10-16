@@ -2,9 +2,6 @@
 pragma solidity 0.8.27;
 
 import "./BaseTest.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {ICaliber} from "../src/interfaces/ICaliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
@@ -44,8 +41,8 @@ contract CaliberFuzzTest is BaseTest {
         data.af1Decimals = uint8(bound(data.af1Decimals, 6, 18));
         data.b1f1Decimals = uint8(bound(data.b1f1Decimals, 6, 18));
 
-        accountingToken = new MockERC20("AccountingToken", "ACT", data.aDecimals);
-        baseToken = new MockERC20("baseToken", "BT1", data.b1Decimals);
+        accountingToken = new MockERC20("Accounting Token", "ACT", data.aDecimals);
+        baseToken = new MockERC20("Base Token", "BT", data.b1Decimals);
 
         ACCOUNTING_TOKEN_UNIT = 10 ** data.aDecimals;
         BASE_TOKEN_UNIT = 10 ** data.b1Decimals;
