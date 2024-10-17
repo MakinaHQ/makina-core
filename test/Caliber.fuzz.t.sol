@@ -13,14 +13,8 @@ contract CaliberFuzzTest is BaseTest {
     MockPriceFeed private b1PriceFeed1;
     MockPriceFeed private aPriceFeed1;
 
-    uint256 ACCOUNTING_TOKEN_UNIT;
-    uint256 BASE_TOKEN_UNIT;
-
-    /// @dev A is the accounting token, B is the base token
-    /// and E is the reference currency of the oracle registry
-    uint256 private constant PRICE_A_E = 600;
-    uint256 private constant PRICE_B_E = 60000;
-    uint256 private constant PRICE_B_A = 100;
+    uint256 private accountingTokenUnit;
+    uint256 private baseTokenUnit;
 
     struct Data {
         uint8 aDecimals;
@@ -29,6 +23,8 @@ contract CaliberFuzzTest is BaseTest {
         uint8 af2Decimals;
         uint8 b1f1Decimals;
         uint8 b1f2Decimals;
+        uint16 a_e_price; // price of accounting token in oracle registry's reference currency
+        uint16 b_e_price; // price of base token in oracle registry's reference currency
     }
 
     constructor() {
@@ -41,17 +37,21 @@ contract CaliberFuzzTest is BaseTest {
         data.af1Decimals = uint8(bound(data.af1Decimals, 6, 18));
         data.b1f1Decimals = uint8(bound(data.b1f1Decimals, 6, 18));
 
+        data.a_e_price = uint16(bound(data.a_e_price, 1, type(uint16).max));
+        data.b_e_price = uint16(bound(data.b_e_price, 1, type(uint16).max));
+
         accountingToken = new MockERC20("Accounting Token", "ACT", data.aDecimals);
         baseToken = new MockERC20("Base Token", "BT", data.b1Decimals);
 
-        ACCOUNTING_TOKEN_UNIT = 10 ** data.aDecimals;
-        BASE_TOKEN_UNIT = 10 ** data.b1Decimals;
+        accountingTokenUnit = 10 ** data.aDecimals;
+        baseTokenUnit = 10 ** data.b1Decimals;
 
         accountingTokenPosID = 1;
 
-        aPriceFeed1 = new MockPriceFeed(data.af1Decimals, int256(PRICE_A_E * (10 ** data.af1Decimals)), block.timestamp);
+        aPriceFeed1 =
+            new MockPriceFeed(data.af1Decimals, int256(data.a_e_price * (10 ** data.af1Decimals)), block.timestamp);
         b1PriceFeed1 =
-            new MockPriceFeed(data.b1f1Decimals, int256(PRICE_B_E * (10 ** data.b1f1Decimals)), block.timestamp);
+            new MockPriceFeed(data.b1f1Decimals, int256(data.b_e_price * (10 ** data.b1f1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -71,14 +71,14 @@ contract CaliberFuzzTest is BaseTest {
         assertEq(caliber.getPosition(1).value, 0);
         assertEq(caliber.getPosition(1).lastAccountingTime, 0);
 
-        deal(address(accountingToken), address(caliber), 2 * ACCOUNTING_TOKEN_UNIT, true);
+        deal(address(accountingToken), address(caliber), 2 * accountingTokenUnit, true);
 
         assertEq(caliber.getPosition(1).value, 0);
         assertEq(caliber.getPosition(1).lastAccountingTime, 0);
 
         caliber.accountForBaseToken(1);
 
-        assertEq(caliber.getPosition(1).value, 2 * ACCOUNTING_TOKEN_UNIT);
+        assertEq(caliber.getPosition(1).value, 2 * accountingTokenUnit);
         assertEq(caliber.getPosition(1).lastAccountingTime, block.timestamp);
     }
 
@@ -91,25 +91,28 @@ contract CaliberFuzzTest is BaseTest {
         assertEq(caliber.getPosition(2).value, 0);
         assertEq(caliber.getPosition(2).lastAccountingTime, 0);
 
-        deal(address(baseToken), address(caliber), 2 * BASE_TOKEN_UNIT, true);
+        // set caliber's base tokens balance to 2
+        deal(address(baseToken), address(caliber), 2 * baseTokenUnit, true);
 
         assertEq(caliber.getPosition(2).value, 0);
         assertEq(caliber.getPosition(2).lastAccountingTime, 0);
 
         caliber.accountForBaseToken(2);
 
-        assertEq(caliber.getPosition(2).value, 2 * PRICE_B_A * ACCOUNTING_TOKEN_UNIT);
+        assertEq(caliber.getPosition(2).value, 2 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
         assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
 
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
 
-        deal(address(baseToken), address(caliber), 3 * BASE_TOKEN_UNIT, true);
+        // set caliber's base tokens balance to 3
+        deal(address(baseToken), address(caliber), 3 * baseTokenUnit, true);
+        // set caliber's accounting tokens balance to 10 to check there is no effect
         deal(address(accountingToken), address(caliber), 10 * data.aDecimals, true);
 
         caliber.accountForBaseToken(2);
 
-        assertEq(caliber.getPosition(2).value, 3 * PRICE_B_A * ACCOUNTING_TOKEN_UNIT);
+        assertEq(caliber.getPosition(2).value, 3 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
         assertEq(caliber.getPosition(2).lastAccountingTime, newTimestamp);
     }
 }
