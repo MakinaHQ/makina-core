@@ -24,7 +24,6 @@ interface IOracleRegistry {
     struct TokenFeedData {
         address feed1;
         address feed2;
-        uint256 decimalsSum; // feed1.decimals + feed2.decimals (used for price calculation)
     }
 
     /// @notice The default price staleness threshold in seconds for price feeds
@@ -43,8 +42,7 @@ interface IOracleRegistry {
     /// @param token Address of the token for which the price feed data is requested
     /// @return feed1 Address of the first price feed
     /// @return feed2 Address of the second price feed
-    /// @return decimalsSum Sum of decimals of the token and the two feeds
-    function getTokenFeedData(address token) external view returns (address, address, uint256);
+    function getTokenFeedData(address token) external view returns (address, address);
 
     /// @notice Set the price feed data for a given token
     /// @dev Both feeds, if set, must be Chainlink-interface-compliant.

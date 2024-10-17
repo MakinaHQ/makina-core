@@ -3,7 +3,6 @@ pragma solidity 0.8.27;
 
 import "./BaseTest.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
@@ -60,11 +59,9 @@ contract OracleRegistryTest is BaseTest {
         vm.prank(dao);
         oracleRegistry.setTokenFeedData(address(baseToken), address(basePriceFeed1), address(basePriceFeed2));
 
-        (address tfdFeed1, address tfdFeed2, uint256 tfdDecimalsSum) =
-            oracleRegistry.getTokenFeedData(address(baseToken));
+        (address tfdFeed1, address tfdFeed2) = oracleRegistry.getTokenFeedData(address(baseToken));
         assertEq(tfdFeed1, address(basePriceFeed1));
         assertEq(tfdFeed2, address(basePriceFeed2));
-        assertEq(tfdDecimalsSum, 18 + 18);
     }
 
     function test_cannotGetUnitializedTokenFeedData() public {

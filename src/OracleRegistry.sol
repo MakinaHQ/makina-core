@@ -31,19 +31,22 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
             revert FeedDataNotRegistered();
         }
 
+        uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
+        uint8 quoteFDDecimalsSum = _getFeedDecimals(quoteFD.feed1) + _getFeedDecimals(quoteFD.feed2);
+
         return (10 ** IERC20Metadata(quoteToken).decimals()).mulDiv(
-            (10 ** quoteFD.decimalsSum) * _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
-            (10 ** baseFD.decimalsSum) * _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
+            (10 ** quoteFDDecimalsSum) * _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
+            (10 ** baseFDDecimalsSum) * _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
         );
     }
 
     /// @inheritdoc IOracleRegistry
-    function getTokenFeedData(address token) external view override returns (address, address, uint256) {
+    function getTokenFeedData(address token) external view override returns (address, address) {
         TokenFeedData memory data = _tokenFeedData[token];
         if (data.feed1 == address(0)) {
             revert FeedDataNotRegistered();
         }
-        return (data.feed1, data.feed2, data.decimalsSum);
+        return (data.feed1, data.feed2);
     }
 
     /// @inheritdoc IOracleRegistry
@@ -51,8 +54,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (feed1 == address(0)) {
             revert InvalidFeedData();
         }
-        _tokenFeedData[token] =
-            TokenFeedData({feed1: feed1, feed2: feed2, decimalsSum: _getFeedDecimals(feed1) + _getFeedDecimals(feed2)});
+        _tokenFeedData[token] = TokenFeedData({feed1: feed1, feed2: feed2});
         if (feedStalenessThreshold[feed1] == 0) {
             feedStalenessThreshold[feed1] = defaultFeedStalenessThreshold;
         }
@@ -88,7 +90,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         return uint256(answer);
     }
 
-    function _getFeedDecimals(address feed) private view returns (uint256) {
+    function _getFeedDecimals(address feed) private view returns (uint8) {
         if (feed == address(0)) {
             return 0;
         }
