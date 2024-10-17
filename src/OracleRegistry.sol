@@ -12,13 +12,10 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     mapping(address feed => uint256 stalenessThreshold) public feedStalenessThreshold;
-    /// @inheritdoc IOracleRegistry
-    uint256 public defaultFeedStalenessThreshold;
 
     mapping(address token => TokenFeedData feedData) private _tokenFeedData;
 
-    function initialize(uint256 defaultFeedStalenessThreshold_, address initialAuthority_) public initializer {
-        defaultFeedStalenessThreshold = defaultFeedStalenessThreshold_;
+    function initialize(address initialAuthority_) public initializer {
         __AccessManaged_init(initialAuthority_);
     }
 
@@ -50,29 +47,37 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
-    function setTokenFeedData(address token, address feed1, address feed2) external override restricted {
+    function setTokenFeedData(
+        address token,
+        address feed1,
+        uint256 stalenessThreshold1,
+        address feed2,
+        uint256 stalenessThreshold2
+    ) external override restricted {
         if (feed1 == address(0)) {
             revert InvalidFeedData();
         }
         _tokenFeedData[token] = TokenFeedData({feed1: feed1, feed2: feed2});
-        if (feedStalenessThreshold[feed1] == 0) {
-            feedStalenessThreshold[feed1] = defaultFeedStalenessThreshold;
-        }
-        if (feedStalenessThreshold[feed2] == 0) {
-            feedStalenessThreshold[feed2] = defaultFeedStalenessThreshold;
-        }
-        emit TokenFeedDataRegistered(token, feed1, feed2);
-    }
 
-    /// @inheritdoc IOracleRegistry
-    function setDefaultStalenessThreshold(uint256 newThreshold) external override restricted {
-        emit DefaultStalenessThresholdChange(defaultFeedStalenessThreshold, newThreshold);
-        defaultFeedStalenessThreshold = newThreshold;
+        if (stalenessThreshold1 == 0) {
+            revert InvalidFeedData();
+        }
+        feedStalenessThreshold[feed1] = stalenessThreshold1;
+
+        if (feed2 != address(0)) {
+            if (stalenessThreshold2 == 0) {
+                revert InvalidFeedData();
+            }
+            feedStalenessThreshold[feed2] = stalenessThreshold2;
+        }
+
+        emit TokenFeedDataRegistered(token, feed1, feed2);
     }
 
     /// @inheritdoc IOracleRegistry
     function setFeedStalenessThreshold(address feed, uint256 newThreshold) external restricted {
         emit FeedStalenessThresholdChange(feed, feedStalenessThreshold[feed], newThreshold);
+        // zero is allowed in order to explicitly indicate that a feed is not used
         feedStalenessThreshold[feed] = newThreshold;
     }
 

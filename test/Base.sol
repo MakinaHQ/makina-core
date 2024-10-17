@@ -6,7 +6,6 @@ import "forge-std/Test.sol";
 
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 
 abstract contract Base is Script, Test {
@@ -16,7 +15,6 @@ abstract contract Base is Script, Test {
     AccessManager accessManager;
 
     OracleRegistry oracleRegistry;
-    uint256 defaultFeedStalenessThreshold;
 
     function _coreSetup() public {
         accessManager = new AccessManager(dao);
@@ -26,9 +24,7 @@ abstract contract Base is Script, Test {
                 new TransparentUpgradeableProxy(
                     address(new OracleRegistry()),
                     address(this),
-                    abi.encodeWithSelector(
-                        OracleRegistry(address(0)).initialize.selector, defaultFeedStalenessThreshold, accessManager
-                    )
+                    abi.encodeWithSelector(OracleRegistry(address(0)).initialize.selector, accessManager)
                 )
             )
         );

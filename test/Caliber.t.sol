@@ -2,7 +2,6 @@
 pragma solidity 0.8.27;
 
 import "./BaseTest.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
 import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
@@ -31,8 +30,12 @@ contract CaliberTest is BaseTest {
         b1PriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(accountingToken), address(aPriceFeed1), address(0));
-        oracleRegistry.setTokenFeedData(address(baseToken), address(b1PriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(
+            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+        oracleRegistry.setTokenFeedData(
+            address(baseToken), address(b1PriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
         vm.stopPrank();
 
         caliber = _deployCaliber(address(accountingToken), accountingTokenPosID);

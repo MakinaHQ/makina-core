@@ -69,8 +69,20 @@ contract OracleRegistryFuzzTest is BaseTest {
         );
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(baseToken), address(basePriceFeed1), address(basePriceFeed2));
-        oracleRegistry.setTokenFeedData(address(quoteToken), address(quotePriceFeed1), address(quotePriceFeed2));
+        oracleRegistry.setTokenFeedData(
+            address(baseToken),
+            address(basePriceFeed1),
+            DEFAULT_PF_STALE_THRSHLD,
+            address(basePriceFeed2),
+            DEFAULT_PF_STALE_THRSHLD
+        );
+        oracleRegistry.setTokenFeedData(
+            address(quoteToken),
+            address(quotePriceFeed1),
+            DEFAULT_PF_STALE_THRSHLD,
+            address(quotePriceFeed2),
+            DEFAULT_PF_STALE_THRSHLD
+        );
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
@@ -94,8 +106,16 @@ contract OracleRegistryFuzzTest is BaseTest {
         );
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(baseToken), address(basePriceFeed1), address(basePriceFeed2));
-        oracleRegistry.setTokenFeedData(address(quoteToken), address(quotePriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(
+            address(baseToken),
+            address(basePriceFeed1),
+            DEFAULT_PF_STALE_THRSHLD,
+            address(basePriceFeed2),
+            DEFAULT_PF_STALE_THRSHLD
+        );
+        oracleRegistry.setTokenFeedData(
+            address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
@@ -119,8 +139,16 @@ contract OracleRegistryFuzzTest is BaseTest {
         );
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(baseToken), address(basePriceFeed1), address(0));
-        oracleRegistry.setTokenFeedData(address(quoteToken), address(quotePriceFeed1), address(quotePriceFeed2));
+        oracleRegistry.setTokenFeedData(
+            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+        oracleRegistry.setTokenFeedData(
+            address(quoteToken),
+            address(quotePriceFeed1),
+            DEFAULT_PF_STALE_THRSHLD,
+            address(quotePriceFeed2),
+            DEFAULT_PF_STALE_THRSHLD
+        );
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
@@ -141,8 +169,12 @@ contract OracleRegistryFuzzTest is BaseTest {
         );
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(baseToken), address(basePriceFeed1), address(0));
-        oracleRegistry.setTokenFeedData(address(quoteToken), address(quotePriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(
+            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+        oracleRegistry.setTokenFeedData(
+            address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));

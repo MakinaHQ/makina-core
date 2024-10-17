@@ -17,7 +17,6 @@ interface IOracleRegistry {
     error NegativeTokenPrice(address priceFeed);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
 
-    event DefaultStalenessThresholdChange(uint256 oldThreshold, uint256 newThreshold);
     event FeedStalenessThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
     event TokenFeedDataRegistered(address indexed token, address indexed feed1, address indexed feed2);
 
@@ -25,9 +24,6 @@ interface IOracleRegistry {
         address feed1;
         address feed2;
     }
-
-    /// @notice The default price staleness threshold in seconds for price feeds
-    function defaultFeedStalenessThreshold() external view returns (uint256);
 
     /// @notice Feed => Staleness threshold in seconds
     function feedStalenessThreshold(address feed) external view returns (uint256);
@@ -50,15 +46,19 @@ interface IOracleRegistry {
     /// If feed2 is set to address(0), the token price in the reference currency is assumed to be returned by feed1.
     /// @param token Address of the token for which the price feed data is set
     /// @param feed1 Address of the first price feed.
+    /// @param stalenessThreshold1 Staleness threshold for the first price feed.
     /// @param feed2 Address of the second price feed. Can be set to address(0).
-    function setTokenFeedData(address token, address feed1, address feed2) external;
+    /// @param stalenessThreshold2 Staleness threshold for the second price feed. Ignored if feed2 is address(0).
+    function setTokenFeedData(
+        address token,
+        address feed1,
+        uint256 stalenessThreshold1,
+        address feed2,
+        uint256 stalenessThreshold2
+    ) external;
 
     /// @notice Set the price staleness threshold for a given feed
     /// @param feed Address of the price feed
     /// @param threshold Value of staleness threshold
     function setFeedStalenessThreshold(address feed, uint256 threshold) external;
-
-    /// @notice Set the default staleness threshold for price feeds
-    /// @param threshold Value of staleness threshold
-    function setDefaultStalenessThreshold(uint256 threshold) external;
 }

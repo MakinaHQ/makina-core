@@ -54,8 +54,12 @@ contract CaliberFuzzTest is BaseTest {
             new MockPriceFeed(data.b1f1Decimals, int256(PRICE_B_E * (10 ** data.b1f1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(accountingToken), address(aPriceFeed1), address(0));
-        oracleRegistry.setTokenFeedData(address(baseToken), address(b1PriceFeed1), address(0));
+        oracleRegistry.setTokenFeedData(
+            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+        oracleRegistry.setTokenFeedData(
+            address(baseToken), address(b1PriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
         vm.stopPrank();
 
         caliber = _deployCaliber(address(accountingToken), accountingTokenPosID);

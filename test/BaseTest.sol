@@ -11,6 +11,8 @@ abstract contract BaseTest is Base {
 
     TestMode public mode = TestMode.UNIT;
 
+    uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
+
     MockERC20 accountingToken;
     uint256 accountingTokenPosID;
     Caliber caliber;
@@ -40,7 +42,6 @@ abstract contract BaseTest is Base {
     function _testSetupBefore() public {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
-        defaultFeedStalenessThreshold = 2 hours;
     }
 
     function _testSetupAfter() public {
