@@ -59,15 +59,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         }
         _tokenFeedData[token] = TokenFeedData({feed1: feed1, feed2: feed2});
 
-        if (stalenessThreshold1 == 0) {
-            revert InvalidFeedData();
-        }
         feedStalenessThreshold[feed1] = stalenessThreshold1;
-
         if (feed2 != address(0)) {
-            if (stalenessThreshold2 == 0) {
-                revert InvalidFeedData();
-            }
             feedStalenessThreshold[feed2] = stalenessThreshold2;
         }
 

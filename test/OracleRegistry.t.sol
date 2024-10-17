@@ -51,28 +51,6 @@ contract OracleRegistryTest is BaseTest {
         );
     }
 
-    function test_cannotSetFeedDataWithZeroFeed1Threshold() public {
-        basePriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_C * (10 ** 18)), block.timestamp);
-        basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_C_E * (10 ** 18)), block.timestamp);
-
-        vm.expectRevert(IOracleRegistry.InvalidFeedData.selector);
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(basePriceFeed1), 0, address(basePriceFeed2), DEFAULT_PF_STALE_THRSHLD
-        );
-    }
-
-    function test_cannotSetFeedDataWithNonZeroFeed2AndZeroFeed2Threshold() public {
-        basePriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_C * (10 ** 18)), block.timestamp);
-        basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_C_E * (10 ** 18)), block.timestamp);
-
-        vm.expectRevert(IOracleRegistry.InvalidFeedData.selector);
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(basePriceFeed2), 0
-        );
-    }
-
     function test_setTokenFeedData() public {
         basePriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_C * 10 ** 18), block.timestamp);
         basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_C_E * 10 ** 18), block.timestamp);
