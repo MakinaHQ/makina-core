@@ -8,6 +8,8 @@
     "max-line-length": ["error", 200],
     "named-parameters-mapping": "warn",
     "no-console": "off",
-    "not-rely-on-time": "off"
+    "not-rely-on-time": "off",
+    "const-name-snakecase": "off",
+    "no-inline-assembly": "off"
   }
 }

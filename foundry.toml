@@ -9,3 +9,6 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 base = "${BASE_RPC_URL}"
+
+[fuzz]
+runs = 1024
