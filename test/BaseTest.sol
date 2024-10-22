@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 import "./Base.sol";
-import {Caliber} from "../src/Caliber.sol";
+import {Caliber} from "../src/caliber/Caliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
 abstract contract BaseTest is Base {

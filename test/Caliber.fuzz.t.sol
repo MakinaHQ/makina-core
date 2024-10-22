@@ -6,7 +6,7 @@ import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
 contract CaliberFuzzTest is BaseTest {
-    event PositionAdded(uint256 indexed id, bool indexed isBaseToken);
+    event PositionCreated(uint256 indexed id, bool indexed isBaseToken);
 
     MockERC20 private baseToken;
 

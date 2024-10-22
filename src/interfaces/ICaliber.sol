@@ -2,14 +2,35 @@
 pragma solidity 0.8.27;
 
 interface ICaliber {
+    error InvalidInputLength();
+    error InvalidInstructions();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
     error NotMechanic();
+    error BaseTokenAlreadyExists();
     error PositionAlreadyExists();
+    error BaseTokenPosition();
+    error RecoveryMode();
     error ZeroPositionID();
 
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
-    event PositionAdded(uint256 indexed id, bool indexed isBaseToken);
+    event PositionCreated(uint256 indexed id);
+    event PositionClosed(uint256 indexed id);
+
+    enum InstructionType {
+        MANAGE,
+        ACCOUNTING,
+        HARVEST
+    }
+
+    struct Instruction {
+        uint256 positionId; // required for ManagePosition, can be 0x0
+        InstructionType instructionType;
+        bytes32[] commands;
+        bytes[] state;
+        uint128 bitMap;
+        bytes32[] merkleProof;
+    }
 
     struct Position {
         uint256 lastAccountingTime; // Last block timestamp when the position was accounted for
@@ -48,9 +69,17 @@ interface ICaliber {
 
     /// @dev Account for a base token position
     /// @param positionId ID of the base token position
-    function accountForBaseToken(uint256 positionId) external;
+    /// @return change The change in the position value
+    function accountForBaseToken(uint256 positionId) external returns (int256 change);
 
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
     function setMechanic(address newMechanic) external;
+
+    /// @notice Updates the state of a position
+    /// @dev Each time a position is managed, the caliber also performs accounting,
+    /// and creates or closes it if needed.
+    /// @param instructions Array containing a manage instruction and optionally
+    /// and accounting instruction, both for the same position
+    function managePosition(Instruction[] calldata instructions) external;
 }
