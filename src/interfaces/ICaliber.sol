@@ -14,6 +14,7 @@ interface ICaliber {
     error ZeroPositionID();
 
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
+    event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
 
@@ -50,6 +51,9 @@ interface ICaliber {
     /// @notice Address of the accounting token
     function accountingToken() external view returns (address);
 
+    /// @notice Is the caliber in recovery mode
+    function recoveryMode() external view returns (bool);
+
     /// @notice Length of the position IDs array
     function getPositionsLength() external view returns (uint256);
 
@@ -75,6 +79,10 @@ interface ICaliber {
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
     function setMechanic(address newMechanic) external;
+
+    /// @notice Set the recovery mode
+    /// @param enabled True to enable recovery mode, false to disable
+    function setRecoveryMode(bool enabled) external;
 
     /// @notice Updates the state of a position
     /// @dev Each time a position is managed, the caliber also performs accounting,

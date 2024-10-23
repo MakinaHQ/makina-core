@@ -86,6 +86,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function recoveryMode() public view override returns (bool) {
+        return _getCaliberStorage()._recoveryMode;
+    }
+
+    /// @inheritdoc ICaliber
     function getPositionsLength() public view override returns (uint256) {
         return _getCaliberStorage()._positionIds.length();
     }
@@ -141,6 +146,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function setRecoveryMode(bool enabled) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._recoveryMode != enabled) {
+            $._recoveryMode = enabled;
+            emit RecoveryModeChanged(enabled);
+        }
+    }
+
+    /// @inheritdoc ICaliber
     function managePosition(Instruction[] calldata instructions) public override {
         CaliberStorage storage $ = _getCaliberStorage();
 
@@ -176,13 +190,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             change = _updatePosition(posId, assets, amounts);
         }
 
-        // reverts if the change is positive and recovery mode is active
-        if ($._recoveryMode && change >= 0) {
-            revert RecoveryMode();
-        }
         // reverts if caller is not the mechanic, unless the change is a position decrease in recovery mode
         if (msg.sender != _getCaliberStorage()._mechanic && (!$._recoveryMode || change >= 0)) {
             revert NotMechanic();
+        }
+        // reverts if the change is positive and recovery mode is active
+        if ($._recoveryMode && change >= 0) {
+            revert RecoveryMode();
         }
     }
 
