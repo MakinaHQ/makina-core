@@ -88,11 +88,22 @@ contract CaliberTest is BaseTest {
 
         caliber.addBaseToken(address(baseToken), 2);
 
-        vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken), 2);
+        MockERC20 baseToken2 = new MockERC20("Base Token 2", "BT2", 18);
+        oracleRegistry.setTokenFeedData(
+            address(baseToken2), address(b1PriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
+        caliber.addBaseToken(address(baseToken2), 2);
+    }
+
+    function test_cannotAddSameBaseTokenTwice() public {
+        vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 2);
+
+        vm.expectRevert(ICaliber.BaseTokenAlreadyExists.selector);
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 3);
     }
 
     function test_cannotAddBaseTokenWithZeroId() public {
@@ -106,6 +117,116 @@ contract CaliberTest is BaseTest {
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken2), 3);
+    }
+
+    function test_cannotSetPositionAsBaseTokenWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setPositionAsBaseToken(2, address(baseToken));
+    }
+
+    function test_cannotSetPositionAsBaseTokenWithoutExistingPosition() public {
+        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
+        vm.prank(dao);
+        caliber.setPositionAsBaseToken(2, address(baseToken));
+    }
+
+    function test_cannotSetPositionAsBaseTokenWithExistingBaseToken() public {
+        vm.startPrank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        MockERC4626 vault = new MockERC4626("Test Vault", "TV", IERC20(baseToken), 0);
+        oracleRegistry.setTokenFeedData(address(vault), address(b1PriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
+        caliber.addBaseToken(address(vault), 3);
+        vm.stopPrank();
+
+        uint256 posId = 4;
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), posId, address(vault));
+
+        // create a new position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        vm.expectRevert(ICaliber.BaseTokenAlreadyExists.selector);
+        vm.prank(dao);
+        caliber.setPositionAsBaseToken(posId, address(baseToken));
+    }
+
+    function test_setPositionAsBaseToken() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        MockERC4626 vault = new MockERC4626("Test Vault", "TV", IERC20(baseToken), 0);
+
+        uint256 posId = 3;
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), posId, address(vault));
+
+        // create a new position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        assertFalse(caliber.isBaseToken(address(vault)));
+        assertEq(caliber.getPositionsLength(), 3);
+
+        vm.prank(dao);
+        caliber.setPositionAsBaseToken(posId, address(vault));
+
+        assertTrue(caliber.isBaseToken(address(vault)));
+        assertEq(caliber.getPositionsLength(), 3);
+    }
+
+    function test_cannotSetPositionAsNonBaseTokenWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setPositionAsNonBaseToken(2);
+    }
+
+    function test_cannotSetPositionAsNonBaseTokenWithoutExistingPosition() public {
+        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
+        vm.prank(dao);
+        caliber.setPositionAsNonBaseToken(2);
+    }
+
+    function test_setPositionAsNonBaseTokenEmpty() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        assertTrue(caliber.isBaseToken(address(baseToken)));
+        assertEq(caliber.getPositionsLength(), 2);
+
+        vm.prank(dao);
+        caliber.setPositionAsNonBaseToken(2);
+
+        // the position should be closed
+        assertFalse(caliber.isBaseToken(address(baseToken)));
+        assertEq(caliber.getPositionsLength(), 1);
+    }
+
+    function test_setPositionAsNonBaseTokenNonEmpty() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        deal(address(baseToken), address(caliber), 1e18, true);
+
+        assertTrue(caliber.isBaseToken(address(baseToken)));
+        assertEq(caliber.getPositionsLength(), 2);
+
+        vm.prank(dao);
+        caliber.setPositionAsNonBaseToken(2);
+
+        // the position should still be there
+        assertFalse(caliber.isBaseToken(address(baseToken)));
+        assertEq(caliber.getPositionsLength(), 2);
     }
 
     function test_accountForATPosition() public {

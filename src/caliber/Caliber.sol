@@ -116,6 +116,44 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function setPositionAsBaseToken(uint256 posId, address token) external restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._positionIds.contains(posId)) {
+            revert PositionDoesNotExist();
+        }
+        Position storage pos = $._positionById[posId];
+        if ($._positionIdToBaseToken[posId] != address(0)) {
+            revert BaseTokenPosition();
+        }
+        if ($._baseTokenToPositionId[token] != 0) {
+            revert BaseTokenAlreadyExists();
+        }
+        $._baseTokenToPositionId[token] = posId;
+        $._positionIdToBaseToken[posId] = token;
+        pos.isBaseToken = true;
+    }
+
+    /// @inheritdoc ICaliber
+    function setPositionAsNonBaseToken(uint256 posId) external restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._positionIds.contains(posId)) {
+            revert PositionDoesNotExist();
+        }
+        Position storage pos = $._positionById[posId];
+        if ($._positionIdToBaseToken[posId] == address(0)) {
+            revert NotBaseTokenPosition();
+        }
+        accountForBaseToken(posId);
+        delete $._baseTokenToPositionId[$._positionIdToBaseToken[posId]];
+        delete $._positionIdToBaseToken[posId];
+        if (pos.value == 0) {
+            _removePosition(posId);
+        } else {
+            pos.isBaseToken = false;
+        }
+    }
+
+    /// @inheritdoc ICaliber
     function accountForBaseToken(uint256 posId) public returns (int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         Position storage pos = $._positionById[posId];
@@ -204,6 +242,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     function _addBaseToken(address token, uint256 posId) internal {
         CaliberStorage storage $ = _getCaliberStorage();
 
+        if ($._baseTokenToPositionId[token] != 0) {
+            revert BaseTokenAlreadyExists();
+        }
+
         // reverts if no price feed is registered for token in the oracle registry
         IOracleRegistry($._oracleRegistry).getTokenFeedData(token);
 
@@ -226,6 +268,16 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionIds.add(posId);
         $._positionById[posId] = pos;
         emit PositionCreated(posId);
+    }
+
+    /// @dev Removes a position from storage, assuming it currently exists.
+    /// Does not remove entries from the _baseTokenToPositionId and _positionIdToBaseToken mappings,
+    /// if such entries exist for the given position.
+    function _removePosition(uint256 posId) internal {
+        CaliberStorage storage $ = _getCaliberStorage();
+        $._positionIds.remove(posId);
+        delete $._positionById[posId];
+        emit PositionClosed(posId);
     }
 
     /// @dev Computes the accounting value of a given token amount.
@@ -297,9 +349,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         if (lastValue > 0 && currentValue == 0) {
-            $._positionIds.remove(posId);
-            delete $._positionById[posId];
-            emit PositionClosed(posId);
+            _removePosition(posId);
         } else if (currentValue > 0) {
             pos.value = currentValue;
             pos.lastAccountingTime = block.timestamp;

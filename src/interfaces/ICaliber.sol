@@ -10,6 +10,7 @@ interface ICaliber {
     error NotMechanic();
     error BaseTokenAlreadyExists();
     error PositionAlreadyExists();
+    error PositionDoesNotExist();
     error BaseTokenPosition();
     error RecoveryMode();
     error ZeroPositionID();
@@ -71,6 +72,12 @@ interface ICaliber {
     /// @param token Address of the base token
     /// @param positionId ID for the base token position
     function addBaseToken(address token, uint256 positionId) external;
+
+    /// @notice Set a position as a base token
+    function setPositionAsBaseToken(uint256 posId, address token) external;
+
+    /// @notice Set a position as a non-base token
+    function setPositionAsNonBaseToken(uint256 posId) external;
 
     /// @dev Account for a base token position
     /// @param positionId ID of the base token position
