@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 interface ICaliber {
+    error InvalidAccounting();
     error InvalidInputLength();
     error InvalidInstructions();
     error NegativeTokenPrice();

@@ -241,25 +241,38 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         pure
         returns (address[] memory, uint256[] memory)
     {
-        address[] memory assets = new address[](1);
-        uint256[] memory amounts = new uint256[](1);
+        uint256 maxEntries = state.length / 2;
+        address[] memory assets = new address[](maxEntries);
+        uint256[] memory amounts = new uint256[](maxEntries);
 
+        uint256 count;
         for (uint256 i; i < state.length; i++) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END_OF_ARGS) {
+                if (i % 2 == 1) {
+                    revert InvalidAccounting();
+                }
                 break;
             }
             if (i % 2 == 0) {
                 assets[i / 2] = address(uint160(uint256(bytes32(state[i]))));
             } else {
                 amounts[i / 2] = uint256(bytes32(state[i]));
+                count++; // count the number of asset/amount pairs
             }
+        }
+
+        // Resize the arrays to the actual number of entries
+        assembly {
+            mstore(assets, count)
+            mstore(amounts, count)
         }
 
         return (assets, amounts);
     }
 
-    /// @dev Computes the accounting value of a non-base-token position, based on the provided assets and amounts.
-    /// The position is then created if it does not exist yet and its value is positive, and closed if its value goes to zero.
+    /// @dev Computes the accounting value of a non-base-token position, based on the provided
+    /// assets and amounts, assumed to have equal length.
+    /// The position can be either created, closed or simply updated.
     function _updatePosition(uint256 posId, address[] memory assets, uint256[] memory amounts)
         internal
         returns (int256)
@@ -275,13 +288,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 currentValue;
 
         uint256 len = assets.length;
-        if (len != amounts.length) {
-            revert InvalidInputLength();
-        }
-
         for (uint256 i; i < len; i++) {
             if ($._baseTokenToPositionId[assets[i]] == 0) {
-                revert NotBaseTokenPosition();
+                revert InvalidAccounting();
             }
             uint256 assetValue = _accountingValueOf(assets[i], amounts[i]);
             currentValue += assetValue;

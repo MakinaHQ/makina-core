@@ -311,6 +311,46 @@ contract CaliberTest is BaseTest {
         caliber.managePosition(instructions);
     }
 
+    function test_cannotCallManagePositionWithInvalidAccounting() public {
+        // baseToken is not set as an actual base token in the caliber
+        MockERC4626 vault = new MockERC4626("Test Vault", "TV", IERC20(baseToken), 0);
+
+        uint256 posId = 3;
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 3e18, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), posId, address(vault));
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        caliber.managePosition(instructions);
+
+        // set baseToken as an actual base token
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        // makes the number of assets and amounts unequal in the accounting instruction output state
+        bytes32[] memory commands = new bytes32[](1);
+        commands[0] = WeirollPlanner.buildCommand(
+            IERC4626.asset.selector,
+            0x02, // static call
+            0xffffffffffff, // no input
+            0x00, // store fixed size result at index 0 of state
+            address(vault)
+        );
+        bytes[] memory state = new bytes[](2);
+        state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+        instructions[1].commands = commands;
+        instructions[1].state = state;
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        caliber.managePosition(instructions);
+    }
+
     function test_managePosition_4626_create() public {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 2);
