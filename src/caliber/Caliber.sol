@@ -305,6 +305,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
                 }
                 break;
             }
+            if (i % 2 == 0 && i + 1 == state.length) {
+                // last state entry is neither end-of-args flag nor an amount
+                revert InvalidAccounting();
+            }
             if (i % 2 == 0) {
                 assets[i / 2] = address(uint160(uint256(bytes32(state[i]))));
             } else {

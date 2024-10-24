@@ -453,7 +453,13 @@ contract CaliberTest is BaseTest {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 2);
 
-        // makes the number of assets and amounts unequal in the accounting instruction output state
+        // replace end flag with null value in output state with odd length
+        delete instructions[1].state[2];
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        caliber.managePosition(instructions);
+
+        // put an end flag in the state after unequal number of assets and amounts
         bytes32[] memory commands = new bytes32[](1);
         commands[0] = WeirollPlanner.buildCommand(
             IERC4626.asset.selector,
