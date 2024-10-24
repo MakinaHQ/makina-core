@@ -130,6 +130,17 @@ contract CaliberTest is BaseTest {
         caliber.setPositionAsBaseToken(2, address(baseToken));
     }
 
+    function test_cannotSetPositionAsBaseTokenWithAlreadyBaseTokenPosition() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        MockERC20 baseToken2 = new MockERC20("Base Token 2", "BT2", 18);
+
+        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        vm.prank(dao);
+        caliber.setPositionAsBaseToken(2, address(baseToken2));
+    }
+
     function test_cannotSetPositionAsBaseTokenWithExistingBaseToken() public {
         vm.startPrank(dao);
         caliber.addBaseToken(address(baseToken), 2);
@@ -188,6 +199,18 @@ contract CaliberTest is BaseTest {
 
     function test_cannotSetPositionAsNonBaseTokenWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setPositionAsNonBaseToken(2);
+    }
+
+    function test_cannotSetPositionAsNonBaseTokenIfAlreadyNonBaseToken() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), 2);
+
+        deal(address(baseToken), address(caliber), 3e18, true);
+
+        vm.startPrank(dao);
+        caliber.setPositionAsNonBaseToken(2);
+        vm.expectRevert(ICaliber.NotBaseTokenPosition.selector);
         caliber.setPositionAsNonBaseToken(2);
     }
 
