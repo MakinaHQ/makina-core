@@ -2,7 +2,7 @@
 
 pragma solidity 0.8.27;
 
-import "./CommandBuilder.sol";
+import {CommandBuilder} from "./CommandBuilder.sol";
 
 abstract contract VM {
     using CommandBuilder for bytes[];
@@ -42,6 +42,7 @@ abstract contract VM {
             }
 
             if (flags & FLAG_CT_MASK == FLAG_CT_DELEGATECALL) {
+                // solhint-disable-next-line avoid-low-level-calls
                 (success, outdata) = address(uint160(uint256(command))).delegatecall( // target
                     // inputs
                     state.buildInputs(
@@ -51,6 +52,7 @@ abstract contract VM {
                     )
                 );
             } else if (flags & FLAG_CT_MASK == FLAG_CT_CALL) {
+                // solhint-disable-next-line avoid-low-level-calls
                 (success, outdata) = address(uint160(uint256(command))).call( // target
                     // inputs
                     state.buildInputs(
