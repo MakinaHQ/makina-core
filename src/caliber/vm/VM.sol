@@ -1,30 +1,27 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.11;
+pragma solidity 0.8.27;
 
 import "./CommandBuilder.sol";
 
 abstract contract VM {
     using CommandBuilder for bytes[];
 
-    uint256 constant FLAG_CT_DELEGATECALL = 0x00;
-    uint256 constant FLAG_CT_CALL = 0x01;
-    uint256 constant FLAG_CT_STATICCALL = 0x02;
-    uint256 constant FLAG_CT_VALUECALL = 0x03;
-    uint256 constant FLAG_CT_MASK = 0x03;
-    uint256 constant FLAG_EXTENDED_COMMAND = 0x80;
-    uint256 constant FLAG_TUPLE_RETURN = 0x40;
+    uint256 internal constant FLAG_CT_DELEGATECALL = 0x00;
+    uint256 internal constant FLAG_CT_CALL = 0x01;
+    uint256 internal constant FLAG_CT_STATICCALL = 0x02;
+    uint256 internal constant FLAG_CT_VALUECALL = 0x03;
+    uint256 internal constant FLAG_CT_MASK = 0x03;
+    uint256 internal constant FLAG_EXTENDED_COMMAND = 0x80;
+    uint256 internal constant FLAG_TUPLE_RETURN = 0x40;
 
-    uint256 constant SHORT_COMMAND_FILL = 0x000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+    uint256 internal constant SHORT_COMMAND_FILL = 0x000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
-    address immutable self;
+    error InvalidCallType();
+    error ValueCallHasNoValue();
+    error ExecutionFailed(uint256 commandIndex, address target, string message);
 
-    error ExecutionFailed(uint256 command_index, address target, string message);
-
-    constructor() {
-        self = address(this);
-    }
-
+    // solhint-disable-next-line code-complexity
     function _execute(bytes32[] calldata commands, bytes[] memory state) internal returns (bytes[] memory) {
         bytes32 command;
         uint256 flags;
@@ -74,7 +71,9 @@ abstract contract VM {
             } else if (flags & FLAG_CT_MASK == FLAG_CT_VALUECALL) {
                 uint256 calleth;
                 bytes memory v = state[uint8(bytes1(indices))];
-                require(v.length == 32, "_execute: value call has no value indicated.");
+                if (v.length != 32) {
+                    revert ValueCallHasNoValue();
+                }
                 assembly {
                     calleth := mload(add(v, 0x20))
                 }
@@ -89,7 +88,7 @@ abstract contract VM {
                     )
                 );
             } else {
-                revert("Invalid calltype");
+                revert InvalidCallType();
             }
 
             if (!success) {
@@ -99,7 +98,7 @@ abstract contract VM {
                     }
                 }
                 revert ExecutionFailed({
-                    command_index: 0,
+                    commandIndex: 0,
                     target: address(uint160(uint256(command))),
                     message: outdata.length > 0 ? string(outdata) : "Unknown"
                 });

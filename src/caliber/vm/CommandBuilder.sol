@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.11;
+pragma solidity 0.8.27;
 
 library CommandBuilder {
-    uint256 constant IDX_VARIABLE_LENGTH = 0x80;
-    uint256 constant IDX_VALUE_MASK = 0x7f;
-    uint256 constant IDX_END_OF_ARGS = 0xff;
-    uint256 constant IDX_USE_STATE = 0xfe;
+    uint256 internal constant IDX_VARIABLE_LENGTH = 0x80;
+    uint256 internal constant IDX_VALUE_MASK = 0x7f;
+    uint256 internal constant IDX_END_OF_ARGS = 0xff;
+    uint256 internal constant IDX_USE_STATE = 0xfe;
 
+    error MustBeBytes32();
+    error MultipleVarLenReturn();
+    error StaticLenReturnIsNotOne();
+    error MustBeMultipleOfBytes32();
+
+    // solhint-disable-next-line code-complexity
     function buildInputs(bytes[] memory state, bytes4 selector, bytes32 indices)
         internal
         view
@@ -33,11 +39,15 @@ library CommandBuilder {
                 } else {
                     // Add the size of the value, rounded up to the next word boundary, plus space for pointer and length
                     uint256 arglen = state[idx & IDX_VALUE_MASK].length;
-                    require(arglen % 32 == 0, "Dynamic state variables must be a multiple of 32 bytes");
+                    if (arglen % 32 != 0) {
+                        revert MustBeMultipleOfBytes32();
+                    }
                     count += arglen + 32;
                 }
             } else {
-                require(state[idx & IDX_VALUE_MASK].length == 32, "Static state variables must be 32 bytes");
+                if (state[idx & IDX_VALUE_MASK].length != 32) {
+                    revert MustBeBytes32();
+                }
                 count += 32;
             }
             unchecked {
@@ -108,7 +118,9 @@ library CommandBuilder {
                 assembly {
                     argptr := mload(add(output, 32))
                 }
-                require(argptr == 32, "Only one return value permitted (variable)");
+                if (argptr != 32) {
+                    revert MultipleVarLenReturn();
+                }
 
                 assembly {
                     // Overwrite the first word of the return data with the length - 32
@@ -119,7 +131,9 @@ library CommandBuilder {
             }
         } else {
             // Single word
-            require(output.length == 32, "Only one return value permitted (static)");
+            if (output.length != 32) {
+                revert StaticLenReturnIsNotOne();
+            }
 
             state[idx & IDX_VALUE_MASK] = output;
         }
