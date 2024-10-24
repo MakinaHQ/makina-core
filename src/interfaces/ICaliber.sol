@@ -4,7 +4,7 @@ pragma solidity 0.8.27;
 interface ICaliber {
     error InvalidAccounting();
     error InvalidInputLength();
-    error InvalidInstructions();
+    error InvalidInstruction();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
     error NotMechanic();
@@ -80,9 +80,24 @@ interface ICaliber {
     function setPositionAsNonBaseToken(uint256 posId) external;
 
     /// @dev Account for a base token position
-    /// @param positionId ID of the base token position
+    /// @param posId ID of the base token position
+    /// @return value The new position value
     /// @return change The change in the position value
-    function accountForBaseToken(uint256 positionId) external returns (int256 change);
+    function accountForBaseToken(uint256 posId) external returns (uint256 value, int256 change);
+
+    /// @notice Account for a position
+    /// @dev If the position value goes to zero, it is closed
+    /// @param instruction Accounting instruction
+    /// @return value The new position value
+    /// @return change The change in the position value
+    function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
+
+    /// @notice Updates the state of a position
+    /// @dev Each time a position is managed, the caliber also performs accounting,
+    /// and creates or closes it if needed.
+    /// @param instructions Array containing a manage instruction and optionally
+    /// and accounting instruction, both for the same position
+    function managePosition(Instruction[] calldata instructions) external;
 
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
@@ -91,11 +106,4 @@ interface ICaliber {
     /// @notice Set the recovery mode
     /// @param enabled True to enable recovery mode, false to disable
     function setRecoveryMode(bool enabled) external;
-
-    /// @notice Updates the state of a position
-    /// @dev Each time a position is managed, the caliber also performs accounting,
-    /// and creates or closes it if needed.
-    /// @param instructions Array containing a manage instruction and optionally
-    /// and accounting instruction, both for the same position
-    function managePosition(Instruction[] calldata instructions) external;
 }

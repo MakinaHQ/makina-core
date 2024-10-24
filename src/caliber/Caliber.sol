@@ -154,7 +154,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function accountForBaseToken(uint256 posId) public returns (int256) {
+    function accountForBaseToken(uint256 posId) public returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         Position storage pos = $._positionById[posId];
         if ($._positionIdToBaseToken[posId] == address(0)) {
@@ -172,7 +172,60 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
         pos.lastAccountingTime = block.timestamp;
 
-        return int256(pos.value) - int256(lastValue);
+        return (pos.value, int256(pos.value) - int256(lastValue));
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._positionIds.contains(instruction.positionId)) {
+            revert PositionDoesNotExist();
+        }
+        if ($._positionIdToBaseToken[instruction.positionId] != address(0)) {
+            revert BaseTokenPosition();
+        }
+        return _accountForPosition(instruction);
+    }
+
+    /// @inheritdoc ICaliber
+    function managePosition(Instruction[] calldata instructions) public override {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if (instructions.length == 0) {
+            revert InvalidInstruction();
+        }
+        Instruction calldata managingInstruction = instructions[0];
+        if (managingInstruction.instructionType != InstructionType.MANAGE) {
+            revert InvalidInstruction();
+        }
+        _execute(managingInstruction.commands, managingInstruction.state);
+
+        int256 change;
+        uint256 posId = managingInstruction.positionId;
+        if ($._positionIdToBaseToken[posId] != address(0)) {
+            if (instructions.length != 1) {
+                revert InvalidInstruction();
+            }
+            (, change) = accountForBaseToken(posId);
+        } else {
+            if (instructions.length != 2) {
+                revert InvalidInstruction();
+            }
+            Instruction calldata accountingInstruction = instructions[1];
+            if (posId != accountingInstruction.positionId) {
+                revert InvalidInstruction();
+            }
+            (, change) = _accountForPosition(accountingInstruction);
+        }
+
+        // reverts if caller is not the mechanic, unless the change is a position decrease in recovery mode
+        if (msg.sender != _getCaliberStorage()._mechanic && (!$._recoveryMode || change >= 0)) {
+            revert NotMechanic();
+        }
+        // reverts if the change is positive and recovery mode is active
+        if ($._recoveryMode && change >= 0) {
+            revert RecoveryMode();
+        }
     }
 
     /// @inheritdoc ICaliber
@@ -189,52 +242,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
-        }
-    }
-
-    /// @inheritdoc ICaliber
-    function managePosition(Instruction[] calldata instructions) public override {
-        CaliberStorage storage $ = _getCaliberStorage();
-
-        if (instructions.length == 0) {
-            revert InvalidInstructions();
-        }
-        Instruction calldata managingInstruction = instructions[0];
-        if (managingInstruction.instructionType != InstructionType.MANAGE) {
-            revert InvalidInstructions();
-        }
-        _execute(managingInstruction.commands, managingInstruction.state);
-
-        int256 change;
-        uint256 posId = managingInstruction.positionId;
-        if ($._positionIdToBaseToken[posId] != address(0)) {
-            if (instructions.length != 1) {
-                revert InvalidInstructions();
-            }
-            change = accountForBaseToken(posId);
-        } else {
-            if (instructions.length != 2) {
-                revert InvalidInstructions();
-            }
-            Instruction calldata accountingInstruction = instructions[1];
-            if (
-                accountingInstruction.instructionType != InstructionType.ACCOUNTING
-                    || posId != accountingInstruction.positionId
-            ) {
-                revert InvalidInstructions();
-            }
-            bytes[] memory returnedState = _execute(accountingInstruction.commands, accountingInstruction.state);
-            (address[] memory assets, uint256[] memory amounts) = _decodeAccountingOutputState(returnedState);
-            change = _updatePosition(posId, assets, amounts);
-        }
-
-        // reverts if caller is not the mechanic, unless the change is a position decrease in recovery mode
-        if (msg.sender != _getCaliberStorage()._mechanic && (!$._recoveryMode || change >= 0)) {
-            revert NotMechanic();
-        }
-        // reverts if the change is positive and recovery mode is active
-        if ($._recoveryMode && change >= 0) {
-            revert RecoveryMode();
         }
     }
 
@@ -280,14 +287,47 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         emit PositionClosed(posId);
     }
 
-    /// @dev Computes the accounting value of a given token amount.
-    function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
+    /// @dev Computes the accounting value of a non-base-token position
+    /// Depending on last and current value, the position is then either created, closed or simply updated in storage.
+    function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
+        if (instruction.instructionType != InstructionType.ACCOUNTING) {
+            revert InvalidInstruction();
+        }
+        bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
+        (address[] memory assets, uint256[] memory amounts) = _decodeAccountingOutputState(returnedState);
+
+        uint256 posId = instruction.positionId;
+
         CaliberStorage storage $ = _getCaliberStorage();
-        uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
-        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+
+        Position storage pos = $._positionById[posId];
+        uint256 lastValue = pos.value;
+        uint256 currentValue;
+
+        uint256 len = assets.length;
+        for (uint256 i; i < len; i++) {
+            if ($._baseTokenToPositionId[assets[i]] == 0) {
+                revert InvalidAccounting();
+            }
+            uint256 assetValue = _accountingValueOf(assets[i], amounts[i]);
+            currentValue += assetValue;
+        }
+
+        if (lastValue > 0 && currentValue == 0) {
+            _removePosition(posId);
+        } else if (currentValue > 0) {
+            pos.value = currentValue;
+            pos.lastAccountingTime = block.timestamp;
+            if (lastValue == 0) {
+                $._positionIds.add(posId);
+                emit PositionCreated(posId);
+            }
+        }
+
+        return (currentValue, int256(currentValue) - int256(lastValue));
     }
 
-    /// @dev Decodes the output state of an accounting instruction.
+    /// @dev Decodes the output state of an accounting instruction into asset and amount arrays of equal length.
     function _decodeAccountingOutputState(bytes[] memory state)
         internal
         pure
@@ -326,43 +366,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return (assets, amounts);
     }
 
-    /// @dev Computes the accounting value of a non-base-token position, based on the provided
-    /// assets and amounts, assumed to have equal length.
-    /// The position can be either created, closed or simply updated.
-    function _updatePosition(uint256 posId, address[] memory assets, uint256[] memory amounts)
-        internal
-        returns (int256)
-    {
+    /// @dev Computes the accounting value of a given token amount.
+    function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
-        Position storage pos = $._positionById[posId];
-
-        if ($._positionIdToBaseToken[posId] != address(0)) {
-            revert BaseTokenPosition();
-        }
-
-        uint256 lastValue = pos.value;
-        uint256 currentValue;
-
-        uint256 len = assets.length;
-        for (uint256 i; i < len; i++) {
-            if ($._baseTokenToPositionId[assets[i]] == 0) {
-                revert InvalidAccounting();
-            }
-            uint256 assetValue = _accountingValueOf(assets[i], amounts[i]);
-            currentValue += assetValue;
-        }
-
-        if (lastValue > 0 && currentValue == 0) {
-            _removePosition(posId);
-        } else if (currentValue > 0) {
-            pos.value = currentValue;
-            pos.lastAccountingTime = block.timestamp;
-            if (lastValue == 0) {
-                $._positionIds.add(posId);
-                emit PositionCreated(posId);
-            }
-        }
-
-        return int256(currentValue) - int256(lastValue);
+        uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
+        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 }
