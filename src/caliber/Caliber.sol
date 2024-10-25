@@ -19,6 +19,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address _accountingToken;
         address _oracleRegistry;
         address _mechanic;
+        address _securityCouncil;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
         mapping(uint256 posId => address bt) _positionIdToBaseToken;
@@ -47,6 +48,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 acountingTokenPosID_,
         address oracleRegistry_,
         address initialMechanic_,
+        address initialSecurityCouncil_,
         address initialAuthority_
     ) public initializer {
         CaliberStorage storage $ = _getCaliberStorage();
@@ -54,13 +56,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._accountingToken = accountingToken_;
         $._oracleRegistry = oracleRegistry_;
         $._mechanic = initialMechanic_;
+        $._securityCouncil = initialSecurityCouncil_;
         _addBaseToken(accountingToken_, acountingTokenPosID_);
         __AccessManaged_init(initialAuthority_);
     }
 
-    modifier onlyMechanic() {
-        if (msg.sender != _getCaliberStorage()._mechanic) {
-            revert NotMechanic();
+    modifier onlyOperator() {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
+            revert UnauthorizedOperator();
         }
         _;
     }
@@ -73,6 +77,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function mechanic() public view override returns (address) {
         return _getCaliberStorage()._mechanic;
+    }
+
+    /// @inheritdoc ICaliber
+    function securityCouncil() public view override returns (address) {
+        return _getCaliberStorage()._securityCouncil;
     }
 
     /// @inheritdoc ICaliber
@@ -188,7 +197,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function managePosition(Instruction[] calldata instructions) public override {
+    function managePosition(Instruction[] calldata instructions) public override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (instructions.length == 0) {
@@ -218,10 +227,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             (, change) = _accountForPosition(accountingInstruction);
         }
 
-        // reverts if caller is not the mechanic, unless the change is a position decrease in recovery mode
-        if (msg.sender != _getCaliberStorage()._mechanic && (!$._recoveryMode || change >= 0)) {
-            revert NotMechanic();
-        }
         // reverts if the change is positive and recovery mode is active
         if ($._recoveryMode && change >= 0) {
             revert RecoveryMode();
@@ -234,6 +239,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address currentMechanic = $._mechanic;
         emit MechanicChanged(currentMechanic, newMechanic);
         $._mechanic = newMechanic;
+    }
+
+    /// @inheritdoc ICaliber
+    function setSecurityCouncil(address newSecurityCouncil) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        address currentSecurityCouncil = $._securityCouncil;
+        emit SecurityCouncilChanged(currentSecurityCouncil, newSecurityCouncil);
+        $._securityCouncil = newSecurityCouncil;
     }
 
     /// @inheritdoc ICaliber

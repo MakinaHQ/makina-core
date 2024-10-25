@@ -42,6 +42,7 @@ abstract contract BaseTest is Base {
     function _testSetupBefore() public {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
+        securityCouncil = makeAddr("SecurityCouncil");
     }
 
     function _testSetupAfter() public {
@@ -62,6 +63,7 @@ abstract contract BaseTest is Base {
                         _accountingTokenPosID,
                         address(oracleRegistry),
                         mechanic,
+                        securityCouncil,
                         accessManager
                     )
                 )

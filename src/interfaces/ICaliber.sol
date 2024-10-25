@@ -7,15 +7,16 @@ interface ICaliber {
     error InvalidInstruction();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
-    error NotMechanic();
     error BaseTokenAlreadyExists();
     error PositionAlreadyExists();
     error PositionDoesNotExist();
     error BaseTokenPosition();
     error RecoveryMode();
+    error UnauthorizedOperator();
     error ZeroPositionID();
 
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
+    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
@@ -46,6 +47,9 @@ interface ICaliber {
 
     /// @notice Address of the mechanic
     function mechanic() external view returns (address);
+
+    /// @notice Address of the security council
+    function securityCouncil() external view returns (address);
 
     /// @notice Address of the oracle registry
     function oracleRegistry() external view returns (address);
@@ -102,6 +106,10 @@ interface ICaliber {
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
     function setMechanic(address newMechanic) external;
+
+    /// @notice Set a new security council
+    /// @param newSecurityCouncil Address of the new security council
+    function setSecurityCouncil(address newSecurityCouncil) external;
 
     /// @notice Set the recovery mode
     /// @param enabled True to enable recovery mode, false to disable

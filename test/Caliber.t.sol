@@ -14,6 +14,7 @@ import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
 contract CaliberTest is BaseTest {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
+    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
@@ -350,6 +351,20 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.mechanic(), newMechanic);
     }
 
+    function test_cannotSetSecurityCouncilWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setSecurityCouncil(address(0x0));
+    }
+
+    function test_setSecurityCouncil() public {
+        address newSecurityCouncil = makeAddr("NewSecurityCouncil");
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit SecurityCouncilChanged(securityCouncil, newSecurityCouncil);
+        vm.prank(dao);
+        caliber.setSecurityCouncil(newSecurityCouncil);
+        assertEq(caliber.securityCouncil(), newSecurityCouncil);
+    }
+
     function test_cannotSetRecoveryModeWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliber.setRecoveryMode(true);
@@ -365,6 +380,7 @@ contract CaliberTest is BaseTest {
 
     function test_cannotCallManagePositionWithoutInstruction() public {
         vm.expectRevert(ICaliber.InvalidInstruction.selector);
+        vm.prank(mechanic);
         caliber.managePosition(new ICaliber.Instruction[](0));
     }
 
@@ -744,7 +760,13 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPosition(posId).value, 0);
     }
 
-    function test_managePositionMechanicPermissions() public {
+    function test_managePositionOperatorPermissions() public {
+        // security council cannot call managePosition while recovery mode is off
+        ICaliber.Instruction[] memory dummyInstructions;
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.managePosition(dummyInstructions);
+
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 2);
 
@@ -755,133 +777,45 @@ contract CaliberTest is BaseTest {
 
         deal(address(baseToken), address(caliber), 2 * inputAmount, true);
 
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        Caliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
         instructions[1] = _build4626AccountingInstruction(address(caliber), posId, address(vault));
 
+        // create a new position with mechanic
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
         // turn on recovery mode
         vm.prank(dao);
         caliber.setRecoveryMode(true);
 
-        // check that mechanic cannot create a position
+        // check mechanic now cannot call manage position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 2);
-        assertEq(vault.balanceOf(address(caliber)), 0);
-        assertEq(caliber.getPosition(posId).value, 0);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.managePosition(dummyInstructions);
 
-        // turn off recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(false);
-
-        // check that mechanic can create a position
+        // check security council cannot increase position
         uint256 previewShares = vault.previewDeposit(inputAmount);
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
-
-        // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
-
-        // check that mechanic cannot increase position
-        vm.prank(mechanic);
+        vm.prank(securityCouncil);
         vm.expectRevert(ICaliber.RecoveryMode.selector);
         caliber.managePosition(instructions);
         assertEq(caliber.getPositionsLength(), 3);
         assertEq(vault.balanceOf(address(caliber)), previewShares);
         assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
 
-        // check that mechanic can decrease position
+        // check security council can decrease position
         uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 2;
-        vm.prank(mechanic);
+        vm.prank(securityCouncil);
         instructions[0] = _build4626RedeemInstruction(address(caliber), posId, address(vault), sharesToRedeem);
         caliber.managePosition(instructions);
         assertEq(caliber.getPositionsLength(), 3);
         assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
         assertEq(caliber.getPosition(posId).value, vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A);
 
-        // check that mechanic can close position
-        vm.prank(mechanic);
+        // check that security council can close position
         instructions[0] =
             _build4626RedeemInstruction(address(caliber), posId, address(vault), vault.balanceOf(address(caliber)));
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 2);
-        assertEq(vault.balanceOf(address(caliber)), 0);
-        assertEq(caliber.getPosition(posId).value, 0);
-    }
-
-    function test_managePositionUserPermissions() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), 2);
-
-        MockERC4626 vault = new MockERC4626("Test Vault", "TV", IERC20(baseToken), 0);
-
-        uint256 posId = 3;
-        uint256 inputAmount = 3e18;
-
-        deal(address(baseToken), address(caliber), 2 * inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), posId, address(vault));
-
-        // check that user cannot create a position
-        vm.expectRevert(ICaliber.NotMechanic.selector);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 2);
-        assertEq(vault.balanceOf(address(caliber)), 0);
-        assertEq(caliber.getPosition(posId).value, 0);
-
-        // mechanic creates position
-        uint256 previewShares = vault.previewDeposit(inputAmount);
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
-
-        // check that user cannot increase position
-        vm.expectRevert(ICaliber.NotMechanic.selector);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
-
-        // check that user cannot decrease position
-        uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 2;
-        instructions[0] = _build4626RedeemInstruction(address(caliber), posId, address(vault), sharesToRedeem);
-        vm.expectRevert(ICaliber.NotMechanic.selector);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
-
-        // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
-
-        // check that user cannot increase position
-        instructions[0] = _build4626DepositInstruction(address(caliber), posId, address(vault), inputAmount);
-        vm.expectRevert(ICaliber.NotMechanic.selector);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(posId).value, inputAmount * PRICE_B_A);
-
-        // check that user can decrease position
-        instructions[0] = _build4626RedeemInstruction(address(caliber), posId, address(vault), sharesToRedeem);
-        caliber.managePosition(instructions);
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
-        assertEq(caliber.getPosition(posId).value, vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A);
-
-        // check that user can close position
-        instructions[0] =
-            _build4626RedeemInstruction(address(caliber), posId, address(vault), vault.balanceOf(address(caliber)));
+        vm.prank(securityCouncil);
         caliber.managePosition(instructions);
         assertEq(caliber.getPositionsLength(), 2);
         assertEq(vault.balanceOf(address(caliber)), 0);
