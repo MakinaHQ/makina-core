@@ -1,17 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.27;
 
+import "forge-std/StdJson.sol";
 import "./Base.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
 abstract contract BaseTest is Base {
+    using stdJson for string;
+
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
     // string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
 
-    TestMode public mode = TestMode.UNIT;
+    bytes32 public constant MOCK_TOKENS_SALT = bytes32("0x123");
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
+
+    address public mockTokensDeployer;
+
+    string public allowedScriptsMerkleData;
+
+    TestMode public mode = TestMode.UNIT;
 
     MockERC20 accountingToken;
     uint256 accountingTokenPosID;
@@ -46,11 +55,15 @@ abstract contract BaseTest is Base {
     }
 
     function _testSetupAfter() public {
-        accountingToken = new MockERC20("AccountingToken", "ACT", 18);
+        mockTokensDeployer = makeAddr("MOCK_TOKENS_DEPLOYER");
+        accountingToken = new MockERC20("accountingToken", "ACT", 18);
         accountingTokenPosID = 1;
     }
 
-    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID) public returns (Caliber) {
+    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedScriptsMerkleRoot)
+        public
+        returns (Caliber)
+    {
         return Caliber(
             address(
                 new TransparentUpgradeableProxy(
@@ -62,6 +75,7 @@ abstract contract BaseTest is Base {
                         _accountingToken,
                         _accountingTokenPosID,
                         address(oracleRegistry),
+                        allowedScriptsMerkleRoot,
                         mechanic,
                         securityCouncil,
                         accessManager
@@ -69,5 +83,39 @@ abstract contract BaseTest is Base {
                 )
             )
         );
+    }
+
+    function _generateMerkleData(address _caliber, address _mockBaseToken, address _mockVault, uint256 _mockVaultPosId)
+        internal
+    {
+        string[] memory command = new string[](6);
+        command[0] = "yarn";
+        command[1] = "genMerkleData";
+        command[2] = vm.toString(_caliber);
+        command[3] = vm.toString(_mockBaseToken);
+        command[4] = vm.toString(_mockVault);
+        command[5] = vm.toString(_mockVaultPosId);
+        vm.ffi(command);
+        allowedScriptsMerkleData = _getMerkleData();
+    }
+
+    function _getMerkleData() internal view returns (string memory) {
+        return vm.readFile(string.concat(vm.projectRoot(), "/script/merkle/merkleTreeData.json"));
+    }
+
+    function _getAllowedScriptsMerkleRoot() internal view returns (bytes32) {
+        return allowedScriptsMerkleData.readBytes32(".root");
+    }
+
+    function _getDeposit4626ScriptProof() internal view returns (bytes32[] memory) {
+        return allowedScriptsMerkleData.readBytes32Array(".proofDepositMock4626");
+    }
+
+    function _getRedeem4626ScriptProof() internal view returns (bytes32[] memory) {
+        return allowedScriptsMerkleData.readBytes32Array(".proofRedeemMock4626");
+    }
+
+    function _getAccounting4626ScriptProof() internal view returns (bytes32[] memory) {
+        return allowedScriptsMerkleData.readBytes32Array(".proofAccountingMock4626");
     }
 }

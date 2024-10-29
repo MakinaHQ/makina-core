@@ -4,6 +4,7 @@ pragma solidity 0.8.27;
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
@@ -18,6 +19,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address _hubMachine;
         address _accountingToken;
         address _oracleRegistry;
+        bytes32 _allowedScriptsRoot;
         address _mechanic;
         address _securityCouncil;
         bool _recoveryMode;
@@ -47,6 +49,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address accountingToken_,
         uint256 acountingTokenPosID_,
         address oracleRegistry_,
+        bytes32 initialScriptsRoot_,
         address initialMechanic_,
         address initialSecurityCouncil_,
         address initialAuthority_
@@ -55,6 +58,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._hubMachine = hubMachine_;
         $._accountingToken = accountingToken_;
         $._oracleRegistry = oracleRegistry_;
+        $._allowedScriptsRoot = initialScriptsRoot_;
         $._mechanic = initialMechanic_;
         $._securityCouncil = initialSecurityCouncil_;
         _addBaseToken(accountingToken_, acountingTokenPosID_);
@@ -97,6 +101,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function recoveryMode() public view override returns (bool) {
         return _getCaliberStorage()._recoveryMode;
+    }
+
+    /// @inheritdoc ICaliber
+    function allowedScriptsRoot() public view returns (bytes32) {
+        return _getCaliberStorage()._allowedScriptsRoot;
     }
 
     /// @inheritdoc ICaliber
@@ -201,28 +210,30 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (instructions.length == 0) {
-            revert InvalidInstruction();
+            revert InvalidInstructionsLength();
         }
         Instruction calldata managingInstruction = instructions[0];
         if (managingInstruction.instructionType != InstructionType.MANAGE) {
-            revert InvalidInstruction();
+            revert InvalidInstructionType();
         }
+        _checkInstructionIsAllowed(managingInstruction);
+
         _execute(managingInstruction.commands, managingInstruction.state);
 
         int256 change;
         uint256 posId = managingInstruction.positionId;
         if ($._positionIdToBaseToken[posId] != address(0)) {
             if (instructions.length != 1) {
-                revert InvalidInstruction();
+                revert InvalidInstructionsLength();
             }
             (, change) = accountForBaseToken(posId);
         } else {
             if (instructions.length != 2) {
-                revert InvalidInstruction();
+                revert InvalidInstructionsLength();
             }
             Instruction calldata accountingInstruction = instructions[1];
             if (posId != accountingInstruction.positionId) {
-                revert InvalidInstruction();
+                revert UnmatchingInstructions();
             }
             (, change) = _accountForPosition(accountingInstruction);
         }
@@ -256,6 +267,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
         }
+    }
+
+    /// @inheritdoc ICaliber
+    function setAllowedScriptsRoot(bytes32 newMerkleRoot) external restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        $._allowedScriptsRoot = newMerkleRoot;
+        emit AllowedScriptsRootUpdated(newMerkleRoot);
     }
 
     /// @dev Adds a new base token to storage.
@@ -304,8 +322,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// Depending on last and current value, the position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
         if (instruction.instructionType != InstructionType.ACCOUNTING) {
-            revert InvalidInstruction();
+            revert InvalidInstructionType();
         }
+        _checkInstructionIsAllowed(instruction);
         bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
         (address[] memory assets, uint256[] memory amounts) = _decodeAccountingOutputState(returnedState);
 
@@ -384,5 +403,79 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+    }
+
+    /// @dev Checks if the script is enabled and the state is valid for a given position.
+    /// @param instruction The instruction to check.
+    function _checkInstructionIsAllowed(Instruction calldata instruction) internal view {
+        // all commands are concatenated and hashed
+        bytes32 commandsHash = keccak256(abi.encodePacked(instruction.commands));
+
+        // states are hashed based on the bitmap
+        bytes32 stateHash = _getStateHash(instruction.state, instruction.stateBitmap);
+
+        if (
+            !_verifyInstructionProof(
+                instruction.merkleProof,
+                commandsHash,
+                stateHash,
+                instruction.stateBitmap,
+                instruction.positionId,
+                instruction.instructionType
+            )
+        ) {
+            revert InvalidInstructionProof();
+        }
+    }
+
+    /// @dev Checks if a given proof is valid for a given instruction.
+    /// @param proof The proof to check.
+    /// @param commandsHash The hash of the commands.
+    /// @param stateHash The hash of the state.
+    /// @param stateBitmap The bitmap of the state.
+    /// @param posId The position ID.
+    /// @param instructionType The type of the instruction.
+    /// @return boolean True if the proof is valid, false otherwise.
+    function _verifyInstructionProof(
+        bytes32[] memory proof,
+        bytes32 commandsHash,
+        bytes32 stateHash,
+        uint128 stateBitmap,
+        uint256 posId,
+        InstructionType instructionType
+    ) internal view returns (bool) {
+        CaliberStorage storage $ = _getCaliberStorage();
+        // the state transition hash is the hash of the scripts(commands), state, bitmap, position ID and instruction type
+        bytes32 stateTransitionHash =
+            keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, instructionType));
+        return MerkleProof.verify(proof, $._allowedScriptsRoot, keccak256(abi.encode(stateTransitionHash)));
+    }
+
+    /// @dev Utility method to get the hash of the state based on bitmap.
+    /// This allows the script to have both fixed and variable parameters.
+    /// @param state The state to hash.
+    /// @param stateBitmap The bitmap of the state.
+    /// @return hash of the state.
+    function _getStateHash(bytes[] memory state, uint128 stateBitmap) internal pure returns (bytes32) {
+        if (stateBitmap == uint128(0)) {
+            return bytes32(0);
+        }
+
+        uint8 i;
+        bytes memory hashInput;
+
+        // loop through the state and hash the values based on the bitmap
+        // the bitmap encodes the index of the state that should be hashed
+        for (i; i < state.length;) {
+            // if the bit is set as 1, hash the state
+            if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
+                hashInput = bytes.concat(hashInput, state[i]);
+            }
+
+            unchecked {
+                ++i;
+            }
+        }
+        return keccak256(hashInput);
     }
 }

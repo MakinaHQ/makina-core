@@ -4,7 +4,10 @@ pragma solidity 0.8.27;
 interface ICaliber {
     error InvalidAccounting();
     error InvalidInputLength();
-    error InvalidInstruction();
+    error InvalidInstructionsLength();
+    error InvalidInstructionProof();
+    error InvalidInstructionType();
+    error UnmatchingInstructions();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
     error BaseTokenAlreadyExists();
@@ -20,6 +23,7 @@ interface ICaliber {
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
+    event AllowedScriptsRootUpdated(bytes32 indexed newMerkleRoot);
 
     enum InstructionType {
         MANAGE,
@@ -32,7 +36,7 @@ interface ICaliber {
         InstructionType instructionType;
         bytes32[] commands;
         bytes[] state;
-        uint128 bitMap;
+        uint128 stateBitmap;
         bytes32[] merkleProof;
     }
 
@@ -59,6 +63,9 @@ interface ICaliber {
 
     /// @notice Is the caliber in recovery mode
     function recoveryMode() external view returns (bool);
+
+    /// @notice Root of the Merkle tree containing allowed scripts
+    function allowedScriptsRoot() external view returns (bytes32);
 
     /// @notice Length of the position IDs array
     function getPositionsLength() external view returns (uint256);
@@ -114,4 +121,8 @@ interface ICaliber {
     /// @notice Set the recovery mode
     /// @param enabled True to enable recovery mode, false to disable
     function setRecoveryMode(bool enabled) external;
+
+    /// @dev Set the Merkle root used to validate allowed scripts
+    /// @param newMerkleRoot The root of the Merkle tree containing allowed scripts
+    function setAllowedScriptsRoot(bytes32 newMerkleRoot) external;
 }
