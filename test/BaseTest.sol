@@ -18,7 +18,7 @@ abstract contract BaseTest is Base {
 
     address public mockTokensDeployer;
 
-    string public allowedScriptsMerkleData;
+    string public allowedInstrMerkleData;
 
     TestMode public mode = TestMode.UNIT;
 
@@ -60,7 +60,7 @@ abstract contract BaseTest is Base {
         accountingTokenPosID = 1;
     }
 
-    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedScriptsMerkleRoot)
+    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedInstrMerkleRoot)
         public
         returns (Caliber)
     {
@@ -75,7 +75,7 @@ abstract contract BaseTest is Base {
                         _accountingToken,
                         _accountingTokenPosID,
                         address(oracleRegistry),
-                        allowedScriptsMerkleRoot,
+                        allowedInstrMerkleRoot,
                         mechanic,
                         securityCouncil,
                         accessManager
@@ -96,26 +96,26 @@ abstract contract BaseTest is Base {
         command[4] = vm.toString(_mockVault);
         command[5] = vm.toString(_mockVaultPosId);
         vm.ffi(command);
-        allowedScriptsMerkleData = _getMerkleData();
+        allowedInstrMerkleData = _getMerkleData();
     }
 
     function _getMerkleData() internal view returns (string memory) {
         return vm.readFile(string.concat(vm.projectRoot(), "/script/merkle/merkleTreeData.json"));
     }
 
-    function _getAllowedScriptsMerkleRoot() internal view returns (bytes32) {
-        return allowedScriptsMerkleData.readBytes32(".root");
+    function _getAllowedInstrMerkleRoot() internal view returns (bytes32) {
+        return allowedInstrMerkleData.readBytes32(".root");
     }
 
-    function _getDeposit4626ScriptProof() internal view returns (bytes32[] memory) {
-        return allowedScriptsMerkleData.readBytes32Array(".proofDepositMock4626");
+    function _getDeposit4626InstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofDepositMock4626");
     }
 
-    function _getRedeem4626ScriptProof() internal view returns (bytes32[] memory) {
-        return allowedScriptsMerkleData.readBytes32Array(".proofRedeemMock4626");
+    function _getRedeem4626InstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofRedeemMock4626");
     }
 
-    function _getAccounting4626ScriptProof() internal view returns (bytes32[] memory) {
-        return allowedScriptsMerkleData.readBytes32Array(".proofAccountingMock4626");
+    function _getAccounting4626InstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofAccountingMock4626");
     }
 }

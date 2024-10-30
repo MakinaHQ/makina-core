@@ -21,9 +21,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address _oracleRegistry;
         address _mechanic;
         address _securityCouncil;
-        bytes32 _allowedScriptsRoot;
+        bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
-        bytes32 _pendingAllowedScriptsRoot;
+        bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
@@ -37,7 +37,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
-    uint256 private constant SCRIPT_ROOT_UPDATE_MIN_TIMELOCK = 1 hours;
+    uint256 private constant INSTR_ROOT_UPDATE_MIN_TIMELOCK = 1 hours;
 
     function _getCaliberStorage() private pure returns (CaliberStorage storage $) {
         assembly {
@@ -54,7 +54,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address accountingToken_,
         uint256 acountingTokenPosID_,
         address oracleRegistry_,
-        bytes32 initialScriptsRoot_,
+        bytes32 initialAllowedInstrRoot_,
         address initialMechanic_,
         address initialSecurityCouncil_,
         address initialAuthority_
@@ -63,8 +63,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._hubMachine = hubMachine_;
         $._accountingToken = accountingToken_;
         $._oracleRegistry = oracleRegistry_;
-        $._allowedScriptsRoot = initialScriptsRoot_;
-        $._timelockDuration = SCRIPT_ROOT_UPDATE_MIN_TIMELOCK;
+        $._allowedInstrRoot = initialAllowedInstrRoot_;
+        $._timelockDuration = INSTR_ROOT_UPDATE_MIN_TIMELOCK;
         $._mechanic = initialMechanic_;
         $._securityCouncil = initialSecurityCouncil_;
         _addBaseToken(accountingToken_, acountingTokenPosID_);
@@ -110,11 +110,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function allowedScriptsRoot() public view override returns (bytes32) {
+    function allowedInstrRoot() public view override returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
         return ($._pendingTimelockExpiry == 0 || block.timestamp < $._pendingTimelockExpiry)
-            ? $._allowedScriptsRoot
-            : $._pendingAllowedScriptsRoot;
+            ? $._allowedInstrRoot
+            : $._pendingAllowedInstrRoot;
     }
 
     /// @inheritdoc ICaliber
@@ -123,11 +123,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function pendingAllowedScriptsRoot() public view override returns (bytes32) {
+    function pendingAllowedInstrRoot() public view override returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
         return ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
             ? bytes32(0)
-            : $._pendingAllowedScriptsRoot;
+            : $._pendingAllowedInstrRoot;
     }
 
     /// @inheritdoc ICaliber
@@ -300,7 +300,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function setTimelockDuration(uint256 newTimelockDuration) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (newTimelockDuration < SCRIPT_ROOT_UPDATE_MIN_TIMELOCK) {
+        if (newTimelockDuration < INSTR_ROOT_UPDATE_MIN_TIMELOCK) {
             revert TimelockDurationTooShort();
         }
         emit TimelockDurationChanged($._timelockDuration, newTimelockDuration);
@@ -308,15 +308,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function scheduleAllowedScriptsRootUpdate(bytes32 newMerkleRoot) external override restricted {
+    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        _updateAllowedScriptRoot();
+        _updateAllowedInstrRoot();
         if ($._pendingTimelockExpiry != 0) {
             revert ActiveUpdatePending();
         }
-        $._pendingAllowedScriptsRoot = newMerkleRoot;
+        $._pendingAllowedInstrRoot = newMerkleRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
-        emit NewAllowedScriptsRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+        emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
     }
 
     /// @dev Adds a new base token to storage.
@@ -448,7 +448,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 
-    /// @dev Checks if the script is enabled and the state is valid for a given position.
+    /// @dev Checks if the instruction is allowed for a given position.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
         // all commands are concatenated and hashed
@@ -487,14 +487,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 posId,
         InstructionType instructionType
     ) internal returns (bool) {
-        // the state transition hash is the hash of the scripts(commands), state, bitmap, position ID and instruction type
+        // the state transition hash is the hash of the commands, state, bitmap, position ID and instruction type
         bytes32 stateTransitionHash =
             keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, instructionType));
-        return MerkleProof.verify(proof, _updateAllowedScriptRoot(), keccak256(abi.encode(stateTransitionHash)));
+        return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
     }
 
     /// @dev Utility method to get the hash of the state based on bitmap.
-    /// This allows the script to have both fixed and variable parameters.
+    /// This allows a weiroll script to have both fixed and variable parameters.
     /// @param state The state to hash.
     /// @param stateBitmap The bitmap of the state.
     /// @return hash of the state.
@@ -521,13 +521,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return keccak256(hashInput);
     }
 
-    function _updateAllowedScriptRoot() internal returns (bytes32) {
+    /// @dev Updates the allowed instructions root if a pending update is scheduled and the timelock has expired.
+    function _updateAllowedInstrRoot() internal returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._pendingTimelockExpiry != 0 && block.timestamp >= $._pendingTimelockExpiry) {
-            $._allowedScriptsRoot = $._pendingAllowedScriptsRoot;
-            delete $._pendingAllowedScriptsRoot;
+            $._allowedInstrRoot = $._pendingAllowedInstrRoot;
+            delete $._pendingAllowedInstrRoot;
             delete $._pendingTimelockExpiry;
         }
-        return $._allowedScriptsRoot;
+        return $._allowedInstrRoot;
     }
 }

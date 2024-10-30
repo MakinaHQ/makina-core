@@ -4,14 +4,14 @@ import fs from "fs";
 
 // arguments to pass : caliberAddress mockBaseTokenAddress mockERC4626Address mockERC4626PosId
 
-// scripts format: [commandsHash, stateHash, stateBitmap, positionID, instructionType]
+// instructions format: [commandsHash, stateHash, stateBitmap, positionID, instructionType]
 
 const caliberAddr = process.argv[2];
 const mockBaseTokenAddr = process.argv[3];
 const mockERC4626Addr = process.argv[4];
 const mockERC4626PosId = process.argv[5];
 
-const depositMock4626Script = [
+const depositMock4626Instruction = [
   keccak256EncodePacked([
     ethers.concat(["0x095ea7b3010001ffffffffff", mockBaseTokenAddr]),
     ethers.concat(["0x6e553f65010102ffffffffff", mockERC4626Addr]),
@@ -25,7 +25,7 @@ const depositMock4626Script = [
   "0",
 ];
 
-const redeemMock4626Script = [
+const redeemMock4626Instruction = [
   keccak256EncodePacked([
     ethers.concat(["0xba08765201000102ffffffff", mockERC4626Addr]),
   ]),
@@ -38,7 +38,7 @@ const redeemMock4626Script = [
   "0",
 ];
 
-const accountingMock4626Script = [
+const accountingMock4626Instruction = [
   keccak256EncodePacked([
     ethers.concat(["0x38d52e0f02ffffffffffff00", mockERC4626Addr]),
     ethers.concat(["0x70a082310201ffffffffff01", mockERC4626Addr]),
@@ -51,9 +51,9 @@ const accountingMock4626Script = [
 ];
 
 const values = [
-  depositMock4626Script,
-  redeemMock4626Script,
-  accountingMock4626Script,
+  depositMock4626Instruction,
+  redeemMock4626Instruction,
+  accountingMock4626Instruction,
 ];
 
 const tree = StandardMerkleTree.of(values, [

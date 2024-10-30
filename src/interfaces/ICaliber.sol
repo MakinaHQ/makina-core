@@ -25,7 +25,7 @@ interface ICaliber {
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
-    event NewAllowedScriptsRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
+    event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     enum InstructionType {
@@ -67,16 +67,16 @@ interface ICaliber {
     /// @notice Is the caliber in recovery mode
     function recoveryMode() external view returns (bool);
 
-    /// @notice Root of the Merkle tree containing allowed scripts
-    function allowedScriptsRoot() external view returns (bytes32);
+    /// @notice Root of the Merkle tree containing allowed instructions
+    function allowedInstrRoot() external view returns (bytes32);
 
-    /// @notice Duration of the allowedScriptsRoot update timelock
+    /// @notice Duration of the allowedInstrRoot update timelock
     function timelockDuration() external view returns (uint256);
 
-    /// @notice Value of the pending allowedScriptsRoot, if any
-    function pendingAllowedScriptsRoot() external view returns (bytes32);
+    /// @notice Value of the pending allowedInstrRoot, if any
+    function pendingAllowedInstrRoot() external view returns (bytes32);
 
-    /// @notice Effective time of the last scheduled allowedScriptsRoot update
+    /// @notice Effective time of the last scheduled allowedInstrRoot update
     function pendingTimelockExpiry() external view returns (uint256);
 
     /// @notice Length of the position IDs array
@@ -134,13 +134,13 @@ interface ICaliber {
     /// @param enabled True to enable recovery mode, false to disable
     function setRecoveryMode(bool enabled) external;
 
-    /// @notice Set the duration of the allowedScriptsRoot update timelock
+    /// @notice Set the duration of the allowedInstrRoot update timelock
     /// @param newTimelockDuration New duration in seconds
     function setTimelockDuration(uint256 newTimelockDuration) external;
 
-    /// @notice Schedule an update of the root of the Merkle tree containing allowed scripts
+    /// @notice Schedule an update of the root of the Merkle tree containing allowed instructions
     /// @dev The update will take effect after the timelock duration stored in the contract
     /// at the time of the call.
-    /// @param newMerkleRoot Root of the Merkle tree containing allowed scripts
-    function scheduleAllowedScriptsRootUpdate(bytes32 newMerkleRoot) external;
+    /// @param newMerkleRoot Root of the Merkle tree containing allowed instructions
+    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
 }
