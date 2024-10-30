@@ -15,7 +15,9 @@ interface ICaliber {
     error PositionDoesNotExist();
     error BaseTokenPosition();
     error RecoveryMode();
+    error TimelockDurationTooShort();
     error UnauthorizedOperator();
+    error ActiveUpdatePending();
     error ZeroPositionID();
 
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
@@ -23,7 +25,8 @@ interface ICaliber {
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
-    event AllowedScriptsRootUpdated(bytes32 indexed newMerkleRoot);
+    event NewAllowedScriptsRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
+    event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     enum InstructionType {
         MANAGE,
@@ -66,6 +69,15 @@ interface ICaliber {
 
     /// @notice Root of the Merkle tree containing allowed scripts
     function allowedScriptsRoot() external view returns (bytes32);
+
+    /// @notice Duration of the allowedScriptsRoot update timelock
+    function timelockDuration() external view returns (uint256);
+
+    /// @notice Value of the pending allowedScriptsRoot, if any
+    function pendingAllowedScriptsRoot() external view returns (bytes32);
+
+    /// @notice Effective time of the last scheduled allowedScriptsRoot update
+    function pendingTimelockExpiry() external view returns (uint256);
 
     /// @notice Length of the position IDs array
     function getPositionsLength() external view returns (uint256);
@@ -122,7 +134,13 @@ interface ICaliber {
     /// @param enabled True to enable recovery mode, false to disable
     function setRecoveryMode(bool enabled) external;
 
-    /// @dev Set the Merkle root used to validate allowed scripts
-    /// @param newMerkleRoot The root of the Merkle tree containing allowed scripts
-    function setAllowedScriptsRoot(bytes32 newMerkleRoot) external;
+    /// @notice Set the duration of the allowedScriptsRoot update timelock
+    /// @param newTimelockDuration New duration in seconds
+    function setTimelockDuration(uint256 newTimelockDuration) external;
+
+    /// @notice Schedule an update of the root of the Merkle tree containing allowed scripts
+    /// @dev The update will take effect after the timelock duration stored in the contract
+    /// at the time of the call.
+    /// @param newMerkleRoot Root of the Merkle tree containing allowed scripts
+    function scheduleAllowedScriptsRootUpdate(bytes32 newMerkleRoot) external;
 }

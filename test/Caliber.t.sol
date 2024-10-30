@@ -17,7 +17,7 @@ contract CaliberTest is BaseTest {
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
-    event AllowedScriptsRootUpdated(bytes32 indexed newMerkleRoot);
+    event NewAllowedScriptsRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
@@ -45,27 +45,34 @@ contract CaliberTest is BaseTest {
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+            address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         oracleRegistry.setTokenFeedData(
-            address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+            address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID, bytes32(""));
+        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID, bytes32(0));
 
         // generate merkle tree for scripts involving mock base token and vault
         _generateMerkleData(address(caliber), address(baseToken), address(vault), VAULT_POS_ID);
+
         vm.prank(dao);
-        caliber.setAllowedScriptsRoot(_getAllowedScriptsMerkleRoot());
+        caliber.scheduleAllowedScriptsRootUpdate(_getAllowedScriptsMerkleRoot());
+        skip(caliber.timelockDuration() + 1);
     }
 
     function test_caliber_getters() public view {
         assertEq(caliber.hubMachine(), address(0));
         assertEq(caliber.mechanic(), mechanic);
+        assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.oracleRegistry(), address(oracleRegistry));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.recoveryMode(), false);
+        assertEq(caliber.allowedScriptsRoot(), _getAllowedScriptsMerkleRoot());
+        assertEq(caliber.timelockDuration(), 1 hours);
+        assertEq(caliber.pendingAllowedScriptsRoot(), bytes32(0));
+        assertEq(caliber.pendingTimelockExpiry(), 0);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 1);
     }
@@ -381,18 +388,86 @@ contract CaliberTest is BaseTest {
         assertTrue(caliber.recoveryMode());
     }
 
-    function test_cannotSetAllowedScriptRootWithoutRole() public {
+    function test_cannotSetTimelockDurationWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.setAllowedScriptsRoot(bytes32(""));
+        caliber.setTimelockDuration(2 hours);
     }
 
-    function test_setAllowedScriptRoot() public {
-        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit AllowedScriptsRootUpdated(newRoot);
+    function test_cannotSetTimelockDurationBelowMinimum() public {
+        vm.expectRevert(abi.encodeWithSelector(ICaliber.TimelockDurationTooShort.selector));
         vm.prank(dao);
-        caliber.setAllowedScriptsRoot(newRoot);
+        caliber.setTimelockDuration(30 minutes);
+    }
+
+    function test_setTimelockDuration() public {
+        vm.prank(dao);
+        caliber.setTimelockDuration(2 hours);
+        assertEq(caliber.timelockDuration(), 2 hours);
+    }
+
+    function test_cannotScheduleRootUpdateWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.scheduleAllowedScriptsRootUpdate(bytes32(0));
+    }
+
+    function test_scheduleAllowedScriptRootUpdate() public {
+        bytes32 currentRoot = _getAllowedScriptsMerkleRoot();
+
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit NewAllowedScriptsRootScheduled(newRoot, effectiveUpdateTime);
+        vm.prank(dao);
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
+
+        assertEq(caliber.allowedScriptsRoot(), currentRoot);
+        assertEq(caliber.pendingAllowedScriptsRoot(), newRoot);
+        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
+
+        vm.warp(effectiveUpdateTime);
+
         assertEq(caliber.allowedScriptsRoot(), newRoot);
+        assertEq(caliber.pendingAllowedScriptsRoot(), bytes32(0));
+        assertEq(caliber.pendingTimelockExpiry(), 0);
+    }
+
+    function test_timelockDurationChangeDoesNotAffectPendingUpdate() public {
+        assertEq(caliber.timelockDuration(), 1 hours);
+
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.startPrank(dao);
+
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
+        caliber.setTimelockDuration(2 hours);
+
+        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
+
+        vm.warp(effectiveUpdateTime);
+
+        assertEq(caliber.allowedScriptsRoot(), newRoot);
+        assertEq(caliber.pendingAllowedScriptsRoot(), bytes32(0));
+        assertEq(caliber.pendingTimelockExpiry(), 0);
+
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
+    }
+
+    function test_cannotScheduleRootUpdateWithActivePendingUpdate() public {
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.startPrank(dao);
+
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
+
+        vm.expectRevert(ICaliber.ActiveUpdatePending.selector);
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
+
+        vm.warp(effectiveUpdateTime);
+
+        caliber.scheduleAllowedScriptsRootUpdate(newRoot);
     }
 
     function test_cannotCallManagePositionWithoutInstruction() public {
@@ -776,6 +851,52 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
     }
 
+    function test_cannotManagePositionWithWrongRoot() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 3 * inputAmount, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // schedule root update with a wrong root
+        vm.prank(dao);
+        caliber.scheduleAllowedScriptsRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
+
+        // instruction can still be executed while the update is pending
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        skip(caliber.timelockDuration());
+
+        // instruction cannot be executed after the update takes effect
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.managePosition(instructions);
+
+        // schedule root update with the correct root
+        vm.prank(dao);
+        caliber.scheduleAllowedScriptsRootUpdate(_getAllowedScriptsMerkleRoot());
+
+        // instruction cannot be executed while the update is pending
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.managePosition(instructions);
+
+        skip(caliber.timelockDuration());
+
+        // instruction can be executed after the update takes effect
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+    }
+
     function test_managePositionOperatorPermissions() public {
         // security council cannot call managePosition while recovery mode is off
         ICaliber.Instruction[] memory dummyInstructions;
@@ -1000,6 +1121,48 @@ contract CaliberTest is BaseTest {
         caliber.setPositionAsBaseToken(VAULT_POS_ID, address(vault));
 
         vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        caliber.accountForPosition(instructions[1]);
+    }
+
+    function test_cannotAccountForPositionWithWrongRoot() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 3e18, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // schedule root update with a wrong root
+        vm.prank(dao);
+        caliber.scheduleAllowedScriptsRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
+
+        // accounting can still be executed while the update is pending
+        caliber.accountForPosition(instructions[1]);
+
+        skip(caliber.timelockDuration());
+
+        // accounting cannot be executed after the update takes effect
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.accountForPosition(instructions[1]);
+
+        // schedule root update with the correct root
+        vm.prank(dao);
+        caliber.scheduleAllowedScriptsRootUpdate(_getAllowedScriptsMerkleRoot());
+
+        // accounting cannot be executed while the update is pending
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.accountForPosition(instructions[1]);
+
+        skip(caliber.timelockDuration());
+
+        // accounting can be executed after the update takes effect
         caliber.accountForPosition(instructions[1]);
     }
 
