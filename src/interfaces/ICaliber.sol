@@ -2,6 +2,8 @@
 pragma solidity 0.8.27;
 
 interface ICaliber {
+    error AccountingTokenPosition();
+    error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidInputLength();
     error InvalidInstructionsLength();
@@ -13,7 +15,6 @@ interface ICaliber {
     error BaseTokenAlreadyExists();
     error PositionAlreadyExists();
     error PositionDoesNotExist();
-    error BaseTokenPosition();
     error RecoveryMode();
     error TimelockDurationTooShort();
     error UnauthorizedOperator();

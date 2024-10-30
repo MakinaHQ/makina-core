@@ -191,6 +191,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if ($._positionIdToBaseToken[posId] == address(0)) {
             revert NotBaseTokenPosition();
         }
+        if ($._positionIdToBaseToken[posId] == $._accountingToken) {
+            revert AccountingTokenPosition();
+        }
         accountForBaseToken(posId);
         delete $._baseTokenToPositionId[$._positionIdToBaseToken[posId]];
         delete $._positionIdToBaseToken[posId];

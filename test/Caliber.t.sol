@@ -225,6 +225,12 @@ contract CaliberTest is BaseTest {
         caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
     }
 
+    function test_cannotSetAccountingTokenPositionAsNonBaseToken() public {
+        vm.expectRevert(ICaliber.AccountingTokenPosition.selector);
+        vm.prank(dao);
+        caliber.setPositionAsNonBaseToken(accountingTokenPosID);
+    }
+
     function test_cannotSetPositionAsNonBaseTokenWithoutExistingPosition() public {
         vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
         vm.prank(dao);
