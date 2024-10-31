@@ -164,47 +164,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function setPositionAsBaseToken(uint256 posId, address token) external restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._positionIds.contains(posId)) {
-            revert PositionDoesNotExist();
-        }
-        Position storage pos = $._positionById[posId];
-        if ($._positionIdToBaseToken[posId] != address(0)) {
-            revert BaseTokenPosition();
-        }
-        if ($._baseTokenToPositionId[token] != 0) {
-            revert BaseTokenAlreadyExists();
-        }
-        $._baseTokenToPositionId[token] = posId;
-        $._positionIdToBaseToken[posId] = token;
-        pos.isBaseToken = true;
-    }
-
-    /// @inheritdoc ICaliber
-    function setPositionAsNonBaseToken(uint256 posId) external restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._positionIds.contains(posId)) {
-            revert PositionDoesNotExist();
-        }
-        Position storage pos = $._positionById[posId];
-        if ($._positionIdToBaseToken[posId] == address(0)) {
-            revert NotBaseTokenPosition();
-        }
-        if ($._positionIdToBaseToken[posId] == $._accountingToken) {
-            revert AccountingTokenPosition();
-        }
-        accountForBaseToken(posId);
-        delete $._baseTokenToPositionId[$._positionIdToBaseToken[posId]];
-        delete $._positionIdToBaseToken[posId];
-        if (pos.value == 0) {
-            _removePosition(posId);
-        } else {
-            pos.isBaseToken = false;
-        }
-    }
-
-    /// @inheritdoc ICaliber
     function accountForBaseToken(uint256 posId) public returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         Position storage pos = $._positionById[posId];
@@ -242,36 +201,27 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     function managePosition(Instruction[] calldata instructions) public override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
 
-        if (instructions.length == 0) {
+        if (instructions.length != 2) {
             revert InvalidInstructionsLength();
         }
         Instruction calldata managingInstruction = instructions[0];
+        Instruction calldata accountingInstruction = instructions[1];
+
+        uint256 posId = managingInstruction.positionId;
+        if (posId != accountingInstruction.positionId) {
+            revert UnmatchingInstructions();
+        }
         if (managingInstruction.instructionType != InstructionType.MANAGE) {
             revert InvalidInstructionType();
         }
-        _checkInstructionIsAllowed(managingInstruction);
-
-        _execute(managingInstruction.commands, managingInstruction.state);
-
-        int256 change;
-        uint256 posId = managingInstruction.positionId;
         if ($._positionIdToBaseToken[posId] != address(0)) {
-            if (instructions.length != 1) {
-                revert InvalidInstructionsLength();
-            }
-            (, change) = accountForBaseToken(posId);
-        } else {
-            if (instructions.length != 2) {
-                revert InvalidInstructionsLength();
-            }
-            Instruction calldata accountingInstruction = instructions[1];
-            if (posId != accountingInstruction.positionId) {
-                revert UnmatchingInstructions();
-            }
-            (, change) = _accountForPosition(accountingInstruction);
+            revert BaseTokenPosition();
         }
 
-        // reverts if the change is positive and recovery mode is active
+        _checkInstructionIsAllowed(managingInstruction);
+        _execute(managingInstruction.commands, managingInstruction.state);
+        (, int256 change) = _accountForPosition(accountingInstruction);
+
         if ($._recoveryMode && change >= 0) {
             revert RecoveryMode();
         }
@@ -354,16 +304,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         emit PositionCreated(posId);
     }
 
-    /// @dev Removes a position from storage, assuming it currently exists.
-    /// Does not remove entries from the _baseTokenToPositionId and _positionIdToBaseToken mappings,
-    /// if such entries exist for the given position.
-    function _removePosition(uint256 posId) internal {
-        CaliberStorage storage $ = _getCaliberStorage();
-        $._positionIds.remove(posId);
-        delete $._positionById[posId];
-        emit PositionClosed(posId);
-    }
-
     /// @dev Computes the accounting value of a non-base-token position
     /// Depending on last and current value, the position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
@@ -392,7 +332,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         if (lastValue > 0 && currentValue == 0) {
-            _removePosition(posId);
+            $._positionIds.remove(posId);
+            delete $._positionById[posId];
+            emit PositionClosed(posId);
         } else if (currentValue > 0) {
             pos.value = currentValue;
             pos.lastAccountingTime = block.timestamp;

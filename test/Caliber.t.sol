@@ -135,140 +135,6 @@ contract CaliberTest is BaseTest {
         caliber.addBaseToken(address(baseToken2), BASE_TOKEN_POS_ID + 1);
     }
 
-    function test_cannotSetPositionAsBaseTokenWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.setPositionAsBaseToken(BASE_TOKEN_POS_ID, address(baseToken));
-    }
-
-    function test_cannotSetPositionAsBaseTokenWithoutExistingPosition() public {
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
-        vm.prank(dao);
-        caliber.setPositionAsBaseToken(BASE_TOKEN_POS_ID, address(baseToken));
-    }
-
-    function test_cannotSetPositionAsBaseTokenWithAlreadyBaseTokenPosition() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        MockERC20 baseToken2 = new MockERC20("Base Token 2", "BT2", 18);
-
-        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
-        vm.prank(dao);
-        caliber.setPositionAsBaseToken(BASE_TOKEN_POS_ID, address(baseToken2));
-    }
-
-    function test_cannotSetPositionAsBaseTokenWithExistingBaseToken() public {
-        vm.startPrank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        oracleRegistry.setTokenFeedData(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
-        caliber.addBaseToken(address(vault), 4);
-        vm.stopPrank();
-
-        uint256 inputAmount = 3e18;
-
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-
-        // create a new position
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        vm.expectRevert(ICaliber.BaseTokenAlreadyExists.selector);
-        vm.prank(dao);
-        caliber.setPositionAsBaseToken(VAULT_POS_ID, address(baseToken));
-    }
-
-    function test_setPositionAsBaseToken() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        uint256 inputAmount = 3e18;
-
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-
-        // create a new position
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        assertFalse(caliber.isBaseToken(address(vault)));
-        assertEq(caliber.getPositionsLength(), 3);
-
-        vm.prank(dao);
-        caliber.setPositionAsBaseToken(VAULT_POS_ID, address(vault));
-
-        assertTrue(caliber.isBaseToken(address(vault)));
-        assertEq(caliber.getPositionsLength(), 3);
-    }
-
-    function test_cannotSetPositionAsNonBaseTokenWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-    }
-
-    function test_cannotSetPositionAsNonBaseTokenIfAlreadyNonBaseToken() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        deal(address(baseToken), address(caliber), 3e18, true);
-
-        vm.startPrank(dao);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-        vm.expectRevert(ICaliber.NotBaseTokenPosition.selector);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-    }
-
-    function test_cannotSetAccountingTokenPositionAsNonBaseToken() public {
-        vm.expectRevert(ICaliber.AccountingTokenPosition.selector);
-        vm.prank(dao);
-        caliber.setPositionAsNonBaseToken(accountingTokenPosID);
-    }
-
-    function test_cannotSetPositionAsNonBaseTokenWithoutExistingPosition() public {
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
-        vm.prank(dao);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-    }
-
-    function test_setPositionAsNonBaseTokenEmpty() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        assertTrue(caliber.isBaseToken(address(baseToken)));
-        assertEq(caliber.getPositionsLength(), 2);
-
-        vm.prank(dao);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-
-        // the position should be closed
-        assertFalse(caliber.isBaseToken(address(baseToken)));
-        assertEq(caliber.getPositionsLength(), 1);
-    }
-
-    function test_setPositionAsNonBaseTokenNonEmpty() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        deal(address(baseToken), address(caliber), 1e18, true);
-
-        assertTrue(caliber.isBaseToken(address(baseToken)));
-        assertEq(caliber.getPositionsLength(), 2);
-
-        vm.prank(dao);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-
-        // the position should still be there
-        assertFalse(caliber.isBaseToken(address(baseToken)));
-        assertEq(caliber.getPositionsLength(), 2);
-    }
-
     function test_accountForATPosition() public {
         assertEq(caliber.getPosition(1).value, 0);
         assertEq(caliber.getPosition(1).lastAccountingTime, 0);
@@ -482,36 +348,24 @@ contract CaliberTest is BaseTest {
         caliber.managePosition(new ICaliber.Instruction[](0));
     }
 
-    function test_cannotCallManageNonBaseTokenPositionWithInvalidInstruction() public {
+    function test_cannotCallManagePositionWithInvalidInstruction() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
         vm.startPrank(mechanic);
 
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](1);
-
-        // first instruction is not a manage instruction
-        instructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
-        caliber.managePosition(instructions);
-
-        // missing second instruction
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        // no instructions
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](0);
         vm.expectRevert(ICaliber.InvalidInstructionsLength.selector);
         caliber.managePosition(instructions);
 
-        // second instruction is not an accounting instruction
-        instructions = new ICaliber.Instruction[](2);
+        // missing second instruction
+        instructions = new ICaliber.Instruction[](1);
         instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = instructions[0];
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
-        caliber.managePosition(instructions);
-
-        // instructions have different positionId
-        instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
-        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        vm.expectRevert(ICaliber.InvalidInstructionsLength.selector);
         caliber.managePosition(instructions);
 
         // more than 2 instructions
@@ -521,31 +375,30 @@ contract CaliberTest is BaseTest {
         instructions[2] = instructions[1];
         vm.expectRevert(ICaliber.InvalidInstructionsLength.selector);
         caliber.managePosition(instructions);
-    }
 
-    function test_cannotCallManageBaseTokenPositionWithInvalidInstruction() public {
-        uint256 inputAmount = 3e18;
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        // set up feed data for the vault, considering 1:1 ratio with its underlying, and add vault as a base token
-        vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
-        caliber.addBaseToken(address(vault), VAULT_POS_ID);
-        vm.stopPrank();
-
-        vm.startPrank(mechanic);
+        // instructions have different positionId
+        instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
+        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        caliber.managePosition(instructions);
 
         // first instruction is not a manage instruction
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](1);
         instructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.expectRevert(ICaliber.InvalidInstructionType.selector);
         caliber.managePosition(instructions);
 
-        // more than 1 instruction
-        instructions = new ICaliber.Instruction[](2);
+        // position is a base token position
+        instructions[0] = _build4626DepositInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault));
+        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        caliber.managePosition(instructions);
+
+        // second instruction is not an accounting instruction
         instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        vm.expectRevert(ICaliber.InvalidInstructionsLength.selector);
+        instructions[1] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
         caliber.managePosition(instructions);
     }
 
@@ -749,114 +602,6 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
     }
 
-    function test_managePosition_baseToken_4626_increase() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        uint256 inputAmount = 3e18;
-        uint256 previewShares = vault.previewDeposit(inputAmount);
-
-        // set up feed data for the vault, considering 1:1 ratio with its underlying, and add vault as a base token
-        vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
-        caliber.addBaseToken(address(vault), VAULT_POS_ID);
-        vm.stopPrank();
-
-        deal(address(baseToken), address(caliber), 2 * inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](1);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-
-        assertEq(caliber.getPositionsLength(), 3);
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(VAULT_POS_ID).value, inputAmount * PRICE_B_A);
-
-        previewShares += vault.previewDeposit(inputAmount);
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(caliber.getPosition(VAULT_POS_ID).value, 2 * inputAmount * PRICE_B_A);
-    }
-
-    function test_managePosition_baseToken_4626_decrease() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        uint256 inputAmount = 3e18;
-        uint256 previewShares = vault.previewDeposit(inputAmount);
-
-        // set up feed data for the vault, considering 1:1 ratio with its underlying, and add vault as a base token
-        vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
-        caliber.addBaseToken(address(vault), VAULT_POS_ID);
-        vm.stopPrank();
-
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](1);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-
-        assertEq(caliber.getPositionsLength(), 3);
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 2;
-
-        instructions[0] = _build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
-        assertEq(
-            caliber.getPosition(VAULT_POS_ID).value, vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A
-        );
-    }
-
-    function test_managePosition_baseToken_4626_full_decrease() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
-        uint256 inputAmount = 3e18;
-
-        // set up feed data for the vault, considering 1:1 ratio with its underlying, and add vault as a base token
-        vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
-        caliber.addBaseToken(address(vault), VAULT_POS_ID);
-        vm.stopPrank();
-
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](1);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-
-        assertEq(caliber.getPositionsLength(), 3);
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        instructions[0] = _build4626RedeemInstruction(
-            address(caliber), VAULT_POS_ID, address(vault), vault.balanceOf(address(caliber))
-        );
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        assertEq(caliber.getPositionsLength(), 3);
-        assertEq(vault.balanceOf(address(caliber)), 0);
-        assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
-    }
-
     function test_cannotManagePositionWithWrongRoot() public {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
@@ -987,17 +732,6 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        // set baseToken position as non-base-token
-        vm.prank(dao);
-        caliber.setPositionAsNonBaseToken(BASE_TOKEN_POS_ID);
-
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
-        caliber.accountForPosition(instructions[1]);
-
-        // set baseToken back as a base token
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
         // replace end flag with null value in accounting output state with odd length
         delete instructions[1].state[2];
         vm.expectRevert(ICaliber.InvalidAccounting.selector);
@@ -1024,22 +758,11 @@ contract CaliberTest is BaseTest {
     }
 
     function test_cannotAccountForPositionWithInvalidProof() public {
-        vm.startPrank(dao);
+        vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
-        // set new token as a non-baseToken position
-        MockERC20 testToken = new MockERC20("TestToken", "TST", 18);
-        oracleRegistry.setTokenFeedData(
-            address(testToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-        caliber.addBaseToken(address(testToken), 4);
-        deal(address(testToken), address(caliber), 1e18, true);
-        caliber.setPositionAsNonBaseToken(4);
-        vm.stopPrank();
-
         uint256 inputAmount = 3e18;
-
-        deal(address(baseToken), address(caliber), 3e18, true);
+        deal(address(baseToken), address(caliber), inputAmount, true);
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
@@ -1051,11 +774,6 @@ contract CaliberTest is BaseTest {
         // use wrong vault
         MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
         instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
-        caliber.accountForPosition(instructions[1]);
-
-        // use wrong posId
-        instructions[1] = _build4626AccountingInstruction(address(caliber), 4, address(vault));
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         caliber.accountForPosition(instructions[1]);
 
@@ -1112,22 +830,17 @@ contract CaliberTest is BaseTest {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
-        uint256 inputAmount = 3e18;
-
-        deal(address(baseToken), address(caliber), 3e18, true);
-
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-
-        vm.prank(mechanic);
-        caliber.managePosition(instructions);
-
-        vm.prank(dao);
-        caliber.setPositionAsBaseToken(VAULT_POS_ID, address(vault));
+        ICaliber.Instruction memory instruction = ICaliber.Instruction(
+            BASE_TOKEN_POS_ID,
+            ICaliber.InstructionType.ACCOUNTING,
+            new bytes32[](0),
+            new bytes[](0),
+            0,
+            new bytes32[](0)
+        );
 
         vm.expectRevert(ICaliber.BaseTokenPosition.selector);
-        caliber.accountForPosition(instructions[1]);
+        caliber.accountForPosition(instruction);
     }
 
     function test_cannotAccountForPositionWithWrongRoot() public {
