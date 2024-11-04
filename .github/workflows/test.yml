@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -51,7 +53,7 @@ jobs:
 
       - name: Run Forge coverage
         run: |
-          forge coverage --report lcov --gas-report --no-match-coverage '(script|test|src/caliber/vm)'
+          FOUNDRY_FUZZ_RUNS=32 forge coverage --report lcov --gas-report --no-match-coverage '(script|test|src/caliber/vm)'
         id: coverage
 
       - name: Report coverage
