@@ -11,6 +11,7 @@ import {OracleRegistry} from "../src/OracleRegistry.sol";
 abstract contract Base is Script, Test {
     address dao;
     address mechanic;
+    address securityCouncil;
 
     AccessManager accessManager;
 

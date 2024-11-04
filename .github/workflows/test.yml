@@ -21,6 +21,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install modules
+        run: |
+          yarn
+
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -44,12 +48,12 @@ jobs:
         run: |
           forge test -vvv
         id: test
-      
+
       - name: Run Forge coverage
         run: |
-          forge coverage --report lcov --gas-report --no-match-coverage '(script|test)'
+          forge coverage --report lcov --gas-report --no-match-coverage '(script|test|src/caliber/vm)'
         id: coverage
-      
+
       - name: Report coverage
         uses: romeovs/lcov-reporter-action@v0.4.0
         with:

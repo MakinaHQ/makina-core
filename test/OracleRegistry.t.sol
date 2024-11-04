@@ -185,12 +185,12 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_1() public {
-        uint256 startTimestamp = block.timestamp;
+        uint256 startTimestamp = vm.getBlockTimestamp();
         basePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -208,12 +208,12 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_2() public {
-        uint256 startTimestamp = block.timestamp;
+        uint256 startTimestamp = vm.getBlockTimestamp();
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -231,13 +231,13 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_3() public {
-        uint256 startTimestamp = block.timestamp;
+        uint256 startTimestamp = vm.getBlockNumber();
         basePriceFeed2 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -259,13 +259,13 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_4() public {
-        uint256 startTimestamp = block.timestamp;
+        uint256 startTimestamp = vm.getBlockNumber();
         quotePriceFeed2 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
