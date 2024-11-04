@@ -17,8 +17,8 @@
     "lint:sol": "forge fmt --check && yarn solhint \"{script,src,test}/**/*.sol\"",
     "prettier:check": "prettier --check \"**/*.{js,json,md,yml}\"",
     "prettier:write": "prettier --write \"**/*.{js,json,md,yml}\"",
-    "coverage": "forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\"",
-    "coverage:debug": "forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\" --report debug",
+    "coverage": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\"",
+    "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\" --report debug",
     "genMerkleData": "node script/merkle/generateMerkleTreeData.js"
   }
 }
