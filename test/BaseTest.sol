@@ -16,6 +16,8 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
+    uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
+
     address public mockTokensDeployer;
 
     string public allowedInstrMerkleData;
@@ -76,6 +78,7 @@ abstract contract BaseTest is Base {
                         _accountingTokenPosID,
                         address(oracleRegistry),
                         allowedInstrMerkleRoot,
+                        DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
                         mechanic,
                         securityCouncil,
                         accessManager

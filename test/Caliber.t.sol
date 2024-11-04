@@ -18,6 +18,7 @@ contract CaliberTest is BaseTest {
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
+    event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
@@ -265,16 +266,12 @@ contract CaliberTest is BaseTest {
         caliber.setTimelockDuration(2 hours);
     }
 
-    function test_cannotSetTimelockDurationBelowMinimum() public {
-        vm.expectRevert(abi.encodeWithSelector(ICaliber.TimelockDurationTooShort.selector));
-        vm.prank(dao);
-        caliber.setTimelockDuration(30 minutes);
-    }
-
     function test_setTimelockDuration() public {
+        uint256 newDuration = 2 hours;
+        emit TimelockDurationChanged(DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK, newDuration);
         vm.prank(dao);
-        caliber.setTimelockDuration(2 hours);
-        assertEq(caliber.timelockDuration(), 2 hours);
+        caliber.setTimelockDuration(newDuration);
+        assertEq(caliber.timelockDuration(), newDuration);
     }
 
     function test_cannotScheduleRootUpdateWithoutRole() public {

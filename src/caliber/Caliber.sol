@@ -37,8 +37,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
-    uint256 private constant INSTR_ROOT_UPDATE_MIN_TIMELOCK = 1 hours;
-
     function _getCaliberStorage() private pure returns (CaliberStorage storage $) {
         assembly {
             $.slot := CaliberStorageLocation
@@ -55,6 +53,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 acountingTokenPosID_,
         address oracleRegistry_,
         bytes32 initialAllowedInstrRoot_,
+        uint256 initialTimelockDuration_,
         address initialMechanic_,
         address initialSecurityCouncil_,
         address initialAuthority_
@@ -64,7 +63,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._accountingToken = accountingToken_;
         $._oracleRegistry = oracleRegistry_;
         $._allowedInstrRoot = initialAllowedInstrRoot_;
-        $._timelockDuration = INSTR_ROOT_UPDATE_MIN_TIMELOCK;
+        $._timelockDuration = initialTimelockDuration_;
         $._mechanic = initialMechanic_;
         $._securityCouncil = initialSecurityCouncil_;
         _addBaseToken(accountingToken_, acountingTokenPosID_);
@@ -253,9 +252,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function setTimelockDuration(uint256 newTimelockDuration) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (newTimelockDuration < INSTR_ROOT_UPDATE_MIN_TIMELOCK) {
-            revert TimelockDurationTooShort();
-        }
         emit TimelockDurationChanged($._timelockDuration, newTimelockDuration);
         $._timelockDuration = newTimelockDuration;
     }
