@@ -65,25 +65,17 @@ abstract contract BaseTest is Base {
     function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedInstrMerkleRoot)
         public
         returns (Caliber)
-    {
+    {   
+        vm.prank(dao);
         return Caliber(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(new Caliber()),
-                    address(this),
-                    abi.encodeWithSelector(
-                        Caliber(address(0)).initialize.selector,
-                        address(0),
-                        _accountingToken,
-                        _accountingTokenPosID,
-                        address(oracleRegistry),
-                        allowedInstrMerkleRoot,
-                        DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                        mechanic,
-                        securityCouncil,
-                        accessManager
-                    )
-                )
+            caliberFactory.deployCaliber(
+                address(0),
+                _accountingToken,
+                _accountingTokenPosID,
+                allowedInstrMerkleRoot,
+                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                mechanic,
+                securityCouncil
             )
         );
     }

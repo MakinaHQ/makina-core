@@ -14,11 +14,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /// @inheritdoc ICaliber
+    address public immutable oracleRegistry;
+
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
         address _hubMachine;
         address _accountingToken;
-        address _oracleRegistry;
         address _mechanic;
         address _securityCouncil;
         bytes32 _allowedInstrRoot;
@@ -43,15 +45,16 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    constructor() {
+    constructor(address oracleRegistry_) {
+        oracleRegistry = oracleRegistry_;
         _disableInitializers();
     }
 
+    /// @inheritdoc ICaliber
     function initialize(
         address hubMachine_,
         address accountingToken_,
         uint256 acountingTokenPosID_,
-        address oracleRegistry_,
         bytes32 initialAllowedInstrRoot_,
         uint256 initialTimelockDuration_,
         address initialMechanic_,
@@ -61,7 +64,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         $._hubMachine = hubMachine_;
         $._accountingToken = accountingToken_;
-        $._oracleRegistry = oracleRegistry_;
         $._allowedInstrRoot = initialAllowedInstrRoot_;
         $._timelockDuration = initialTimelockDuration_;
         $._mechanic = initialMechanic_;
@@ -91,11 +93,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
-    }
-
-    /// @inheritdoc ICaliber
-    function oracleRegistry() public view override returns (address) {
-        return _getCaliberStorage()._oracleRegistry;
     }
 
     /// @inheritdoc ICaliber
@@ -277,7 +274,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         // reverts if no price feed is registered for token in the oracle registry
-        IOracleRegistry($._oracleRegistry).getTokenFeedData(token);
+        IOracleRegistry(oracleRegistry).getTokenFeedData(token);
 
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
@@ -385,7 +382,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Computes the accounting value of a given token amount.
     function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
-        uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
+        uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 

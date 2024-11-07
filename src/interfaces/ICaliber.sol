@@ -49,6 +49,26 @@ interface ICaliber {
         bool isBaseToken; // Is the position a base token
     }
 
+    /// @notice Initialize the caliber
+    /// @param hubMachine_ Address of the hub machine
+    /// @param accountingToken_ Address of the accounting token
+    /// @param acountingTokenPosID_ ID for the accounting token position
+    /// @param initialAllowedInstrRoot_ Root of the Merkle tree containing allowed instructions
+    /// @param initialTimelockDuration_ Duration of the allowedInstrRoot update timelock
+    /// @param initialMechanic_ Address of the initial mechanic
+    /// @param initialSecurityCouncil_ Address of the initial security council
+    /// @param initialAuthority_ Address of the initial authority
+    function initialize(
+        address hubMachine_,
+        address accountingToken_,
+        uint256 acountingTokenPosID_,
+        bytes32 initialAllowedInstrRoot_,
+        uint256 initialTimelockDuration_,
+        address initialMechanic_,
+        address initialSecurityCouncil_,
+        address initialAuthority_
+    ) external;
+
     /// @notice Address of the hub machine
     function hubMachine() external view returns (address);
 
