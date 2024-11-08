@@ -10,6 +10,7 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
+import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
 
 abstract contract Base is Script, Test {
     address public dao;
@@ -34,12 +35,13 @@ abstract contract Base is Script, Test {
             )
         );
 
+        address caliberInboxBeaconAddr = address(new UpgradeableBeacon(address(new HubCaliberInbox()), dao));
         address caliberBeaconAddr = address(new UpgradeableBeacon(address(new Caliber(address(oracleRegistry))), dao));
 
         caliberFactory = CaliberFactory(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new CaliberFactory(caliberBeaconAddr)),
+                    address(new CaliberFactory(caliberBeaconAddr, caliberInboxBeaconAddr)),
                     dao,
                     abi.encodeWithSelector(CaliberFactory(address(0)).initialize.selector, accessManager)
                 )

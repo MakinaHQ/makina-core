@@ -62,14 +62,16 @@ abstract contract BaseTest is Base {
         accountingTokenPosID = 1;
     }
 
-    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedInstrMerkleRoot)
-        public
-        returns (Caliber)
-    {   
+    function _deployCaliber(
+        address _hubMachineInbox,
+        address _accountingToken,
+        uint256 _accountingTokenPosID,
+        bytes32 allowedInstrMerkleRoot
+    ) public returns (Caliber) {
         vm.prank(dao);
         return Caliber(
             caliberFactory.deployCaliber(
-                address(0),
+                _hubMachineInbox,
                 _accountingToken,
                 _accountingTokenPosID,
                 allowedInstrMerkleRoot,

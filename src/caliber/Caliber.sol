@@ -2,12 +2,14 @@
 pragma solidity 0.8.27;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 
 contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
@@ -19,7 +21,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
-        address _hubMachine;
+        address _inbox;
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
@@ -52,7 +54,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     /// @inheritdoc ICaliber
     function initialize(
-        address hubMachine_,
+        address inboxBeacon_,
+        address hubMachineInbox_,
         address accountingToken_,
         uint256 acountingTokenPosID_,
         bytes32 initialAllowedInstrRoot_,
@@ -60,9 +63,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address initialMechanic_,
         address initialSecurityCouncil_,
         address initialAuthority_
-    ) public initializer {
+    ) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._hubMachine = hubMachine_;
+        $._inbox = _deployInbox(inboxBeacon_, hubMachineInbox_);
         $._accountingToken = accountingToken_;
         $._allowedInstrRoot = initialAllowedInstrRoot_;
         $._timelockDuration = initialTimelockDuration_;
@@ -81,8 +84,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function hubMachine() public view override returns (address) {
-        return _getCaliberStorage()._hubMachine;
+    function inbox() public view override returns (address) {
+        return _getCaliberStorage()._inbox;
     }
 
     /// @inheritdoc ICaliber
@@ -263,6 +266,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._pendingAllowedInstrRoot = newMerkleRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
         emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+    }
+
+    /// @dev Deploys the inbox.
+    function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
+        address _inbox = address(
+            new BeaconProxy(
+                inboxBeacon, abi.encodeCall(ICaliberInbox(address(0)).initialize, (address(this), hubMachineInbox))
+            )
+        );
+        emit InboxDeployed(_inbox);
+        return _inbox;
     }
 
     /// @dev Adds a new base token to storage.

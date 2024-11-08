@@ -53,7 +53,7 @@ contract CaliberTest is BaseTest {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(address(caliber), address(baseToken), address(vault), VAULT_POS_ID);
@@ -64,7 +64,7 @@ contract CaliberTest is BaseTest {
     }
 
     function test_caliber_getters() public view {
-        assertEq(caliber.hubMachine(), address(0));
+        assertNotEq(caliber.inbox(), address(0));
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.oracleRegistry(), address(oracleRegistry));

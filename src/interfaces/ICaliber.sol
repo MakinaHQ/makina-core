@@ -20,6 +20,7 @@ interface ICaliber {
     error ActiveUpdatePending();
     error ZeroPositionID();
 
+    event InboxDeployed(address indexed inbox);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
     event RecoveryModeChanged(bool indexed enabled);
@@ -49,8 +50,9 @@ interface ICaliber {
         bool isBaseToken; // Is the position a base token
     }
 
-    /// @notice Initialize the caliber
-    /// @param hubMachine_ Address of the hub machine
+    /// @notice Initializer of the contract
+    /// @param inboxBeacon_ Address of the inbox beacon used to deploy the inbox
+    /// @param hubMachineInbox_ Address of the hub machine inbox
     /// @param accountingToken_ Address of the accounting token
     /// @param acountingTokenPosID_ ID for the accounting token position
     /// @param initialAllowedInstrRoot_ Root of the Merkle tree containing allowed instructions
@@ -59,7 +61,8 @@ interface ICaliber {
     /// @param initialSecurityCouncil_ Address of the initial security council
     /// @param initialAuthority_ Address of the initial authority
     function initialize(
-        address hubMachine_,
+        address inboxBeacon_,
+        address hubMachineInbox_,
         address accountingToken_,
         uint256 acountingTokenPosID_,
         bytes32 initialAllowedInstrRoot_,
@@ -69,17 +72,17 @@ interface ICaliber {
         address initialAuthority_
     ) external;
 
-    /// @notice Address of the hub machine
-    function hubMachine() external view returns (address);
+    /// @notice Address of the oracle registry
+    function oracleRegistry() external view returns (address);
+
+    /// @notice Address of the inbox
+    function inbox() external view returns (address);
 
     /// @notice Address of the mechanic
     function mechanic() external view returns (address);
 
     /// @notice Address of the security council
     function securityCouncil() external view returns (address);
-
-    /// @notice Address of the oracle registry
-    function oracleRegistry() external view returns (address);
 
     /// @notice Address of the accounting token
     function accountingToken() external view returns (address);

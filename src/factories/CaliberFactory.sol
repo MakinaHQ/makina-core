@@ -7,12 +7,17 @@ import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 
 contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
+    /// @inheritdoc ICaliberFactory
     address public immutable caliberBeacon;
+    /// @inheritdoc ICaliberFactory
+    address public immutable caliberInboxBeacon;
 
+    /// @inheritdoc ICaliberFactory
     mapping(address caliber => bool isCaliber) public isCaliber;
 
-    constructor(address _caliberBeacon) {
+    constructor(address _caliberBeacon, address _caliberInboxBeacon) {
         caliberBeacon = _caliberBeacon;
+        caliberInboxBeacon = _caliberInboxBeacon;
         _disableInitializers();
     }
 
@@ -20,8 +25,9 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         __AccessManaged_init(_initialAuthority);
     }
 
+    /// @inheritdoc ICaliberFactory
     function deployCaliber(
-        address hubMachine,
+        address hubMachineInbox,
         address accountingToken,
         uint256 acountingTokenPosID,
         bytes32 initialAllowedInstrRoot,
@@ -34,7 +40,8 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
                 caliberBeacon,
                 abi.encodeWithSelector(
                     ICaliber(address(0)).initialize.selector,
-                    hubMachine,
+                    caliberInboxBeacon,
+                    hubMachineInbox,
                     accountingToken,
                     acountingTokenPosID,
                     initialAllowedInstrRoot,
