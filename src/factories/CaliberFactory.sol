@@ -30,27 +30,26 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         address hubMachineInbox,
         address accountingToken,
         uint256 acountingTokenPosID,
+        uint256 initialPositionStaleThreshold,
         bytes32 initialAllowedInstrRoot,
         uint256 initialTimelockDuration,
         address initialMechanic,
         address initialSecurityCouncil
     ) external override restricted returns (address) {
+        ICaliber.InitParams memory params = ICaliber.InitParams({
+            inboxBeacon: caliberInboxBeacon,
+            hubMachineInbox: hubMachineInbox,
+            accountingToken: accountingToken,
+            acountingTokenPosID: acountingTokenPosID,
+            initialPositionStaleThreshold: initialPositionStaleThreshold,
+            initialAllowedInstrRoot: initialAllowedInstrRoot,
+            initialTimelockDuration: initialTimelockDuration,
+            initialMechanic: initialMechanic,
+            initialSecurityCouncil: initialSecurityCouncil,
+            initialAuthority: authority()
+        });
         address caliber = address(
-            new BeaconProxy(
-                caliberBeacon,
-                abi.encodeWithSelector(
-                    ICaliber(address(0)).initialize.selector,
-                    caliberInboxBeacon,
-                    hubMachineInbox,
-                    accountingToken,
-                    acountingTokenPosID,
-                    initialAllowedInstrRoot,
-                    initialTimelockDuration,
-                    initialMechanic,
-                    initialSecurityCouncil,
-                    authority()
-                )
-            )
+            new BeaconProxy(caliberBeacon, abi.encodeWithSelector(ICaliber(address(0)).initialize.selector, params))
         );
         isCaliber[caliber] = true;
         return caliber;

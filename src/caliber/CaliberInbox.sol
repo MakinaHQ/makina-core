@@ -10,7 +10,8 @@ import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 abstract contract CaliberInbox is Initializable, ICaliberInbox {
     using SafeERC20 for IERC20;
 
-    address public override caliber;
+    address public caliber;
+    address public hubMachineInbox;
 
     mapping(address token => uint256 pendingAmount) public pendingReceivedFromHubMachine;
     mapping(address baseToken => uint256 totalAmount) public totalReceivedFromHubMachine;
@@ -24,8 +25,9 @@ abstract contract CaliberInbox is Initializable, ICaliberInbox {
         _disableInitializers();
     }
 
-    function __caliberInbox_init(address _caliber) internal onlyInitializing {
+    function __caliberInbox_init(address _caliber, address _hubMachineInbox) internal onlyInitializing {
         caliber = _caliber;
+        hubMachineInbox = _hubMachineInbox;
     }
 
     modifier onlyCaliber() {

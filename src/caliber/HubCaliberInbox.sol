@@ -8,14 +8,11 @@ import {CaliberInbox, ICaliberInbox} from "./CaliberInbox.sol";
 contract HubCaliberInbox is CaliberInbox {
     using SafeERC20 for IERC20;
 
-    address public hubMachineInbox;
-
     error NotHMInbox();
 
     /// @inheritdoc ICaliberInbox
     function initialize(address _caliber, address _hubMachineInbox) external override initializer {
-        __caliberInbox_init(_caliber);
-        hubMachineInbox = _hubMachineInbox;
+        __caliberInbox_init(_caliber, _hubMachineInbox);
     }
 
     modifier onlyHMInbox() {

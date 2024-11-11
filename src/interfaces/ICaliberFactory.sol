@@ -15,6 +15,7 @@ interface ICaliberFactory {
     /// @param _hubMachine The address of the hub machine inbox
     /// @param _accountingToken The address of the accounting token
     /// @param _acountingTokenPosID The position ID of the accounting token
+    /// @param _initialPositionStaleThreshold The position accounting staleness threshold
     /// @param _initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions
     /// @param _initialTimelockDuration The duration of the Merkle tree root update timelock
     /// @param _initialMechanic The address of the initial mechanic
@@ -24,6 +25,7 @@ interface ICaliberFactory {
         address _hubMachine,
         address _accountingToken,
         uint256 _acountingTokenPosID,
+        uint256 _initialPositionStaleThreshold,
         bytes32 _initialAllowedInstrRoot,
         uint256 _initialTimelockDuration,
         address _initialMechanic,

@@ -25,6 +25,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
+        uint256 _lastReportedAUM;
+        uint256 _lastReportedAUMTime;
+        uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
@@ -53,26 +56,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function initialize(
-        address inboxBeacon_,
-        address hubMachineInbox_,
-        address accountingToken_,
-        uint256 acountingTokenPosID_,
-        bytes32 initialAllowedInstrRoot_,
-        uint256 initialTimelockDuration_,
-        address initialMechanic_,
-        address initialSecurityCouncil_,
-        address initialAuthority_
-    ) public override initializer {
+    function initialize(InitParams calldata params) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._inbox = _deployInbox(inboxBeacon_, hubMachineInbox_);
-        $._accountingToken = accountingToken_;
-        $._allowedInstrRoot = initialAllowedInstrRoot_;
-        $._timelockDuration = initialTimelockDuration_;
-        $._mechanic = initialMechanic_;
-        $._securityCouncil = initialSecurityCouncil_;
-        _addBaseToken(accountingToken_, acountingTokenPosID_);
-        __AccessManaged_init(initialAuthority_);
+        $._inbox = _deployInbox(params.inboxBeacon, params.hubMachineInbox);
+        $._accountingToken = params.accountingToken;
+        $._positionStaleThreshold = params.initialPositionStaleThreshold;
+        $._allowedInstrRoot = params.initialAllowedInstrRoot;
+        $._timelockDuration = params.initialTimelockDuration;
+        $._mechanic = params.initialMechanic;
+        $._securityCouncil = params.initialSecurityCouncil;
+        _addBaseToken(params.accountingToken, params.acountingTokenPosID);
+        __AccessManaged_init(params.initialAuthority);
     }
 
     modifier onlyOperator() {
@@ -101,6 +95,21 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function accountingToken() public view override returns (address) {
         return _getCaliberStorage()._accountingToken;
+    }
+
+    /// @inheritdoc ICaliber
+    function lastReportedAUM() public view override returns (uint256) {
+        return _getCaliberStorage()._lastReportedAUM;
+    }
+
+    /// @inheritdoc ICaliber
+    function lastReportedAUMTime() public view returns (uint256) {
+        return _getCaliberStorage()._lastReportedAUMTime;
+    }
+
+    /// @inheritdoc ICaliber
+    function positionStaleThreshold() public view override returns (uint256) {
+        return _getCaliberStorage()._positionStaleThreshold;
     }
 
     /// @inheritdoc ICaliber
@@ -185,7 +194,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+    function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
@@ -194,6 +203,43 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenPosition();
         }
         return _accountForPosition(instruction);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPositionBatch(Instruction[] calldata instructions) public override {
+        uint256 len = instructions.length;
+        for (uint256 i; i < len; i++) {
+            accountForPosition(instructions[i]);
+        }
+    }
+
+    /// @inheritdoc ICaliber
+    function updateAndReportCaliberAUM(Instruction[] calldata instructions)
+        external
+        override
+        returns (ICaliberInbox.AccountingMessageSlim memory)
+    {
+        accountForPositionBatch(instructions);
+        CaliberStorage storage $ = _getCaliberStorage();
+        ICaliberInbox($._inbox).withdrawPendingReceivedAmounts();
+
+        uint256 currentTimestamp = block.timestamp;
+        uint256 len = $._positionIds.length();
+        uint256 aum;
+        for (uint256 i; i < len; i++) {
+            uint256 posId = $._positionIds.at(i);
+            if ($._positionIdToBaseToken[posId] != address(0)) {
+                accountForBaseToken(posId);
+            } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+                revert PositionAccountingStale(posId);
+            }
+            aum += $._positionById[posId].value;
+        }
+
+        $._lastReportedAUM = aum;
+        $._lastReportedAUMTime = currentTimestamp;
+
+        return ICaliberInbox($._inbox).relayAccounting(aum);
     }
 
     /// @inheritdoc ICaliber
@@ -238,6 +284,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
+    }
+
+    /// @inheritdoc ICaliber
+    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit PositionStaleThresholdChanged($._positionStaleThreshold, newPositionStaleThreshold);
+        $._positionStaleThreshold = newPositionStaleThreshold;
     }
 
     /// @inheritdoc ICaliber

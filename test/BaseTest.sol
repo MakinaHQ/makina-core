@@ -16,6 +16,8 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
+    uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
+
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
 
     address public mockTokensDeployer;
@@ -74,6 +76,7 @@ abstract contract BaseTest is Base {
                 _hubMachineInbox,
                 _accountingToken,
                 _accountingTokenPosID,
+                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 allowedInstrMerkleRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
                 mechanic,
