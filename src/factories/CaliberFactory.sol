@@ -52,6 +52,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             new BeaconProxy(caliberBeacon, abi.encodeWithSelector(ICaliber(address(0)).initialize.selector, params))
         );
         isCaliber[caliber] = true;
+        emit CaliberDeployed(caliber);
         return caliber;
     }
 }

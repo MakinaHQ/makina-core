@@ -2,6 +2,8 @@
 pragma solidity 0.8.27;
 
 interface ICaliberFactory {
+    event CaliberDeployed(address indexed caliber);
+
     /// @notice The address of the Caliber beacon
     function caliberBeacon() external view returns (address);
 

@@ -25,6 +25,9 @@ interface ICaliberInbox {
     /// @notice Address of the associated caliber
     function caliber() external view returns (address);
 
+    /// @notice Address of the hub machine inbox
+    function hubMachineInbox() external view returns (address);
+
     /// @notice Token => pending amount received from the hub machine, awaiting transfer to the caliber
     function pendingReceivedFromHubMachine(address token) external view returns (uint256);
 
