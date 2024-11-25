@@ -324,9 +324,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Deploys the inbox.
     function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
         address _inbox = address(
-            new BeaconProxy(
-                inboxBeacon, abi.encodeCall(ICaliberInbox(address(0)).initialize, (address(this), hubMachineInbox))
-            )
+            new BeaconProxy(inboxBeacon, abi.encodeCall(ICaliberInbox.initialize, (address(this), hubMachineInbox)))
         );
         emit InboxDeployed(_inbox);
         return _inbox;
