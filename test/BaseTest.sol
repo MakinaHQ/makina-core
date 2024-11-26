@@ -16,6 +16,8 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
+    uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
+
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
 
     address public mockTokensDeployer;
@@ -62,28 +64,23 @@ abstract contract BaseTest is Base {
         accountingTokenPosID = 1;
     }
 
-    function _deployCaliber(address _accountingToken, uint256 _accountingTokenPosID, bytes32 allowedInstrMerkleRoot)
-        public
-        returns (Caliber)
-    {
+    function _deployCaliber(
+        address _hubMachineInbox,
+        address _accountingToken,
+        uint256 _accountingTokenPosID,
+        bytes32 allowedInstrMerkleRoot
+    ) public returns (Caliber) {
+        vm.prank(dao);
         return Caliber(
-            address(
-                new TransparentUpgradeableProxy(
-                    address(new Caliber()),
-                    address(this),
-                    abi.encodeWithSelector(
-                        Caliber(address(0)).initialize.selector,
-                        address(0),
-                        _accountingToken,
-                        _accountingTokenPosID,
-                        address(oracleRegistry),
-                        allowedInstrMerkleRoot,
-                        DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                        mechanic,
-                        securityCouncil,
-                        accessManager
-                    )
-                )
+            caliberFactory.deployCaliber(
+                _hubMachineInbox,
+                _accountingToken,
+                _accountingTokenPosID,
+                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                allowedInstrMerkleRoot,
+                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                mechanic,
+                securityCouncil
             )
         );
     }

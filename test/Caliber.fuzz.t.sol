@@ -62,7 +62,7 @@ contract CaliberFuzzTest is BaseTest {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
     }
 
     function test_accountForATPosition_fuzz(Data memory data) public {

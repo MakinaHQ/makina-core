@@ -5,17 +5,22 @@ import "forge-std/Script.sol";
 import "forge-std/Test.sol";
 
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
+import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
+import {Caliber} from "../src/caliber/Caliber.sol";
+import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
 
 abstract contract Base is Script, Test {
-    address dao;
-    address mechanic;
-    address securityCouncil;
+    address public dao;
+    address public mechanic;
+    address public securityCouncil;
 
-    AccessManager accessManager;
+    AccessManager public accessManager;
 
-    OracleRegistry oracleRegistry;
+    OracleRegistry public oracleRegistry;
+    CaliberFactory public caliberFactory;
 
     function _coreSetup() public {
         accessManager = new AccessManager(dao);
@@ -24,8 +29,21 @@ abstract contract Base is Script, Test {
             address(
                 new TransparentUpgradeableProxy(
                     address(new OracleRegistry()),
-                    address(this),
+                    dao,
                     abi.encodeWithSelector(OracleRegistry(address(0)).initialize.selector, accessManager)
+                )
+            )
+        );
+
+        address caliberInboxBeaconAddr = address(new UpgradeableBeacon(address(new HubCaliberInbox()), dao));
+        address caliberBeaconAddr = address(new UpgradeableBeacon(address(new Caliber(address(oracleRegistry))), dao));
+
+        caliberFactory = CaliberFactory(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new CaliberFactory(caliberBeaconAddr, caliberInboxBeaconAddr)),
+                    dao,
+                    abi.encodeWithSelector(CaliberFactory(address(0)).initialize.selector, accessManager)
                 )
             )
         );

@@ -14,6 +14,7 @@ import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 contract CaliberTest is BaseTest {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
+    event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
@@ -53,7 +54,7 @@ contract CaliberTest is BaseTest {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(address(caliber), address(baseToken), address(vault), VAULT_POS_ID);
@@ -64,11 +65,14 @@ contract CaliberTest is BaseTest {
     }
 
     function test_caliber_getters() public view {
-        assertEq(caliber.hubMachine(), address(0));
+        assertNotEq(caliber.inbox(), address(0));
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.oracleRegistry(), address(oracleRegistry));
         assertEq(caliber.accountingToken(), address(accountingToken));
+        assertEq(caliber.lastReportedAUM(), 0);
+        assertEq(caliber.lastReportedAUMTime(), 0);
+        assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.recoveryMode(), false);
         assertEq(caliber.allowedInstrRoot(), _getAllowedInstrMerkleRoot());
         assertEq(caliber.timelockDuration(), 1 hours);
@@ -246,6 +250,19 @@ contract CaliberTest is BaseTest {
         vm.prank(dao);
         caliber.setSecurityCouncil(newSecurityCouncil);
         assertEq(caliber.securityCouncil(), newSecurityCouncil);
+    }
+
+    function test_cannotSetPositionStaleThresholdWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setPositionStaleThreshold(2 hours);
+    }
+
+    function test_setPositionStaleThreshold() public {
+        uint256 newThreshold = 2 hours;
+        emit PositionStaleThresholdChanged(DEFAULT_CALIBER_POS_STALE_THRESHOLD, newThreshold);
+        vm.prank(dao);
+        caliber.setPositionStaleThreshold(newThreshold);
+        assertEq(caliber.positionStaleThreshold(), newThreshold);
     }
 
     function test_cannotSetRecoveryModeWithoutRole() public {
@@ -880,6 +897,210 @@ contract CaliberTest is BaseTest {
 
         // accounting can be executed after the update takes effect
         caliber.accountForPosition(instructions[1]);
+    }
+
+    function test_accountForPositionBatch() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+        uint256 previewShares = vault.previewDeposit(inputAmount);
+
+        deal(address(baseToken), address(caliber), 3e18, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        assertEq(vault.balanceOf(address(caliber)), previewShares);
+        assertEq(caliber.getPosition(VAULT_POS_ID).value, inputAmount * PRICE_B_A);
+
+        uint256 yield = 1e18;
+        deal(address(baseToken), address(vault), inputAmount + yield, true);
+
+        uint256 previewAssets = vault.previewRedeem(vault.balanceOf(address(caliber)));
+
+        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] = instructions[1];
+
+        caliber.accountForPositionBatch(accountingInstructions);
+
+        assertEq(vault.balanceOf(address(caliber)), previewShares);
+        assertEq(caliber.getPosition(VAULT_POS_ID).value, previewAssets * PRICE_B_A);
+    }
+
+    function test_cannotAccountForPositionWithInvalidInstruction() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
+        vaultInstructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vaultInstructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(vaultInstructions);
+
+        // 1st instruction is not an accounting instruction
+        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.accountForPositionBatch(accountingInstructions);
+
+        // 2nd instruction is not an accounting instruction
+        accountingInstructions = new ICaliber.Instruction[](2);
+        accountingInstructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        accountingInstructions[1] =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.accountForPositionBatch(accountingInstructions);
+
+        // position is a base token position
+        accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] = _build4626AccountingInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault));
+        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        caliber.accountForPositionBatch(accountingInstructions);
+    }
+
+    function test_updateAndReportCaliberAUM() public {
+        vm.startPrank(dao);
+        oracleRegistry.setFeedStalenessThreshold(address(aPriceFeed1), 1 days);
+        oracleRegistry.setFeedStalenessThreshold(address(bPriceFeed1), 1 days);
+        vm.stopPrank();
+
+        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](0);
+
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), 0);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
+        uint256 inputAmount = 3e18;
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+
+        // check that accounting token is correctly accounted for in AUM
+        uint256 expectedCaliberAUM = inputAmount;
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount2 = 2e18;
+        deal(address(baseToken), address(caliber), inputAmount2, true);
+
+        // check that base token is correctly accounted for in AUM
+        expectedCaliberAUM += inputAmount2 * PRICE_B_A;
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
+        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
+        vaultInstructions[0] =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount2);
+        vaultInstructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(vaultInstructions);
+
+        // check that AUM remains the same after depositing baseToken into vault
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
+        uint256 yield = 1e18;
+        deal(address(baseToken), address(vault), inputAmount2 + yield, true);
+
+        // check that AUM reflects vault yield
+        accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] = vaultInstructions[1];
+        expectedCaliberAUM = inputAmount + vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A;
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+    }
+
+    function test_cannotUpdateAndReportCaliberAUMWithInvalidInstruction() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
+        vaultInstructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vaultInstructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(vaultInstructions);
+
+        // 1st instruction is not an accounting instruction
+        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+
+        // 2nd instruction is not an accounting instruction
+        accountingInstructions = new ICaliber.Instruction[](2);
+        accountingInstructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        accountingInstructions[1] =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+
+        // position is a base token position
+        accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] = _build4626AccountingInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault));
+        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+    }
+
+    function test_cannotUpdateAndReportCaliberAUMWithStalePosition() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
+        vaultInstructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vaultInstructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(vaultInstructions);
+
+        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](0);
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), inputAmount * PRICE_B_A);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+
+        // check that AUM cannot be updated with stale position
+        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+
+        // include accounting instruction and check that AUM can then be updated
+        accountingInstructions = new ICaliber.Instruction[](1);
+        accountingInstructions[0] = vaultInstructions[1];
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), inputAmount * PRICE_B_A);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
     }
 
     ///

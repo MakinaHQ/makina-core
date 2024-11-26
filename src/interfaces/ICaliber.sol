@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.27;
 
+import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
+
 interface ICaliber {
     error BaseTokenPosition();
     error InvalidAccounting();
@@ -12,6 +14,7 @@ interface ICaliber {
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
     error BaseTokenAlreadyExists();
+    error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
     error RecoveryMode();
@@ -20,8 +23,10 @@ interface ICaliber {
     error ActiveUpdatePending();
     error ZeroPositionID();
 
+    event InboxDeployed(address indexed inbox);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
+    event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event RecoveryModeChanged(bool indexed enabled);
     event PositionCreated(uint256 indexed id);
     event PositionClosed(uint256 indexed id);
@@ -32,6 +37,30 @@ interface ICaliber {
         MANAGE,
         ACCOUNTING,
         HARVEST
+    }
+
+    /// @notice Initialization parameters
+    /// @param inboxBeacon Address of the inbox beacon used to deploy the inbox
+    /// @param hubMachineInbox Address of the hub machine inbox
+    /// @param accountingToken Address of the accounting token
+    /// @param acountingTokenPosID ID for the accounting token position
+    /// @param initialPositionStaleThreshold Position accounting staleness threshold in seconds
+    /// @param initialAllowedInstrRoot Root of the Merkle tree containing allowed instructions
+    /// @param initialTimelockDuration Duration of the allowedInstrRoot update timelock
+    /// @param initialMechanic Address of the initial mechanic
+    /// @param initialSecurityCouncil Address of the initial security council
+    /// @param initialAuthority Address of the initial authority
+    struct InitParams {
+        address inboxBeacon;
+        address hubMachineInbox;
+        address accountingToken;
+        uint256 acountingTokenPosID;
+        uint256 initialPositionStaleThreshold;
+        bytes32 initialAllowedInstrRoot;
+        uint256 initialTimelockDuration;
+        address initialMechanic;
+        address initialSecurityCouncil;
+        address initialAuthority;
     }
 
     struct Instruction {
@@ -49,8 +78,15 @@ interface ICaliber {
         bool isBaseToken; // Is the position a base token
     }
 
-    /// @notice Address of the hub machine
-    function hubMachine() external view returns (address);
+    /// @notice Initializer of the contract
+    /// @param params Initialization parameters
+    function initialize(InitParams calldata params) external;
+
+    /// @notice Address of the oracle registry
+    function oracleRegistry() external view returns (address);
+
+    /// @notice Address of the inbox
+    function inbox() external view returns (address);
 
     /// @notice Address of the mechanic
     function mechanic() external view returns (address);
@@ -58,11 +94,17 @@ interface ICaliber {
     /// @notice Address of the security council
     function securityCouncil() external view returns (address);
 
-    /// @notice Address of the oracle registry
-    function oracleRegistry() external view returns (address);
-
     /// @notice Address of the accounting token
     function accountingToken() external view returns (address);
+
+    /// @notice Caliber's AUM (expressed in accounting token) as of the last report to the hub machine
+    function lastReportedAUM() external view returns (uint256);
+
+    /// @notice Timestamp of the last caliber's AUM report to the hub machine
+    function lastReportedAUMTime() external view returns (uint256);
+
+    /// @notice Maximum duration a position can remain unaccounted for before it is considered stale
+    function positionStaleThreshold() external view returns (uint256);
 
     /// @notice Is the caliber in recovery mode
     function recoveryMode() external view returns (bool);
@@ -109,6 +151,18 @@ interface ICaliber {
     /// @return change The change in the position value
     function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
 
+    /// @notice Account for a batch of positions
+    /// @dev If a position value goes to zero, it is closed
+    /// @param instructions Array of accounting instructions
+    function accountForPositionBatch(Instruction[] calldata instructions) external;
+
+    /// @notice Update and report the caliber's AUM to the hub machine
+    /// @param instructions Array of accounting instructions to be performed before the AUM computation
+    /// @return accountingMessage Accounting message to be sent to the hub machine
+    function updateAndReportCaliberAUM(Instruction[] calldata instructions)
+        external
+        returns (ICaliberInbox.AccountingMessageSlim memory accountingMessage);
+
     /// @notice Updates the state of a position
     /// @dev Each time a position is managed, the caliber also performs accounting,
     /// and creates or closes it if needed.
@@ -123,6 +177,10 @@ interface ICaliber {
     /// @notice Set a new security council
     /// @param newSecurityCouncil Address of the new security council
     function setSecurityCouncil(address newSecurityCouncil) external;
+
+    /// @notice Set the position accounting staleness threshold
+    /// @param newPositionStaleThreshold New threshold in seconds
+    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external;
 
     /// @notice Set the recovery mode
     /// @param enabled True to enable recovery mode, false to disable

@@ -2,25 +2,32 @@
 pragma solidity 0.8.27;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 
 contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /// @inheritdoc ICaliber
+    address public immutable oracleRegistry;
+
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
-        address _hubMachine;
+        address _inbox;
         address _accountingToken;
-        address _oracleRegistry;
         address _mechanic;
         address _securityCouncil;
+        uint256 _lastReportedAUM;
+        uint256 _lastReportedAUMTime;
+        uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
@@ -43,31 +50,23 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    constructor() {
+    constructor(address oracleRegistry_) {
+        oracleRegistry = oracleRegistry_;
         _disableInitializers();
     }
 
-    function initialize(
-        address hubMachine_,
-        address accountingToken_,
-        uint256 acountingTokenPosID_,
-        address oracleRegistry_,
-        bytes32 initialAllowedInstrRoot_,
-        uint256 initialTimelockDuration_,
-        address initialMechanic_,
-        address initialSecurityCouncil_,
-        address initialAuthority_
-    ) public initializer {
+    /// @inheritdoc ICaliber
+    function initialize(InitParams calldata params) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._hubMachine = hubMachine_;
-        $._accountingToken = accountingToken_;
-        $._oracleRegistry = oracleRegistry_;
-        $._allowedInstrRoot = initialAllowedInstrRoot_;
-        $._timelockDuration = initialTimelockDuration_;
-        $._mechanic = initialMechanic_;
-        $._securityCouncil = initialSecurityCouncil_;
-        _addBaseToken(accountingToken_, acountingTokenPosID_);
-        __AccessManaged_init(initialAuthority_);
+        $._inbox = _deployInbox(params.inboxBeacon, params.hubMachineInbox);
+        $._accountingToken = params.accountingToken;
+        $._positionStaleThreshold = params.initialPositionStaleThreshold;
+        $._allowedInstrRoot = params.initialAllowedInstrRoot;
+        $._timelockDuration = params.initialTimelockDuration;
+        $._mechanic = params.initialMechanic;
+        $._securityCouncil = params.initialSecurityCouncil;
+        _addBaseToken(params.accountingToken, params.acountingTokenPosID);
+        __AccessManaged_init(params.initialAuthority);
     }
 
     modifier onlyOperator() {
@@ -79,8 +78,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function hubMachine() public view override returns (address) {
-        return _getCaliberStorage()._hubMachine;
+    function inbox() public view override returns (address) {
+        return _getCaliberStorage()._inbox;
     }
 
     /// @inheritdoc ICaliber
@@ -94,13 +93,23 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function oracleRegistry() public view override returns (address) {
-        return _getCaliberStorage()._oracleRegistry;
+    function accountingToken() public view override returns (address) {
+        return _getCaliberStorage()._accountingToken;
     }
 
     /// @inheritdoc ICaliber
-    function accountingToken() public view override returns (address) {
-        return _getCaliberStorage()._accountingToken;
+    function lastReportedAUM() public view override returns (uint256) {
+        return _getCaliberStorage()._lastReportedAUM;
+    }
+
+    /// @inheritdoc ICaliber
+    function lastReportedAUMTime() public view returns (uint256) {
+        return _getCaliberStorage()._lastReportedAUMTime;
+    }
+
+    /// @inheritdoc ICaliber
+    function positionStaleThreshold() public view override returns (uint256) {
+        return _getCaliberStorage()._positionStaleThreshold;
     }
 
     /// @inheritdoc ICaliber
@@ -185,7 +194,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+    function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
@@ -194,6 +203,43 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenPosition();
         }
         return _accountForPosition(instruction);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPositionBatch(Instruction[] calldata instructions) public override {
+        uint256 len = instructions.length;
+        for (uint256 i; i < len; i++) {
+            accountForPosition(instructions[i]);
+        }
+    }
+
+    /// @inheritdoc ICaliber
+    function updateAndReportCaliberAUM(Instruction[] calldata instructions)
+        external
+        override
+        returns (ICaliberInbox.AccountingMessageSlim memory)
+    {
+        accountForPositionBatch(instructions);
+        CaliberStorage storage $ = _getCaliberStorage();
+        ICaliberInbox($._inbox).withdrawPendingReceivedAmounts();
+
+        uint256 currentTimestamp = block.timestamp;
+        uint256 len = $._positionIds.length();
+        uint256 aum;
+        for (uint256 i; i < len; i++) {
+            uint256 posId = $._positionIds.at(i);
+            if ($._positionIdToBaseToken[posId] != address(0)) {
+                accountForBaseToken(posId);
+            } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+                revert PositionAccountingStale(posId);
+            }
+            aum += $._positionById[posId].value;
+        }
+
+        $._lastReportedAUM = aum;
+        $._lastReportedAUMTime = currentTimestamp;
+
+        return ICaliberInbox($._inbox).relayAccounting(aum);
     }
 
     /// @inheritdoc ICaliber
@@ -241,6 +287,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit PositionStaleThresholdChanged($._positionStaleThreshold, newPositionStaleThreshold);
+        $._positionStaleThreshold = newPositionStaleThreshold;
+    }
+
+    /// @inheritdoc ICaliber
     function setRecoveryMode(bool enabled) public override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode != enabled) {
@@ -268,6 +321,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
     }
 
+    /// @dev Deploys the inbox.
+    function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
+        address _inbox = address(
+            new BeaconProxy(inboxBeacon, abi.encodeCall(ICaliberInbox.initialize, (address(this), hubMachineInbox)))
+        );
+        emit InboxDeployed(_inbox);
+        return _inbox;
+    }
+
     /// @dev Adds a new base token to storage.
     function _addBaseToken(address token, uint256 posId) internal {
         CaliberStorage storage $ = _getCaliberStorage();
@@ -277,7 +339,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         // reverts if no price feed is registered for token in the oracle registry
-        IOracleRegistry($._oracleRegistry).getTokenFeedData(token);
+        IOracleRegistry(oracleRegistry).getTokenFeedData(token);
 
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
@@ -385,7 +447,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Computes the accounting value of a given token amount.
     function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
-        uint256 price = IOracleRegistry($._oracleRegistry).getPrice(token, $._accountingToken);
+        uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 
