@@ -20,6 +20,8 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
 
+    uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
+
     address public mockTokensDeployer;
 
     string public allowedInstrMerkleData;
@@ -79,6 +81,7 @@ abstract contract BaseTest is Base {
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 allowedInstrMerkleRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                 mechanic,
                 securityCouncil
             )

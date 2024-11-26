@@ -20,6 +20,7 @@ interface ICaliberFactory {
     /// @param _initialPositionStaleThreshold The position accounting staleness threshold
     /// @param _initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions
     /// @param _initialTimelockDuration The duration of the Merkle tree root update timelock
+    /// @param _initialMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another
     /// @param _initialMechanic The address of the initial mechanic
     /// @param _initialSecurityCouncil The address of the initial security council
     /// @return caliber The address of the deployed Caliber instance
@@ -30,6 +31,7 @@ interface ICaliberFactory {
         uint256 _initialPositionStaleThreshold,
         bytes32 _initialAllowedInstrRoot,
         uint256 _initialTimelockDuration,
+        uint256 _initialMaxSwapLossBps,
         address _initialMechanic,
         address _initialSecurityCouncil
     ) external returns (address caliber);
