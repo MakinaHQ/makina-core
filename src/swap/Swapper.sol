@@ -20,9 +20,9 @@ contract Swapper is AccessManagedUpgradeable, ISwapper {
         if (targets.approvalTarget == address(0) || targets.executionTarget == address(0)) {
             revert DexAggregatorNotSet();
         }
-        if (IERC20(order.inputToken).balanceOf(address(this)) < order.inputAmount) {
-            revert InsufficientBalance();
-        }
+
+        address caller = msg.sender;
+        IERC20(order.inputToken).safeTransferFrom(caller, address(this), order.inputAmount);
 
         uint256 balBefore = IERC20(order.outputToken).balanceOf(address(this));
 
@@ -39,9 +39,9 @@ contract Swapper is AccessManagedUpgradeable, ISwapper {
         if (outputAmount < order.minOutputAmount) {
             revert AmountOutTooLow();
         }
-        IERC20(order.outputToken).safeTransfer(msg.sender, outputAmount);
+        IERC20(order.outputToken).safeTransfer(caller, outputAmount);
 
-        emit Swapped(msg.sender, order.aggregator, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
+        emit Swapped(caller, order.aggregator, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
 
         return outputAmount;
     }

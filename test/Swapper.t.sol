@@ -3,6 +3,7 @@ pragma solidity 0.8.27;
 
 import "./BaseTest.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 import {ISwapper} from "../src/interfaces/ISwapper.sol";
 import {HubCaliberInbox, ICaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
 import {MockPool} from "./mocks/MockPool.sol";
@@ -92,7 +93,11 @@ contract SwapperTest is BaseTest {
             minOutputAmount: 0
         });
 
-        vm.expectRevert(ISwapper.InsufficientBalance.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(swapper), 0, order.inputAmount
+            )
+        );
         swapper.swap(order);
     }
 
@@ -101,7 +106,8 @@ contract SwapperTest is BaseTest {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(swapper), inputAmount, true);
+        deal(address(accountingToken), address(this), inputAmount, true);
+        accountingToken.approve(address(swapper), inputAmount);
 
         uint256 previewSwap = pool.previewSwap(address(accountingToken), inputAmount);
 
@@ -134,7 +140,8 @@ contract SwapperTest is BaseTest {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(swapper), inputAmount, true);
+        deal(address(accountingToken), address(this), inputAmount, true);
+        accountingToken.approve(address(swapper), inputAmount);
 
         uint256 previewSwap = pool.previewSwap(address(accountingToken), inputAmount);
 
@@ -156,7 +163,8 @@ contract SwapperTest is BaseTest {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = initialPoolLiquidityOneSide + 1;
-        deal(address(accountingToken), address(swapper), inputAmount, true);
+        deal(address(accountingToken), address(this), inputAmount, true);
+        accountingToken.approve(address(swapper), inputAmount);
 
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,

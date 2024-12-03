@@ -40,8 +40,7 @@ interface ICaliber {
     enum InstructionType {
         MANAGE,
         ACCOUNTING,
-        HARVEST,
-        SWAP
+        HARVEST
     }
 
     /// @notice Initialization parameters

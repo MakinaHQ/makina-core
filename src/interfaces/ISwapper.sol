@@ -4,7 +4,6 @@ pragma solidity 0.8.27;
 interface ISwapper {
     error AmountOutTooLow();
     error DexAggregatorNotSet();
-    error InsufficientBalance();
     error SwapFailed();
 
     event DexAggregatorTargetsSet(DexAggregator indexed aggregator, address approvalTarget, address executionTarget);

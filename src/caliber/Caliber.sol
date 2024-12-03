@@ -5,6 +5,7 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
@@ -16,6 +17,7 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
+    using SafeERC20 for IERC20Metadata;
 
     /// @dev Full scale value in basis points
     uint256 private constant MAX_BPS = 10_000;
@@ -301,8 +303,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        IERC20Metadata(order.inputToken).transfer(address(swapper), order.inputAmount);
+        IERC20Metadata(order.inputToken).forceApprove(swapper, order.inputAmount);
         uint256 amountOut = ISwapper(swapper).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(swapper, 0);
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
