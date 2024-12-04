@@ -199,8 +199,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
         if (btBal == 0) {
             pos.value = 0;
-        } else if (bt == $._accountingToken) {
-            pos.value = btBal;
         } else {
             pos.value = _accountingValueOf(bt, btBal);
         }
@@ -497,6 +495,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Computes the accounting value of a given token amount.
     function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
+        if (token == $._accountingToken) {
+            return amount;
+        }
         uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
