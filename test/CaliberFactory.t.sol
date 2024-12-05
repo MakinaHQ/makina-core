@@ -27,6 +27,11 @@ contract CaliberFactoryTest is BaseTest {
         );
     }
 
+    function test_getters() public {
+        assertEq(caliberFactory.registry(), address(hubRegistry));
+        assertEq(caliberFactory.isCaliber(address(0)), false);
+    }
+
     function test_cannotDeployCaliberWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliberFactory.deployCaliber(address(0), address(0), 0, 0, bytes32(0), 0, 0, address(0), address(0));
@@ -53,9 +58,7 @@ contract CaliberFactoryTest is BaseTest {
             )
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
-        assertEq(caliberFactory.isCaliber(address(0)), false);
 
-        assertEq(caliber.oracleRegistry(), address(oracleRegistry));
         assertEq(ICaliberInbox(caliber.inbox()).hubMachineInbox(), hubMachineInbox);
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
@@ -63,7 +66,6 @@ contract CaliberFactoryTest is BaseTest {
         assertEq(caliber.timelockDuration(), DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.mechanic(), mechanic);
-        assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 1);

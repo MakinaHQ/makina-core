@@ -9,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
+import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
@@ -23,9 +24,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     uint256 private constant MAX_BPS = 10_000;
 
     /// @inheritdoc ICaliber
-    address public immutable oracleRegistry;
-    /// @inheritdoc ICaliber
-    address public immutable swapper;
+    address public immutable registry;
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
@@ -59,16 +58,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    constructor(address oracleRegistry_, address swapper_) {
-        oracleRegistry = oracleRegistry_;
-        swapper = swapper_;
+    constructor(address _registry) {
+        registry = _registry;
         _disableInitializers();
     }
 
     /// @inheritdoc ICaliber
     function initialize(InitParams calldata params) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._inbox = _deployInbox(params.inboxBeacon, params.hubMachineInbox);
+        $._inbox = _deployInbox(IBaseMakinaRegistry(registry).caliberInboxBeacon(), params.hubMachineInbox);
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
@@ -301,9 +299,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        IERC20Metadata(order.inputToken).forceApprove(swapper, order.inputAmount);
-        uint256 amountOut = ISwapper(swapper).swap(order);
-        IERC20Metadata(order.inputToken).forceApprove(swapper, 0);
+        address _swapper = IBaseMakinaRegistry(registry).swapper();
+        IERC20Metadata(order.inputToken).forceApprove(_swapper, order.inputAmount);
+        uint256 amountOut = ISwapper(_swapper).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(_swapper, 0);
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
@@ -387,7 +386,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         // reverts if no price feed is registered for token in the oracle registry
-        IOracleRegistry(oracleRegistry).getTokenFeedData(token);
+        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
 
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
@@ -498,7 +497,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if (token == $._accountingToken) {
             return amount;
         }
-        uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, $._accountingToken);
+        uint256 price =
+            IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 

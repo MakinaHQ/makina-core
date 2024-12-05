@@ -71,7 +71,6 @@ contract CaliberTest is BaseTest {
         assertNotEq(caliber.inbox(), address(0));
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
-        assertEq(caliber.oracleRegistry(), address(oracleRegistry));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.lastReportedAUM(), 0);
         assertEq(caliber.lastReportedAUMTime(), 0);

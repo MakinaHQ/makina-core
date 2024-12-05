@@ -7,6 +7,8 @@ import "forge-std/Test.sol";
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {IHubRegistry} from "../src/interfaces/IHubRegistry.sol";
+import {HubRegistry} from "../src/registries/HubRegistry.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
@@ -20,9 +22,14 @@ abstract contract Base is Script, Test {
 
     AccessManager public accessManager;
 
+    HubRegistry public hubRegistry;
+
     OracleRegistry public oracleRegistry;
     Swapper public swapper;
     CaliberFactory public caliberFactory;
+
+    UpgradeableBeacon public caliberBeacon;
+    UpgradeableBeacon public caliberInboxBeacon;
 
     function _coreSetup() public {
         accessManager = new AccessManager(dao);
@@ -32,7 +39,7 @@ abstract contract Base is Script, Test {
                 new TransparentUpgradeableProxy(
                     address(new OracleRegistry()),
                     dao,
-                    abi.encodeWithSelector(OracleRegistry(address(0)).initialize.selector, accessManager)
+                    abi.encodeCall(OracleRegistry.initialize, (address(accessManager)))
                 )
             )
         );
@@ -40,23 +47,39 @@ abstract contract Base is Script, Test {
         swapper = Swapper(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new Swapper()),
-                    dao,
-                    abi.encodeWithSelector(Swapper(address(0)).initialize.selector, accessManager)
+                    address(new Swapper()), dao, abi.encodeCall(Swapper.initialize, (address(accessManager)))
                 )
             )
         );
 
-        address caliberInboxBeaconAddr = address(new UpgradeableBeacon(address(new HubCaliberInbox()), dao));
-        address caliberBeaconAddr =
-            address(new UpgradeableBeacon(address(new Caliber(address(oracleRegistry), address(swapper))), dao));
+        hubRegistry = HubRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new HubRegistry()),
+                    dao,
+                    abi.encodeCall(
+                        HubRegistry.initialize,
+                        (
+                            IHubRegistry.initParams({
+                                oracleRegistry: address(oracleRegistry),
+                                swapper: address(swapper),
+                                initialAuthority: address(accessManager)
+                            })
+                        )
+                    )
+                )
+            )
+        );
+
+        caliberBeacon = new UpgradeableBeacon(address(new Caliber(address(hubRegistry))), dao);
+        caliberInboxBeacon = new UpgradeableBeacon(address(new HubCaliberInbox()), dao);
 
         caliberFactory = CaliberFactory(
             address(
                 new TransparentUpgradeableProxy(
-                    address(new CaliberFactory(caliberBeaconAddr, caliberInboxBeaconAddr)),
+                    address(new CaliberFactory(address(hubRegistry))),
                     dao,
-                    abi.encodeWithSelector(CaliberFactory(address(0)).initialize.selector, accessManager)
+                    abi.encodeCall(CaliberFactory.initialize, (address(accessManager)))
                 )
             )
         );

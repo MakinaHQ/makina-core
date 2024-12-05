@@ -22,8 +22,6 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
-    address public mockTokensDeployer;
-
     string public allowedInstrMerkleData;
 
     TestMode public mode = TestMode.UNIT;
@@ -41,29 +39,41 @@ abstract contract BaseTest is Base {
         // vm.selectFork(vm.createFork(MAINNET_RPC_URL));
 
         if (mode == TestMode.UNIT) {
-            _testSetupBefore();
+            _testSetupMakinaGovernance();
             _coreSetup();
-            _testSetupAfter();
+            _testSetupRegistry();
+            _testSetupTokens();
             _setUp();
         } else if (mode == TestMode.FUZZ) {
-            _testSetupBefore();
+            _testSetupMakinaGovernance();
             _coreSetup();
+            _testSetupRegistry();
         }
     }
 
     /// @dev Can be overriden to provide additional configuration
     function _setUp() public virtual {}
 
-    function _testSetupBefore() public {
+    function _testSetupMakinaGovernance() public {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
         securityCouncil = makeAddr("SecurityCouncil");
     }
 
-    function _testSetupAfter() public {
-        mockTokensDeployer = makeAddr("MOCK_TOKENS_DEPLOYER");
+    function _testSetupTokens() public {
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
         accountingTokenPosID = 1;
+    }
+
+    function _testSetupRegistry() public {
+        vm.startPrank(dao);
+        hubRegistry.setCaliberBeacon(address(caliberBeacon));
+        hubRegistry.setCaliberInboxBeacon(address(caliberInboxBeacon));
+        hubRegistry.setCaliberFactory(address(caliberFactory));
+        hubRegistry.setMachineBeacon(makeAddr("machineBeacon"));
+        hubRegistry.setMachineHubInboxBeacon(makeAddr("machineHubInboxBeacon"));
+        hubRegistry.setMachineFactory(makeAddr("machineFactory"));
+        vm.stopPrank();
     }
 
     function _deployCaliber(
