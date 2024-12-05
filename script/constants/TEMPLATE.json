@@ -1,0 +1,33 @@
+{
+    "DAO": "0x0000000000000000000000000000000000000000",
+    "Governor": "0x0000000000000000000000000000000000000000",
+    "SecurityCouncil": "0x0000000000000000000000000000000000000000",
+    "priceFeedData": [
+        {
+            "token": "0x0000000000000000000000000000000000000000",
+            "feed1": "0x0000000000000000000000000000000000000000",
+            "stalenessThreshold1": 0,
+            "feed2": "0x0000000000000000000000000000000000000000",
+            "stalenessThreshold2": 0
+        }
+    ],
+    "dexAggregatorsTargets": [
+        {   
+            "aggregatorId": 0,
+            "approvalTarget": "0x0000000000000000000000000000000000000000",
+            "executionTarget": "0x0000000000000000000000000000000000000000"
+        }
+    ],
+    "calibersToDeploy": [
+        {
+            "hubMachineInbox": "0x0000000000000000000000000000000000000000",
+            "accountingToken": "0x0000000000000000000000000000000000000000",
+            "acountingTokenPosID": 0,
+            "initialPositionStaleThreshold": 0,
+            "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "initialTimelockDuration": 0,
+            "initialMaxSwapLossBps": 0,
+            "initialMechanic": "0x0000000000000000000000000000000000000000"
+        }
+    ]
+}

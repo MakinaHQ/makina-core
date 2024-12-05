@@ -16,6 +16,8 @@ import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
 import {Swapper} from "../src/swap/Swapper.sol";
 
 abstract contract Base is Script, Test {
+    address public deployer;
+
     address public dao;
     address public mechanic;
     address public securityCouncil;
@@ -32,7 +34,7 @@ abstract contract Base is Script, Test {
     UpgradeableBeacon public caliberInboxBeacon;
 
     function _coreSetup() public {
-        accessManager = new AccessManager(dao);
+        accessManager = new AccessManager(deployer);
 
         oracleRegistry = OracleRegistry(
             address(
@@ -71,7 +73,8 @@ abstract contract Base is Script, Test {
             )
         );
 
-        caliberBeacon = new UpgradeableBeacon(address(new Caliber(address(hubRegistry))), dao);
+        address caliberImplem = address(new Caliber(address(hubRegistry)));
+        caliberBeacon = new UpgradeableBeacon(caliberImplem, dao);
         caliberInboxBeacon = new UpgradeableBeacon(address(new HubCaliberInbox()), dao);
 
         caliberFactory = CaliberFactory(
