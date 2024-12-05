@@ -44,7 +44,6 @@ interface ICaliber {
     }
 
     /// @notice Initialization parameters
-    /// @param inboxBeacon Address of the inbox beacon used to deploy the inbox
     /// @param hubMachineInbox Address of the hub machine inbox
     /// @param accountingToken Address of the accounting token
     /// @param acountingTokenPosID ID for the accounting token position
@@ -56,7 +55,6 @@ interface ICaliber {
     /// @param initialSecurityCouncil Address of the initial security council
     /// @param initialAuthority Address of the initial authority
     struct InitParams {
-        address inboxBeacon;
         address hubMachineInbox;
         address accountingToken;
         uint256 acountingTokenPosID;
@@ -88,11 +86,8 @@ interface ICaliber {
     /// @param params Initialization parameters
     function initialize(InitParams calldata params) external;
 
-    /// @notice Address of the oracle registry
-    function oracleRegistry() external view returns (address);
-
-    /// @notice Address of the swapper module
-    function swapper() external view returns (address);
+    /// @notice Address of the Makina registry
+    function registry() external view returns (address);
 
     /// @notice Address of the inbox
     function inbox() external view returns (address);

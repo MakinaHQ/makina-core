@@ -3,21 +3,19 @@ pragma solidity 0.8.27;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 
 contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     /// @inheritdoc ICaliberFactory
-    address public immutable caliberBeacon;
-    /// @inheritdoc ICaliberFactory
-    address public immutable caliberInboxBeacon;
+    address public immutable registry;
 
     /// @inheritdoc ICaliberFactory
     mapping(address caliber => bool isCaliber) public isCaliber;
 
-    constructor(address _caliberBeacon, address _caliberInboxBeacon) {
-        caliberBeacon = _caliberBeacon;
-        caliberInboxBeacon = _caliberInboxBeacon;
+    constructor(address _registry) {
+        registry = _registry;
         _disableInitializers();
     }
 
@@ -38,7 +36,6 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         address initialSecurityCouncil
     ) external override restricted returns (address) {
         ICaliber.InitParams memory params = ICaliber.InitParams({
-            inboxBeacon: caliberInboxBeacon,
             hubMachineInbox: hubMachineInbox,
             accountingToken: accountingToken,
             acountingTokenPosID: acountingTokenPosID,
@@ -50,7 +47,11 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             initialSecurityCouncil: initialSecurityCouncil,
             initialAuthority: authority()
         });
-        address caliber = address(new BeaconProxy(caliberBeacon, abi.encodeCall(ICaliber.initialize, (params))));
+        address caliber = address(
+            new BeaconProxy(
+                IBaseMakinaRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (params))
+            )
+        );
         isCaliber[caliber] = true;
         emit CaliberDeployed(caliber);
         return caliber;

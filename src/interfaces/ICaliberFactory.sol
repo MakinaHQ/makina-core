@@ -4,17 +4,14 @@ pragma solidity 0.8.27;
 interface ICaliberFactory {
     event CaliberDeployed(address indexed caliber);
 
-    /// @notice The address of the Caliber beacon
-    function caliberBeacon() external view returns (address);
-
-    /// @notice The address of the CaliberInbox beacon
-    function caliberInboxBeacon() external view returns (address);
+    /// @notice Address of the Makina registry
+    function registry() external view returns (address);
 
     /// @notice Caliber => is a caliber deployed by this factory
     function isCaliber(address caliber) external view returns (bool);
 
     /// @notice deploys a new Caliber instance
-    /// @param _hubMachine The address of the hub machine inbox
+    /// @param _hubMachineInbox The address of the hub machine inbox
     /// @param _accountingToken The address of the accounting token
     /// @param _acountingTokenPosID The position ID of the accounting token
     /// @param _initialPositionStaleThreshold The position accounting staleness threshold
@@ -25,7 +22,7 @@ interface ICaliberFactory {
     /// @param _initialSecurityCouncil The address of the initial security council
     /// @return caliber The address of the deployed Caliber instance
     function deployCaliber(
-        address _hubMachine,
+        address _hubMachineInbox,
         address _accountingToken,
         uint256 _acountingTokenPosID,
         uint256 _initialPositionStaleThreshold,
