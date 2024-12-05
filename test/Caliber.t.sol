@@ -7,9 +7,11 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
 import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
+import {ISwapper} from "../src/interfaces/ISwapper.sol";
 import {WeirollPlanner} from "./utils/WeirollPlanner.sol";
 import {MockERC4626} from "./mocks/MockERC4626.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
+import {MockPool} from "./mocks/MockPool.sol";
 
 contract CaliberTest is BaseTest {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
@@ -20,6 +22,7 @@ contract CaliberTest is BaseTest {
     event PositionClosed(uint256 indexed id);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
@@ -78,6 +81,7 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.timelockDuration(), 1 hours);
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
+        assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 1);
     }
@@ -354,6 +358,19 @@ contract CaliberTest is BaseTest {
         vm.warp(effectiveUpdateTime);
 
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
+    }
+
+    function test_cannotSetMaxSwapLossBpsWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setMaxSwapLossBps(1000);
+    }
+
+    function test_setMaxSwapLossBps() public {
+        vm.expectEmit(true, true, true, true, address(caliber));
+        emit MaxSwapLossBpsChanged(DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS, 1000);
+        vm.prank(dao);
+        caliber.setMaxSwapLossBps(1000);
+        assertEq(caliber.maxSwapLossBps(), 1000);
     }
 
     function test_cannotCallManagePositionWithoutInstruction() public {
@@ -722,6 +739,142 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPositionsLength(), 2);
         assertEq(vault.balanceOf(address(caliber)), 0);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
+    }
+
+    function test_cannotSwapIntoNonBaseToken() public {
+        ISwapper.SwapOrder memory order;
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        vm.expectRevert(ICaliber.InvalidOutputToken.selector);
+        vm.prank(mechanic);
+        caliber.swap(order);
+    }
+
+    function test_swapOperatorPermission() public {
+        // security council cannot call swap while recovery mode is off
+        ISwapper.SwapOrder memory order;
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.swap(order);
+
+        // mechanic cannot call swap into a non-base-token
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidOutputToken.selector);
+        caliber.swap(order);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        // check mechanic now cannot call swap
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.swap(order);
+
+        // check security council cannot swap into a non-accounting-token
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        caliber.swap(order);
+    }
+
+    function test_swap() public {
+        // deploy mock pool and add liquidity
+        MockPool pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        deal(address(accountingToken), address(this), amount1, true);
+        deal(address(baseToken), address(this), amount2, true);
+        accountingToken.approve(address(pool), amount1);
+        baseToken.approve(address(pool), amount2);
+        pool.addLiquidity(amount1, amount2);
+
+        // set up swapper with the mock pool
+        vm.prank(dao);
+        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+
+        // swap baseToken (not yet registered as base token) to accountingToken
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        uint256 previewOutputAmoun1 = pool.previewSwap(address(baseToken), inputAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: inputAmount,
+            minOutputAmount: previewOutputAmoun1
+        });
+        vm.prank(mechanic);
+        caliber.swap(order);
+
+        caliber.accountForBaseToken(accountingTokenPosID);
+        assertEq(caliber.getPosition(accountingTokenPosID).value, previewOutputAmoun1);
+        assertEq(baseToken.balanceOf(address(caliber)), 0);
+
+        // set baseToken as an actual base token
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        // swap accountingToken to baseToken
+        uint256 previewOutputAmount2 = pool.previewSwap(address(accountingToken), previewOutputAmoun1);
+        order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(accountingToken), previewOutputAmoun1)),
+            inputToken: address(accountingToken),
+            outputToken: address(baseToken),
+            inputAmount: previewOutputAmoun1,
+            minOutputAmount: previewOutputAmount2
+        });
+        vm.prank(mechanic);
+        caliber.swap(order);
+
+        caliber.accountForBaseToken(accountingTokenPosID);
+        caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+
+        assertEq(caliber.getPosition(accountingTokenPosID).value, 0);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, previewOutputAmount2 * PRICE_B_A);
+    }
+
+    function test_cannotSwapFromBTToBTWithValueLossTooHigh() public {
+        // deploy mock pool and add liquidity
+        MockPool pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        deal(address(accountingToken), address(this), amount1, true);
+        deal(address(baseToken), address(this), amount2, true);
+        accountingToken.approve(address(pool), amount1);
+        baseToken.approve(address(pool), amount2);
+        pool.addLiquidity(amount1, amount2);
+
+        // set up swapper with the mock pool
+        vm.prank(dao);
+        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        // decrease baseToken value
+        bPriceFeed1.setLatestAnswer(
+            bPriceFeed1.latestAnswer() * int256(10_000 - DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS - 1) / 10_000
+        );
+
+        // check cannot swap accountingToken to baseToken
+        uint256 inputAmount = 3e18;
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+        uint256 previewOutputAmount = pool.previewSwap(address(accountingToken), inputAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
+            inputToken: address(accountingToken),
+            outputToken: address(baseToken),
+            inputAmount: inputAmount,
+            minOutputAmount: previewOutputAmount
+        });
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.prank(mechanic);
+        caliber.swap(order);
     }
 
     function test_cannotAccountForPositionWithoutExistingPosition() public {

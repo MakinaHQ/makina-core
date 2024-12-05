@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
+import {ISwapper} from "../interfaces/ISwapper.sol";
 
 interface ICaliber {
     error BaseTokenPosition();
@@ -10,7 +11,9 @@ interface ICaliber {
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
     error InvalidInstructionType();
+    error InvalidOutputToken();
     error UnmatchingInstructions();
+    error MaxValueLossExceeded();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
     error BaseTokenAlreadyExists();
@@ -32,6 +35,7 @@ interface ICaliber {
     event PositionClosed(uint256 indexed id);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
 
     enum InstructionType {
         MANAGE,
@@ -47,6 +51,7 @@ interface ICaliber {
     /// @param initialPositionStaleThreshold Position accounting staleness threshold in seconds
     /// @param initialAllowedInstrRoot Root of the Merkle tree containing allowed instructions
     /// @param initialTimelockDuration Duration of the allowedInstrRoot update timelock
+    /// @param initialMaxSwapLossBps Max allowed value loss (in basis point) for base token swaps
     /// @param initialMechanic Address of the initial mechanic
     /// @param initialSecurityCouncil Address of the initial security council
     /// @param initialAuthority Address of the initial authority
@@ -58,6 +63,7 @@ interface ICaliber {
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
+        uint256 initialMaxSwapLossBps;
         address initialMechanic;
         address initialSecurityCouncil;
         address initialAuthority;
@@ -84,6 +90,9 @@ interface ICaliber {
 
     /// @notice Address of the oracle registry
     function oracleRegistry() external view returns (address);
+
+    /// @notice Address of the swapper module
+    function swapper() external view returns (address);
 
     /// @notice Address of the inbox
     function inbox() external view returns (address);
@@ -120,6 +129,9 @@ interface ICaliber {
 
     /// @notice Effective time of the last scheduled allowedInstrRoot update
     function pendingTimelockExpiry() external view returns (uint256);
+
+    /// @notice Max allowed value loss (in basis point) for base token swaps
+    function maxSwapLossBps() external view returns (uint256);
 
     /// @notice Length of the position IDs array
     function getPositionsLength() external view returns (uint256);
@@ -170,6 +182,10 @@ interface ICaliber {
     /// and accounting instruction, both for the same position
     function managePosition(Instruction[] calldata instructions) external;
 
+    /// @notice Perform a swap via the swapper module
+    /// @param order Swap order parameters
+    function swap(ISwapper.SwapOrder calldata order) external;
+
     /// @notice Set a new mechanic
     /// @param newMechanic Address of new mechanic
     function setMechanic(address newMechanic) external;
@@ -195,4 +211,8 @@ interface ICaliber {
     /// at the time of the call.
     /// @param newMerkleRoot Root of the Merkle tree containing allowed instructions
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
+
+    /// @notice Set the max allowed value loss for base token swaps
+    /// @param newMaxSwapLossBps New max value loss in basis points
+    function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external;
 }

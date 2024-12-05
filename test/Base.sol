@@ -11,6 +11,7 @@ import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
+import {Swapper} from "../src/swap/Swapper.sol";
 
 abstract contract Base is Script, Test {
     address public dao;
@@ -20,6 +21,7 @@ abstract contract Base is Script, Test {
     AccessManager public accessManager;
 
     OracleRegistry public oracleRegistry;
+    Swapper public swapper;
     CaliberFactory public caliberFactory;
 
     function _coreSetup() public {
@@ -35,8 +37,19 @@ abstract contract Base is Script, Test {
             )
         );
 
+        swapper = Swapper(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new Swapper()),
+                    dao,
+                    abi.encodeWithSelector(Swapper(address(0)).initialize.selector, accessManager)
+                )
+            )
+        );
+
         address caliberInboxBeaconAddr = address(new UpgradeableBeacon(address(new HubCaliberInbox()), dao));
-        address caliberBeaconAddr = address(new UpgradeableBeacon(address(new Caliber(address(oracleRegistry))), dao));
+        address caliberBeaconAddr =
+            address(new UpgradeableBeacon(address(new Caliber(address(oracleRegistry), address(swapper))), dao));
 
         caliberFactory = CaliberFactory(
             address(

@@ -33,6 +33,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         uint256 initialPositionStaleThreshold,
         bytes32 initialAllowedInstrRoot,
         uint256 initialTimelockDuration,
+        uint256 initialMaxSwapLossBps,
         address initialMechanic,
         address initialSecurityCouncil
     ) external override restricted returns (address) {
@@ -44,6 +45,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             initialPositionStaleThreshold: initialPositionStaleThreshold,
             initialAllowedInstrRoot: initialAllowedInstrRoot,
             initialTimelockDuration: initialTimelockDuration,
+            initialMaxSwapLossBps: initialMaxSwapLossBps,
             initialMechanic: initialMechanic,
             initialSecurityCouncil: initialSecurityCouncil,
             initialAuthority: authority()

@@ -5,19 +5,27 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {VM} from "./vm/VM.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {ISwapper} from "../interfaces/ISwapper.sol";
 
 contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
+    using SafeERC20 for IERC20Metadata;
+
+    /// @dev Full scale value in basis points
+    uint256 private constant MAX_BPS = 10_000;
 
     /// @inheritdoc ICaliber
     address public immutable oracleRegistry;
+    /// @inheritdoc ICaliber
+    address public immutable swapper;
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
@@ -32,6 +40,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
+        uint256 _maxSwapLossBps;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
         mapping(uint256 posId => address bt) _positionIdToBaseToken;
@@ -50,8 +59,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    constructor(address oracleRegistry_) {
+    constructor(address oracleRegistry_, address swapper_) {
         oracleRegistry = oracleRegistry_;
+        swapper = swapper_;
         _disableInitializers();
     }
 
@@ -63,6 +73,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
         $._timelockDuration = params.initialTimelockDuration;
+        $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
         _addBaseToken(params.accountingToken, params.acountingTokenPosID);
@@ -144,6 +155,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
             ? 0
             : $._pendingTimelockExpiry;
+    }
+
+    /// @inheritdoc ICaliber
+    function maxSwapLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxSwapLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -273,6 +289,33 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function swap(ISwapper.SwapOrder calldata order) public onlyOperator {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._recoveryMode && order.outputToken != $._accountingToken) {
+            revert RecoveryMode();
+        } else if ($._baseTokenToPositionId[order.outputToken] == 0) {
+            revert InvalidOutputToken();
+        }
+
+        uint256 valBefore;
+        bool isInputBaseToken = $._baseTokenToPositionId[order.inputToken] != 0;
+        if (isInputBaseToken) {
+            valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
+        }
+
+        IERC20Metadata(order.inputToken).forceApprove(swapper, order.inputAmount);
+        uint256 amountOut = ISwapper(swapper).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(swapper, 0);
+
+        if (isInputBaseToken) {
+            uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
+            if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
+                revert MaxValueLossExceeded();
+            }
+        }
+    }
+
+    /// @inheritdoc ICaliber
     function setMechanic(address newMechanic) public override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MechanicChanged($._mechanic, newMechanic);
@@ -319,6 +362,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._pendingAllowedInstrRoot = newMerkleRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
         emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+    }
+
+    /// @inheritdoc ICaliber
+    function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
+        $._maxSwapLossBps = newMaxSwapLossBps;
     }
 
     /// @dev Deploys the inbox.
