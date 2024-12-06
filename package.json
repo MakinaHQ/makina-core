@@ -19,6 +19,8 @@
     "prettier:write": "prettier --write \"**/*.{js,json,md,yml}\"",
     "coverage": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\"",
     "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\" --report debug",
-    "genMerkleData": "node script/merkle/generateMerkleTreeData.js"
+    "genMerkleData": "node script/merkle/generateMerkleTreeData.js",
+    "deployMakinaCoreVTNMainnet": "forge script script/DeployMakinaCore.s.sol --rpc-url vtnmainnet --account MAKINA_TEST_DEPLOYER --slow --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv",
+    "deployCalibersVTNMainnet": "forge script script/DeployCalibers.s.sol --rpc-url vtnmainnet --account MAKINA_TEST_DEPLOYER --slow --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv"
   }
 }

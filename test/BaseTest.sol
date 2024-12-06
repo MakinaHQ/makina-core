@@ -32,22 +32,29 @@ abstract contract BaseTest is Base {
 
     enum TestMode {
         UNIT,
-        FUZZ
+        FUZZ,
+        CUSTOM
     }
 
     function setUp() public {
         // vm.selectFork(vm.createFork(MAINNET_RPC_URL));
 
+        deployer = address(this);
+
         if (mode == TestMode.UNIT) {
             _testSetupMakinaGovernance();
             _coreSetup();
             _testSetupRegistry();
+            _testSetupAccessManager();
             _testSetupTokens();
             _setUp();
         } else if (mode == TestMode.FUZZ) {
             _testSetupMakinaGovernance();
             _coreSetup();
             _testSetupRegistry();
+            _testSetupAccessManager();
+        } else if (mode == TestMode.CUSTOM) {
+            _setUp();
         }
     }
 
@@ -66,14 +73,17 @@ abstract contract BaseTest is Base {
     }
 
     function _testSetupRegistry() public {
-        vm.startPrank(dao);
         hubRegistry.setCaliberBeacon(address(caliberBeacon));
         hubRegistry.setCaliberInboxBeacon(address(caliberInboxBeacon));
         hubRegistry.setCaliberFactory(address(caliberFactory));
         hubRegistry.setMachineBeacon(makeAddr("machineBeacon"));
         hubRegistry.setMachineHubInboxBeacon(makeAddr("machineHubInboxBeacon"));
         hubRegistry.setMachineFactory(makeAddr("machineFactory"));
-        vm.stopPrank();
+    }
+
+    function _testSetupAccessManager() public {
+        accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
+        accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
     }
 
     function _deployCaliber(

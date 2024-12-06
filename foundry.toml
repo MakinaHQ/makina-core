@@ -10,6 +10,10 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 base = "${BASE_RPC_URL}"
+vtnmainnet = "${VTN_MAINNET_RPC_URL}"
+
+[etherscan]
+vtnmainnet = { key = "${VTN_MAINNET_ETHERSCAN_API_KEY}", chain = 1, url = "${VTN_MAINNET_VERIFIER_URL}" }
 
 [fuzz]
 runs = 1024
