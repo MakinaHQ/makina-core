@@ -495,6 +495,14 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
+        // use wrong affected tokens list
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID + 1, address(vault), inputAmount);
+        instructions[0].affectedTokens[0] = address(0);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
         // use wrong commands
         instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         instructions[0].commands[1] = instructions[0].commands[0];
@@ -720,8 +728,8 @@ contract CaliberTest is BaseTest {
 
         // check security council can decrease position
         uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 2;
-        vm.prank(securityCouncil);
         instructions[0] = _build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
+        vm.prank(securityCouncil);
         caliber.managePosition(instructions);
         assertEq(caliber.getPositionsLength(), 3);
         assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
@@ -943,6 +951,12 @@ contract CaliberTest is BaseTest {
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         caliber.accountForPosition(instructions[1]);
 
+        // use wrong affected tokens list
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instructions[1].affectedTokens[0] = address(0);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.accountForPosition(instructions[1]);
+
         // use wrong commands
         instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instructions[1].commands[2] = instructions[1].commands[1];
@@ -999,6 +1013,7 @@ contract CaliberTest is BaseTest {
         ICaliber.Instruction memory instruction = ICaliber.Instruction(
             BASE_TOKEN_POS_ID,
             ICaliber.InstructionType.ACCOUNTING,
+            new address[](0),
             new bytes32[](0),
             new bytes[](0),
             0,
@@ -1264,6 +1279,9 @@ contract CaliberTest is BaseTest {
         view
         returns (ICaliber.Instruction memory)
     {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = IERC4626(_vault).asset();
+
         bytes32[] memory commands = new bytes32[](2);
         // "0x095ea7b3010001ffffffffff" + IERC4626(_vault).asset()
         commands[0] = WeirollPlanner.buildCommand(
@@ -1291,7 +1309,9 @@ contract CaliberTest is BaseTest {
 
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
-        return ICaliber.Instruction(_posId, ICaliber.InstructionType.MANAGE, commands, state, stateBitmap, merkleProof);
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
     }
 
     function _build4626RedeemInstruction(address _caliber, uint256 _posId, address _vault, uint256 _shares)
@@ -1299,6 +1319,9 @@ contract CaliberTest is BaseTest {
         view
         returns (ICaliber.Instruction memory)
     {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = IERC4626(_vault).asset();
+
         bytes32[] memory commands = new bytes32[](1);
         // "0xba08765201000102ffffffff" + _vault
         commands[0] = WeirollPlanner.buildCommand(
@@ -1318,7 +1341,9 @@ contract CaliberTest is BaseTest {
 
         bytes32[] memory merkleProof = _getRedeem4626InstrProof();
 
-        return ICaliber.Instruction(_posId, ICaliber.InstructionType.MANAGE, commands, state, stateBitmap, merkleProof);
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
     }
 
     function _build4626AccountingInstruction(address _caliber, uint256 _posId, address _vault)
@@ -1326,6 +1351,9 @@ contract CaliberTest is BaseTest {
         view
         returns (ICaliber.Instruction memory)
     {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = IERC4626(_vault).asset();
+
         bytes32[] memory commands = new bytes32[](3);
         // "0x38d52e0f02ffffffffffff00" + _vault
         commands[0] = WeirollPlanner.buildCommand(
@@ -1360,7 +1388,8 @@ contract CaliberTest is BaseTest {
 
         bytes32[] memory merkleProof = _getAccounting4626InstrProof();
 
-        return
-            ICaliber.Instruction(_posId, ICaliber.InstructionType.ACCOUNTING, commands, state, stateBitmap, merkleProof);
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
     }
 }

@@ -70,6 +70,7 @@ interface ICaliber {
     struct Instruction {
         uint256 positionId; // required for ManagePosition, can be 0x0
         InstructionType instructionType;
+        address[] affectedTokens;
         bytes32[] commands;
         bytes[] state;
         uint128 stateBitmap;

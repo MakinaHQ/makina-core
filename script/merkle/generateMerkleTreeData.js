@@ -4,7 +4,7 @@ import fs from "fs";
 
 // arguments to pass : caliberAddress mockBaseTokenAddress mockERC4626Address mockERC4626PosId
 
-// instructions format: [commandsHash, stateHash, stateBitmap, positionID, instructionType]
+// instructions format: [commandsHash, stateHash, stateBitmap, positionID, affectedTokensHash, instructionType]
 
 const caliberAddr = process.argv[2];
 const mockBaseTokenAddr = process.argv[3];
@@ -22,6 +22,9 @@ const depositMock4626Instruction = [
   ]),
   "0xa0000000000000000000000000000000",
   mockERC4626PosId,
+  keccak256EncodePacked([
+    ethers.zeroPadValue(mockBaseTokenAddr, 32),
+  ]),
   "0",
 ];
 
@@ -35,6 +38,9 @@ const redeemMock4626Instruction = [
   ]),
   "0x60000000000000000000000000000000",
   mockERC4626PosId,
+  keccak256EncodePacked([
+    ethers.zeroPadValue(mockBaseTokenAddr, 32),
+  ]),
   "0",
 ];
 
@@ -47,6 +53,9 @@ const accountingMock4626Instruction = [
   keccak256EncodePacked([ethers.zeroPadValue(caliberAddr, 32)]),
   "0x40000000000000000000000000000000",
   mockERC4626PosId,
+  keccak256EncodePacked([
+    ethers.zeroPadValue(mockBaseTokenAddr, 32),
+  ]),
   "1",
 ];
 
@@ -61,6 +70,7 @@ const tree = StandardMerkleTree.of(values, [
   "bytes32",
   "uint128",
   "uint256",
+  "bytes32",
   "uint256",
 ]);
 
