@@ -76,6 +76,7 @@ contract DeployTest is BaseTest {
             assertEq(ICaliber(_caliber).accountingToken(), _calibersToDeploy[i].accountingToken);
             assertEq(ICaliber(_caliber).getPositionId(0), _calibersToDeploy[i].accountingTokenPosID);
             assertEq(ICaliber(_caliber).allowedInstrRoot(), _calibersToDeploy[i].initialAllowedInstrRoot);
+            assertEq(ICaliber(_caliber).maxMgmtLossBps(), _calibersToDeploy[i].initialMaxMgmtLossBps);
             assertEq(ICaliber(_caliber).maxSwapLossBps(), _calibersToDeploy[i].initialMaxSwapLossBps);
             assertEq(ICaliber(_caliber).mechanic(), _calibersToDeploy[i].initialMechanic);
             assertEq(ICaliber(_caliber).positionStaleThreshold(), _calibersToDeploy[i].initialPositionStaleThreshold);

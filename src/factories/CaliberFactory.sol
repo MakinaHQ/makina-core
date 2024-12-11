@@ -31,6 +31,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         uint256 initialPositionStaleThreshold,
         bytes32 initialAllowedInstrRoot,
         uint256 initialTimelockDuration,
+        uint256 initialMaxMgmtLossBps,
         uint256 initialMaxSwapLossBps,
         address initialMechanic,
         address initialSecurityCouncil
@@ -42,6 +43,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             initialPositionStaleThreshold: initialPositionStaleThreshold,
             initialAllowedInstrRoot: initialAllowedInstrRoot,
             initialTimelockDuration: initialTimelockDuration,
+            initialMaxMgmtLossBps: initialMaxMgmtLossBps,
             initialMaxSwapLossBps: initialMaxSwapLossBps,
             initialMechanic: initialMechanic,
             initialSecurityCouncil: initialSecurityCouncil,

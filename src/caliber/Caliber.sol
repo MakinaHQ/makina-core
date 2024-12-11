@@ -39,6 +39,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
+        uint256 _maxMgmtLossBps;
         uint256 _maxSwapLossBps;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
@@ -71,6 +72,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
         $._timelockDuration = params.initialTimelockDuration;
+        $._maxMgmtLossBps = params.initialMaxMgmtLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
@@ -153,6 +155,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
             ? 0
             : $._pendingTimelockExpiry;
+    }
+
+    /// @inheritdoc ICaliber
+    function maxMgmtLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxMgmtLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -255,7 +262,12 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function managePosition(Instruction[] calldata instructions) public override onlyOperator {
+    function managePosition(Instruction[] calldata instructions)
+        public
+        override
+        onlyOperator
+        returns (uint256, int256)
+    {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (instructions.length != 2) {
@@ -276,12 +288,42 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         _checkInstructionIsAllowed(managingInstruction);
+
+        uint256 inputTokensValueBefore;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[_affectedToken] == 0) {
+                revert InvalidAffectedToken();
+            }
+            inputTokensValueBefore +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
         _execute(managingInstruction.commands, managingInstruction.state);
-        (, int256 change) = _accountForPosition(accountingInstruction);
+
+        (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
 
         if ($._recoveryMode && change >= 0) {
             revert RecoveryMode();
         }
+
+        if (change >= 0) {
+            uint256 inputTokensValueAfter;
+            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+                address _affectedToken = managingInstruction.affectedTokens[i];
+                inputTokensValueAfter +=
+                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+            }
+            int256 inputTokensValueChange = int256(inputTokensValueBefore) - int256(inputTokensValueAfter);
+            if (
+                inputTokensValueChange > 0
+                    && uint256(change) < uint256(inputTokensValueChange).mulDiv(MAX_BPS - $._maxMgmtLossBps, MAX_BPS)
+            ) {
+                revert MaxValueLossExceeded();
+            }
+        }
+
+        return (value, change);
     }
 
     /// @inheritdoc ICaliber
@@ -359,6 +401,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._pendingAllowedInstrRoot = newMerkleRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
         emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+    }
+
+    /// @inheritdoc ICaliber
+    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit MaxMgmtLossBpsChanged($._maxMgmtLossBps, newMaxMgmtLossBps);
+        $._maxMgmtLossBps = newMaxMgmtLossBps;
     }
 
     /// @inheritdoc ICaliber

@@ -54,6 +54,7 @@
             "initialPositionStaleThreshold": 10800,
             "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "initialTimelockDuration": 0,
+            "initialMaxMgmtLossBps": 300,
             "initialMaxSwapLossBps": 300,
             "initialMechanic": "0x750af8495Fc5ca305161CccF8b1012715fBE7462"
         }

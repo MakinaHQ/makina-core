@@ -22,6 +22,7 @@ contract CaliberTest is BaseTest {
     event PositionClosed(uint256 indexed id);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
 
     bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
@@ -34,9 +35,11 @@ contract CaliberTest is BaseTest {
 
     uint256 private constant BASE_TOKEN_POS_ID = 2;
     uint256 private constant VAULT_POS_ID = 3;
+    uint256 private constant POOL_POS_ID = 4;
 
     MockERC20 private baseToken;
     MockERC4626 private vault;
+    MockPool private pool;
 
     MockPriceFeed private bPriceFeed1;
     MockPriceFeed private aPriceFeed1;
@@ -57,10 +60,20 @@ contract CaliberTest is BaseTest {
         );
         vm.stopPrank();
 
+        pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+
         caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(address(caliber), address(baseToken), address(vault), VAULT_POS_ID);
+        _generateMerkleData(
+            address(caliber),
+            address(accountingToken),
+            address(baseToken),
+            address(vault),
+            VAULT_POS_ID,
+            address(pool),
+            POOL_POS_ID
+        );
 
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(_getAllowedInstrMerkleRoot());
@@ -80,6 +93,7 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.timelockDuration(), 1 hours);
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
+        assertEq(caliber.maxMgmtLossBps(), DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 1);
@@ -359,6 +373,19 @@ contract CaliberTest is BaseTest {
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
     }
 
+    function test_cannotSetMaxMgmtLossBpsWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setMaxMgmtLossBps(1000);
+    }
+
+    function test_setMaxMgmtLossBps() public {
+        vm.expectEmit(true, true, true, true, address(caliber));
+        emit MaxMgmtLossBpsChanged(DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS, 1000);
+        vm.prank(dao);
+        caliber.setMaxMgmtLossBps(1000);
+        assertEq(caliber.maxMgmtLossBps(), 1000);
+    }
+
     function test_cannotSetMaxSwapLossBpsWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliber.setMaxSwapLossBps(1000);
@@ -372,16 +399,13 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.maxSwapLossBps(), 1000);
     }
 
-    function test_cannotCallManagePositionWithoutInstruction() public {
+    function test_cannotManagePositionWithoutInstruction() public {
         vm.expectRevert(ICaliber.InvalidInstructionsLength.selector);
         vm.prank(mechanic);
         caliber.managePosition(new ICaliber.Instruction[](0));
     }
 
-    function test_cannotCallManagePositionWithInvalidInstruction() public {
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
-
+    function test_cannotManagePositionWithInvalidInstruction() public {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -409,7 +433,7 @@ contract CaliberTest is BaseTest {
         // instructions have different positionId
         instructions = new ICaliber.Instruction[](2);
         instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
+        instructions[1] = _build4626AccountingInstruction(address(caliber), POOL_POS_ID, address(vault));
         vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
         caliber.managePosition(instructions);
 
@@ -418,6 +442,20 @@ contract CaliberTest is BaseTest {
         instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.expectRevert(ICaliber.InvalidInstructionType.selector);
         caliber.managePosition(instructions);
+
+        // affected token list contains non-base-token
+        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instructions[1].affectedTokens[0] = address(0);
+        vm.expectRevert(ICaliber.InvalidAffectedToken.selector);
+        caliber.managePosition(instructions);
+
+        vm.stopPrank();
+
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        vm.startPrank(mechanic);
 
         // position is a base token position
         instructions[0] = _build4626DepositInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault), inputAmount);
@@ -432,16 +470,16 @@ contract CaliberTest is BaseTest {
         caliber.managePosition(instructions);
     }
 
-    function test_cannotCallManagePositionWithInvalidAccounting() public {
+    function test_cannotManagePositionWithInvalidAccounting() public {
         // baseToken is not set as an actual base token in the caliber
 
         uint256 inputAmount = 3e18;
 
-        deal(address(baseToken), address(caliber), 3e18, true);
+        deal(address(accountingToken), address(caliber), inputAmount, true);
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instructions[0] = _buildMockPoolAddLiquidityOneSide0Instruction(POOL_POS_ID, address(pool), inputAmount);
+        instructions[1] = _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
 
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.InvalidAccounting.selector);
@@ -456,21 +494,9 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.InvalidAccounting.selector);
         caliber.managePosition(instructions);
-
-        // put an end flag in the state after unequal number of assets and amounts
-        bytes[] memory badState = new bytes[](4);
-        badState[0] = instructions[1].state[0];
-        badState[1] = instructions[1].state[1];
-        badState[2] = abi.encode(address(1));
-        badState[3] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
-        instructions[1].state = badState;
-
-        vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
-        caliber.managePosition(instructions);
     }
 
-    function test_cannotCallManagePositionWithInvalidProof() public {
+    function test_cannotManagePositionWithInvalidProof() public {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
@@ -489,16 +515,16 @@ contract CaliberTest is BaseTest {
         caliber.managePosition(instructions);
 
         // use wrong posId
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID + 1, address(vault), inputAmount);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
+        instructions[0] = _build4626DepositInstruction(address(caliber), POOL_POS_ID, address(vault), inputAmount);
+        instructions[1] = _build4626AccountingInstruction(address(caliber), POOL_POS_ID, address(vault));
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
         // use wrong affected tokens list
-        instructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID + 1, address(vault), inputAmount);
+        instructions[0] = _build4626DepositInstruction(address(caliber), POOL_POS_ID, address(vault), inputAmount);
         instructions[0].affectedTokens[0] = address(0);
-        instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID + 1, address(vault));
+        instructions[1] = _build4626AccountingInstruction(address(caliber), POOL_POS_ID, address(vault));
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(instructions);
@@ -523,6 +549,25 @@ contract CaliberTest is BaseTest {
         instructions[0].stateBitmap = 0;
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         vm.prank(mechanic);
+        caliber.managePosition(instructions);
+    }
+
+    function test_cannotManagePositionWithValueLossTooHigh() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        // a1 < 0.99 * (a0 + a1)
+        // <=> a1 < (0.99 / 0.01) * a0
+        uint256 assets0 = 1e30 * PRICE_B_A;
+        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) - 1;
+        deal(address(accountingToken), address(caliber), assets0, true);
+        deal(address(baseToken), address(caliber), assets1, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
+        instructions[1] = _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
         caliber.managePosition(instructions);
     }
 
@@ -638,6 +683,62 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPositionsLength(), 2);
         assertEq(vault.balanceOf(address(caliber)), 0);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
+    }
+
+    function test_managePosition_mockPool_create() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        uint256 assets0 = 1e30 * PRICE_B_A;
+        uint256 assets1 = 1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS;
+        uint256 previewLpts = pool.previewAddLiquidity(assets0, assets1);
+
+        deal(address(accountingToken), address(caliber), assets0, true);
+        deal(address(baseToken), address(caliber), assets1, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
+        instructions[1] = _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit PositionCreated(POOL_POS_ID);
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        assertEq(caliber.getPositionsLength(), 3);
+        assertEq(pool.balanceOf(address(caliber)), previewLpts);
+        assertEq(caliber.getPosition(POOL_POS_ID).value, assets1 * PRICE_B_A);
+    }
+
+    function test_managePosition_mockPool_close() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        uint256 assets0 = 1e30 * PRICE_B_A;
+        uint256 assets1 = 1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS;
+
+        deal(address(accountingToken), address(caliber), assets0, true);
+        deal(address(baseToken), address(caliber), assets1, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = _buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
+        instructions[1] = _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        assertEq(caliber.getPositionsLength(), 2);
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        instructions[0] = _buildMockPoolRemoveLiquidityOneSide1Instruction(
+            POOL_POS_ID, address(pool), pool.balanceOf(address(caliber))
+        );
+
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit PositionClosed(POOL_POS_ID);
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        assertEq(caliber.getPositionsLength(), 2);
+        assertEq(pool.balanceOf(address(caliber)), 0);
+        assertEq(caliber.getPosition(POOL_POS_ID).value, 0);
     }
 
     function test_cannotManagePositionWithWrongRoot() public {
@@ -787,8 +888,7 @@ contract CaliberTest is BaseTest {
     }
 
     function test_swap() public {
-        // deploy mock pool and add liquidity
-        MockPool pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+        // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
         deal(address(accountingToken), address(this), amount1, true);
@@ -845,8 +945,7 @@ contract CaliberTest is BaseTest {
     }
 
     function test_cannotSwapFromBTToBTWithValueLossTooHigh() public {
-        // deploy mock pool and add liquidity
-        MockPool pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+        // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
         deal(address(accountingToken), address(this), amount1, true);
@@ -1387,6 +1486,170 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0x40000000000000000000000000000000;
 
         bytes32[] memory merkleProof = _getAccounting4626InstrProof();
+
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockPoolAddLiquidityInstruction(uint256 _posId, address _pool, uint256 _assets0, uint256 _assets1)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](2);
+        affectedTokens[0] = MockPool(_pool).token0();
+        affectedTokens[1] = MockPool(_pool).token1();
+
+        bytes32[] memory commands = new bytes32[](3);
+        // "0x095ea7b3010001ffffffffff" + MockPool(_pool).token0()
+        commands[0] = WeirollPlanner.buildCommand(
+            IERC20.approve.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            MockPool(_pool).token0()
+        );
+        // "0x095ea7b3010002ffffffffff" + MockPool(_pool).token1()
+        commands[1] = WeirollPlanner.buildCommand(
+            IERC20.approve.selector,
+            0x01, // call
+            0x0002ffffffff, // 2 inputs at indices 0 and 2 of state
+            0xff, // ignore result
+            MockPool(_pool).token1()
+        );
+        // "0x9cd441da010102ffffffffff" + _pool
+        commands[2] = WeirollPlanner.buildCommand(
+            MockPool.addLiquidity.selector,
+            0x01, // call
+            0x0102ffffffff, // 2 inputs at indices 1 and 2 of state
+            0xff, // ignore result
+            _pool
+        );
+
+        bytes[] memory state = new bytes[](3);
+        state[0] = abi.encode(_pool);
+        state[1] = abi.encode(_assets0);
+        state[2] = abi.encode(_assets1);
+
+        bytes32[] memory merkleProof = _getAddLiquidityMockPoolInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockPoolAddLiquidityOneSide0Instruction(uint256 _posId, address _pool, uint256 _assets0)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address token0 = MockPool(_pool).token0();
+
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = token0;
+
+        bytes32[] memory commands = new bytes32[](2);
+        // "0x095ea7b3010001ffffffffff" + token0
+        commands[0] = WeirollPlanner.buildCommand(
+            IERC20.approve.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            token0
+        );
+        // "0x8e022364010102ffffffffff" + _pool
+        commands[1] = WeirollPlanner.buildCommand(
+            MockPool.addLiquidityOneSide.selector,
+            0x01, // call
+            0x0102ffffffff, // 2 inputs at indices 1 and 2 of state
+            0xff, // ignore result
+            _pool
+        );
+
+        bytes[] memory state = new bytes[](3);
+        state[0] = abi.encode(_pool);
+        state[1] = abi.encode(_assets0);
+        state[2] = abi.encode(token0);
+
+        bytes32[] memory merkleProof = _getAddLiquidityOneSide0MockPoolInstrProof();
+
+        uint128 stateBitmap = 0xa0000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockPoolRemoveLiquidityOneSide1Instruction(uint256 _posId, address _pool, uint256 _lpTokens)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address token1 = MockPool(_pool).token1();
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = token1;
+
+        bytes32[] memory commands = new bytes32[](1);
+        // "0xdf7aebb9010001ffffffffff" + _pool
+        commands[0] = WeirollPlanner.buildCommand(
+            MockPool.removeLiquidityOneSide.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            _pool
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_lpTokens);
+        state[1] = abi.encode(token1);
+
+        bytes32[] memory merkleProof = _getRemoveLiquidityOneSide1MockPoolInstrProof();
+
+        uint128 stateBitmap = 0x40000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    /// @dev Builds a mock pool accounting instruction for removing liquidity one-sided from a pool (only token1)
+    function _buildMockPoolAccountingInstruction(address _caliber, uint256 _posId, address _pool)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockPool(_pool).token1();
+
+        bytes32[] memory commands = new bytes32[](2);
+        // "0x70a082310201ffffffffff01" + _pool
+        commands[0] = WeirollPlanner.buildCommand(
+            IERC20.balanceOf.selector,
+            0x02, // static call
+            0x01ffffffffff, // 1 input at index 1 of state
+            0x01, // store fixed size result at index 1 of state
+            _pool
+        );
+        // "0xeeb47144020100ffffffff01" + _pool
+        commands[1] = WeirollPlanner.buildCommand(
+            MockPool.previewRemoveLiquidityOneSide.selector,
+            0x02, // call
+            0x0100ffffffff, // 2 inputs at indices 1 and 0 of state
+            0x01, // store fixed size result at index 1 of state
+            _pool
+        );
+
+        bytes[] memory state = new bytes[](3);
+        state[0] = abi.encode(MockPool(_pool).token1());
+        state[1] = abi.encode(_caliber);
+        state[2] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+
+        bytes32[] memory merkleProof = _getAccountingMockPoolInstrProof();
+
+        uint128 stateBitmap = 0xc0000000000000000000000000000000;
 
         return ICaliber.Instruction(
             _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
