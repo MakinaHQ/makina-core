@@ -465,23 +465,30 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert InvalidInstructionType();
         }
         _checkInstructionIsAllowed(instruction);
-        bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
-        (address[] memory assets, uint256[] memory amounts) = _decodeAccountingOutputState(returnedState);
 
-        uint256 posId = instruction.positionId;
+        uint256[] memory amounts;
+        {
+            bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
+            amounts = _decodeAccountingOutputState(returnedState);
+        }
 
         CaliberStorage storage $ = _getCaliberStorage();
 
+        uint256 posId = instruction.positionId;
         Position storage pos = $._positionById[posId];
         uint256 lastValue = pos.value;
         uint256 currentValue;
 
-        uint256 len = assets.length;
+        uint256 len = instruction.affectedTokens.length;
+        if (amounts.length != len) {
+            revert InvalidAccounting();
+        }
         for (uint256 i; i < len; i++) {
-            if ($._baseTokenToPositionId[assets[i]] == 0) {
+            address token = instruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[token] == 0) {
                 revert InvalidAccounting();
             }
-            uint256 assetValue = _accountingValueOf(assets[i], amounts[i]);
+            uint256 assetValue = _accountingValueOf(token, amounts[i]);
             currentValue += assetValue;
         }
 
@@ -502,42 +509,24 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @dev Decodes the output state of an accounting instruction into asset and amount arrays of equal length.
-    function _decodeAccountingOutputState(bytes[] memory state)
-        internal
-        pure
-        returns (address[] memory, uint256[] memory)
-    {
-        uint256 maxEntries = state.length / 2;
-        address[] memory assets = new address[](maxEntries);
-        uint256[] memory amounts = new uint256[](maxEntries);
+    function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
+        uint256[] memory amounts = new uint256[](state.length);
 
         uint256 count;
         for (uint256 i; i < state.length; i++) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END_OF_ARGS) {
-                if (i % 2 == 1) {
-                    revert InvalidAccounting();
-                }
                 break;
             }
-            if (i % 2 == 0 && i + 1 == state.length) {
-                // last state entry is neither end-of-args flag nor an amount
-                revert InvalidAccounting();
-            }
-            if (i % 2 == 0) {
-                assets[i / 2] = address(uint160(uint256(bytes32(state[i]))));
-            } else {
-                amounts[i / 2] = uint256(bytes32(state[i]));
-                count++; // count the number of asset/amount pairs
-            }
+            amounts[i] = uint256(bytes32(state[i]));
+            count++;
         }
 
-        // Resize the arrays to the actual number of entries
+        // Resize the array to the actual number of amounts
         assembly {
-            mstore(assets, count)
             mstore(amounts, count)
         }
 
-        return (assets, amounts);
+        return amounts;
     }
 
     /// @dev Computes the accounting value of a given token amount.

@@ -50,11 +50,11 @@ const redeemMock4626Instruction = [
 const accountingMock4626Instruction = [
   keccak256EncodePacked([
     ethers.concat(["0x38d52e0f02ffffffffffff00", mockERC4626Addr]),
-    ethers.concat(["0x70a082310201ffffffffff01", mockERC4626Addr]),
-    ethers.concat(["0x4cdad5060201ffffffffff01", mockERC4626Addr]),
+    ethers.concat(["0x70a082310202ffffffffff02", mockERC4626Addr]),
+    ethers.concat(["0x4cdad5060202ffffffffff00", mockERC4626Addr]),
   ]),
   keccak256EncodePacked([ethers.zeroPadValue(caliberAddr, 32)]),
-  "0x40000000000000000000000000000000",
+  "0x20000000000000000000000000000000",
   mockERC4626PosId,
   keccak256EncodePacked([
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
@@ -114,14 +114,14 @@ const removeLiquidityOneSide1MockPoolInstruction = [
 
 const accountingMockPoolInstruction = [
   keccak256EncodePacked([
-    ethers.concat(["0x70a082310201ffffffffff01", mockPoolAddr]),
-    ethers.concat(["0xeeb47144020100ffffffff01", mockPoolAddr]),
+    ethers.concat(["0x70a082310202ffffffffff02", mockPoolAddr]),
+    ethers.concat(["0xeeb47144020200ffffffff00", mockPoolAddr]),
   ]),
   keccak256EncodePacked([
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
     ethers.zeroPadValue(caliberAddr, 32),
   ]),
-  "0xc0000000000000000000000000000000",
+  "0xa0000000000000000000000000000000",
   mockPoolAddrPosId,
   keccak256EncodePacked([
     ethers.zeroPadValue(mockBaseTokenAddr, 32),

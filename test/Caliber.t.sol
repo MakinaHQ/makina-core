@@ -489,8 +489,8 @@ contract CaliberTest is BaseTest {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
-        // replace end flag with null value in accounting output state with odd length
-        delete instructions[1].state[2];
+        // replace end flag with null value in accounting output state
+        delete instructions[1].state[1];
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.InvalidAccounting.selector);
         caliber.managePosition(instructions);
@@ -1005,19 +1005,8 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        // replace end flag with null value in accounting output state with odd length
-        delete instructions[1].state[2];
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
-        caliber.accountForPosition(instructions[1]);
-
-        // put an end flag in the state after unequal number of assets and amounts
-        bytes[] memory badState = new bytes[](4);
-        badState[0] = instructions[1].state[0];
-        badState[1] = instructions[1].state[1];
-        badState[2] = abi.encode(address(1));
-        badState[3] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
-        instructions[1].state = badState;
-
+        // replace end flag with null value in accounting output state
+        delete instructions[1].state[1];
         vm.expectRevert(ICaliber.InvalidAccounting.selector);
         caliber.accountForPosition(instructions[1]);
     }
@@ -1064,7 +1053,7 @@ contract CaliberTest is BaseTest {
 
         // use wrong state
         instructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        instructions[1].state[1] = instructions[1].state[0];
+        instructions[1].state[2] = instructions[1].state[0];
         vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
         caliber.accountForPosition(instructions[1]);
 
@@ -1466,24 +1455,24 @@ contract CaliberTest is BaseTest {
         commands[1] = WeirollPlanner.buildCommand(
             IERC20.balanceOf.selector,
             0x02, // static call
-            0x01ffffffffff, // 1 input at index 1 of state
-            0x01, // store fixed size result at index 1 of state
+            0x02ffffffffff, // 1 input at index 2 of state
+            0x02, // store fixed size result at index 2 of state
             _vault
         );
         // "0x4cdad5060201ffffffffff01" + _vault
         commands[2] = WeirollPlanner.buildCommand(
             IERC4626.previewRedeem.selector,
             0x02, // static call
-            0x01ffffffffff, // 1 input at index 1 of state
-            0x01, // store fixed size result at index 1 of state
+            0x02ffffffffff, // 1 input at index 2 of state
+            0x00, // store fixed size result at index 0 of state
             _vault
         );
 
         bytes[] memory state = new bytes[](3);
-        state[1] = abi.encode(_caliber);
-        state[2] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+        state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+        state[2] = abi.encode(_caliber);
 
-        uint128 stateBitmap = 0x40000000000000000000000000000000;
+        uint128 stateBitmap = 0x20000000000000000000000000000000;
 
         bytes32[] memory merkleProof = _getAccounting4626InstrProof();
 
@@ -1629,27 +1618,27 @@ contract CaliberTest is BaseTest {
         commands[0] = WeirollPlanner.buildCommand(
             IERC20.balanceOf.selector,
             0x02, // static call
-            0x01ffffffffff, // 1 input at index 1 of state
-            0x01, // store fixed size result at index 1 of state
+            0x02ffffffffff, // 1 input at index 2 of state
+            0x02, // store fixed size result at index 2 of state
             _pool
         );
         // "0xeeb47144020100ffffffff01" + _pool
         commands[1] = WeirollPlanner.buildCommand(
             MockPool.previewRemoveLiquidityOneSide.selector,
             0x02, // call
-            0x0100ffffffff, // 2 inputs at indices 1 and 0 of state
-            0x01, // store fixed size result at index 1 of state
+            0x0200ffffffff, // 2 inputs at indices 2 and 0 of state
+            0x00, // store fixed size result at index 0 of state
             _pool
         );
 
         bytes[] memory state = new bytes[](3);
         state[0] = abi.encode(MockPool(_pool).token1());
-        state[1] = abi.encode(_caliber);
-        state[2] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+        state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+        state[2] = abi.encode(_caliber);
 
         bytes32[] memory merkleProof = _getAccountingMockPoolInstrProof();
 
-        uint128 stateBitmap = 0xc0000000000000000000000000000000;
+        uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
             _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
