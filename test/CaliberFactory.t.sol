@@ -48,7 +48,7 @@ contract CaliberFactoryTest is BaseTest {
             caliberFactory.deployCaliber(
                 hubMachineInbox,
                 address(accountingToken),
-                accountingTokenPosID,
+                accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 initialAllowedInstrRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -70,6 +70,6 @@ contract CaliberFactoryTest is BaseTest {
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 1);
-        caliber.accountForBaseToken(accountingTokenPosID);
+        caliber.accountForBaseToken(accountingTokenPosId);
     }
 }

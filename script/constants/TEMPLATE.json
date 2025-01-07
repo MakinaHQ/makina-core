@@ -22,7 +22,7 @@
         {
             "hubMachineInbox": "0x0000000000000000000000000000000000000000",
             "accountingToken": "0x0000000000000000000000000000000000000000",
-            "acountingTokenPosID": 0,
+            "accountingTokenPosId": 0,
             "initialPositionStaleThreshold": 0,
             "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
             "initialTimelockDuration": 0,

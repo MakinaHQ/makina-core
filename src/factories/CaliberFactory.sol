@@ -27,7 +27,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     function deployCaliber(
         address hubMachineInbox,
         address accountingToken,
-        uint256 acountingTokenPosID,
+        uint256 accountingTokenPosId,
         uint256 initialPositionStaleThreshold,
         bytes32 initialAllowedInstrRoot,
         uint256 initialTimelockDuration,
@@ -39,7 +39,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
         ICaliber.InitParams memory params = ICaliber.InitParams({
             hubMachineInbox: hubMachineInbox,
             accountingToken: accountingToken,
-            acountingTokenPosID: acountingTokenPosID,
+            accountingTokenPosId: accountingTokenPosId,
             initialPositionStaleThreshold: initialPositionStaleThreshold,
             initialAllowedInstrRoot: initialAllowedInstrRoot,
             initialTimelockDuration: initialTimelockDuration,

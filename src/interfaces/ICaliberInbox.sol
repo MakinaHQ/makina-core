@@ -50,9 +50,9 @@ interface ICaliberInbox {
     function initTransferToHubMachine(address token, uint256 amount) external;
 
     /// @notice Formats accounting message based on caliber accounting data.
-    /// @param _totalAccountingTokenValue The total value (expressed in caliber's accounting token) held by the caliber.
+    /// @param totalAccountingTokenValue The total value (expressed in caliber's accounting token) held by the caliber.
     /// @return accountingMessage The accounting message.
-    function relayAccounting(uint256 _totalAccountingTokenValue)
+    function relayAccounting(uint256 totalAccountingTokenValue)
         external
         returns (AccountingMessageSlim memory accountingMessage);
 }

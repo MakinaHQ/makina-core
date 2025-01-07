@@ -29,7 +29,7 @@ abstract contract BaseTest is Base {
     TestMode public mode = TestMode.UNIT;
 
     MockERC20 accountingToken;
-    uint256 accountingTokenPosID;
+    uint256 accountingTokenPosId;
     Caliber caliber;
 
     enum TestMode {
@@ -71,7 +71,7 @@ abstract contract BaseTest is Base {
 
     function _testSetupTokens() public {
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
-        accountingTokenPosID = 1;
+        accountingTokenPosId = 1;
     }
 
     function _testSetupRegistry() public {
@@ -91,7 +91,7 @@ abstract contract BaseTest is Base {
     function _deployCaliber(
         address _hubMachineInbox,
         address _accountingToken,
-        uint256 _accountingTokenPosID,
+        uint256 _accountingTokenPosId,
         bytes32 allowedInstrMerkleRoot
     ) public returns (Caliber) {
         vm.prank(dao);
@@ -99,7 +99,7 @@ abstract contract BaseTest is Base {
             caliberFactory.deployCaliber(
                 _hubMachineInbox,
                 _accountingToken,
-                _accountingTokenPosID,
+                _accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 allowedInstrMerkleRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

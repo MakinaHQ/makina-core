@@ -76,7 +76,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
-        _addBaseToken(params.accountingToken, params.acountingTokenPosID);
+        _addBaseToken(params.accountingToken, params.accountingTokenPosId);
         __AccessManaged_init(params.initialAuthority);
     }
 
@@ -447,7 +447,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Adds a new position to storage.
     function _addPosition(Position memory pos, uint256 posId) internal {
         if (posId == 0) {
-            revert ZeroPositionID();
+            revert ZeroPositionId();
         }
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._positionIds.contains(posId)) {

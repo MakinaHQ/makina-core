@@ -25,7 +25,7 @@ interface ICaliber {
     error TimelockDurationTooShort();
     error UnauthorizedOperator();
     error ActiveUpdatePending();
-    error ZeroPositionID();
+    error ZeroPositionId();
 
     event InboxDeployed(address indexed inbox);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
@@ -48,7 +48,7 @@ interface ICaliber {
     /// @notice Initialization parameters.
     /// @param hubMachineInbox The address of the hub machine inbox.
     /// @param accountingToken The address of the accounting token.
-    /// @param acountingTokenPosID The ID of the accounting token position.
+    /// @param accountingTokenPosId The ID of the accounting token position.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
@@ -60,7 +60,7 @@ interface ICaliber {
     struct InitParams {
         address hubMachineInbox;
         address accountingToken;
-        uint256 acountingTokenPosID;
+        uint256 accountingTokenPosId;
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;

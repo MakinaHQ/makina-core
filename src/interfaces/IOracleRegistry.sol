@@ -17,7 +17,7 @@ interface IOracleRegistry {
     error NegativeTokenPrice(address priceFeed);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
 
-    event FeedStalenessThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
+    event FeedStaleThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
     event TokenFeedDataRegistered(address indexed token, address indexed feed1, address indexed feed2);
 
     struct TokenFeedData {
@@ -26,7 +26,7 @@ interface IOracleRegistry {
     }
 
     /// @notice Feed => Staleness threshold in seconds
-    function feedStalenessThreshold(address feed) external view returns (uint256);
+    function feedStaleThreshold(address feed) external view returns (uint256);
 
     /// @notice Returns the price of one unit of baseToken in terms of quoteToken.
     /// @param baseToken The address of the token for which the price is requested.
@@ -60,5 +60,5 @@ interface IOracleRegistry {
     /// @notice Sets the price staleness threshold for a given feed.
     /// @param feed The address of the price feed.
     /// @param threshold The value of staleness threshold.
-    function setFeedStalenessThreshold(address feed, uint256 threshold) external;
+    function setFeedStaleThreshold(address feed, uint256 threshold) external;
 }

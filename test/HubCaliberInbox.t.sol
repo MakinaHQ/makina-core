@@ -34,7 +34,7 @@ contract HubCaliberInboxTest is BaseTest {
 
         hubMachineInbox = makeAddr("HubMachineInbox");
 
-        caliber = _deployCaliber(hubMachineInbox, address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(hubMachineInbox, address(accountingToken), accountingTokenPosId, bytes32(0));
 
         caliberInbox = HubCaliberInbox(caliber.inbox());
     }

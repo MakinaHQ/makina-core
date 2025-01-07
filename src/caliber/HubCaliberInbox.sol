@@ -48,12 +48,12 @@ contract HubCaliberInbox is CaliberInbox {
     }
 
     /// @inheritdoc ICaliberInbox
-    function relayAccounting(uint256 _totalAccountingTokenValue)
+    function relayAccounting(uint256 totalAccountingTokenValue)
         external
         onlyCaliber
         returns (AccountingMessageSlim memory)
     {
         // @TODO notify hubMachineInbox of the accounting message
-        return _formatAccountingMessageSlim(_totalAccountingTokenValue, block.timestamp);
+        return _formatAccountingMessageSlim(totalAccountingTokenValue, block.timestamp);
     }
 }
