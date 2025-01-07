@@ -4,8 +4,8 @@ pragma solidity 0.8.27;
 import {IBaseMakinaRegistry} from "./IBaseMakinaRegistry.sol";
 
 interface IHubRegistry is IBaseMakinaRegistry {
-    event MachineFactoryChange(address indexed oldMachineFactory, address indexed newMachineFactory);
     event MachineBeaconChange(address indexed oldMachineBeacon, address indexed newMachineBeacon);
+    event MachineFactoryChange(address indexed oldMachineFactory, address indexed newMachineFactory);
     event MachineHubInboxBeaconChange(
         address indexed oldMachineHubInboxBeacon, address indexed newMachineHubInboxBeacon
     );

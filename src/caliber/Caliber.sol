@@ -94,6 +94,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function accountingToken() public view override returns (address) {
+        return _getCaliberStorage()._accountingToken;
+    }
+
+    /// @inheritdoc ICaliber
     function mechanic() public view override returns (address) {
         return _getCaliberStorage()._mechanic;
     }
@@ -101,11 +106,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
-    }
-
-    /// @inheritdoc ICaliber
-    function accountingToken() public view override returns (address) {
-        return _getCaliberStorage()._accountingToken;
     }
 
     /// @inheritdoc ICaliber
@@ -121,11 +121,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function positionStaleThreshold() public view override returns (uint256) {
         return _getCaliberStorage()._positionStaleThreshold;
-    }
-
-    /// @inheritdoc ICaliber
-    function recoveryMode() public view override returns (bool) {
-        return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
@@ -165,6 +160,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function maxSwapLossBps() public view override returns (uint256) {
         return _getCaliberStorage()._maxSwapLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function recoveryMode() public view override returns (bool) {
+        return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
@@ -376,15 +376,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function setRecoveryMode(bool enabled) public override restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if ($._recoveryMode != enabled) {
-            $._recoveryMode = enabled;
-            emit RecoveryModeChanged(enabled);
-        }
-    }
-
-    /// @inheritdoc ICaliber
     function setTimelockDuration(uint256 newTimelockDuration) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit TimelockDurationChanged($._timelockDuration, newTimelockDuration);
@@ -415,6 +406,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
         $._maxSwapLossBps = newMaxSwapLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function setRecoveryMode(bool enabled) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._recoveryMode != enabled) {
+            $._recoveryMode = enabled;
+            emit RecoveryModeChanged(enabled);
+        }
     }
 
     /// @dev Deploys the caliber inbox.

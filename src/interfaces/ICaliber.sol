@@ -5,6 +5,8 @@ import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
 interface ICaliber {
+    error ActiveUpdatePending();
+    error BaseTokenAlreadyExists();
     error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidAffectedToken();
@@ -13,31 +15,29 @@ interface ICaliber {
     error InvalidInstructionProof();
     error InvalidInstructionType();
     error InvalidOutputToken();
-    error UnmatchingInstructions();
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
     error NotBaseTokenPosition();
-    error BaseTokenAlreadyExists();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
     error RecoveryMode();
     error TimelockDurationTooShort();
     error UnauthorizedOperator();
-    error ActiveUpdatePending();
+    error UnmatchingInstructions();
     error ZeroPositionId();
 
     event InboxDeployed(address indexed inbox);
-    event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
-    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
-    event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
-    event RecoveryModeChanged(bool indexed enabled);
-    event PositionCreated(uint256 indexed id);
-    event PositionClosed(uint256 indexed id);
-    event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
-    event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
     event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
+    event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
+    event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
+    event PositionClosed(uint256 indexed id);
+    event PositionCreated(uint256 indexed id);
+    event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
+    event RecoveryModeChanged(bool indexed enabled);
+    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
+    event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     enum InstructionType {
         MANAGE,
