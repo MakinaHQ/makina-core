@@ -60,14 +60,7 @@ abstract contract Base is Script, Test {
                     address(new HubRegistry()),
                     dao,
                     abi.encodeCall(
-                        HubRegistry.initialize,
-                        (
-                            IHubRegistry.initParams({
-                                oracleRegistry: address(oracleRegistry),
-                                swapper: address(swapper),
-                                initialAuthority: address(accessManager)
-                            })
-                        )
+                        HubRegistry.initialize, (address(oracleRegistry), address(swapper), address(accessManager))
                     )
                 )
             )

@@ -10,12 +10,6 @@ interface IHubRegistry is IBaseMakinaRegistry {
         address indexed oldMachineHubInboxBeacon, address indexed newMachineHubInboxBeacon
     );
 
-    struct initParams {
-        address oracleRegistry;
-        address swapper;
-        address initialAuthority;
-    }
-
     /// @notice Address of the machine factory.
     function machineFactory() external view returns (address);
 
