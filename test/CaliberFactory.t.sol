@@ -27,7 +27,7 @@ contract CaliberFactoryTest is BaseTest {
         );
     }
 
-    function test_getters() public {
+    function test_getters() public view {
         assertEq(caliberFactory.registry(), address(hubRegistry));
         assertEq(caliberFactory.isCaliber(address(0)), false);
     }

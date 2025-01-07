@@ -28,9 +28,9 @@ abstract contract BaseTest is Base {
 
     TestMode public mode = TestMode.UNIT;
 
-    MockERC20 accountingToken;
-    uint256 accountingTokenPosId;
-    Caliber caliber;
+    MockERC20 public accountingToken;
+    uint256 public accountingTokenPosId;
+    Caliber public caliber;
 
     enum TestMode {
         UNIT,
