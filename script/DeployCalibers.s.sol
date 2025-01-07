@@ -65,7 +65,8 @@ contract DeployCalibers is Script {
                     _calibersToDeploy[i].initialMaxMgmtLossBps,
                     _calibersToDeploy[i].initialMaxSwapLossBps,
                     _calibersToDeploy[i].initialMechanic,
-                    securityCouncil
+                    securityCouncil,
+                    accessManager
                 )
             );
         }

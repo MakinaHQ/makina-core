@@ -21,6 +21,7 @@ interface ICaliberFactory {
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another.
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
+    /// @param initialAuthority The address of the initial authority.
     /// @return caliber The address of the deployed Caliber instance.
     function deployCaliber(
         address hubMachineInbox,
@@ -32,6 +33,7 @@ interface ICaliberFactory {
         uint256 initialMaxMgmtLossBps,
         uint256 initialMaxSwapLossBps,
         address initialMechanic,
-        address initialSecurityCouncil
+        address initialSecurityCouncil,
+        address initialAuthority
     ) external returns (address caliber);
 }

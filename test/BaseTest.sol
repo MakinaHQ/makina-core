@@ -106,7 +106,8 @@ abstract contract BaseTest is Base {
                 DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
                 DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                 mechanic,
-                securityCouncil
+                securityCouncil,
+                address(accessManager)
             )
         );
     }
