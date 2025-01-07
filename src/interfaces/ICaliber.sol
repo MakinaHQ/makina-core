@@ -152,6 +152,8 @@ interface ICaliber {
     function getPositionsLength() external view returns (uint256);
 
     /// @dev Position index => Position ID
+    /// @dev There are no guarantees on the ordering of values inside the Position ID array,
+    ///      and it may change when values are added or remove.
     function getPositionId(uint256 idx) external view returns (uint256);
 
     /// @dev Position ID => Position data
