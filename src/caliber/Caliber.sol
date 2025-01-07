@@ -417,7 +417,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._maxSwapLossBps = newMaxSwapLossBps;
     }
 
-    /// @dev Deploys the inbox.
+    /// @dev Deploys the caliber inbox.
     function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
         address _inbox = address(
             new BeaconProxy(inboxBeacon, abi.encodeCall(ICaliberInbox.initialize, (address(this), hubMachineInbox)))
@@ -458,8 +458,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         emit PositionCreated(posId);
     }
 
-    /// @dev Computes the accounting value of a non-base-token position
-    /// Depending on last and current value, the position is then either created, closed or simply updated in storage.
+    /// @dev Computes the accounting value of a non-base-token position. Depending on last and current value, the
+    /// position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
         if (instruction.instructionType != InstructionType.ACCOUNTING) {
             revert InvalidInstructionType();
@@ -508,7 +508,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return (currentValue, int256(currentValue) - int256(lastValue));
     }
 
-    /// @dev Decodes the output state of an accounting instruction into asset and amount arrays of equal length.
+    /// @dev Decodes the output state of an accounting instruction into an array of amounts.
     function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
         uint256[] memory amounts = new uint256[](state.length);
 
@@ -521,7 +521,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             count++;
         }
 
-        // Resize the array to the actual number of amounts
+        // Resizes the array to the actual number of amounts
         assembly {
             mstore(amounts, count)
         }
@@ -569,7 +569,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @param stateBitmap The bitmap of the state.
     /// @param posId The position ID.
     /// @param instructionType The type of the instruction.
-    /// @return boolean True if the proof is valid, false otherwise.
+    /// @return isValid True if the proof is valid, false otherwise.
     function _verifyInstructionProof(
         bytes32[] memory proof,
         bytes32 commandsHash,
@@ -589,7 +589,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// This allows a weiroll script to have both fixed and variable parameters.
     /// @param state The state to hash.
     /// @param stateBitmap The bitmap of the state.
-    /// @return hash of the state.
+    /// @return hash The hash of the state.
     function _getStateHash(bytes[] memory state, uint128 stateBitmap) internal pure returns (bytes32) {
         if (stateBitmap == uint128(0)) {
             return bytes32(0);
@@ -598,10 +598,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint8 i;
         bytes memory hashInput;
 
-        // loop through the state and hash the values based on the bitmap
-        // the bitmap encodes the index of the state that should be hashed
+        // Loop through the state and hash the values based on the bitmap
+        // which encodes the index of the state that should be hashed.
         for (i; i < state.length;) {
-            // if the bit is set as 1, hash the state
+            // If the bit is set as 1, hash the state.
             if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, state[i]);
             }
@@ -614,6 +614,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @dev Updates the allowed instructions root if a pending update is scheduled and the timelock has expired.
+    /// @return currentRoot The current allowed instructions root.
     function _updateAllowedInstrRoot() internal returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._pendingTimelockExpiry != 0 && block.timestamp >= $._pendingTimelockExpiry) {

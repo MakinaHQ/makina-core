@@ -4,24 +4,24 @@ pragma solidity 0.8.27;
 interface ICaliberFactory {
     event CaliberDeployed(address indexed caliber);
 
-    /// @notice Address of the Makina registry
+    /// @notice Address of the Makina registry.
     function registry() external view returns (address);
 
-    /// @notice Caliber => is a caliber deployed by this factory
+    /// @notice Caliber => Is a caliber deployed by this factory
     function isCaliber(address caliber) external view returns (bool);
 
-    /// @notice deploys a new Caliber instance
-    /// @param _hubMachineInbox The address of the hub machine inbox
-    /// @param _accountingToken The address of the accounting token
-    /// @param _acountingTokenPosID The position ID of the accounting token
-    /// @param _initialPositionStaleThreshold The position accounting staleness threshold
-    /// @param _initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions
-    /// @param _initialTimelockDuration The duration of the Merkle tree root update timelock
-    /// @param _initialMaxMgmtLossBps The max allowed value loss (in basis point) when managing a position
-    /// @param _initialMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another
-    /// @param _initialMechanic The address of the initial mechanic
-    /// @param _initialSecurityCouncil The address of the initial security council
-    /// @return caliber The address of the deployed Caliber instance
+    /// @notice Deploys a new Caliber instance.
+    /// @param _hubMachineInbox The address of the hub machine inbox.
+    /// @param _accountingToken The address of the accounting token.
+    /// @param _acountingTokenPosID The position ID of the accounting token.
+    /// @param _initialPositionStaleThreshold The position accounting staleness threshold.
+    /// @param _initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
+    /// @param _initialTimelockDuration The duration of the Merkle tree root update timelock.
+    /// @param _initialMaxMgmtLossBps The max allowed value loss (in basis point) when managing a position.
+    /// @param _initialMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another.
+    /// @param _initialMechanic The address of the initial mechanic.
+    /// @param _initialSecurityCouncil The address of the initial security council.
+    /// @return caliber The address of the deployed Caliber instance.
     function deployCaliber(
         address _hubMachineInbox,
         address _accountingToken,

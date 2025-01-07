@@ -74,6 +74,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         feedStalenessThreshold[feed] = newThreshold;
     }
 
+    /// @dev Returns the last price of the feed.
+    /// @dev Reverts if the feed is stale or the price is negative.
     function _getFeedPrice(address feed) private view returns (uint256) {
         if (feed == address(0)) {
             return 1;
@@ -88,6 +90,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         return uint256(answer);
     }
 
+    /// @dev Returns the number of decimals of the feed.
+    /// @dev Returns 0 if the feed is not set.
     function _getFeedDecimals(address feed) private view returns (uint8) {
         if (feed == address(0)) {
             return 0;

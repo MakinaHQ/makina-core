@@ -9,12 +9,14 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 contract Swapper is AccessManagedUpgradeable, ISwapper {
     using SafeERC20 for IERC20;
 
+    /// @inheritdoc ISwapper
     mapping(DexAggregator aggregator => DexAggregatorTargets targets) public dexAggregatorTargets;
 
     function initialize(address _initialAuthority) external initializer {
         __AccessManaged_init(_initialAuthority);
     }
 
+    /// @inheritdoc ISwapper
     function swap(SwapOrder calldata order) external override returns (uint256) {
         DexAggregatorTargets storage targets = dexAggregatorTargets[order.aggregator];
         if (targets.approvalTarget == address(0) || targets.executionTarget == address(0)) {
@@ -46,8 +48,10 @@ contract Swapper is AccessManagedUpgradeable, ISwapper {
         return outputAmount;
     }
 
+    /// @inheritdoc ISwapper
     function setDexAggregatorTargets(DexAggregator aggregator, address approvalTarget, address executionTarget)
         external
+        override
         restricted
     {
         dexAggregatorTargets[aggregator] = DexAggregatorTargets(approvalTarget, executionTarget);

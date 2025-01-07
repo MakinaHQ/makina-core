@@ -29,26 +29,26 @@ interface IOracleRegistry {
     function feedStalenessThreshold(address feed) external view returns (uint256);
 
     /// @notice Returns the price of one unit of baseToken in terms of quoteToken.
-    /// @param baseToken Address of the token for which the price is requested
-    /// @param quoteToken Address of the token in which the price is quoted
+    /// @param baseToken The address of the token for which the price is requested.
+    /// @param quoteToken The address of the token in which the price is quoted.
     /// @return price The price of baseToken denominated in quoteToken (expressed in quoteToken decimals).
     function getPrice(address baseToken, address quoteToken) external view returns (uint256);
 
-    /// @notice Get the price feed data for a given token
-    /// @param token Address of the token for which the price feed data is requested
-    /// @return feed1 Address of the first price feed
-    /// @return feed2 Address of the second price feed
+    /// @notice Gets the price feed data for a given token.
+    /// @param token The address of the token for which the price feed data is requested.
+    /// @return feed1 The address of the first price feed.
+    /// @return feed2 The address of the second price feed.
     function getTokenFeedData(address token) external view returns (address, address);
 
-    /// @notice Set the price feed data for a given token
+    /// @notice Sets the price feed data for a given token.
     /// @dev Both feeds, if set, must be Chainlink-interface-compliant.
     /// The combination of feed1 and feed2 must be able to price the token in the reference currency.
     /// If feed2 is set to address(0), the token price in the reference currency is assumed to be returned by feed1.
-    /// @param token Address of the token for which the price feed data is set
-    /// @param feed1 Address of the first price feed.
-    /// @param stalenessThreshold1 Staleness threshold for the first price feed.
-    /// @param feed2 Address of the second price feed. Can be set to address(0).
-    /// @param stalenessThreshold2 Staleness threshold for the second price feed. Ignored if feed2 is address(0).
+    /// @param token The address of the token for which the price feed data is set.
+    /// @param feed1 The address of the first price feed.
+    /// @param stalenessThreshold1 The staleness threshold for the first price feed.
+    /// @param feed2 The address of the second price feed. Can be set to address(0).
+    /// @param stalenessThreshold2 The staleness threshold for the second price feed. Ignored if feed2 is address(0).
     function setTokenFeedData(
         address token,
         address feed1,
@@ -57,8 +57,8 @@ interface IOracleRegistry {
         uint256 stalenessThreshold2
     ) external;
 
-    /// @notice Set the price staleness threshold for a given feed
-    /// @param feed Address of the price feed
-    /// @param threshold Value of staleness threshold
+    /// @notice Sets the price staleness threshold for a given feed.
+    /// @param feed The address of the price feed.
+    /// @param threshold The value of staleness threshold.
     function setFeedStalenessThreshold(address feed, uint256 threshold) external;
 }
