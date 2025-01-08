@@ -80,7 +80,7 @@ interface ICaliber {
     /// @param stateBitmap The state bitmap.
     /// @param merkleProof The array of Merkle proof elements.
     struct Instruction {
-        uint256 positionId; // required for ManagePosition, can be 0x0
+        uint256 positionId;
         InstructionType instructionType;
         address[] affectedTokens;
         bytes32[] commands;
