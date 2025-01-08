@@ -1398,7 +1398,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1430,7 +1430,7 @@ contract CaliberTest is BaseTest {
         bytes32[] memory merkleProof = _getRedeem4626InstrProof();
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1526,7 +1526,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1568,7 +1568,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1600,7 +1600,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0x40000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 

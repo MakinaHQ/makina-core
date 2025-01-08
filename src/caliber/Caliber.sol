@@ -280,7 +280,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if (posId != accountingInstruction.positionId) {
             revert UnmatchingInstructions();
         }
-        if (managingInstruction.instructionType != InstructionType.MANAGE) {
+        if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
         if ($._positionIdToBaseToken[posId] != address(0)) {

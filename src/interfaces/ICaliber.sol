@@ -40,9 +40,8 @@ interface ICaliber {
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     enum InstructionType {
-        MANAGE,
-        ACCOUNTING,
-        HARVEST
+        MANAGEMENT,
+        ACCOUNTING
     }
 
     /// @notice Initialization parameters.
