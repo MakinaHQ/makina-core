@@ -434,7 +434,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenAlreadyExists();
         }
 
-        // reverts if no price feed is registered for token in the oracle registry
+        // Reverts if no price feed is registered for token in the oracle registry.
         IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
 
         $._baseTokenToPositionId[token] = posId;
@@ -521,7 +521,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             count++;
         }
 
-        // Resizes the array to the actual number of amounts
+        // Resize the array to the actual number of amounts.
         assembly {
             mstore(amounts, count)
         }
@@ -579,7 +579,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         bytes32 affectedTokensHash,
         InstructionType instructionType
     ) internal returns (bool) {
-        // the state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type
+        // The state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type.
         bytes32 stateTransitionHash =
             keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, affectedTokensHash, instructionType));
         return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
@@ -598,10 +598,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint8 i;
         bytes memory hashInput;
 
-        // Loop through the state and hash the values based on the bitmap
-        // which encodes the index of the state that should be hashed.
+        // Iterate through the state and hash values corresponding to indices marked in the bitmap.
         for (i; i < state.length;) {
-            // If the bit is set as 1, hash the state.
+            // If the bit is set as 1, hash the state value.
             if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, state[i]);
             }
