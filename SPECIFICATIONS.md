@@ -20,6 +20,26 @@ Data passing and fund transfers between calibers and machines is managed by mail
 
 Calibers can manage and account for positions by executing authorized instructions, which leverage the Weiroll command-chaining framework. A large set of instructions can be pre-approved and registered in a Merkle Tree, whose root is stored in the caliber and used to verify authorization proof.
 
+Instructions can be of two types: 
+- **ACCOUNTING**: Calculates the current size of a position and updates it in the executing caliber's storage.
+- **MANAGEMENT**: Modifies the size of a position. Every `MANAGEMENT` instruction is always paired with an `ACCOUNTING` instruction to account for the changes it introduces.
+
+Each `Instruction` object includes an `affectedTokens` list which can have various purpose for different instruction types.
+
+#### Assumptions
+
+The protocol relies on specific assumptions on the instructions:
+- **ACCOUNTING**:
+  - They must consist solely of read actions. 
+  - The `affectedTokens` list must include exactly all tokens in which the position size is expressed. These tokens must be registered as base tokens in the executing caliber.   
+  - Their output state must start with an ordered list of amounts (one amount per slot) corresponding to the tokens in `affectedTokens`, followed by an end-of-args flag.
+- **MANAGEMENT**:  
+  - The `affectedTokens` list must include exactly all tokens spent by the instruction. These tokens must also be registered as base tokens in the executing caliber.
+
+Furthermore, while positions can be represented by one or more receipt tokens (e.g. ERC20 tokens, NFTs, etc.) that calibers do not track, the protocol relies on the following assumptions when creating new positions within a given caliber:
+- A given position cannot be denoted by more than 1 ID.
+- A token cannot be both a base token and a position token.
+
 #### Standard Operations:
 - Can add a base token with `addBaseToken()`.
 - Can account for a base token position with `accountForBaseToken()`.
