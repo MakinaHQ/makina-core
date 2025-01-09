@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 /// @notice An aggregator of Chainlink price feeds that prices tokens in a reference currency (e.g., USD) using up to two feeds.
 /// If a direct feed between a base token and the reference currency does not exists, it combines two feeds to compute the price.

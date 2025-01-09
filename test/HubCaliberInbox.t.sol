@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 import "./BaseTest.sol";
 import {HubCaliberInbox, ICaliberInbox} from "../src/caliber/HubCaliberInbox.sol";

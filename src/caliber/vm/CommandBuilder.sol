@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 library CommandBuilder {
     uint256 internal constant IDX_VARIABLE_LENGTH = 0x80;

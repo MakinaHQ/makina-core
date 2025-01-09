@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 /// @notice This interface is a combination of Chainlink's AggregatorInterface.sol
 /// and AggregatorV3Interface.sol.
