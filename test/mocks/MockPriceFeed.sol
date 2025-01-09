@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.27;
+pragma solidity 0.8.28;
 
 import {AggregatorV2V3Interface} from "../../src/interfaces/AggregatorV2V3Interface.sol";
 
