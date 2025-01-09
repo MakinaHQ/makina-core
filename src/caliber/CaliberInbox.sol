@@ -57,7 +57,7 @@ abstract contract CaliberInbox is Initializable, ICaliberInbox {
                     --len;
                 }
 
-                // swap element to remove with the last element and pop last element
+                // Swap the element to be removed with the last element, then pop the last element.
                 if (i != len) {
                     _pendingReceivedTokens[i] = _pendingReceivedTokens[len];
                 }

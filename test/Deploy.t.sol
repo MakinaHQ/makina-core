@@ -74,7 +74,7 @@ contract DeployTest is BaseTest {
             assertTrue(deployMakinaCore.caliberFactory().isCaliber(_caliber));
             assertEq(ICaliberInbox(ICaliber(_caliber).inbox()).hubMachineInbox(), _calibersToDeploy[i].hubMachineInbox);
             assertEq(ICaliber(_caliber).accountingToken(), _calibersToDeploy[i].accountingToken);
-            assertEq(ICaliber(_caliber).getPositionId(0), _calibersToDeploy[i].accountingTokenPosID);
+            assertEq(ICaliber(_caliber).getPositionId(0), _calibersToDeploy[i].accountingTokenPosId);
             assertEq(ICaliber(_caliber).allowedInstrRoot(), _calibersToDeploy[i].initialAllowedInstrRoot);
             assertEq(ICaliber(_caliber).maxMgmtLossBps(), _calibersToDeploy[i].initialMaxMgmtLossBps);
             assertEq(ICaliber(_caliber).maxSwapLossBps(), _calibersToDeploy[i].initialMaxSwapLossBps);

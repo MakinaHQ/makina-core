@@ -62,7 +62,7 @@ contract CaliberTest is BaseTest {
 
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
-        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosId, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(
@@ -122,7 +122,7 @@ contract CaliberTest is BaseTest {
         vm.startPrank(dao);
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken), accountingTokenPosID);
+        caliber.addBaseToken(address(baseToken), accountingTokenPosId);
 
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
@@ -145,7 +145,7 @@ contract CaliberTest is BaseTest {
     }
 
     function test_cannotAddBaseTokenWithZeroId() public {
-        vm.expectRevert(ICaliber.ZeroPositionID.selector);
+        vm.expectRevert(ICaliber.ZeroPositionId.selector);
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 0);
     }
@@ -916,8 +916,8 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.swap(order);
 
-        caliber.accountForBaseToken(accountingTokenPosID);
-        assertEq(caliber.getPosition(accountingTokenPosID).value, previewOutputAmoun1);
+        caliber.accountForBaseToken(accountingTokenPosId);
+        assertEq(caliber.getPosition(accountingTokenPosId).value, previewOutputAmoun1);
         assertEq(baseToken.balanceOf(address(caliber)), 0);
 
         // set baseToken as an actual base token
@@ -937,10 +937,10 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.swap(order);
 
-        caliber.accountForBaseToken(accountingTokenPosID);
+        caliber.accountForBaseToken(accountingTokenPosId);
         caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
 
-        assertEq(caliber.getPosition(accountingTokenPosID).value, 0);
+        assertEq(caliber.getPosition(accountingTokenPosId).value, 0);
         assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, previewOutputAmount2 * PRICE_B_A);
     }
 
@@ -1225,8 +1225,8 @@ contract CaliberTest is BaseTest {
 
     function test_updateAndReportCaliberAUM() public {
         vm.startPrank(dao);
-        oracleRegistry.setFeedStalenessThreshold(address(aPriceFeed1), 1 days);
-        oracleRegistry.setFeedStalenessThreshold(address(bPriceFeed1), 1 days);
+        oracleRegistry.setFeedStaleThreshold(address(aPriceFeed1), 1 days);
+        oracleRegistry.setFeedStaleThreshold(address(bPriceFeed1), 1 days);
         vm.stopPrank();
 
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](0);
@@ -1398,7 +1398,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1430,7 +1430,7 @@ contract CaliberTest is BaseTest {
         bytes32[] memory merkleProof = _getRedeem4626InstrProof();
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1526,7 +1526,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1568,7 +1568,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -1600,7 +1600,7 @@ contract CaliberTest is BaseTest {
         uint128 stateBitmap = 0x40000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGE, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 

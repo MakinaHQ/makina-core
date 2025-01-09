@@ -27,19 +27,20 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     function deployCaliber(
         address hubMachineInbox,
         address accountingToken,
-        uint256 acountingTokenPosID,
+        uint256 accountingTokenPosId,
         uint256 initialPositionStaleThreshold,
         bytes32 initialAllowedInstrRoot,
         uint256 initialTimelockDuration,
         uint256 initialMaxMgmtLossBps,
         uint256 initialMaxSwapLossBps,
         address initialMechanic,
-        address initialSecurityCouncil
+        address initialSecurityCouncil,
+        address initialAuthority
     ) external override restricted returns (address) {
         ICaliber.InitParams memory params = ICaliber.InitParams({
             hubMachineInbox: hubMachineInbox,
             accountingToken: accountingToken,
-            acountingTokenPosID: acountingTokenPosID,
+            accountingTokenPosId: accountingTokenPosId,
             initialPositionStaleThreshold: initialPositionStaleThreshold,
             initialAllowedInstrRoot: initialAllowedInstrRoot,
             initialTimelockDuration: initialTimelockDuration,
@@ -47,7 +48,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             initialMaxSwapLossBps: initialMaxSwapLossBps,
             initialMechanic: initialMechanic,
             initialSecurityCouncil: initialSecurityCouncil,
-            initialAuthority: authority()
+            initialAuthority: initialAuthority
         });
         address caliber = address(
             new BeaconProxy(

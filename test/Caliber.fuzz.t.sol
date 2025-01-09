@@ -46,7 +46,7 @@ contract CaliberFuzzTest is BaseTest {
         accountingTokenUnit = 10 ** data.aDecimals;
         baseTokenUnit = 10 ** data.b1Decimals;
 
-        accountingTokenPosID = 1;
+        accountingTokenPosId = 1;
 
         aPriceFeed1 =
             new MockPriceFeed(data.af1Decimals, int256(data.a_e_price * (10 ** data.af1Decimals)), block.timestamp);
@@ -62,7 +62,7 @@ contract CaliberFuzzTest is BaseTest {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosID, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosId, bytes32(0));
     }
 
     function test_accountForATPosition_fuzz(Data memory data) public {

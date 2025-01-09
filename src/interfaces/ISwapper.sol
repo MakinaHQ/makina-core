@@ -28,6 +28,13 @@ interface ISwapper {
         address executionTarget;
     }
 
+    /// @notice Swap order object.
+    /// @param aggregator The DEX aggregator.
+    /// @param data The swap calldata to pass to the DEX aggregator's execution target.
+    /// @param inputToken The input token.
+    /// @param outputToken The output token.
+    /// @param inputAmount The input amount.
+    /// @param minOutputAmount The minimum expected output amount.
     struct SwapOrder {
         DexAggregator aggregator;
         bytes data;
@@ -37,10 +44,22 @@ interface ISwapper {
         uint256 minOutputAmount;
     }
 
+    /// @notice Returns approval and execution targets for a given DEX aggregator.
+    /// @param aggregator The DEX aggregator.
+    /// @return approvalTarget The approval target.
+    /// @return executionTarget The execution target.
     function dexAggregatorTargets(DexAggregator aggregator)
         external
         view
         returns (address approvalTarget, address executionTarget);
 
+    /// @notice Swaps tokens using a given DEX aggregator.
+    /// @param order The swap order object.
     function swap(SwapOrder calldata order) external returns (uint256);
+
+    /// @notice Sets approval and execution targets for a given DEX aggregator.
+    /// @param aggregator The DEX aggregator.
+    /// @param approvalTarget The approval target.
+    function setDexAggregatorTargets(DexAggregator aggregator, address approvalTarget, address executionTarget)
+        external;
 }

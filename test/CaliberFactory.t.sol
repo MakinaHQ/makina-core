@@ -27,14 +27,16 @@ contract CaliberFactoryTest is BaseTest {
         );
     }
 
-    function test_getters() public {
+    function test_getters() public view {
         assertEq(caliberFactory.registry(), address(hubRegistry));
         assertEq(caliberFactory.isCaliber(address(0)), false);
     }
 
     function test_cannotDeployCaliberWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.deployCaliber(address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0));
+        caliberFactory.deployCaliber(
+            address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0), address(0)
+        );
     }
 
     function test_deployCaliber() public {
@@ -48,14 +50,15 @@ contract CaliberFactoryTest is BaseTest {
             caliberFactory.deployCaliber(
                 hubMachineInbox,
                 address(accountingToken),
-                accountingTokenPosID,
+                accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 initialAllowedInstrRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
                 DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
                 DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                 mechanic,
-                securityCouncil
+                securityCouncil,
+                address(accessManager)
             )
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
@@ -70,6 +73,6 @@ contract CaliberFactoryTest is BaseTest {
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 1);
-        caliber.accountForBaseToken(accountingTokenPosID);
+        caliber.accountForBaseToken(accountingTokenPosId);
     }
 }

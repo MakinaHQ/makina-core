@@ -4,7 +4,7 @@ import fs from "fs";
 
 // arguments to pass : caliberAddress mockAccountingTokenAddress mockBaseTokenAddress mockERC4626Address mockPoolAddress mockERC4626PosId
 
-// instructions format: [commandsHash, stateHash, stateBitmap, positionID, affectedTokensHash, instructionType]
+// instructions format: [commandsHash, stateHash, stateBitmap, positionId, affectedTokensHash, instructionType]
 
 const caliberAddr = process.argv[2];
 const mockAccountingTokenAddr = process.argv[3];

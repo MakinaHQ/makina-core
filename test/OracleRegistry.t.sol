@@ -8,7 +8,7 @@ import {MockERC20} from "./mocks/MockERC20.sol";
 import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
 contract OracleRegistryTest is BaseTest {
-    event FeedStalenessThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
+    event FeedStaleThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
     event TokenFeedDataRegistered(address indexed token, address indexed feed1, address indexed feed2);
 
     MockERC20 internal baseToken;
@@ -185,12 +185,12 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_1() public {
-        uint256 startTimestamp = vm.getBlockTimestamp();
+        uint256 startTimestamp = block.timestamp;
         basePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -208,12 +208,12 @@ contract OracleRegistryTest is BaseTest {
     }
 
     function test_cannotGetPriceWithStalePrice_2() public {
-        uint256 startTimestamp = vm.getBlockTimestamp();
+        uint256 startTimestamp = block.timestamp;
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -236,8 +236,8 @@ contract OracleRegistryTest is BaseTest {
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -264,8 +264,8 @@ contract OracleRegistryTest is BaseTest {
 
         skip(DEFAULT_PF_STALE_THRSHLD + 1);
 
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
-        quotePriceFeed1 = new MockPriceFeed(18, 1e18, vm.getBlockTimestamp());
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -343,28 +343,28 @@ contract OracleRegistryTest is BaseTest {
         assertEq(price, (10 ** 8) / PRICE_A_B);
     }
 
-    function test_cannotSetFeedStalenessThresholdWithoutRole() public {
+    function test_cannotSetFeedStaleThresholdWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        oracleRegistry.setFeedStalenessThreshold(address(0), 0);
+        oracleRegistry.setFeedStaleThreshold(address(0), 0);
     }
 
-    function test_setFeedStalenessThreshold() public {
+    function test_setFeedStaleThreshold() public {
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        assertEq(oracleRegistry.feedStalenessThreshold(address(basePriceFeed1)), 0);
+        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 0);
 
         vm.prank(dao);
         oracleRegistry.setTokenFeedData(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        assertEq(oracleRegistry.feedStalenessThreshold(address(basePriceFeed1)), DEFAULT_PF_STALE_THRSHLD);
+        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), DEFAULT_PF_STALE_THRSHLD);
 
         vm.expectEmit(true, true, true, true, address(oracleRegistry));
-        emit FeedStalenessThresholdChange(address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
+        emit FeedStaleThresholdChange(address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
         vm.prank(dao);
-        oracleRegistry.setFeedStalenessThreshold(address(basePriceFeed1), 1 days);
+        oracleRegistry.setFeedStaleThreshold(address(basePriceFeed1), 1 days);
 
-        assertEq(oracleRegistry.feedStalenessThreshold(address(basePriceFeed1)), 1 days);
+        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 1 days);
     }
 }

@@ -11,7 +11,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
 
     /// @inheritdoc IOracleRegistry
-    mapping(address feed => uint256 stalenessThreshold) public feedStalenessThreshold;
+    mapping(address feed => uint256 stalenessThreshold) public feedStaleThreshold;
 
     mapping(address token => TokenFeedData feedData) private _tokenFeedData;
 
@@ -59,21 +59,23 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         }
         _tokenFeedData[token] = TokenFeedData({feed1: feed1, feed2: feed2});
 
-        feedStalenessThreshold[feed1] = stalenessThreshold1;
+        feedStaleThreshold[feed1] = stalenessThreshold1;
         if (feed2 != address(0)) {
-            feedStalenessThreshold[feed2] = stalenessThreshold2;
+            feedStaleThreshold[feed2] = stalenessThreshold2;
         }
 
         emit TokenFeedDataRegistered(token, feed1, feed2);
     }
 
     /// @inheritdoc IOracleRegistry
-    function setFeedStalenessThreshold(address feed, uint256 newThreshold) external restricted {
-        emit FeedStalenessThresholdChange(feed, feedStalenessThreshold[feed], newThreshold);
+    function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
+        emit FeedStaleThresholdChange(feed, feedStaleThreshold[feed], newThreshold);
         // zero is allowed in order to explicitly indicate that a feed is not used
-        feedStalenessThreshold[feed] = newThreshold;
+        feedStaleThreshold[feed] = newThreshold;
     }
 
+    /// @dev Returns the last price of the feed.
+    /// @dev Reverts if the feed is stale or the price is negative.
     function _getFeedPrice(address feed) private view returns (uint256) {
         if (feed == address(0)) {
             return 1;
@@ -82,12 +84,14 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (answer < 0) {
             revert NegativeTokenPrice(feed);
         }
-        if (block.timestamp - updatedAt > feedStalenessThreshold[feed]) {
+        if (block.timestamp - updatedAt > feedStaleThreshold[feed]) {
             revert PriceFeedStale(feed, updatedAt);
         }
         return uint256(answer);
     }
 
+    /// @dev Returns the number of decimals of the feed.
+    /// @dev Returns 0 if the feed is not set.
     function _getFeedDecimals(address feed) private view returns (uint8) {
         if (feed == address(0)) {
             return 0;

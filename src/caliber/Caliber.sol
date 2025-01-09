@@ -76,7 +76,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
-        _addBaseToken(params.accountingToken, params.acountingTokenPosID);
+        _addBaseToken(params.accountingToken, params.accountingTokenPosId);
         __AccessManaged_init(params.initialAuthority);
     }
 
@@ -94,6 +94,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function accountingToken() public view override returns (address) {
+        return _getCaliberStorage()._accountingToken;
+    }
+
+    /// @inheritdoc ICaliber
     function mechanic() public view override returns (address) {
         return _getCaliberStorage()._mechanic;
     }
@@ -101,11 +106,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
-    }
-
-    /// @inheritdoc ICaliber
-    function accountingToken() public view override returns (address) {
-        return _getCaliberStorage()._accountingToken;
     }
 
     /// @inheritdoc ICaliber
@@ -121,11 +121,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function positionStaleThreshold() public view override returns (uint256) {
         return _getCaliberStorage()._positionStaleThreshold;
-    }
-
-    /// @inheritdoc ICaliber
-    function recoveryMode() public view override returns (bool) {
-        return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
@@ -165,6 +160,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function maxSwapLossBps() public view override returns (uint256) {
         return _getCaliberStorage()._maxSwapLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function recoveryMode() public view override returns (bool) {
+        return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
@@ -280,7 +280,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if (posId != accountingInstruction.positionId) {
             revert UnmatchingInstructions();
         }
-        if (managingInstruction.instructionType != InstructionType.MANAGE) {
+        if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
         if ($._positionIdToBaseToken[posId] != address(0)) {
@@ -376,15 +376,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function setRecoveryMode(bool enabled) public override restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if ($._recoveryMode != enabled) {
-            $._recoveryMode = enabled;
-            emit RecoveryModeChanged(enabled);
-        }
-    }
-
-    /// @inheritdoc ICaliber
     function setTimelockDuration(uint256 newTimelockDuration) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit TimelockDurationChanged($._timelockDuration, newTimelockDuration);
@@ -417,7 +408,16 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._maxSwapLossBps = newMaxSwapLossBps;
     }
 
-    /// @dev Deploys the inbox.
+    /// @inheritdoc ICaliber
+    function setRecoveryMode(bool enabled) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._recoveryMode != enabled) {
+            $._recoveryMode = enabled;
+            emit RecoveryModeChanged(enabled);
+        }
+    }
+
+    /// @dev Deploys the caliber inbox.
     function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
         address _inbox = address(
             new BeaconProxy(inboxBeacon, abi.encodeCall(ICaliberInbox.initialize, (address(this), hubMachineInbox)))
@@ -434,7 +434,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenAlreadyExists();
         }
 
-        // reverts if no price feed is registered for token in the oracle registry
+        // Reverts if no price feed is registered for token in the oracle registry.
         IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
 
         $._baseTokenToPositionId[token] = posId;
@@ -447,7 +447,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Adds a new position to storage.
     function _addPosition(Position memory pos, uint256 posId) internal {
         if (posId == 0) {
-            revert ZeroPositionID();
+            revert ZeroPositionId();
         }
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._positionIds.contains(posId)) {
@@ -458,8 +458,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         emit PositionCreated(posId);
     }
 
-    /// @dev Computes the accounting value of a non-base-token position
-    /// Depending on last and current value, the position is then either created, closed or simply updated in storage.
+    /// @dev Computes the accounting value of a non-base-token position. Depending on last and current value, the
+    /// position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
         if (instruction.instructionType != InstructionType.ACCOUNTING) {
             revert InvalidInstructionType();
@@ -508,7 +508,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return (currentValue, int256(currentValue) - int256(lastValue));
     }
 
-    /// @dev Decodes the output state of an accounting instruction into asset and amount arrays of equal length.
+    /// @dev Decodes the output state of an accounting instruction into an array of amounts.
     function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
         uint256[] memory amounts = new uint256[](state.length);
 
@@ -521,7 +521,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             count++;
         }
 
-        // Resize the array to the actual number of amounts
+        // Resize the array to the actual number of amounts.
         assembly {
             mstore(amounts, count)
         }
@@ -569,7 +569,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @param stateBitmap The bitmap of the state.
     /// @param posId The position ID.
     /// @param instructionType The type of the instruction.
-    /// @return boolean True if the proof is valid, false otherwise.
+    /// @return isValid True if the proof is valid, false otherwise.
     function _verifyInstructionProof(
         bytes32[] memory proof,
         bytes32 commandsHash,
@@ -579,7 +579,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         bytes32 affectedTokensHash,
         InstructionType instructionType
     ) internal returns (bool) {
-        // the state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type
+        // The state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type.
         bytes32 stateTransitionHash =
             keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, affectedTokensHash, instructionType));
         return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
@@ -589,7 +589,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// This allows a weiroll script to have both fixed and variable parameters.
     /// @param state The state to hash.
     /// @param stateBitmap The bitmap of the state.
-    /// @return hash of the state.
+    /// @return hash The hash of the state.
     function _getStateHash(bytes[] memory state, uint128 stateBitmap) internal pure returns (bytes32) {
         if (stateBitmap == uint128(0)) {
             return bytes32(0);
@@ -598,10 +598,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint8 i;
         bytes memory hashInput;
 
-        // loop through the state and hash the values based on the bitmap
-        // the bitmap encodes the index of the state that should be hashed
+        // Iterate through the state and hash values corresponding to indices marked in the bitmap.
         for (i; i < state.length;) {
-            // if the bit is set as 1, hash the state
+            // If the bit is set as 1, hash the state value.
             if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, state[i]);
             }
@@ -614,6 +613,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @dev Updates the allowed instructions root if a pending update is scheduled and the timelock has expired.
+    /// @return currentRoot The current allowed instructions root.
     function _updateAllowedInstrRoot() internal returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._pendingTimelockExpiry != 0 && block.timestamp >= $._pendingTimelockExpiry) {
