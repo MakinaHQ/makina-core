@@ -34,7 +34,7 @@ contract CaliberFactoryTest is BaseTest {
 
     function test_cannotDeployCaliberWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.deployCaliber(address(0), address(0), 0, 0, bytes32(0), 0, 0, address(0), address(0));
+        caliberFactory.deployCaliber(address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0));
     }
 
     function test_deployCaliber() public {
@@ -52,6 +52,7 @@ contract CaliberFactoryTest is BaseTest {
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 initialAllowedInstrRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
                 DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                 mechanic,
                 securityCouncil

@@ -12,6 +12,7 @@ contract DeployCalibers is Script {
         uint256 accountingTokenPosID;
         address hubMachineInbox;
         bytes32 initialAllowedInstrRoot;
+        uint256 initialMaxMgmtLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         uint256 initialPositionStaleThreshold;
@@ -61,6 +62,7 @@ contract DeployCalibers is Script {
                     _calibersToDeploy[i].initialPositionStaleThreshold,
                     _calibersToDeploy[i].initialAllowedInstrRoot,
                     _calibersToDeploy[i].initialTimelockDuration,
+                    _calibersToDeploy[i].initialMaxMgmtLossBps,
                     _calibersToDeploy[i].initialMaxSwapLossBps,
                     _calibersToDeploy[i].initialMechanic,
                     securityCouncil

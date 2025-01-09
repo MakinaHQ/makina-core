@@ -20,6 +20,8 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
 
+    uint256 public constant DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS = 100;
+
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
     string public allowedInstrMerkleData;
@@ -101,6 +103,7 @@ abstract contract BaseTest is Base {
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 allowedInstrMerkleRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
                 DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                 mechanic,
                 securityCouncil
@@ -108,16 +111,25 @@ abstract contract BaseTest is Base {
         );
     }
 
-    function _generateMerkleData(address _caliber, address _mockBaseToken, address _mockVault, uint256 _mockVaultPosId)
-        internal
-    {
-        string[] memory command = new string[](6);
+    function _generateMerkleData(
+        address _caliber,
+        address _mockAccountingToken,
+        address _mockBaseToken,
+        address _mockVault,
+        uint256 _mockVaultPosId,
+        address _mockPool,
+        uint256 _mockPoolPosId
+    ) internal {
+        string[] memory command = new string[](9);
         command[0] = "yarn";
-        command[1] = "genMerkleData";
+        command[1] = "genMerkleDataMock";
         command[2] = vm.toString(_caliber);
-        command[3] = vm.toString(_mockBaseToken);
-        command[4] = vm.toString(_mockVault);
-        command[5] = vm.toString(_mockVaultPosId);
+        command[3] = vm.toString(_mockAccountingToken);
+        command[4] = vm.toString(_mockBaseToken);
+        command[5] = vm.toString(_mockVault);
+        command[6] = vm.toString(_mockVaultPosId);
+        command[7] = vm.toString(_mockPool);
+        command[8] = vm.toString(_mockPoolPosId);
         vm.ffi(command);
         allowedInstrMerkleData = _getMerkleData();
     }
@@ -140,5 +152,21 @@ abstract contract BaseTest is Base {
 
     function _getAccounting4626InstrProof() internal view returns (bytes32[] memory) {
         return allowedInstrMerkleData.readBytes32Array(".proofAccountingMock4626");
+    }
+
+    function _getAddLiquidityMockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofAddLiquidityMockPool");
+    }
+
+    function _getAddLiquidityOneSide0MockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofAddLiquidityOneSide0MockPool");
+    }
+
+    function _getRemoveLiquidityOneSide1MockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofRemoveLiquidityOneSide1MockPool");
+    }
+
+    function _getAccountingMockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofAccountingMockPool");
     }
 }

@@ -7,6 +7,7 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 interface ICaliber {
     error BaseTokenPosition();
     error InvalidAccounting();
+    error InvalidAffectedToken();
     error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
@@ -35,6 +36,7 @@ interface ICaliber {
     event PositionClosed(uint256 indexed id);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
 
     enum InstructionType {
@@ -50,6 +52,7 @@ interface ICaliber {
     /// @param initialPositionStaleThreshold Position accounting staleness threshold in seconds
     /// @param initialAllowedInstrRoot Root of the Merkle tree containing allowed instructions
     /// @param initialTimelockDuration Duration of the allowedInstrRoot update timelock
+    /// @param initialMaxMgmtLossBps Max allowed value loss (in basis point) for position management
     /// @param initialMaxSwapLossBps Max allowed value loss (in basis point) for base token swaps
     /// @param initialMechanic Address of the initial mechanic
     /// @param initialSecurityCouncil Address of the initial security council
@@ -61,6 +64,7 @@ interface ICaliber {
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
+        uint256 initialMaxMgmtLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         address initialSecurityCouncil;
@@ -70,6 +74,7 @@ interface ICaliber {
     struct Instruction {
         uint256 positionId; // required for ManagePosition, can be 0x0
         InstructionType instructionType;
+        address[] affectedTokens;
         bytes32[] commands;
         bytes[] state;
         uint128 stateBitmap;
@@ -125,6 +130,9 @@ interface ICaliber {
     /// @notice Effective time of the last scheduled allowedInstrRoot update
     function pendingTimelockExpiry() external view returns (uint256);
 
+    /// @notice Max allowed value loss (in basis point) for position management
+    function maxMgmtLossBps() external view returns (uint256);
+
     /// @notice Max allowed value loss (in basis point) for base token swaps
     function maxSwapLossBps() external view returns (uint256);
 
@@ -175,7 +183,9 @@ interface ICaliber {
     /// and creates or closes it if needed.
     /// @param instructions Array containing a manage instruction and optionally
     /// and accounting instruction, both for the same position
-    function managePosition(Instruction[] calldata instructions) external;
+    /// @return value The new position value
+    /// @return change The change in the position value
+    function managePosition(Instruction[] calldata instructions) external returns (uint256 value, int256 change);
 
     /// @notice Perform a swap via the swapper module
     /// @param order Swap order parameters
@@ -206,6 +216,10 @@ interface ICaliber {
     /// at the time of the call.
     /// @param newMerkleRoot Root of the Merkle tree containing allowed instructions
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
+
+    /// @notice Set the max allowed value loss for position management
+    /// @param newMaxMgmtLossBps New max value loss in basis points
+    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external;
 
     /// @notice Set the max allowed value loss for base token swaps
     /// @param newMaxSwapLossBps New max value loss in basis points

@@ -39,6 +39,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
+        uint256 _maxMgmtLossBps;
         uint256 _maxSwapLossBps;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
@@ -71,6 +72,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
         $._timelockDuration = params.initialTimelockDuration;
+        $._maxMgmtLossBps = params.initialMaxMgmtLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
@@ -153,6 +155,11 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
             ? 0
             : $._pendingTimelockExpiry;
+    }
+
+    /// @inheritdoc ICaliber
+    function maxMgmtLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxMgmtLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -255,7 +262,12 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function managePosition(Instruction[] calldata instructions) public override onlyOperator {
+    function managePosition(Instruction[] calldata instructions)
+        public
+        override
+        onlyOperator
+        returns (uint256, int256)
+    {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (instructions.length != 2) {
@@ -276,12 +288,42 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         _checkInstructionIsAllowed(managingInstruction);
+
+        uint256 inputTokensValueBefore;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[_affectedToken] == 0) {
+                revert InvalidAffectedToken();
+            }
+            inputTokensValueBefore +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
         _execute(managingInstruction.commands, managingInstruction.state);
-        (, int256 change) = _accountForPosition(accountingInstruction);
+
+        (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
 
         if ($._recoveryMode && change >= 0) {
             revert RecoveryMode();
         }
+
+        if (change >= 0) {
+            uint256 inputTokensValueAfter;
+            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+                address _affectedToken = managingInstruction.affectedTokens[i];
+                inputTokensValueAfter +=
+                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+            }
+            int256 inputTokensValueChange = int256(inputTokensValueBefore) - int256(inputTokensValueAfter);
+            if (
+                inputTokensValueChange > 0
+                    && uint256(change) < uint256(inputTokensValueChange).mulDiv(MAX_BPS - $._maxMgmtLossBps, MAX_BPS)
+            ) {
+                revert MaxValueLossExceeded();
+            }
+        }
+
+        return (value, change);
     }
 
     /// @inheritdoc ICaliber
@@ -362,6 +404,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit MaxMgmtLossBpsChanged($._maxMgmtLossBps, newMaxMgmtLossBps);
+        $._maxMgmtLossBps = newMaxMgmtLossBps;
+    }
+
+    /// @inheritdoc ICaliber
     function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
@@ -416,23 +465,30 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert InvalidInstructionType();
         }
         _checkInstructionIsAllowed(instruction);
-        bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
-        (address[] memory assets, uint256[] memory amounts) = _decodeAccountingOutputState(returnedState);
 
-        uint256 posId = instruction.positionId;
+        uint256[] memory amounts;
+        {
+            bytes[] memory returnedState = _execute(instruction.commands, instruction.state);
+            amounts = _decodeAccountingOutputState(returnedState);
+        }
 
         CaliberStorage storage $ = _getCaliberStorage();
 
+        uint256 posId = instruction.positionId;
         Position storage pos = $._positionById[posId];
         uint256 lastValue = pos.value;
         uint256 currentValue;
 
-        uint256 len = assets.length;
+        uint256 len = instruction.affectedTokens.length;
+        if (amounts.length != len) {
+            revert InvalidAccounting();
+        }
         for (uint256 i; i < len; i++) {
-            if ($._baseTokenToPositionId[assets[i]] == 0) {
+            address token = instruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[token] == 0) {
                 revert InvalidAccounting();
             }
-            uint256 assetValue = _accountingValueOf(assets[i], amounts[i]);
+            uint256 assetValue = _accountingValueOf(token, amounts[i]);
             currentValue += assetValue;
         }
 
@@ -453,42 +509,24 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @dev Decodes the output state of an accounting instruction into asset and amount arrays of equal length.
-    function _decodeAccountingOutputState(bytes[] memory state)
-        internal
-        pure
-        returns (address[] memory, uint256[] memory)
-    {
-        uint256 maxEntries = state.length / 2;
-        address[] memory assets = new address[](maxEntries);
-        uint256[] memory amounts = new uint256[](maxEntries);
+    function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
+        uint256[] memory amounts = new uint256[](state.length);
 
         uint256 count;
         for (uint256 i; i < state.length; i++) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END_OF_ARGS) {
-                if (i % 2 == 1) {
-                    revert InvalidAccounting();
-                }
                 break;
             }
-            if (i % 2 == 0 && i + 1 == state.length) {
-                // last state entry is neither end-of-args flag nor an amount
-                revert InvalidAccounting();
-            }
-            if (i % 2 == 0) {
-                assets[i / 2] = address(uint160(uint256(bytes32(state[i]))));
-            } else {
-                amounts[i / 2] = uint256(bytes32(state[i]));
-                count++; // count the number of asset/amount pairs
-            }
+            amounts[i] = uint256(bytes32(state[i]));
+            count++;
         }
 
-        // Resize the arrays to the actual number of entries
+        // Resize the array to the actual number of amounts
         assembly {
-            mstore(assets, count)
             mstore(amounts, count)
         }
 
-        return (assets, amounts);
+        return amounts;
     }
 
     /// @dev Computes the accounting value of a given token amount.
@@ -505,12 +543,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @dev Checks if the instruction is allowed for a given position.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
-        // all commands are concatenated and hashed
         bytes32 commandsHash = keccak256(abi.encodePacked(instruction.commands));
-
-        // states are hashed based on the bitmap
         bytes32 stateHash = _getStateHash(instruction.state, instruction.stateBitmap);
-
+        bytes32 affectedTokensHash = keccak256(abi.encodePacked(instruction.affectedTokens));
         if (
             !_verifyInstructionProof(
                 instruction.merkleProof,
@@ -518,6 +553,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
                 stateHash,
                 instruction.stateBitmap,
                 instruction.positionId,
+                affectedTokensHash,
                 instruction.instructionType
             )
         ) {
@@ -529,6 +565,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @param proof The proof to check.
     /// @param commandsHash The hash of the commands.
     /// @param stateHash The hash of the state.
+    /// @param affectedTokensHash The hash of the affected tokens.
     /// @param stateBitmap The bitmap of the state.
     /// @param posId The position ID.
     /// @param instructionType The type of the instruction.
@@ -539,11 +576,12 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         bytes32 stateHash,
         uint128 stateBitmap,
         uint256 posId,
+        bytes32 affectedTokensHash,
         InstructionType instructionType
     ) internal returns (bool) {
-        // the state transition hash is the hash of the commands, state, bitmap, position ID and instruction type
+        // the state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type
         bytes32 stateTransitionHash =
-            keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, instructionType));
+            keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, affectedTokensHash, instructionType));
         return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
     }
 
