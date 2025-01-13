@@ -4,6 +4,7 @@ out = "out"
 libs = ["lib"]
 evm_version = "shanghai"
 solc_version = "0.8.28"
+optimizer = true
 ffi = true
 fs_permissions = [{ access = "read-write", path = "./"}]
 
