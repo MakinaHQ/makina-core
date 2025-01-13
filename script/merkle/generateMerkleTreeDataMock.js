@@ -19,7 +19,7 @@ const depositMock4626Instruction = [
     ethers.concat(["0x095ea7b3010001ffffffffff", mockBaseTokenAddr]),
     ethers.concat(["0x6e553f65010102ffffffffff", mockERC4626Addr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(mockERC4626Addr, 32),
     ethers.zeroPadValue(caliberAddr, 32),
   ]),
@@ -35,7 +35,7 @@ const redeemMock4626Instruction = [
   keccak256EncodePacked([
     ethers.concat(["0xba08765201000102ffffffff", mockERC4626Addr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(caliberAddr, 32),
     ethers.zeroPadValue(caliberAddr, 32),
   ]),
@@ -53,7 +53,7 @@ const accountingMock4626Instruction = [
     ethers.concat(["0x70a082310202ffffffffff02", mockERC4626Addr]),
     ethers.concat(["0x4cdad5060202ffffffffff00", mockERC4626Addr]),
   ]),
-  keccak256EncodePacked([ethers.zeroPadValue(caliberAddr, 32)]),
+  getStateHash([ethers.zeroPadValue(caliberAddr, 32)]),
   "0x20000000000000000000000000000000",
   mockERC4626PosId,
   keccak256EncodePacked([
@@ -68,7 +68,7 @@ const addLiquidityMockPoolInstruction = [
     ethers.concat(["0x095ea7b3010002ffffffffff", mockBaseTokenAddr]),
     ethers.concat(["0x9cd441da010102ffffffffff", mockPoolAddr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(mockPoolAddr, 32),
   ]),
   "0x80000000000000000000000000000000",
@@ -85,7 +85,7 @@ const addLiquidityOneSide0MockPoolInstruction = [
     ethers.concat(["0x095ea7b3010001ffffffffff", mockAccountingTokenAddr]),
     ethers.concat(["0x8e022364010102ffffffffff", mockPoolAddr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(mockPoolAddr, 32),
     ethers.zeroPadValue(mockAccountingTokenAddr, 32),
   ]),
@@ -101,7 +101,7 @@ const removeLiquidityOneSide1MockPoolInstruction = [
   keccak256EncodePacked([
     ethers.concat(["0xdf7aebb9010001ffffffffff", mockPoolAddr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
   ]),
   "0x40000000000000000000000000000000",
@@ -117,7 +117,7 @@ const accountingMockPoolInstruction = [
     ethers.concat(["0x70a082310202ffffffffff02", mockPoolAddr]),
     ethers.concat(["0xeeb47144020200ffffffff00", mockPoolAddr]),
   ]),
-  keccak256EncodePacked([
+  getStateHash([
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
     ethers.zeroPadValue(caliberAddr, 32),
   ]),
@@ -129,6 +129,19 @@ const accountingMockPoolInstruction = [
   "1",
 ];
 
+const harvestMockBaseTokenInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0x40c10f19010001ffffffffff", mockBaseTokenAddr]),
+  ]),
+  getStateHash([
+    ethers.zeroPadValue(caliberAddr, 32),
+  ]),
+  "0x80000000000000000000000000000000",
+  0,
+  keccak256EncodePacked([]),
+  "2",
+];
+
 const values = [
   depositMock4626Instruction,
   redeemMock4626Instruction,
@@ -137,6 +150,7 @@ const values = [
   addLiquidityOneSide0MockPoolInstruction,
   removeLiquidityOneSide1MockPoolInstruction,
   accountingMockPoolInstruction,
+  harvestMockBaseTokenInstruction
 ];
 
 const tree = StandardMerkleTree.of(values, [
@@ -157,6 +171,7 @@ const treeData = {
   proofAddLiquidityOneSide0MockPool: tree.getProof(4),
   proofRemoveLiquidityOneSide1MockPool: tree.getProof(5),
   proofAccountingMockPool: tree.getProof(6),
+  proofHarvestMockBaseToken: tree.getProof(7),
 };
 
 fs.writeFileSync(
@@ -164,8 +179,12 @@ fs.writeFileSync(
   JSON.stringify(treeData, null, 2) + "\n",
 );
 
-function keccak256EncodePacked(commands) {
-  return commands.length > 0
-    ? ethers.keccak256(ethers.concat(commands))
+function keccak256EncodePacked(list) {
+  return ethers.keccak256(ethers.concat(list))
+}
+
+function getStateHash(state) {
+  return state.length > 0
+    ? keccak256EncodePacked(state)
     : ethers.ZeroHash;
 }

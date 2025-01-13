@@ -170,4 +170,8 @@ abstract contract BaseTest is Base {
     function _getAccountingMockPoolInstrProof() internal view returns (bytes32[] memory) {
         return allowedInstrMerkleData.readBytes32Array(".proofAccountingMockPool");
     }
+
+    function _getHarvestMockBaseTokenInstrProof() internal view returns (bytes32[] memory) {
+        return allowedInstrMerkleData.readBytes32Array(".proofHarvestMockBaseToken");
+    }
 }

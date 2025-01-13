@@ -51,6 +51,8 @@ contract CaliberTest is BaseTest {
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
+        pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
@@ -58,9 +60,8 @@ contract CaliberTest is BaseTest {
         oracleRegistry.setTokenFeedData(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
+        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
         vm.stopPrank();
-
-        pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
         caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosId, bytes32(0));
 
@@ -851,39 +852,43 @@ contract CaliberTest is BaseTest {
 
     function test_cannotSwapIntoNonBaseToken() public {
         ISwapper.SwapOrder memory order;
-
-        uint256 inputAmount = 3e18;
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
         vm.expectRevert(ICaliber.InvalidOutputToken.selector);
         vm.prank(mechanic);
         caliber.swap(order);
     }
 
-    function test_swapOperatorPermission() public {
-        // security council cannot call swap while recovery mode is off
-        ISwapper.SwapOrder memory order;
-        vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
-        caliber.swap(order);
-
-        // mechanic cannot call swap into a non-base-token
-        vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidOutputToken.selector);
-        caliber.swap(order);
-
-        // turn on recovery mode
+    function test_cannotSwapIntoNonAccountingTokenWhileInRecoveryMode() public {
         vm.prank(dao);
         caliber.setRecoveryMode(true);
 
-        // check mechanic now cannot call swap
-        vm.prank(mechanic);
+        ISwapper.SwapOrder memory order;
+        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.prank(securityCouncil);
+        caliber.swap(order);
+    }
+
+    function test_cannotSwapWithoutMechanicWhileNotInRecoveryMode() public {
+        ISwapper.SwapOrder memory order;
+
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.swap(order);
 
-        // check security council cannot swap into a non-accounting-token
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.swap(order);
+    }
+
+    function test_cannotSwapWithoutSCWhileInRecoveryMode() public {
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        ISwapper.SwapOrder memory order;
+
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.swap(order);
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.swap(order);
     }
 
@@ -891,17 +896,9 @@ contract CaliberTest is BaseTest {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
-        deal(address(accountingToken), address(this), amount1, true);
-        deal(address(baseToken), address(this), amount2, true);
-        accountingToken.approve(address(pool), amount1);
-        baseToken.approve(address(pool), amount2);
-        pool.addLiquidity(amount1, amount2);
+        _addLiquidityToMockPool(amount1, amount2);
 
-        // set up swapper with the mock pool
-        vm.prank(dao);
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
-
-        // swap baseToken (not yet registered as base token) to accountingToken
+        // swap baseToken to accountingToken
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         uint256 previewOutputAmoun1 = pool.previewSwap(address(baseToken), inputAmount);
@@ -916,8 +913,7 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.swap(order);
 
-        caliber.accountForBaseToken(accountingTokenPosId);
-        assertEq(caliber.getPosition(accountingTokenPosId).value, previewOutputAmoun1);
+        assertEq(accountingToken.balanceOf(address(caliber)), previewOutputAmoun1);
         assertEq(baseToken.balanceOf(address(caliber)), 0);
 
         // set baseToken as an actual base token
@@ -937,57 +933,342 @@ contract CaliberTest is BaseTest {
         vm.prank(mechanic);
         caliber.swap(order);
 
-        caliber.accountForBaseToken(accountingTokenPosId);
-        caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
-
-        assertEq(caliber.getPosition(accountingTokenPosId).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, previewOutputAmount2 * PRICE_B_A);
+        assertEq(accountingToken.balanceOf(address(caliber)), 0);
+        assertEq(baseToken.balanceOf(address(caliber)), previewOutputAmount2);
     }
 
-    function test_cannotSwapFromBTToBTWithValueLossTooHigh() public {
+    function test_swapWhileInRecoveryMode() public {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
-        deal(address(accountingToken), address(this), amount1, true);
-        deal(address(baseToken), address(this), amount2, true);
-        accountingToken.approve(address(pool), amount1);
-        baseToken.approve(address(pool), amount2);
-        pool.addLiquidity(amount1, amount2);
+        _addLiquidityToMockPool(amount1, amount2);
 
-        // set up swapper with the mock pool
+        // turn on recovery mode
         vm.prank(dao);
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+        caliber.setRecoveryMode(true);
+
+        // swap baseToken to accountingToken
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: inputAmount,
+            minOutputAmount: previewOutputAmount1
+        });
+        vm.prank(securityCouncil);
+        caliber.swap(order);
+    }
+
+    function test_cannotSwapFromBTWithValueLossTooHigh() public {
+        // add liquidity to mock pool
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        _addLiquidityToMockPool(amount1, amount2);
 
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
-        // decrease baseToken value
-        bPriceFeed1.setLatestAnswer(
-            bPriceFeed1.latestAnswer() * int256(10_000 - DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS - 1) / 10_000
+        // decrease accountingToken value
+        aPriceFeed1.setLatestAnswer(
+            aPriceFeed1.latestAnswer() * int256(10_000 - DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS - 1) / 10_000
         );
 
-        // check cannot swap accountingToken to baseToken
+        // check cannot swap baseToken to accountingToken
         uint256 inputAmount = 3e18;
-        deal(address(accountingToken), address(caliber), inputAmount, true);
-        uint256 previewOutputAmount = pool.previewSwap(address(accountingToken), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        uint256 previewOutputAmount = pool.previewSwap(address(baseToken), inputAmount);
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
-            data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
-            inputToken: address(accountingToken),
-            outputToken: address(baseToken),
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
             inputAmount: inputAmount,
             minOutputAmount: previewOutputAmount
         });
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
         vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.swap(order);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        // check cannot swap baseToken to accountingToken
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
         caliber.swap(order);
     }
 
-    function test_cannotAccountForPositionWithoutExistingPosition() public {
-        ICaliber.Instruction memory instruction = _build4626AccountingInstruction(address(caliber), 3, address(vault));
+    function test_cannotHarvestWithInvalidInstruction() public {
+        // instruction is not a harvest instruction
+        Caliber.Instruction memory instruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.harvest(instruction, swapOrders);
+    }
 
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
-        caliber.accountForPosition(instruction);
+    function test_cannotHarvestWithInvalidProof() public {
+        uint256 harvestAmount = 1e18;
+        Caliber.Instruction memory instruction;
+        ISwapper.SwapOrder[] memory swapOrders;
+
+        // use wrong reward contract
+        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+
+        // use wrong commands
+        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        delete instruction.commands[0];
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+
+        // use wrong state
+        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        delete instruction.state[0];
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+
+        // use wrong bitmap
+        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        instruction.stateBitmap = 0;
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+    }
+
+    function test_harvestWithoutSwap() public {
+        uint256 harvestAmount = 1e18;
+        Caliber.Instruction memory instruction =
+            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+        assertEq(baseToken.balanceOf(address(caliber)), harvestAmount);
+    }
+
+    function test_cannotHarvestWithSwapIntoNonAccountingTokenWhileInRecoveryMode() public {
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        Caliber.Instruction memory instruction;
+        ISwapper.SwapOrder[] memory orders;
+
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.prank(securityCouncil);
+        caliber.harvest(instruction, orders);
+    }
+
+    function test_cannotHarvestWithSwapWithoutMechanicWhileNotInRecoveryMode() public {
+        Caliber.Instruction memory instruction;
+        ISwapper.SwapOrder[] memory orders;
+
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, orders);
+
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, orders);
+    }
+
+    function test_cannotHarvestWithSwapWithoutSCWhileInRecoveryMode() public {
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        Caliber.Instruction memory instruction;
+        ISwapper.SwapOrder[] memory orders;
+
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, orders);
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, orders);
+    }
+
+    function test_harvestWithSwap() public {
+        // add liquidity to mock pool
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        _addLiquidityToMockPool(amount1, amount2);
+
+        uint256 harvestAmount = 1e18;
+
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), harvestAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: harvestAmount,
+            minOutputAmount: previewOutputAmount1
+        });
+
+        Caliber.Instruction memory instruction =
+            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        swapOrders[0] = order;
+
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+        assertEq(accountingToken.balanceOf(address(caliber)), previewOutputAmount1);
+    }
+
+    function test_harvestWithSwapWhileInRecoveryMode() public {
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        // add liquidity to mock pool
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        _addLiquidityToMockPool(amount1, amount2);
+
+        uint256 harvestAmount = 1e18;
+
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), harvestAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: harvestAmount,
+            minOutputAmount: previewOutputAmount1
+        });
+
+        Caliber.Instruction memory instruction =
+            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        swapOrders[0] = order;
+
+        vm.prank(securityCouncil);
+        caliber.harvest(instruction, swapOrders);
+        assertEq(accountingToken.balanceOf(address(caliber)), previewOutputAmount1);
+    }
+
+    function test_cannotHarvestWithSwapFromBTWithValueLossTooHigh() public {
+        // add liquidity to mock pool
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        _addLiquidityToMockPool(amount1, amount2);
+
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        // decrease accountingToken value
+        aPriceFeed1.setLatestAnswer(
+            aPriceFeed1.latestAnswer() * int256(10_000 - DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS - 1) / 10_000
+        );
+
+        // check cannot harvest and swap baseToken to accountingToken
+        uint256 harvestAmount = 3e18;
+        Caliber.Instruction memory instruction =
+            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        uint256 previewOutputAmount = pool.previewSwap(address(baseToken), harvestAmount);
+        swapOrders[0] = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: harvestAmount,
+            minOutputAmount: previewOutputAmount
+        });
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        // check cannot swap baseToken to accountingToken
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.harvest(instruction, swapOrders);
+    }
+
+    function test_cannotHarvestWithWrongRoot() public {
+        uint256 harvestAmount = 1e18;
+        Caliber.Instruction memory instruction =
+            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+
+        // schedule root update with a wrong root
+        vm.prank(dao);
+        caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
+
+        // instruction can still be executed while the update is pending
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+
+        skip(caliber.timelockDuration());
+
+        // instruction cannot be executed after the update takes effect
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        // schedule root update with the correct root
+        vm.prank(dao);
+        caliber.scheduleAllowedInstrRootUpdate(_getAllowedInstrMerkleRoot());
+
+        // instruction cannot be executed while the update is pending
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        skip(caliber.timelockDuration());
+
+        // instruction can be executed after the update takes effect
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+    }
+
+    function test_harvestOperatorPermissions() public {
+        Caliber.Instruction memory instruction;
+        ISwapper.SwapOrder[] memory swapOrders;
+
+        // security council cannot call swap while recovery mode is off
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        uint256 harvestAmount = 1e18;
+        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        swapOrders = new ISwapper.SwapOrder[](1);
+
+        // mechanic cannot call harvest with swap into a non-base-token
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidOutputToken.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        // check mechanic now cannot call harvest
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliber.harvest(instruction, swapOrders);
+
+        // check security council cannot call harvest
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        caliber.harvest(instruction, swapOrders);
     }
 
     function test_cannotAccountForPositionWithInvalidAccounting() public {
@@ -1017,6 +1298,30 @@ contract CaliberTest is BaseTest {
 
         vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
         caliber.accountForPosition(instruction);
+    }
+
+    function test_cannotAccountForPositionWithInvalidInstruction() public {
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
+        vaultInstructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vaultInstructions[1] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(vaultInstructions);
+
+        // instruction is not an accounting instruction
+        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        caliber.accountForPosition(vaultInstructions[0]);
+
+        // position is a base token position
+        vaultInstructions[1].positionId = BASE_TOKEN_POS_ID;
+        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
+        caliber.accountForPosition(vaultInstructions[1]);
     }
 
     function test_cannotAccountForPositionWithInvalidProof() public {
@@ -1187,7 +1492,7 @@ contract CaliberTest is BaseTest {
         assertEq(caliber.getPosition(VAULT_POS_ID).value, previewAssets * PRICE_B_A);
     }
 
-    function test_cannotAccountForPositionWithInvalidInstruction() public {
+    function test_cannotAccountForPositionBatchWithInvalidInstruction() public {
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
@@ -1362,6 +1667,14 @@ contract CaliberTest is BaseTest {
     /// Helper functions
     ///
 
+    function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {
+        deal(address(accountingToken), address(this), _amount1, true);
+        deal(address(baseToken), address(this), _amount2, true);
+        accountingToken.approve(address(pool), _amount1);
+        baseToken.approve(address(pool), _amount2);
+        pool.addLiquidity(_amount1, _amount2);
+    }
+
     function _build4626DepositInstruction(address _caliber, uint256 _posId, address _vault, uint256 _assets)
         internal
         view
@@ -1451,7 +1764,7 @@ contract CaliberTest is BaseTest {
             0x00, // store fixed size result at index 0 of state
             _vault
         );
-        // "0x70a082310201ffffffffff01" + _vault
+        // "0x70a082310202ffffffffff02" + _vault
         commands[1] = WeirollPlanner.buildCommand(
             IERC20.balanceOf.selector,
             0x02, // static call
@@ -1459,7 +1772,7 @@ contract CaliberTest is BaseTest {
             0x02, // store fixed size result at index 2 of state
             _vault
         );
-        // "0x4cdad5060201ffffffffff01" + _vault
+        // "0x4cdad5060202ffffffffff00" + _vault
         commands[2] = WeirollPlanner.buildCommand(
             IERC4626.previewRedeem.selector,
             0x02, // static call
@@ -1614,7 +1927,7 @@ contract CaliberTest is BaseTest {
         affectedTokens[0] = MockPool(_pool).token1();
 
         bytes32[] memory commands = new bytes32[](2);
-        // "0x70a082310201ffffffffff01" + _pool
+        // "0x70a082310202ffffffffff02" + _pool
         commands[0] = WeirollPlanner.buildCommand(
             IERC20.balanceOf.selector,
             0x02, // static call
@@ -1622,7 +1935,7 @@ contract CaliberTest is BaseTest {
             0x02, // store fixed size result at index 2 of state
             _pool
         );
-        // "0xeeb47144020100ffffffff01" + _pool
+        // "0xeeb47144020200ffffffff00" + _pool
         commands[1] = WeirollPlanner.buildCommand(
             MockPool.previewRemoveLiquidityOneSide.selector,
             0x02, // call
@@ -1642,6 +1955,34 @@ contract CaliberTest is BaseTest {
 
         return ICaliber.Instruction(
             _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockRewardTokenHarvestInstruction(address _caliber, address _mockRewardToken, uint256 _harvestAmount)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        bytes32[] memory commands = new bytes32[](1);
+        // "0x40c10f19010001ffffffffff" + _mockRewardToken
+        commands[0] = WeirollPlanner.buildCommand(
+            MockERC20.mint.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            _mockRewardToken
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_caliber);
+        state[1] = abi.encode(_harvestAmount);
+
+        bytes32[] memory merkleProof = _getHarvestMockBaseTokenInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            0, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
         );
     }
 }

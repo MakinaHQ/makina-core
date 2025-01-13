@@ -41,7 +41,8 @@ interface ICaliber {
 
     enum InstructionType {
         MANAGEMENT,
-        ACCOUNTING
+        ACCOUNTING,
+        HARVEST
     }
 
     /// @notice Initialization parameters.
@@ -199,6 +200,11 @@ interface ICaliber {
     /// @return value The new position value.
     /// @return change The change in the position value.
     function managePosition(Instruction[] calldata instructions) external returns (uint256 value, int256 change);
+
+    /// @notice Harvests one or multiple positions.
+    /// @param instruction The harvest instruction.
+    /// @param swapOrders The array of swap orders to be executed after the harvest.
+    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders) external;
 
     /// @notice Performs a swap via the swapper module.
     /// @param order The swap order parameters.

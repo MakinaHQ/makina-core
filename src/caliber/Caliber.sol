@@ -327,7 +327,23 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function swap(ISwapper.SwapOrder calldata order) public onlyOperator {
+    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders)
+        public
+        override
+        onlyOperator
+    {
+        if (instruction.instructionType != InstructionType.HARVEST) {
+            revert InvalidInstructionType();
+        }
+        _checkInstructionIsAllowed(instruction);
+        _execute(instruction.commands, instruction.state);
+        for (uint256 i; i < swapOrders.length; i++) {
+            swap(swapOrders[i]);
+        }
+    }
+
+    /// @inheritdoc ICaliber
+    function swap(ISwapper.SwapOrder calldata order) public override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
