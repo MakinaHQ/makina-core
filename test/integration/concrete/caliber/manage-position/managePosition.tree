@@ -37,7 +37,7 @@ managePosition.t.sol
 │                                   │  └── it should revert with InvalidAccounting
 │                                   └── given the second instruction outputs a valid state
 │                                      ├── when the second instruction's affected tokens list contains non-base tokens
-│                                      │  └── it should revert with InvalidAccounting
+│                                      │  └── it should revert with InvalidAffectedToken
 │                                      └── when the second instruction's affected tokens list only contains base tokens
 │                                         ├── given the position value did not decrease
 │                                         │  ├── given the new position value is zero

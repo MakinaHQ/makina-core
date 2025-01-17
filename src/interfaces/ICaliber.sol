@@ -36,7 +36,7 @@ interface ICaliber {
     event PositionCreated(uint256 indexed id);
     event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event RecoveryModeChanged(bool indexed enabled);
-    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newecurityCouncil);
+    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
 
     enum InstructionType {

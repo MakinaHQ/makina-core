@@ -290,24 +290,25 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         _checkInstructionIsAllowed(managingInstruction);
 
         uint256 inputTokensValueBefore;
-        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-            address _affectedToken = managingInstruction.affectedTokens[i];
-            if ($._baseTokenToPositionId[_affectedToken] == 0) {
-                revert InvalidAffectedToken();
+        if (!$._recoveryMode) {
+            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+                address _affectedToken = managingInstruction.affectedTokens[i];
+                if ($._baseTokenToPositionId[_affectedToken] == 0) {
+                    revert InvalidAffectedToken();
+                }
+                inputTokensValueBefore +=
+                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
             }
-            inputTokensValueBefore +=
-                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
 
         _execute(managingInstruction.commands, managingInstruction.state);
 
         (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
 
-        if ($._recoveryMode && change >= 0) {
-            revert RecoveryMode();
-        }
-
         if (change >= 0) {
+            if ($._recoveryMode) {
+                revert RecoveryMode();
+            }
             uint256 inputTokensValueAfter;
             for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
                 address _affectedToken = managingInstruction.affectedTokens[i];
@@ -502,7 +503,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         for (uint256 i; i < len; i++) {
             address token = instruction.affectedTokens[i];
             if ($._baseTokenToPositionId[token] == 0) {
-                revert InvalidAccounting();
+                revert InvalidAffectedToken();
             }
             uint256 assetValue = _accountingValueOf(token, amounts[i]);
             currentValue += assetValue;
