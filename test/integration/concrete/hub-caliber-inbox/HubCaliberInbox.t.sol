@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
-import {HubCaliberInbox, ICaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
-import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
+import {HubCaliberInbox, ICaliberInbox} from "src/caliber/HubCaliberInbox.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-contract HubCaliberInboxTest is BaseTest {
+import {Base_Test} from "test/BaseTest.sol";
+
+contract HubCaliberInbox_Integration_Concrete_Test is Base_Test {
     MockPriceFeed private aPriceFeed1;
     MockPriceFeed private bPriceFeed1;
 

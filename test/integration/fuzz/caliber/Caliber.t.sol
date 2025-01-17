@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
-contract CaliberFuzzTest is BaseTest {
-    event PositionCreated(uint256 indexed id, bool indexed isBaseToken);
+import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {WeirollUtils} from "test/utils/WeirollUtils.sol";
+import {MerkleProofs} from "test/utils/MerkleProofs.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockERC4626} from "test/mocks/MockERC4626.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {MockPool} from "test/mocks/MockPool.sol";
+
+import {Base_Test} from "test/BaseTest.sol";
+
+contract Caliber_Integration_Fuzz_Test is Base_Test {
+    uint256 private constant BASE_TOKEN_POS_ID = 2;
 
     MockERC20 private baseToken;
 
@@ -88,23 +98,23 @@ contract CaliberFuzzTest is BaseTest {
         _fuzzTestSetupAfter(data);
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), 2);
+        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
-        assertEq(caliber.getPosition(2).value, 0);
-        assertEq(caliber.getPosition(2).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
 
         // set caliber's base tokens balance to 2
         deal(address(baseToken), address(caliber), 2 * baseTokenUnit, true);
 
-        assertEq(caliber.getPosition(2).value, 0);
-        assertEq(caliber.getPosition(2).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
 
         (uint256 value, int256 change) = caliber.accountForBaseToken(2);
 
         assertEq(value, 2 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
         assertEq(change, int256(value));
-        assertEq(caliber.getPosition(2).value, value);
-        assertEq(caliber.getPosition(2).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
 
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
@@ -114,11 +124,11 @@ contract CaliberFuzzTest is BaseTest {
         // set caliber's accounting tokens balance to 10 to check there is no effect
         deal(address(accountingToken), address(caliber), 10 * data.aDecimals, true);
 
-        (value, change) = caliber.accountForBaseToken(2);
+        (value, change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
 
         assertEq(value, 3 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
         assertEq(change, int256(accountingTokenUnit * data.b_e_price / data.a_e_price));
-        assertEq(caliber.getPosition(2).value, value);
-        assertEq(caliber.getPosition(2).lastAccountingTime, newTimestamp);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
+        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, newTimestamp);
     }
 }

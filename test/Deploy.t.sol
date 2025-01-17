@@ -8,9 +8,9 @@ import {DeployCalibers} from "../script/DeployCalibers.s.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
 import {ICaliberInbox} from "../src/interfaces/ICaliberInbox.sol";
 
-import "./BaseTest.sol";
+import {Base_Test} from "./BaseTest.sol";
 
-contract DeployTest is BaseTest {
+contract Deploy_Test is Base_Test {
     using stdJson for string;
     using stdStorage for StdStorage;
 

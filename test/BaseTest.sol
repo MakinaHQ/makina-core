@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "forge-std/StdJson.sol";
 import "./Base.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
-abstract contract BaseTest is Base {
-    using stdJson for string;
-
+abstract contract Base_Test is Base {
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
     // string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
 
@@ -24,16 +21,14 @@ abstract contract BaseTest is Base {
 
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
-    string public allowedInstrMerkleData;
-
-    TestMode public mode = TestMode.UNIT;
+    TestMode public mode = TestMode.CONCRETE;
 
     MockERC20 public accountingToken;
     uint256 public accountingTokenPosId;
     Caliber public caliber;
 
     enum TestMode {
-        UNIT,
+        CONCRETE,
         FUZZ,
         CUSTOM
     }
@@ -43,7 +38,7 @@ abstract contract BaseTest is Base {
 
         deployer = address(this);
 
-        if (mode == TestMode.UNIT) {
+        if (mode == TestMode.CONCRETE) {
             _testSetupMakinaGovernance();
             _coreSetup();
             _testSetupRegistry();
@@ -132,46 +127,5 @@ abstract contract BaseTest is Base {
         command[7] = vm.toString(_mockPool);
         command[8] = vm.toString(_mockPoolPosId);
         vm.ffi(command);
-        allowedInstrMerkleData = _getMerkleData();
-    }
-
-    function _getMerkleData() internal view returns (string memory) {
-        return vm.readFile(string.concat(vm.projectRoot(), "/script/merkle/merkleTreeData.json"));
-    }
-
-    function _getAllowedInstrMerkleRoot() internal view returns (bytes32) {
-        return allowedInstrMerkleData.readBytes32(".root");
-    }
-
-    function _getDeposit4626InstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofDepositMock4626");
-    }
-
-    function _getRedeem4626InstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofRedeemMock4626");
-    }
-
-    function _getAccounting4626InstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofAccountingMock4626");
-    }
-
-    function _getAddLiquidityMockPoolInstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofAddLiquidityMockPool");
-    }
-
-    function _getAddLiquidityOneSide0MockPoolInstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofAddLiquidityOneSide0MockPool");
-    }
-
-    function _getRemoveLiquidityOneSide1MockPoolInstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofRemoveLiquidityOneSide1MockPool");
-    }
-
-    function _getAccountingMockPoolInstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofAccountingMockPool");
-    }
-
-    function _getHarvestMockBaseTokenInstrProof() internal view returns (bytes32[] memory) {
-        return allowedInstrMerkleData.readBytes32Array(".proofHarvestMockBaseToken");
     }
 }

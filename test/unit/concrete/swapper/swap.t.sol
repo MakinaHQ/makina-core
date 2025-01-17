@@ -1,61 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import {ISwapper} from "../src/interfaces/ISwapper.sol";
-import {HubCaliberInbox, ICaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
-import {MockPool} from "./mocks/MockPool.sol";
-import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
-contract SwapperTest is BaseTest {
-    event DexAggregatorTargetsSet(
-        ISwapper.DexAggregator indexed aggregator, address approvalTarget, address executionTarget
-    );
-    event Swapped(
-        address indexed sender,
-        ISwapper.DexAggregator aggregator,
-        address indexed inputToken,
-        address indexed outputToken,
-        uint256 inputAmount,
-        uint256 outputAmount
-    );
+import {MockPool} from "test/mocks/MockPool.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {ISwapper} from "src/interfaces/ISwapper.sol";
 
-    MockERC20 private baseToken;
+import {Swapper_Unit_Concrete_Test} from "./Swapper.t.sol";
 
-    // mock pool contract to simulate Dex aggregrator
-    MockPool private pool;
-
-    uint256 private initialPoolLiquidityOneSide;
-
-    function _setUp() public override {
-        baseToken = new MockERC20("baseToken", "BT", 18);
-
-        pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MPL");
-        initialPoolLiquidityOneSide = 1e30;
-        deal(address(accountingToken), address(this), initialPoolLiquidityOneSide, true);
-        deal(address(baseToken), address(this), initialPoolLiquidityOneSide, true);
-        accountingToken.approve(address(pool), initialPoolLiquidityOneSide);
-        baseToken.approve(address(pool), initialPoolLiquidityOneSide);
-        pool.addLiquidity(initialPoolLiquidityOneSide, initialPoolLiquidityOneSide);
-    }
-
-    function test_cannotSetDexAggregatorTargetsWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(0), address(0));
-    }
-
-    function test_setDexAggregatorTargets() public {
-        vm.expectEmit(true, true, true, true, address(swapper));
-        emit DexAggregatorTargetsSet(ISwapper.DexAggregator.ZEROX, address(1), address(2));
-        vm.prank(dao);
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(1), address(2));
-        (address approvalTarget, address executionTarget) = swapper.dexAggregatorTargets(ISwapper.DexAggregator.ZEROX);
-        assertEq(approvalTarget, address(1));
-        assertEq(executionTarget, address(2));
-    }
-
+contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
     function test_cannotSwapWithAggregatorNotSet() public {
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
