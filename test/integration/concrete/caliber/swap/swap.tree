@@ -1,0 +1,32 @@
+swap.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── given output token is not a base token
+│     │  └── it should revert with InvalidOutputToken
+│     └── given output token is a base token
+│        ├── given the swap order fails to be executed
+│        │  └── it should revert
+│        └── given the swap order is successfuly executed
+│           ├── given the value loss induced by the swap is higher than maxSwapLossBps
+│           │  └── it should revert with MaxValueLossExceeded
+│           └── given the value loss induced by the swap is not higher than maxSwapLossBps
+│              ├── the input token balance of the caliber should be decreased by order.inputAmount
+│              └── the output token balance of the caliber should be increased by at least order.minOutputAmount
+└── given recovery mode is on
+   ├── when sender is not the Security Council
+   │  └── it should revert with UnauthorizedOperator
+   └── when sender is the Security Council
+      ├── given output token is not the accounting token
+      │  └── it should revert with RecoveryMode
+      └── given output token is the accounting token
+         ├── given the swap order fails to be executed
+         │  └── it should revert
+         └── given the swap order is successfuly executed
+            ├── given the value loss induced by the swap is higher than maxSwapLossBps
+            │  └── it should revert with MaxValueLossExceeded
+            └── given the value loss induced by the swap is not higher than maxSwapLossBps
+                  ├── the accounting token balance of the caliber should be decreased by order.inputAmount
+                  └── the output token balance of the caliber should be increased by at least order.minOutputAmount
+                  

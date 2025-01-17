@@ -1,0 +1,9 @@
+getPosition.t.sol
+├── given the ID does not reference an existing position
+│  └── it should return an empty position
+└── given the ID references an existing position
+   ├── given the position was not accounted for since its value last changed
+   │  └── it should return the outdated accounting time and value
+   └── given the position was accounted for since its value last changed
+      └── it should return the updated accounting time and value
+      

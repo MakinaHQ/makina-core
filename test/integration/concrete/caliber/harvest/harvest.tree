@@ -1,0 +1,50 @@
+harvest.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── when the instruction is not of the harvest type
+│     │  └── it should revert with InvalidInstructionType
+│     └── when the instruction is of the harvest type
+│        ├── when the instruction proof is not valid against the merkle root set in the caliber
+│        │  └── it should revert with InvalidInstructionProof
+│        └── when the instruction proof is valid against the merkle root set in the caliber
+│           ├── when there is no swap to execute
+│           │  └── harvested token amounts should have been received by caliber
+│           └── when there are swaps to execute
+│              ├── given an output token is not a base token
+│              │  └── it should revert with InvalidOutputToken
+│              └── given all output tokens are base tokens
+│                 ├── given one of the swap orders fails to be executed
+│                 │  └── it should revert
+│                 └── given the swap orders are successfuly executed
+│                    ├── given the value loss induced by one of the swaps is higher than maxSwapLossBps
+│                    │  └── it should revert with MaxValueLossExceeded
+│                    └── given no value loss induced by any of the swaps is higher than maxSwapLossBps
+│                       ├── harvested token amounts should have been received by caliber
+│                       ├── for each order execution, order.inputAmount of order.inputToken should have been spent in the caliber
+│                       └── for each order execution, order.minOutputAmount of order.outputToken should have been received by the caliber
+└── given recovery mode is on
+   ├── when sender is not the Security Council
+   │  └── it should revert with UnauthorizedOperator
+   └── when sender is the Security Council
+      ├── when the instruction is not of the harvest type
+      │  └── it should revert with InvalidInstructionType
+      └── when the instruction is of the harvest type
+         ├── when the instruction proof is not valid against the merkle root set in the caliber
+         │  └── it should revert with InvalidInstructionProof
+         └── when the instruction proof is valid against the merkle root set in the caliber
+            ├── when there is no swap to execute
+            │  └── harvested token amounts should be held by caliber
+            └── when there are swaps to execute
+               ├── given one of the output tokens is not the accounting token
+               │  └── it should revert with RecoveryMode
+               └── given all output tokens are base tokens
+                     ├── given one of the swap orders fails to be executed
+                     │  └── it should revert
+                     └── given the swap orders are all successfuly executed
+                        ├── given the value loss induced by one of the swaps is higher than maxSwapLossBps
+                        │  └── it should revert with MaxValueLossExceeded
+                        └── given no value loss induced by any of the swaps is higher than maxSwapLossBps
+                           ├── for each order execution, order.inputAmount of order.inputToken should have been spent in the caliber
+                           └── for each order execution, order.minOutputAmount of order.outputToken should have been received by the caliber
