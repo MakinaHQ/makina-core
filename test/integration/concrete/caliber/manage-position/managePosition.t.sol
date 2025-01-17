@@ -297,7 +297,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        vm.expectRevert(ICaliber.InvalidAffectedToken.selector);
         caliber.managePosition(instructions);
     }
 
