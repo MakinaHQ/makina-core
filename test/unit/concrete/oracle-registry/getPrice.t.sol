@@ -1,81 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
+import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-contract OracleRegistryTest is BaseTest {
-    event FeedStaleThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
-    event TokenFeedDataRegistered(address indexed token, address indexed feed1, address indexed feed2);
+import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";
 
-    MockERC20 internal baseToken;
-    MockERC20 internal quoteToken;
-
-    MockPriceFeed internal basePriceFeed1;
-    MockPriceFeed internal basePriceFeed2;
-    MockPriceFeed internal quotePriceFeed1;
-    MockPriceFeed internal quotePriceFeed2;
-
-    /// @dev A and B are either base or quote tokens, C and D are intermediate tokens
-    /// and E is the reference currency of the oracle registry
-    uint256 internal constant PRICE_A_E = 60000;
-    uint256 internal constant PRICE_A_C = 24;
-    uint256 internal constant PRICE_C_E = 2500;
-
-    uint256 internal constant PRICE_B_E = 600;
-    uint256 internal constant PRICE_B_D = 12;
-    uint256 internal constant PRICE_D_E = 50;
-
-    uint256 internal constant PRICE_A_B = 100;
-
-    function _setUp() public override {
-        baseToken = new MockERC20("Base Token", "BT", 8);
-        quoteToken = new MockERC20("Quote Token", "QT", 18);
-    }
-
-    function test_cannotSetFeedDataWithoutRoleWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        oracleRegistry.setTokenFeedData(address(0), address(0), 0, address(0), 0);
-    }
-
-    function test_cannotSetFeedDataWithZeroFeed1() public {
-        basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_A_E * (10 ** 18)), block.timestamp);
-
-        vm.expectRevert(IOracleRegistry.InvalidFeedData.selector);
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(0), DEFAULT_PF_STALE_THRSHLD, address(basePriceFeed2), DEFAULT_PF_STALE_THRSHLD
-        );
-    }
-
-    function test_setTokenFeedData() public {
-        basePriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_C * 10 ** 18), block.timestamp);
-        basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_C_E * 10 ** 18), block.timestamp);
-
-        vm.expectEmit(true, true, true, true, address(oracleRegistry));
-        emit TokenFeedDataRegistered(address(baseToken), address(basePriceFeed1), address(basePriceFeed2));
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken),
-            address(basePriceFeed1),
-            DEFAULT_PF_STALE_THRSHLD,
-            address(basePriceFeed2),
-            DEFAULT_PF_STALE_THRSHLD
-        );
-
-        (address tfdFeed1, address tfdFeed2) = oracleRegistry.getTokenFeedData(address(baseToken));
-        assertEq(tfdFeed1, address(basePriceFeed1));
-        assertEq(tfdFeed2, address(basePriceFeed2));
-    }
-
-    function test_cannotGetUnitializedTokenFeedData() public {
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
-        oracleRegistry.getTokenFeedData(address(0));
-    }
-
+contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     function test_cannotGetPriceWithUnitializedQuoteTokenFeedData() public {
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
@@ -341,30 +273,5 @@ contract OracleRegistryTest is BaseTest {
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
         assertEq(price, (10 ** 8) / PRICE_A_B);
-    }
-
-    function test_cannotSetFeedStaleThresholdWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        oracleRegistry.setFeedStaleThreshold(address(0), 0);
-    }
-
-    function test_setFeedStaleThreshold() public {
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
-
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 0);
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), DEFAULT_PF_STALE_THRSHLD);
-
-        vm.expectEmit(true, true, true, true, address(oracleRegistry));
-        emit FeedStaleThresholdChange(address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
-        vm.prank(dao);
-        oracleRegistry.setFeedStaleThreshold(address(basePriceFeed1), 1 days);
-
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 1 days);
     }
 }

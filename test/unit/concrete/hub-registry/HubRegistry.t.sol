@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IHubRegistry} from "../src/interfaces/IHubRegistry.sol";
-import {IBaseMakinaRegistry} from "../src/interfaces/IBaseMakinaRegistry.sol";
 
-contract HubRegistryTest is BaseTest {
+import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
+import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+
+import {Base_Test} from "test/BaseTest.sol";
+
+contract HubRegistry_Util_Concrete_Test is Base_Test {
     address machineFactoryAddr;
     address machineBeaconAddr;
     address machineHubInboxBeaconAddr;

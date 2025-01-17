@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "./BaseTest.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {ICaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
-import {IOracleRegistry} from "../src/interfaces/IOracleRegistry.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
-import {MockPriceFeed} from "./mocks/MockPriceFeed.sol";
 
-contract CaliberFactoryTest is BaseTest {
+import {ICaliberInbox} from "src/caliber/HubCaliberInbox.sol";
+import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {Caliber} from "src/caliber/Caliber.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+
+import {Base_Test} from "test/BaseTest.sol";
+
+contract CaliberFactory_Integration_Concrete_Test is Base_Test {
     event CaliberDeployed(address indexed caliber);
 
     uint256 private constant PRICE_A_E = 150;
