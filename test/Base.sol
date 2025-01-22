@@ -12,7 +12,7 @@ import {HubRegistry} from "../src/registries/HubRegistry.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
-import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
+import {HubDualMailbox} from "../src/mailbox/HubDualMailbox.sol";
 import {Swapper} from "../src/swap/Swapper.sol";
 
 abstract contract Base is Script, Test {
@@ -31,7 +31,8 @@ abstract contract Base is Script, Test {
     CaliberFactory public caliberFactory;
 
     UpgradeableBeacon public caliberBeacon;
-    UpgradeableBeacon public caliberInboxBeacon;
+
+    UpgradeableBeacon public hubDualMailboxBeacon;
 
     function _coreSetup() public {
         accessManager = new AccessManager(deployer);
@@ -68,7 +69,8 @@ abstract contract Base is Script, Test {
 
         address caliberImplem = address(new Caliber(address(hubRegistry)));
         caliberBeacon = new UpgradeableBeacon(caliberImplem, dao);
-        caliberInboxBeacon = new UpgradeableBeacon(address(new HubCaliberInbox()), dao);
+
+        hubDualMailboxBeacon = new UpgradeableBeacon(address(new HubDualMailbox()), dao);
 
         caliberFactory = CaliberFactory(
             address(

@@ -6,9 +6,7 @@ import {IBaseMakinaRegistry} from "./IBaseMakinaRegistry.sol";
 interface IHubRegistry is IBaseMakinaRegistry {
     event MachineBeaconChange(address indexed oldMachineBeacon, address indexed newMachineBeacon);
     event MachineFactoryChange(address indexed oldMachineFactory, address indexed newMachineFactory);
-    event MachineHubInboxBeaconChange(
-        address indexed oldMachineHubInboxBeacon, address indexed newMachineHubInboxBeacon
-    );
+    event HubDualMailboxBeaconChange(address indexed oldHubDualMailboxBeacon, address indexed newHubDualMailboxBeacon);
 
     /// @notice Address of the machine factory.
     function machineFactory() external view returns (address);
@@ -16,8 +14,8 @@ interface IHubRegistry is IBaseMakinaRegistry {
     /// @notice Address of the machine beacon contract.
     function machineBeacon() external view returns (address);
 
-    /// @notice Address of the machine hub inbox beacon contract.
-    function machineHubInboxBeacon() external view returns (address);
+    /// @notice Address of the hub dual mailbox beacon contract.
+    function hubDualMailboxBeacon() external view returns (address);
 
     /// @notice Sets the machine factory address.
     /// @param _machineFactory The machine factory address.
@@ -27,7 +25,7 @@ interface IHubRegistry is IBaseMakinaRegistry {
     /// @param _machineBeacon The machine beacon address.
     function setMachineBeacon(address _machineBeacon) external;
 
-    /// @notice Sets the machine hub inbox beacon address.
-    /// @param _machineHubInboxBeacon The machine hub inbox beacon address.
-    function setMachineHubInboxBeacon(address _machineHubInboxBeacon) external;
+    /// @notice Sets the hub dual mailbox beacon address.
+    /// @param _hubDualMailboxBeacon The machine hub dual mailbox beacon address.
+    function setHubDualMailboxBeacon(address _hubDualMailboxBeacon) external;
 }

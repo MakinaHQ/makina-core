@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {ICaliberInbox} from "src/caliber/HubCaliberInbox.sol";
+import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -18,7 +18,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
 
     MockPriceFeed private aPriceFeed1;
 
-    address private hubMachineInbox;
+    address private machine;
     bytes32 private initialAllowedInstrRoot;
 
     function _setUp() public override {
@@ -43,7 +43,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
     }
 
     function test_deployCaliber() public {
-        hubMachineInbox = makeAddr("HubMachineInbox");
+        machine = makeAddr("machine");
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
@@ -51,7 +51,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
-                hubMachineInbox,
+                machine,
                 address(accountingToken),
                 accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -66,7 +66,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
-        assertEq(ICaliberInbox(caliber.inbox()).hubMachineInbox(), hubMachineInbox);
+        assertEq(IHubDualMailbox(caliber.mailbox()).machine(), machine);
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);

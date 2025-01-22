@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
 interface ICaliber {
@@ -27,7 +26,7 @@ interface ICaliber {
     error UnmatchingInstructions();
     error ZeroPositionId();
 
-    event InboxDeployed(address indexed inbox);
+    event MailboxDeployed(address indexed mailbox);
     event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
@@ -46,7 +45,8 @@ interface ICaliber {
     }
 
     /// @notice Initialization parameters.
-    /// @param hubMachineInbox The address of the hub machine inbox.
+    /// @param hubMachineEndpoint The address of the hub machine endpoints.
+    /// @param mailboxBeacon The address of the mailbox beacon.
     /// @param accountingToken The address of the accounting token.
     /// @param accountingTokenPosId The ID of the accounting token position.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
@@ -58,7 +58,8 @@ interface ICaliber {
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
     struct InitParams {
-        address hubMachineInbox;
+        address hubMachineEndpoint;
+        address mailboxBeacon;
         address accountingToken;
         uint256 accountingTokenPosId;
         uint256 initialPositionStaleThreshold;
@@ -106,8 +107,8 @@ interface ICaliber {
     /// @notice Address of the Makina registry.
     function registry() external view returns (address);
 
-    /// @notice Address of the inbox.
-    function inbox() external view returns (address);
+    /// @notice Address of the mailbox.
+    function mailbox() external view returns (address);
 
     /// @notice Address of the mechanic.
     function mechanic() external view returns (address);
@@ -187,10 +188,7 @@ interface ICaliber {
 
     /// @notice Updates and reports the caliber's AUM to the hub machine.
     /// @param instructions The array of accounting instructions to be performed before the AUM computation.
-    /// @return accountingMessage The accounting message to be sent to the hub machine.
-    function updateAndReportCaliberAUM(Instruction[] calldata instructions)
-        external
-        returns (ICaliberInbox.AccountingMessageSlim memory accountingMessage);
+    function updateAndReportCaliberAUM(Instruction[] calldata instructions) external;
 
     /// @notice Updates the state of a position.
     /// @dev Each time a position is managed, the caliber also performs accounting,

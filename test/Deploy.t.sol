@@ -6,7 +6,6 @@ import "forge-std/StdJson.sol";
 import {DeployMakinaCore} from "../script/DeployMakinaCore.s.sol";
 import {DeployCalibers} from "../script/DeployCalibers.s.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
-import {ICaliberInbox} from "../src/interfaces/ICaliberInbox.sol";
 
 import {Base_Test} from "./BaseTest.sol";
 
@@ -72,7 +71,7 @@ contract Deploy_Test is Base_Test {
         for (uint256 i; i < _calibersToDeploy.length; i++) {
             address _caliber = deployCalibers.deployedCalibers(i);
             assertTrue(deployMakinaCore.caliberFactory().isCaliber(_caliber));
-            assertEq(ICaliberInbox(ICaliber(_caliber).inbox()).hubMachineInbox(), _calibersToDeploy[i].hubMachineInbox);
+            // @TODO verify that the mailbox is correctly set up
             assertEq(ICaliber(_caliber).accountingToken(), _calibersToDeploy[i].accountingToken);
             assertEq(ICaliber(_caliber).getPositionId(0), _calibersToDeploy[i].accountingTokenPosId);
             assertEq(ICaliber(_caliber).allowedInstrRoot(), _calibersToDeploy[i].initialAllowedInstrRoot);

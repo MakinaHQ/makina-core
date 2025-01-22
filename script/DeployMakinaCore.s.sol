@@ -90,7 +90,7 @@ contract DeployMakinaCore is Base {
         vm.writeJson(vm.serializeAddress(key, "AccessManager", address(accessManager)), path);
         vm.writeJson(vm.serializeAddress(key, "CaliberBeacon", address(caliberBeacon)), path);
         vm.writeJson(vm.serializeAddress(key, "CaliberFactory", address(caliberFactory)), path);
-        vm.writeJson(vm.serializeAddress(key, "CaliberInboxBeacon", address(caliberInboxBeacon)), path);
+        vm.writeJson(vm.serializeAddress(key, "HubDualMailboxBeacon", address(hubDualMailboxBeacon)), path);
         vm.writeJson(vm.serializeAddress(key, "HubRegistry", address(hubRegistry)), path);
         vm.writeJson(vm.serializeAddress(key, "OracleRegistry", address(oracleRegistry)), path);
         vm.writeJson(vm.serializeAddress(key, "Swapper", address(swapper)), path);
@@ -98,8 +98,8 @@ contract DeployMakinaCore is Base {
 
     function _setupHubRegistry() public {
         hubRegistry.setCaliberBeacon(address(caliberBeacon));
-        hubRegistry.setCaliberInboxBeacon(address(caliberInboxBeacon));
         hubRegistry.setCaliberFactory(address(caliberFactory));
+        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
     }
 
     function _setupOracleRegistry() public {

@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 interface IBaseMakinaRegistry {
     event CaliberBeaconChange(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
     event CaliberFactoryChange(address indexed oldCaliberFactory, address indexed newCaliberFactory);
-    event CaliberInboxBeaconChange(address indexed oldCaliberInboxBeacon, address indexed newCaliberInboxBeacon);
     event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
     event SwapperChange(address indexed oldSwapper, address indexed newSwapper);
 
@@ -16,9 +15,6 @@ interface IBaseMakinaRegistry {
 
     /// @notice Address of the caliber beacon contract.
     function caliberBeacon() external view returns (address);
-
-    /// @notice Address of the caliber inbox beacon contract.
-    function caliberInboxBeacon() external view returns (address);
 
     /// @notice Address of the caliber factory.
     function caliberFactory() external view returns (address);
@@ -34,10 +30,6 @@ interface IBaseMakinaRegistry {
     /// @notice Sets the caliber beacon address.
     /// @param _caliberBeacon The caliber beacon address.
     function setCaliberBeacon(address _caliberBeacon) external;
-
-    /// @notice Sets the caliber inbox beacon address.
-    /// @param _caliberInboxBeacon The caliber inbox beacon address.
-    function setCaliberInboxBeacon(address _caliberInboxBeacon) external;
 
     /// @notice Sets the caliber factory address.
     /// @param _caliberFactory The caliber factory address.

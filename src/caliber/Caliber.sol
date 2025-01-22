@@ -11,7 +11,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {VM} from "./vm/VM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberInbox} from "../interfaces/ICaliberInbox.sol";
+import {ICaliberMailbox, IMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
@@ -28,7 +28,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
-        address _inbox;
+        address _mailbox;
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
@@ -67,7 +67,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function initialize(InitParams calldata params) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._inbox = _deployInbox(IBaseMakinaRegistry(registry).caliberInboxBeacon(), params.hubMachineInbox);
+        $._mailbox = _deployMailbox(params.mailboxBeacon, params.hubMachineEndpoint);
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
@@ -89,8 +89,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function inbox() public view override returns (address) {
-        return _getCaliberStorage()._inbox;
+    function mailbox() public view override returns (address) {
+        return _getCaliberStorage()._mailbox;
     }
 
     /// @inheritdoc ICaliber
@@ -233,14 +233,10 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function updateAndReportCaliberAUM(Instruction[] calldata instructions)
-        external
-        override
-        returns (ICaliberInbox.AccountingMessageSlim memory)
-    {
+    function updateAndReportCaliberAUM(Instruction[] calldata instructions) external override {
         accountForPositionBatch(instructions);
         CaliberStorage storage $ = _getCaliberStorage();
-        ICaliberInbox($._inbox).withdrawPendingReceivedAmounts();
+        // ICaliberMailbox($._mailbox).withdrawPendingReceivedAmounts();
 
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._positionIds.length();
@@ -258,7 +254,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._lastReportedAUM = aum;
         $._lastReportedAUMTime = currentTimestamp;
 
-        return ICaliberInbox($._inbox).relayAccounting(aum);
+        return ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
     }
 
     /// @inheritdoc ICaliber
@@ -434,13 +430,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    /// @dev Deploys the caliber inbox.
-    function _deployInbox(address inboxBeacon, address hubMachineInbox) internal onlyInitializing returns (address) {
-        address _inbox = address(
-            new BeaconProxy(inboxBeacon, abi.encodeCall(ICaliberInbox.initialize, (address(this), hubMachineInbox)))
+    /// @dev Deploys the caliber mailbox.
+    function _deployMailbox(address mailboxBeacon, address hubMachineEndpoint)
+        internal
+        onlyInitializing
+        returns (address)
+    {
+        address _mailbox = address(
+            new BeaconProxy(mailboxBeacon, abi.encodeCall(IMailbox.initialize, (hubMachineEndpoint, address(this))))
         );
-        emit InboxDeployed(_inbox);
-        return _inbox;
+        emit MailboxDeployed(_mailbox);
+        return _mailbox;
     }
 
     /// @dev Adds a new base token to storage.

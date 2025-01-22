@@ -71,10 +71,9 @@ abstract contract Base_Test is Base {
 
     function _testSetupRegistry() public {
         hubRegistry.setCaliberBeacon(address(caliberBeacon));
-        hubRegistry.setCaliberInboxBeacon(address(caliberInboxBeacon));
+        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
         hubRegistry.setCaliberFactory(address(caliberFactory));
         hubRegistry.setMachineBeacon(makeAddr("machineBeacon"));
-        hubRegistry.setMachineHubInboxBeacon(makeAddr("machineHubInboxBeacon"));
         hubRegistry.setMachineFactory(makeAddr("machineFactory"));
     }
 
@@ -84,7 +83,7 @@ abstract contract Base_Test is Base {
     }
 
     function _deployCaliber(
-        address _hubMachineInbox,
+        address _hubMachineEndpoint,
         address _accountingToken,
         uint256 _accountingTokenPosId,
         bytes32 allowedInstrMerkleRoot
@@ -92,7 +91,7 @@ abstract contract Base_Test is Base {
         vm.prank(dao);
         return Caliber(
             caliberFactory.deployCaliber(
-                _hubMachineInbox,
+                _hubMachineEndpoint,
                 _accountingToken,
                 _accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
