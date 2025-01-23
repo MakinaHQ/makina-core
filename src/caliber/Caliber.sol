@@ -368,6 +368,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function transferToHubMachine(address token, uint256 amount) public override onlyOperator {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit TransferToHubMachine(token, amount);
+        IERC20Metadata(token).forceApprove($._mailbox, amount);
+        ICaliberMailbox($._mailbox).manageTransferFromCaliberToMachine(token, amount);
+    }
+
+    /// @inheritdoc ICaliber
     function setMechanic(address newMechanic) public override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MechanicChanged($._mechanic, newMechanic);

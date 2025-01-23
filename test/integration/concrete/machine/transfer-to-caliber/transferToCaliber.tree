@@ -1,0 +1,16 @@
+transferToCaliber.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── given caliber's token balance is insufficient
+│     │  └── it should revert with ERC20InsufficientBalance
+│     └── given caliber's token balance is sufficient
+│        ├── given token is not a registered base token in the caliber
+│        │  └── it should revert with FeedDataNotRegistered
+│        └── given token is a registered base token in the caliber
+│           ├── it should decrease the machine's token balance by amount
+│           ├── it should increase the caliber's token balance by amount
+│           └── it should emit a TransferToCaliber event
+└── given recovery mode is on
+   └── it should revert with RecoveryMode

@@ -9,19 +9,11 @@ import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 contract HubRegistry_Util_Concrete_Test is Base_Test {
-    address machineFactoryAddr;
-    address machineBeaconAddr;
-
-    function _setUp() public override {
-        machineFactoryAddr = makeAddr("machineFactory");
-        machineBeaconAddr = makeAddr("machineBeacon");
-    }
-
     function test_hubRegistry_getters() public view {
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(hubRegistry.swapper(), address(swapper));
-        assertEq(hubRegistry.machineBeacon(), machineBeaconAddr);
-        assertEq(hubRegistry.machineFactory(), machineFactoryAddr);
+        assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
+        assertEq(hubRegistry.machineFactory(), address(machineFactory));
         assertEq(hubRegistry.caliberBeacon(), address(caliberBeacon));
         assertEq(hubRegistry.caliberFactory(), address(caliberFactory));
         assertEq(hubRegistry.hubDualMailboxBeacon(), address(hubDualMailboxBeacon));
@@ -92,7 +84,7 @@ contract HubRegistry_Util_Concrete_Test is Base_Test {
     function test_setMachineBeacon() public {
         address newMachineBeacon = makeAddr("newMachineBeacon");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineBeaconChange(machineBeaconAddr, newMachineBeacon);
+        emit IHubRegistry.MachineBeaconChange(address(machineBeacon), newMachineBeacon);
         vm.prank(dao);
         hubRegistry.setMachineBeacon(newMachineBeacon);
         assertEq(hubRegistry.machineBeacon(), newMachineBeacon);
@@ -106,7 +98,7 @@ contract HubRegistry_Util_Concrete_Test is Base_Test {
     function test_setMachineFactory() public {
         address newMachineFactory = makeAddr("newMachineFactory");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineFactoryChange(machineFactoryAddr, newMachineFactory);
+        emit IHubRegistry.MachineFactoryChange(address(machineFactory), newMachineFactory);
         vm.prank(dao);
         hubRegistry.setMachineFactory(newMachineFactory);
         assertEq(hubRegistry.machineFactory(), newMachineFactory);

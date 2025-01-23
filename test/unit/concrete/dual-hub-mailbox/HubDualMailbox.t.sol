@@ -12,12 +12,10 @@ contract HubDualMailbox_Unit_Concrete_Test is Base_Test {
 
     MockERC20 internal baseToken;
 
-    address internal machine;
-
     IHubDualMailbox internal hubDualMailbox;
 
     function _setUp() public override {
-        machine = makeAddr("machine");
+        address _machine = makeAddr("machine");
 
         baseToken = new MockERC20("baseToken", "BT", 18);
 
@@ -28,8 +26,7 @@ contract HubDualMailbox_Unit_Concrete_Test is Base_Test {
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        caliber = _deployCaliber(machine, address(accountingToken), accountingTokenPosId, bytes32(0));
-
+        (machine, caliber) = _deployMachine(address(accountingToken), accountingTokenPosId, bytes32(0));
         hubDualMailbox = IHubDualMailbox(caliber.mailbox());
     }
 

@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 interface ICaliberFactory {
+    error NotMachine();
+
     event CaliberDeployed(address indexed caliber);
 
     /// @notice Address of the Makina registry.

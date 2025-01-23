@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import "./Base.sol";
+import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
@@ -12,6 +13,8 @@ abstract contract Base_Test is Base {
     bytes32 public constant MOCK_TOKENS_SALT = bytes32("0x123");
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
+
+    uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
 
     uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
 
@@ -25,6 +28,8 @@ abstract contract Base_Test is Base {
 
     MockERC20 public accountingToken;
     uint256 public accountingTokenPosId;
+
+    Machine public machine;
     Caliber public caliber;
 
     enum TestMode {
@@ -71,15 +76,39 @@ abstract contract Base_Test is Base {
 
     function _testSetupRegistry() public {
         hubRegistry.setCaliberBeacon(address(caliberBeacon));
-        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
         hubRegistry.setCaliberFactory(address(caliberFactory));
-        hubRegistry.setMachineBeacon(makeAddr("machineBeacon"));
-        hubRegistry.setMachineFactory(makeAddr("machineFactory"));
+        hubRegistry.setMachineBeacon(address(machineBeacon));
+        hubRegistry.setMachineFactory(address(machineFactory));
+        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
     }
 
     function _testSetupAccessManager() public {
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
+    }
+
+    function _deployMachine(address _accountingToken, uint256 _accountingTokenPosId, bytes32 allowedInstrMerkleRoot)
+        public
+        returns (Machine, Caliber)
+    {
+        vm.prank(dao);
+        Machine _machine = Machine(
+            machineFactory.deployMachine(
+                _accountingToken,
+                mechanic,
+                securityCouncil,
+                address(accessManager),
+                DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                _accountingTokenPosId,
+                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                allowedInstrMerkleRoot,
+                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
+                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS
+            )
+        );
+        Caliber _caliber = Caliber(ICaliberMailbox(_machine.getMailbox(block.chainid)).caliber());
+        return (_machine, _caliber);
     }
 
     function _deployCaliber(

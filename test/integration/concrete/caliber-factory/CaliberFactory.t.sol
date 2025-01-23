@@ -18,9 +18,6 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
 
     MockPriceFeed private aPriceFeed1;
 
-    address private machine;
-    bytes32 private initialAllowedInstrRoot;
-
     function _setUp() public override {
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
 
@@ -43,15 +40,15 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
     }
 
     function test_deployCaliber() public {
-        machine = makeAddr("machine");
-        initialAllowedInstrRoot = bytes32("0x12345");
+        address _machine = makeAddr("machine");
+        bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
         emit CaliberDeployed(address(caliber));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
-                machine,
+                _machine,
                 address(accountingToken),
                 accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -66,7 +63,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
-        assertEq(IHubDualMailbox(caliber.mailbox()).machine(), machine);
+        assertEq(IHubDualMailbox(caliber.mailbox()).machine(), _machine);
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);

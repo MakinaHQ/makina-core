@@ -15,7 +15,7 @@ contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox
     }
 
     function test_cannotManageTransferFromMachineToCaliberWithoutBaseToken() public {
-        vm.prank(machine);
+        vm.prank(address(machine));
         vm.expectRevert(IHubDualMailbox.NotBaseToken.selector);
         hubDualMailbox.manageTransferFromMachineToCaliber(address(baseToken), 1e18);
     }
@@ -47,12 +47,13 @@ contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
 
-        vm.startPrank(machine);
+        vm.startPrank(address(machine));
         accountingToken.approve(address(hubDualMailbox), inputAmount);
         hubDualMailbox.manageTransferFromMachineToCaliber(address(accountingToken), inputAmount);
         vm.stopPrank();
 
         assertEq(accountingToken.balanceOf(address(machine)), 0);
+        assertEq(accountingToken.balanceOf(address(hubDualMailbox)), 0);
         assertEq(accountingToken.balanceOf(address(caliber)), inputAmount);
     }
 }

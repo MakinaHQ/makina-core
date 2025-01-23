@@ -37,6 +37,7 @@ interface ICaliber {
     event RecoveryModeChanged(bool indexed enabled);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event TransferToHubMachine(address indexed token, uint256 amount);
 
     enum InstructionType {
         MANAGEMENT,
@@ -207,6 +208,11 @@ interface ICaliber {
     /// @notice Performs a swap via the swapper module.
     /// @param order The swap order parameters.
     function swap(ISwapper.SwapOrder calldata order) external;
+
+    /// @notice Initiates a token transfer to the hub machine.
+    /// @param token The address of the token to transfer.
+    /// @param amount The amount of token to transfer.
+    function transferToHubMachine(address token, uint256 amount) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

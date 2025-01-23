@@ -46,6 +46,7 @@ contract ManageTransferFromCaliberToMachine_Unit_Concrete_Test is HubDualMailbox
         vm.stopPrank();
 
         assertEq(accountingToken.balanceOf(address(caliber)), 0);
+        assertEq(accountingToken.balanceOf(address(hubDualMailbox)), 0);
         assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
     }
 }
