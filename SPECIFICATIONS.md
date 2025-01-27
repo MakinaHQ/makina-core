@@ -6,23 +6,15 @@
 
 The `Machine` contract is the central and user-facing component of the protocol. It handles deposits, redemptions and share price calculation.
 
-#### Inboxes
-
-Machine inboxes are deployed on the Hub chain. They handle incoming accounting messages from caliber inboxes and coordinate fund transfers between them.
-
-- `HubMachineInbox` is used to communicate with an associated `HubCaliberInbox` on the same chain.
-- `SpokeMachineInbox` is used to communicate with an associated `SpokeCaliberInbox` on a spoke chain, via bridging of message and funds.
-
 ### Caliber
 
 The `Caliber` contract is the execution engine from which assets are deployed to external protocols.
 
-#### Inboxes
+### Mailboxes
 
-Caliber inboxes are deployed on the same chain as their assocated caliber. They handle outgoing accounting messages sent to hub machine inboxes and coordinate fund transfers between them.
-
-- `HubCaliberInbox` is used to communicate with an associated `HubMachineInbox`.
-- `SpokeCaliberInbox` is used to communicate with an associated `SpokeMachineInbox`, via bridging of message and funds.
+Data passing and fund transfers between calibers and machines is managed by mailboxes.
+- For hub calibers, a single `HubDualMailbox` is used to handle communication between a machine and a caliber.
+- For spoke calibers, a `SpokeMachineMailbox` (deployed on the hub chain) communicates with an associated `SpokeCaliberMailbox` (deployed on the same spoke chain as their associated caliber) via bridging of message and funds.
 
 #### Instructions
 

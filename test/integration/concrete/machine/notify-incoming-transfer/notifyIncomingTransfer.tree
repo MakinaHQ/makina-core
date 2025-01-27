@@ -1,0 +1,11 @@
+notifyIncomingTransfer.t.sol
+├── when sender is not a machine mailbox
+│  └── it should revert with NotMailbox
+└── when sender is a machine mailbox
+   ├── given the token is not priceable against the accounting token via the oracle registry
+   │  └── it should revert with FeedDataNotRegistered
+   └── given the token is priceable against the accounting token via the oracle registry
+      ├── given the machine has a positive token balance
+      │  └── it should mark the token as an idle token in the machine
+      └── given the machine has a null token balance
+         └── it should not mark the token as an idle token in the machine

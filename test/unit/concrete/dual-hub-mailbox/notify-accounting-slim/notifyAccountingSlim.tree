@@ -1,0 +1,6 @@
+notifyAccountingSlim.t.sol
+├── when sender is not associated caliber
+│  └── it should revert with NotCaliber
+└── when sender is the associated caliber
+   ├── it should store the reported aum value in mailbox storage
+   └── it should set the reported aum time to current block timestamp in mailbox storage

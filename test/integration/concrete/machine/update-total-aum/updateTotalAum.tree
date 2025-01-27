@@ -1,0 +1,13 @@
+updateTotalAum.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── given one of the calibers accounting is stale
+│     │  └── it should revert with CaliberAccountingStale
+│     └── given none of the calibers accounting is stale
+│        ├── it should sum up the last reported aum from each caliber plus all the notified idle token balances held by the machine, and store result as last reported total AUM
+│        ├── it should store the update timestamp
+│        └── it should emit a TotalAumUpdated event
+└── given recovery mode is on
+   └── it should revert with RecoveryMode

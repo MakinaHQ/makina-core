@@ -15,7 +15,7 @@ import {MockPool} from "test/mocks/MockPool.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
-contract Caliber_Integration_Concrete_Test is Base_Test {
+contract Machine_Integration_Concrete_Test is Base_Test {
     /// @dev A is the accounting token, B is the base token
     /// and E is the reference currency of the oracle registry
     uint256 internal constant PRICE_A_E = 150;
@@ -76,7 +76,7 @@ contract Caliber_Integration_Concrete_Test is Base_Test {
 
     modifier whileInRecoveryMode() {
         vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        machine.setRecoveryMode(true);
         _;
     }
 
@@ -84,13 +84,5 @@ contract Caliber_Integration_Concrete_Test is Base_Test {
         vm.prank(dao);
         caliber.addBaseToken(_token, _posId);
         _;
-    }
-
-    function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {
-        deal(address(accountingToken), address(this), _amount1, true);
-        deal(address(baseToken), address(this), _amount2, true);
-        accountingToken.approve(address(pool), _amount1);
-        baseToken.approve(address(pool), _amount2);
-        pool.addLiquidity(_amount1, _amount2);
     }
 }

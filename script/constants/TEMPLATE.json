@@ -20,7 +20,7 @@
     ],
     "calibersToDeploy": [
         {
-            "hubMachineInbox": "0x0000000000000000000000000000000000000000",
+            "hubMachineEndpoint": "0x0000000000000000000000000000000000000000",
             "accountingToken": "0x0000000000000000000000000000000000000000",
             "accountingTokenPosId": 0,
             "initialPositionStaleThreshold": 0,

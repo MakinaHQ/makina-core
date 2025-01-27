@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 interface ICaliberFactory {
+    error NotMachine();
+
     event CaliberDeployed(address indexed caliber);
 
     /// @notice Address of the Makina registry.
@@ -11,7 +13,7 @@ interface ICaliberFactory {
     function isCaliber(address caliber) external view returns (bool);
 
     /// @notice Deploys a new Caliber instance.
-    /// @param hubMachineInbox The address of the hub machine inbox.
+    /// @param hubMachineEndpoint The address of the hub machine endpoint.
     /// @param accountingToken The address of the accounting token.
     /// @param accountingTokenPosId The position ID of the accounting token.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold.
@@ -24,7 +26,7 @@ interface ICaliberFactory {
     /// @param initialAuthority The address of the initial authority.
     /// @return caliber The address of the deployed Caliber instance.
     function deployCaliber(
-        address hubMachineInbox,
+        address hubMachineEndpoint,
         address accountingToken,
         uint256 accountingTokenPosId,
         uint256 initialPositionStaleThreshold,

@@ -12,7 +12,9 @@ import {HubRegistry} from "../src/registries/HubRegistry.sol";
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {CaliberFactory} from "../src/factories/CaliberFactory.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
-import {HubCaliberInbox} from "../src/caliber/HubCaliberInbox.sol";
+import {HubDualMailbox} from "../src/mailbox/HubDualMailbox.sol";
+import {MachineFactory} from "../src/factories/MachineFactory.sol";
+import {Machine} from "../src/machine/Machine.sol";
 import {Swapper} from "../src/swap/Swapper.sol";
 
 abstract contract Base is Script, Test {
@@ -28,10 +30,14 @@ abstract contract Base is Script, Test {
 
     OracleRegistry public oracleRegistry;
     Swapper public swapper;
+
     CaliberFactory public caliberFactory;
+    MachineFactory public machineFactory;
 
     UpgradeableBeacon public caliberBeacon;
-    UpgradeableBeacon public caliberInboxBeacon;
+    UpgradeableBeacon public machineBeacon;
+
+    UpgradeableBeacon public hubDualMailboxBeacon;
 
     function _coreSetup() public {
         accessManager = new AccessManager(deployer);
@@ -68,7 +74,9 @@ abstract contract Base is Script, Test {
 
         address caliberImplem = address(new Caliber(address(hubRegistry)));
         caliberBeacon = new UpgradeableBeacon(caliberImplem, dao);
-        caliberInboxBeacon = new UpgradeableBeacon(address(new HubCaliberInbox()), dao);
+
+        address machineImplem = address(new Machine(address(hubRegistry)));
+        machineBeacon = new UpgradeableBeacon(machineImplem, dao);
 
         caliberFactory = CaliberFactory(
             address(
@@ -79,5 +87,17 @@ abstract contract Base is Script, Test {
                 )
             )
         );
+
+        machineFactory = MachineFactory(
+            address(
+                new TransparentUpgradeableProxy(
+                    address(new MachineFactory(address(hubRegistry))),
+                    dao,
+                    abi.encodeCall(MachineFactory.initialize, (address(accessManager)))
+                )
+            )
+        );
+
+        hubDualMailboxBeacon = new UpgradeableBeacon(address(new HubDualMailbox()), dao);
     }
 }

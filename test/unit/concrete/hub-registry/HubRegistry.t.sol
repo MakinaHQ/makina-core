@@ -9,25 +9,14 @@ import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 contract HubRegistry_Util_Concrete_Test is Base_Test {
-    address machineFactoryAddr;
-    address machineBeaconAddr;
-    address machineHubInboxBeaconAddr;
-
-    function _setUp() public override {
-        machineFactoryAddr = makeAddr("machineFactory");
-        machineBeaconAddr = makeAddr("machineBeacon");
-        machineHubInboxBeaconAddr = makeAddr("machineHubInboxBeacon");
-    }
-
     function test_hubRegistry_getters() public view {
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(hubRegistry.swapper(), address(swapper));
-        assertEq(hubRegistry.machineBeacon(), machineBeaconAddr);
-        assertEq(hubRegistry.machineHubInboxBeacon(), machineHubInboxBeaconAddr);
-        assertEq(hubRegistry.machineFactory(), machineFactoryAddr);
+        assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
+        assertEq(hubRegistry.machineFactory(), address(machineFactory));
         assertEq(hubRegistry.caliberBeacon(), address(caliberBeacon));
-        assertEq(hubRegistry.caliberInboxBeacon(), address(caliberInboxBeacon));
         assertEq(hubRegistry.caliberFactory(), address(caliberFactory));
+        assertEq(hubRegistry.hubDualMailboxBeacon(), address(hubDualMailboxBeacon));
         assertEq(hubRegistry.authority(), address(accessManager));
     }
 
@@ -73,20 +62,6 @@ contract HubRegistry_Util_Concrete_Test is Base_Test {
         assertEq(hubRegistry.caliberBeacon(), newCaliberBeacon);
     }
 
-    function test_cannotSetCaliberInboxBeaconWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setCaliberInboxBeacon(address(0));
-    }
-
-    function test_setCaliberInboxBeacon() public {
-        address newCaliberInboxBeacon = makeAddr("newCaliberInboxBeacon");
-        vm.expectEmit(false, false, false, false, address(hubRegistry));
-        emit IBaseMakinaRegistry.CaliberInboxBeaconChange(address(caliberInboxBeacon), newCaliberInboxBeacon);
-        vm.prank(dao);
-        hubRegistry.setCaliberInboxBeacon(newCaliberInboxBeacon);
-        assertEq(hubRegistry.caliberInboxBeacon(), newCaliberInboxBeacon);
-    }
-
     function test_cannotSetCaliberFactoryWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setCaliberFactory(address(0));
@@ -109,24 +84,10 @@ contract HubRegistry_Util_Concrete_Test is Base_Test {
     function test_setMachineBeacon() public {
         address newMachineBeacon = makeAddr("newMachineBeacon");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineBeaconChange(machineBeaconAddr, newMachineBeacon);
+        emit IHubRegistry.MachineBeaconChange(address(machineBeacon), newMachineBeacon);
         vm.prank(dao);
         hubRegistry.setMachineBeacon(newMachineBeacon);
         assertEq(hubRegistry.machineBeacon(), newMachineBeacon);
-    }
-
-    function test_cannotSetMachineHubInboxBeaconWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setMachineHubInboxBeacon(address(0));
-    }
-
-    function test_setMachineHubInboxBeacon() public {
-        address newMachineHubInboxBeacon = makeAddr("newMachineHubInboxBeacon");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineHubInboxBeaconChange(machineHubInboxBeaconAddr, newMachineHubInboxBeacon);
-        vm.prank(dao);
-        hubRegistry.setMachineHubInboxBeacon(newMachineHubInboxBeacon);
-        assertEq(hubRegistry.machineHubInboxBeacon(), newMachineHubInboxBeacon);
     }
 
     function test_cannotSetMachineFactoryWithoutRole() public {
@@ -137,9 +98,23 @@ contract HubRegistry_Util_Concrete_Test is Base_Test {
     function test_setMachineFactory() public {
         address newMachineFactory = makeAddr("newMachineFactory");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineFactoryChange(machineFactoryAddr, newMachineFactory);
+        emit IHubRegistry.MachineFactoryChange(address(machineFactory), newMachineFactory);
         vm.prank(dao);
         hubRegistry.setMachineFactory(newMachineFactory);
         assertEq(hubRegistry.machineFactory(), newMachineFactory);
+    }
+
+    function test_cannotSetHubDualMailboxBeaconWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        hubRegistry.setHubDualMailboxBeacon(address(0));
+    }
+
+    function test_setHubDualMailboxBeacon() public {
+        address newHubDualMailboxBeacon = makeAddr("newHubDualMailboxBeacon");
+        vm.expectEmit(false, false, false, false, address(hubRegistry));
+        emit IHubRegistry.HubDualMailboxBeaconChange(address(hubDualMailboxBeacon), newHubDualMailboxBeacon);
+        vm.prank(dao);
+        hubRegistry.setHubDualMailboxBeacon(newHubDualMailboxBeacon);
+        assertEq(hubRegistry.hubDualMailboxBeacon(), newHubDualMailboxBeacon);
     }
 }

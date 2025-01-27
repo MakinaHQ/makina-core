@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {ICaliberInbox} from "src/caliber/HubCaliberInbox.sol";
+import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -17,9 +17,6 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
     uint256 private constant PRICE_A_E = 150;
 
     MockPriceFeed private aPriceFeed1;
-
-    address private hubMachineInbox;
-    bytes32 private initialAllowedInstrRoot;
 
     function _setUp() public override {
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
@@ -43,15 +40,15 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
     }
 
     function test_deployCaliber() public {
-        hubMachineInbox = makeAddr("HubMachineInbox");
-        initialAllowedInstrRoot = bytes32("0x12345");
+        address _machine = makeAddr("machine");
+        bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
         emit CaliberDeployed(address(caliber));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
-                hubMachineInbox,
+                _machine,
                 address(accountingToken),
                 accountingTokenPosId,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -66,7 +63,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
-        assertEq(ICaliberInbox(caliber.inbox()).hubMachineInbox(), hubMachineInbox);
+        assertEq(IHubDualMailbox(caliber.mailbox()).machine(), _machine);
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);

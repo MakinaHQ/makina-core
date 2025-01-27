@@ -10,10 +10,9 @@ This is a list of role permissions in Makina Core contracts. These roles must be
     - Can set address of OracleRegistry.
     - Can set address of MachineFactory.
     - Can set address of MachineBeacon.
-    - Can set address of MachineInboxBeacon.
     - Can set address of CaliberFactory.
     - Can set address of CaliberBeacon.
-    - Can set address of CaliberInboxBeacon.
+    - Can set address of HubDualMailboxBeacon.
 
 #### OracleRegistry
 - `ADMIN_ROLE` (roleId `0`)

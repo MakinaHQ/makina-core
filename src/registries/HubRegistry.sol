@@ -9,7 +9,7 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     struct HubRegistryStorage {
         address _machineFactory;
         address _machineBeacon;
-        address _machineHubInboxBeacon;
+        address _hubDualMailboxBeacon;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.HubRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -41,8 +41,8 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
-    function machineHubInboxBeacon() public view override returns (address) {
-        return _getHubRegistryStorage()._machineHubInboxBeacon;
+    function hubDualMailboxBeacon() public view override returns (address) {
+        return _getHubRegistryStorage()._hubDualMailboxBeacon;
     }
 
     /// @inheritdoc IHubRegistry
@@ -60,9 +60,9 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
-    function setMachineHubInboxBeacon(address _machineHubInboxBeacon) external override restricted {
+    function setHubDualMailboxBeacon(address _hubDualMailboxBeacon) external override restricted {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
-        emit MachineHubInboxBeaconChange($._machineHubInboxBeacon, _machineHubInboxBeacon);
-        $._machineHubInboxBeacon = _machineHubInboxBeacon;
+        emit HubDualMailboxBeaconChange($._hubDualMailboxBeacon, _hubDualMailboxBeacon);
+        $._hubDualMailboxBeacon = _hubDualMailboxBeacon;
     }
 }

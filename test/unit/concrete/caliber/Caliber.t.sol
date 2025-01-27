@@ -29,7 +29,7 @@ contract Caliber_Unit_Concrete_Test is Base_Test {
     }
 
     function test_caliber_getters() public view {
-        assertNotEq(caliber.inbox(), address(0));
+        assertNotEq(caliber.mailbox(), address(0));
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.accountingToken(), address(accountingToken));

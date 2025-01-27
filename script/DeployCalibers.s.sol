@@ -10,7 +10,7 @@ contract DeployCalibers is Script {
     struct CaliberDeploymentParams {
         address accountingToken;
         uint256 accountingTokenPosId;
-        address hubMachineInbox;
+        address hubMachineEndpoint;
         bytes32 initialAllowedInstrRoot;
         uint256 initialMaxMgmtLossBps;
         uint256 initialMaxSwapLossBps;
@@ -56,7 +56,7 @@ contract DeployCalibers is Script {
         for (uint256 i; i < _calibersToDeploy.length; i++) {
             deployedCalibers.push(
                 caliberFactory.deployCaliber(
-                    _calibersToDeploy[i].hubMachineInbox,
+                    _calibersToDeploy[i].hubMachineEndpoint,
                     _calibersToDeploy[i].accountingToken,
                     _calibersToDeploy[i].accountingTokenPosId,
                     _calibersToDeploy[i].initialPositionStaleThreshold,

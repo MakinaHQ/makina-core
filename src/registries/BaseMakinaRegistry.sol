@@ -11,7 +11,6 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         address _swapper;
         address _caliberFactory;
         address _caliberBeacon;
-        address _caliberInboxBeacon;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.BaseMakinaRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -54,11 +53,6 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function caliberInboxBeacon() public view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._caliberInboxBeacon;
-    }
-
-    /// @inheritdoc IBaseMakinaRegistry
     function caliberFactory() public view override returns (address) {
         return _getBaseMakinaRegistryStorage()._caliberFactory;
     }
@@ -82,13 +76,6 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit CaliberBeaconChange($._caliberBeacon, _caliberBeacon);
         $._caliberBeacon = _caliberBeacon;
-    }
-
-    /// @inheritdoc IBaseMakinaRegistry
-    function setCaliberInboxBeacon(address _caliberInboxBeacon) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
-        emit CaliberInboxBeaconChange($._caliberInboxBeacon, _caliberInboxBeacon);
-        $._caliberInboxBeacon = _caliberInboxBeacon;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
