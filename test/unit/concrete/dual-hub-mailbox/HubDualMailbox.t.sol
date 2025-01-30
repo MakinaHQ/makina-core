@@ -15,8 +15,6 @@ contract HubDualMailbox_Unit_Concrete_Test is Base_Test {
     IHubDualMailbox internal hubDualMailbox;
 
     function _setUp() public override {
-        address _machine = makeAddr("machine");
-
         baseToken = new MockERC20("baseToken", "BT", 18);
 
         aPriceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);

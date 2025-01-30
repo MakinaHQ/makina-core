@@ -8,7 +8,7 @@ notifyIncomingTransfer.t.sol
       ├── given the token is already registered as idle in the machine
       │  └── it should not change any state
       └── given the token is not already registered as idle in the machine
-         ├── given the token is not priceable against the accounting token via the oracle registry
+         ├── given the token does not have associated feed data in the oracle registry
          │  └── it should revert with FeedDataNotRegistered
-         └── given the token is priceable against the accounting token via the oracle registry
+         └── given the token has associated feed data in the oracle registry
             └── it should mark the token as an idle token in the machine
