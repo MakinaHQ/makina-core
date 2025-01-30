@@ -70,8 +70,6 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
     }
 
     function test_cannotTransferToCaliberWhileInRecoveryMode() public whileInRecoveryMode {
-        uint256 inputAmount = 1e18;
-
         vm.prank(securityCouncil);
         vm.expectRevert(IMachine.RecoveryMode.selector);
         machine.transferToCaliber(address(accountingToken), 1e18, block.chainid);
