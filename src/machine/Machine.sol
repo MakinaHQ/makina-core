@@ -13,6 +13,7 @@ import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {Constants} from "../libraries/Constants.sol";
 
 contract Machine is AccessManagedUpgradeable, IMachine {
     using Math for uint256;
@@ -56,7 +57,17 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     function initialize(MachineInitParams calldata params) external override initializer {
         MachineStorage storage $ = _getMachineStorage();
 
+        uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
+        if (
+            atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
+        ) {
+            revert InvalidDecimals();
+        }
+        // Reverts if no price feed is registered for token in the oracle registry.
+        IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(params.accountingToken);
         $._accountingToken = params.accountingToken;
+        $._idleTokens.add(params.accountingToken);
+
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
         $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
@@ -149,11 +160,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @inheritdoc IMachine
     function notifyIncomingTransfer(address token) external override onlyMailbox {
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(token);
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             MachineStorage storage $ = _getMachineStorage();
-            $._idleTokens.add(token);
+            bool newlyAdded = $._idleTokens.add(token);
+            if (newlyAdded) {
+                // Reverts if no price feed is registered for token in the oracle registry.
+                IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+            }
         }
     }
 
@@ -169,7 +182,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         IERC20Metadata(token).forceApprove(mailbox, amount);
         emit TransferToCaliber(chainId, token, amount);
         IMachineMailbox(mailbox).manageTransferFromMachineToCaliber(token, amount);
-        if (IERC20Metadata(token).balanceOf(address(this)) == 0) {
+        if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
         }
     }

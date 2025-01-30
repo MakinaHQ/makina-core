@@ -64,6 +64,7 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
+        assertTrue(machine.isIdleToken(address(accountingToken)));
 
         assertEq(machine.getCalibersLength(), 1);
 

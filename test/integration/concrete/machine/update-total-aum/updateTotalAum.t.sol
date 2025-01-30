@@ -32,7 +32,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_updateTotalAumDoesNotAccountForUnnotifiedToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(machine), inputAmount);
+        deal(address(baseToken), address(machine), inputAmount);
 
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
@@ -47,9 +47,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount);
-
-        vm.prank(machine.getMailbox(block.chainid));
-        machine.notifyIncomingTransfer(address(accountingToken));
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
