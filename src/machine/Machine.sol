@@ -13,6 +13,7 @@ import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {Constants} from "../libraries/Constants.sol";
 
 contract Machine is AccessManagedUpgradeable, IMachine {
     using Math for uint256;
@@ -56,6 +57,12 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     function initialize(MachineInitParams calldata params) external override initializer {
         MachineStorage storage $ = _getMachineStorage();
 
+        uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
+        if (
+            atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
+        ) {
+            revert InvalidDecimals();
+        }
         // Reverts if no price feed is registered for token in the oracle registry.
         IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(params.accountingToken);
         $._accountingToken = params.accountingToken;

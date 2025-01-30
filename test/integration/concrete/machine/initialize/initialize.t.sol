@@ -5,10 +5,33 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {Constants} from "src/libraries/Constants.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
+    function test_cannotDeployMachineWithAccoutingTokenDecimalsTooLow() public {
+        MockERC20 accountingToken2 =
+            new MockERC20("Accounting Token 2", "AT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
+
+        vm.expectRevert(IMachine.InvalidDecimals.selector);
+        new BeaconProxy(
+            address(machineBeacon),
+            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2))))
+        );
+    }
+
+    function test_cannotDeployMachineWithAccoutingTokenDecimalsTooHigh() public {
+        MockERC20 accountingToken2 =
+            new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
+
+        vm.expectRevert(IMachine.InvalidDecimals.selector);
+        new BeaconProxy(
+            address(machineBeacon),
+            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2))))
+        );
+    }
+
     function test_cannotDeployMachineWithNonPriceableAccountingToken() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);

@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 interface IMachine {
     error CaliberAccountingStale(uint256 caliberChainId);
+    error InvalidDecimals();
     error MailboxAlreadyExists();
     error NotMailbox();
     error RecoveryMode();
