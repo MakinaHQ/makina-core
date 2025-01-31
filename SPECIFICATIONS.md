@@ -23,6 +23,7 @@ Calibers can manage and account for positions by executing authorized instructio
 Instructions can be of two types: 
 - **ACCOUNTING**: Calculates the current size of a position and updates it in the executing caliber's storage.
 - **MANAGEMENT**: Modifies the size of a position. Every `MANAGEMENT` instruction is always paired with an `ACCOUNTING` instruction to account for the changes it introduces.
+- **HARVESTING**: Collects rewards earned by Caliber’s open positions from external protocols. `HARVESTING` instructions can collect rewards for multiple positions in a single operation. The rewards are moved from the external protocols’ reward distribution contracts to the Caliber contract.
 
 Each `Instruction` object includes an `affectedTokens` list which can have various purpose for different instruction types.
 
@@ -35,6 +36,8 @@ The protocol relies on specific assumptions on the instructions:
   - Their output state must start with an ordered list of amounts (one amount per slot) corresponding to the tokens in `affectedTokens`, followed by an end-of-args flag.
 - **MANAGEMENT**:  
   - The `affectedTokens` list must include exactly all tokens spent by the instruction. These tokens must also be registered as base tokens in the executing caliber.
+- **HARVESTING**:
+  - They are restricted to receive-only operations. They cannot spend any tokens that are initially held by the Caliber.
 
 Furthermore, while positions can be represented by one or more receipt tokens (e.g. ERC20 tokens, NFTs, etc.) that calibers do not track, the protocol relies on the following assumptions when creating new positions within a given caliber:
 - A given position cannot be denoted by more than 1 ID.
@@ -47,6 +50,7 @@ Furthermore, while positions can be represented by one or more receipt tokens (e
 - Can account for several non-base-token positions in a batch with `accountForPositionBatch()`.
 - Can compute total caliber accounting value with `updateAndReportCaliberAUM()`.
 - Can open, manage and close a position with `managePosition()`.
+- Can harvest and swap external reward assets with `harvest()`.
 - Can swap a token into any base token with `swap()`.
 
 ### Swapper
