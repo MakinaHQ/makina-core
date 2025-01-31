@@ -10,7 +10,7 @@
     "@openzeppelin/merkle-tree": "^1.0.7",
     "ethers": "^6.13.4",
     "prettier": "3.3.3",
-    "solhint": "5.0.3"
+    "solhint": "5.0.5"
   },
   "scripts": {
     "lint": "yarn lint:sol && yarn prettier:check",
