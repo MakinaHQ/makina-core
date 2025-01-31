@@ -4,9 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
@@ -44,7 +42,7 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
-        emit CaliberDeployed(address(caliber));
+        emit CaliberDeployed(address(0));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(

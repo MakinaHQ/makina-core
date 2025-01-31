@@ -11,8 +11,6 @@ abstract contract Base_Test is Base {
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
     // string MAINNET_RPC_URL = vm.envString("MAINNET_RPC_URL");
 
-    bytes32 public constant MOCK_TOKENS_SALT = bytes32("0x123");
-
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";

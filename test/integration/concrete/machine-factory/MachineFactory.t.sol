@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
@@ -43,8 +42,8 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
     function test_deployMachine() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
-        // vm.expectEmit(false, false, false, false, address(machineFactory));
-        // emit MachineDeployed(address(0));
+        vm.expectEmit(false, false, false, false, address(machineFactory));
+        emit MachineDeployed(address(0));
         vm.prank(dao);
         machine = Machine(
             machineFactory.deployMachine(

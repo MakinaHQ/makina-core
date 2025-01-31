@@ -558,7 +558,6 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.setRecoveryMode(true);
 
         // check security council cannot increase position
-        uint256 previewShares = vault.previewDeposit(inputAmount);
         vm.prank(securityCouncil);
         vm.expectRevert(ICaliber.RecoveryMode.selector);
         caliber.managePosition(instructions);
@@ -612,7 +611,6 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        uint256 receivedShares = vault.balanceOf(address(caliber));
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode

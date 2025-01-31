@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {MockPool} from "test/mocks/MockPool.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 
 import {Swapper_Unit_Concrete_Test} from "./Swapper.t.sol";

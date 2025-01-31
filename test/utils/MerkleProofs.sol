@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import "forge-std/StdJson.sol";
-import "forge-std/Vm.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 library MerkleProofs {
     using stdJson for string;

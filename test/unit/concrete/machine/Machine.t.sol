@@ -2,18 +2,9 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
-import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
-import {MockPool} from "test/mocks/MockPool.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
@@ -43,7 +34,7 @@ contract Machine_Unit_Concrete_Test is Base_Test {
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
-    function test_convertToShares() public {
+    function test_convertToShares() public view {
         // should hold when no yield occurred
         assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** Constants.SHARE_TOKEN_DECIMALS);
     }

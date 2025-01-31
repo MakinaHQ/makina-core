@@ -6,7 +6,6 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 

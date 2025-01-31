@@ -6,7 +6,7 @@ import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract MaxMint_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_maxMintWhenShareLimitEqualMaxUint() public {
+    function test_maxMintWhenShareLimitEqualMaxUint() public view {
         assertEq(machine.shareLimit(), type(uint256).max);
         assertEq(machine.maxMint(), type(uint256).max);
     }

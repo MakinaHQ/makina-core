@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import "forge-std/Test.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_getPositionForUnregisteredIDReturnsEmptyPosition() public {
+    function test_getPositionForUnregisteredIDReturnsEmptyPosition() public view {
         ICaliber.Position memory position = caliber.getPosition(0);
         assertEq(position.lastAccountingTime, 0);
         assertEq(position.value, 0);

@@ -39,19 +39,19 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         // swap baseToken to accountingToken
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
-        uint256 previewOutputAmoun1 = pool.previewSwap(address(baseToken), inputAmount);
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
             inputAmount: inputAmount,
-            minOutputAmount: previewOutputAmoun1
+            minOutputAmount: previewOutputAmount1
         });
         vm.prank(mechanic);
         caliber.swap(order);
 
-        assertGe(accountingToken.balanceOf(address(caliber)), previewOutputAmoun1);
+        assertGe(accountingToken.balanceOf(address(caliber)), previewOutputAmount1);
         assertEq(baseToken.balanceOf(address(caliber)), 0);
 
         // set baseToken as an actual base token
@@ -59,13 +59,13 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
 
         // swap accountingToken to baseToken
-        uint256 previewOutputAmount2 = pool.previewSwap(address(accountingToken), previewOutputAmoun1);
+        uint256 previewOutputAmount2 = pool.previewSwap(address(accountingToken), previewOutputAmount1);
         order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
-            data: abi.encodeCall(MockPool.swap, (address(accountingToken), previewOutputAmoun1)),
+            data: abi.encodeCall(MockPool.swap, (address(accountingToken), previewOutputAmount1)),
             inputToken: address(accountingToken),
             outputToken: address(baseToken),
-            inputAmount: previewOutputAmoun1,
+            inputAmount: previewOutputAmount1,
             minOutputAmount: previewOutputAmount2
         });
         vm.prank(mechanic);
