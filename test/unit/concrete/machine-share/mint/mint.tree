@@ -1,0 +1,5 @@
+mint.t.sol
+├── when sender is not the associated machine
+│  └── it should revert with NotMachine
+└── when sender is the associated machine
+    └── it should increase the share token balance of the receiver by given amount

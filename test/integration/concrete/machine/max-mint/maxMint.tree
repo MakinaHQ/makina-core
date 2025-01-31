@@ -1,0 +1,8 @@
+maxMint.t.sol
+├── given share limit is equal to max uint256
+│  └── it should return max uint256
+└── given share limit is less than uint256
+   ├── given share limit is greater than share total supply
+   │  └── it should return the difference between share limit and share total supply
+   └── given share limit is smaller or equal than share total supply
+      └── it should return 0

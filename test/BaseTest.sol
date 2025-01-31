@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import "./Base.sol";
 import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
+import {IMachine} from "../src/interfaces/IMachine.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
@@ -14,7 +15,13 @@ abstract contract Base_Test is Base {
 
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
+    string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
+
+    string public constant DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL = "MS";
+
     uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
+
+    uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
 
     uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
 
@@ -31,6 +38,8 @@ abstract contract Base_Test is Base {
 
     Machine public machine;
     Caliber public caliber;
+
+    address public machineDepositor = makeAddr("MachineDepositor");
 
     enum TestMode {
         CONCRETE,
@@ -94,17 +103,24 @@ abstract contract Base_Test is Base {
         vm.prank(dao);
         Machine _machine = Machine(
             machineFactory.deployMachine(
-                _accountingToken,
-                mechanic,
-                securityCouncil,
-                address(accessManager),
-                DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                _accountingTokenPosId,
-                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                allowedInstrMerkleRoot,
-                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
-                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS
+                IMachine.MachineInitParams({
+                    accountingToken: _accountingToken,
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialAuthority: address(accessManager),
+                    depositor: machineDepositor,
+                    initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    hubCaliberAccountingTokenPosID: _accountingTokenPosId,
+                    hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    hubCaliberAllowedInstrRoot: allowedInstrMerkleRoot,
+                    hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    hubCaliberMaxMgmtLossBps: DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
+                    hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    depositorOnlyMode: false,
+                    shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                    shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                })
             )
         );
         Caliber _caliber = Caliber(ICaliberMailbox(_machine.getMailbox(block.chainid)).caliber());

@@ -2,9 +2,12 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
+import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
@@ -32,8 +35,9 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
     }
 
     function test_cannotDeployMachineWithoutRole() public {
+        IMachine.MachineInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.deployMachine(address(0), address(0), address(0), address(0), 0, 0, 0, bytes32(0), 0, 0, 0);
+        machineFactory.deployMachine(params);
     }
 
     function test_deployMachine() public {
@@ -44,17 +48,24 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
         vm.prank(dao);
         machine = Machine(
             machineFactory.deployMachine(
-                address(accountingToken),
-                mechanic,
-                securityCouncil,
-                address(accessManager),
-                DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                accountingTokenPosId,
-                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                initialAllowedInstrRoot,
-                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
-                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS
+                IMachine.MachineInitParams({
+                    accountingToken: address(accountingToken),
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialAuthority: address(accessManager),
+                    depositor: machineDepositor,
+                    initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    hubCaliberAccountingTokenPosID: accountingTokenPosId,
+                    hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    hubCaliberAllowedInstrRoot: initialAllowedInstrRoot,
+                    hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    hubCaliberMaxMgmtLossBps: DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
+                    hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    depositorOnlyMode: false,
+                    shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                    shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                })
             )
         );
         assertEq(machineFactory.isMachine(address(machine)), true);
@@ -63,8 +74,14 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
+        assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+
+        IMachineShare shareToken = IMachineShare(machine.shareToken());
+        assertEq(shareToken.machine(), address(machine));
+        assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
+        assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
 
         assertEq(machine.getCalibersLength(), 1);
 
