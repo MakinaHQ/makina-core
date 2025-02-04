@@ -244,17 +244,19 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
             if ($._positionIdToBaseToken[posId] != address(0)) {
-                accountForBaseToken(posId);
+                (uint256 value,) = accountForBaseToken(posId);
+                aum += value;
             } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
+            } else {
+                aum += $._positionById[posId].value;
             }
-            aum += $._positionById[posId].value;
         }
 
         $._lastReportedAUM = aum;
         $._lastReportedAUMTime = currentTimestamp;
 
-        return ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
+        ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
     }
 
     /// @inheritdoc ICaliber
@@ -475,10 +477,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert ZeroPositionId();
         }
         CaliberStorage storage $ = _getCaliberStorage();
-        if ($._positionIds.contains(posId)) {
+        if (!$._positionIds.add(posId)) {
             revert PositionAlreadyExists();
         }
-        $._positionIds.add(posId);
         $._positionById[posId] = pos;
         emit PositionCreated(posId);
     }
