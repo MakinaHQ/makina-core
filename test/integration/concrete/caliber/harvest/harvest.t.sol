@@ -227,7 +227,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
     function _test_cannotHarvestWithSwapFromBTWithValueLossTooHigh(address sender)
         internal
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;

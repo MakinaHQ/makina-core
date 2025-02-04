@@ -5,37 +5,22 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 
-contract Caliber_Integration_Concrete_Test is Base_Test {
-    /// @dev A is the accounting token, B is the base token
-    /// and E is the reference currency of the oracle registry
-    uint256 internal constant PRICE_A_E = 150;
-    uint256 internal constant PRICE_B_E = 60000;
-    uint256 internal constant PRICE_B_A = 400;
-
-    uint256 internal constant BASE_TOKEN_POS_ID = 2;
+contract Caliber_Integration_Concrete_Test is Integration_Concrete_Test {
     uint256 internal constant VAULT_POS_ID = 3;
     uint256 internal constant POOL_POS_ID = 4;
 
-    MockERC20 internal baseToken;
     MockERC4626 internal vault;
     MockPool internal pool;
 
-    MockPriceFeed internal bPriceFeed1;
-    MockPriceFeed internal aPriceFeed1;
+    function setUp() public virtual override {
+        Integration_Concrete_Test.setUp();
 
-    function _setUp() public virtual override {
-        baseToken = new MockERC20("baseToken", "BT", 18);
         vault = new MockERC4626("vault", "VLT", IERC20(baseToken), 0);
-
-        aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
-        bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
@@ -49,7 +34,7 @@ contract Caliber_Integration_Concrete_Test is Base_Test {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
         vm.stopPrank();
 
-        (machine, caliber) = _deployMachine(address(accountingToken), accountingTokenPosId, bytes32(0));
+        (machine, caliber) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(

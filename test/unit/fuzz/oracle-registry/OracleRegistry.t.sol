@@ -6,26 +6,20 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
 contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
-    MockERC20 internal baseToken;
     MockERC20 internal quoteToken;
-
     MockPriceFeed internal basePriceFeed1;
     MockPriceFeed internal basePriceFeed2;
     MockPriceFeed internal quotePriceFeed1;
     MockPriceFeed internal quotePriceFeed2;
 
-    /// @dev A and B are either base or quote tokens, C and D are intermediate tokens
-    /// and E is the reference currency of the oracle registry
-    uint256 internal constant PRICE_A_E = 60000;
-    uint256 internal constant PRICE_A_C = 24;
-    uint256 internal constant PRICE_C_E = 2500;
+    uint32 internal price_b_e;
+    uint32 internal price_q_e;
 
-    uint256 internal constant PRICE_B_E = 600;
-    uint256 internal constant PRICE_B_D = 12;
-    uint256 internal constant PRICE_D_E = 50;
-
-    uint256 internal constant PRICE_A_B = 100;
-
+    /// b represents the base token
+    /// q represents the quote token
+    /// e represents the reference currency of the oracle registry
+    /// x represents the intermediate token between b and e
+    /// y represents the intermediate token between q and e
     struct Data {
         uint8 baseTokenDecimals;
         uint8 quoteTokenDecimals;
@@ -33,10 +27,10 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         uint8 bf2Decimals;
         uint8 qf1Decimals;
         uint8 qf2Decimals;
-    }
-
-    constructor() {
-        mode = TestMode.FUZZ;
+        uint32 price_b_x;
+        uint32 price_x_e;
+        uint32 price_q_y;
+        uint32 price_y_e;
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
@@ -47,26 +41,29 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         data.qf1Decimals = uint8(bound(data.qf1Decimals, 6, 18));
         data.qf2Decimals = uint8(bound(data.qf2Decimals, 6, 18));
 
+        data.price_b_x = uint32(bound(data.price_b_x, 1, 1e4));
+        data.price_x_e = uint32(bound(data.price_x_e, 1, 1e4));
+        data.price_q_y = uint32(bound(data.price_q_y, 1, 1e4));
+        data.price_y_e = uint32(bound(data.price_y_e, 1, 1e4));
+        price_b_e = data.price_b_x * data.price_x_e;
+        price_q_e = data.price_q_y * data.price_y_e;
+
         baseToken = new MockERC20("Base Token", "BT", data.baseTokenDecimals);
         quoteToken = new MockERC20("Quote Token", "QT", data.quoteTokenDecimals);
     }
 
     // 2 base feeds and 2 quote feeds
-    function test_getPrice_1_fuzz(Data memory data, bool direction) public {
+    function test_getPrice_1_fuzz(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
-        basePriceFeed1 = new MockPriceFeed(
-            data.bf1Decimals, int256((direction ? PRICE_A_C : PRICE_B_D) * (10 ** data.bf1Decimals)), block.timestamp
-        );
-        basePriceFeed2 = new MockPriceFeed(
-            data.bf2Decimals, int256((direction ? PRICE_C_E : PRICE_D_E) * (10 ** data.bf2Decimals)), block.timestamp
-        );
-        quotePriceFeed1 = new MockPriceFeed(
-            data.qf1Decimals, int256((direction ? PRICE_B_D : PRICE_A_C) * (10 ** data.qf1Decimals)), block.timestamp
-        );
-        quotePriceFeed2 = new MockPriceFeed(
-            data.qf2Decimals, int256((direction ? PRICE_D_E : PRICE_C_E) * (10 ** data.qf2Decimals)), block.timestamp
-        );
+        basePriceFeed1 =
+            new MockPriceFeed(data.bf1Decimals, int256(data.price_b_x * (10 ** data.bf1Decimals)), block.timestamp);
+        basePriceFeed2 =
+            new MockPriceFeed(data.bf2Decimals, int256(data.price_x_e * (10 ** data.bf2Decimals)), block.timestamp);
+        quotePriceFeed1 =
+            new MockPriceFeed(data.qf1Decimals, int256(data.price_q_y * (10 ** data.qf1Decimals)), block.timestamp);
+        quotePriceFeed2 =
+            new MockPriceFeed(data.qf2Decimals, int256(data.price_y_e * (10 ** data.qf2Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -86,24 +83,19 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(
-            price, direction ? PRICE_A_B * (10 ** data.quoteTokenDecimals) : (10 ** data.quoteTokenDecimals) / PRICE_A_B
-        );
+        assertEq(price, (10 ** data.quoteTokenDecimals) * price_b_e / price_q_e);
     }
 
     // 2 base feeds and 1 quote feed
-    function test_getPrice_2_fuzz(Data memory data, bool direction) public {
+    function test_getPrice_2_fuzz(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
-        basePriceFeed1 = new MockPriceFeed(
-            data.bf1Decimals, int256((direction ? PRICE_A_C : PRICE_B_D) * (10 ** data.bf1Decimals)), block.timestamp
-        );
-        basePriceFeed2 = new MockPriceFeed(
-            data.bf2Decimals, int256((direction ? PRICE_C_E : PRICE_D_E) * (10 ** data.bf2Decimals)), block.timestamp
-        );
-        quotePriceFeed1 = new MockPriceFeed(
-            data.qf1Decimals, int256((direction ? PRICE_B_E : PRICE_A_E) * (10 ** data.qf1Decimals)), block.timestamp
-        );
+        basePriceFeed1 =
+            new MockPriceFeed(data.bf1Decimals, int256(data.price_b_x * (10 ** data.bf1Decimals)), block.timestamp);
+        basePriceFeed2 =
+            new MockPriceFeed(data.bf2Decimals, int256(data.price_x_e * (10 ** data.bf2Decimals)), block.timestamp);
+        quotePriceFeed1 =
+            new MockPriceFeed(data.qf1Decimals, int256(price_q_e * (10 ** data.qf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -119,24 +111,19 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(
-            price, direction ? PRICE_A_B * (10 ** data.quoteTokenDecimals) : (10 ** data.quoteTokenDecimals) / PRICE_A_B
-        );
+        assertEq(price, (10 ** data.quoteTokenDecimals) * price_b_e / price_q_e);
     }
 
     // 1 base feed and 2 quote feeds
-    function test_getPrice_3_fuzz(Data memory data, bool direction) public {
+    function test_getPrice_3_fuzz(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
-        basePriceFeed1 = new MockPriceFeed(
-            data.bf1Decimals, int256((direction ? PRICE_A_E : PRICE_B_E) * (10 ** data.bf1Decimals)), block.timestamp
-        );
-        quotePriceFeed1 = new MockPriceFeed(
-            data.qf1Decimals, int256((direction ? PRICE_B_D : PRICE_A_C) * (10 ** data.qf1Decimals)), block.timestamp
-        );
-        quotePriceFeed2 = new MockPriceFeed(
-            data.qf2Decimals, int256((direction ? PRICE_D_E : PRICE_C_E) * (10 ** data.qf2Decimals)), block.timestamp
-        );
+        basePriceFeed1 =
+            new MockPriceFeed(data.bf1Decimals, int256(price_b_e * (10 ** data.bf1Decimals)), block.timestamp);
+        quotePriceFeed1 =
+            new MockPriceFeed(data.qf1Decimals, int256(data.price_q_y * (10 ** data.qf1Decimals)), block.timestamp);
+        quotePriceFeed2 =
+            new MockPriceFeed(data.qf2Decimals, int256(data.price_y_e * (10 ** data.qf2Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -152,21 +139,17 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(
-            price, direction ? PRICE_A_B * (10 ** data.quoteTokenDecimals) : (10 ** data.quoteTokenDecimals) / PRICE_A_B
-        );
+        assertEq(price, (10 ** data.quoteTokenDecimals) * price_b_e / price_q_e);
     }
 
     // 1 base feed and 1 quote feed
-    function test_getPrice_4_fuzz(Data memory data, bool direction) public {
+    function test_getPrice_4_fuzz(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
-        basePriceFeed1 = new MockPriceFeed(
-            data.bf1Decimals, int256((direction ? PRICE_A_E : PRICE_B_E) * (10 ** data.bf1Decimals)), block.timestamp
-        );
-        quotePriceFeed1 = new MockPriceFeed(
-            data.qf1Decimals, int256((direction ? PRICE_B_E : PRICE_A_E) * (10 ** data.qf1Decimals)), block.timestamp
-        );
+        basePriceFeed1 =
+            new MockPriceFeed(data.bf1Decimals, int256(price_b_e * (10 ** data.bf1Decimals)), block.timestamp);
+        quotePriceFeed1 =
+            new MockPriceFeed(data.qf1Decimals, int256(price_q_e * (10 ** data.qf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -178,8 +161,6 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(
-            price, direction ? PRICE_A_B * (10 ** data.quoteTokenDecimals) : (10 ** data.quoteTokenDecimals) / PRICE_A_B
-        );
+        assertEq(price, (10 ** data.quoteTokenDecimals) * price_b_e / price_q_e);
     }
 }

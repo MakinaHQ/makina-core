@@ -5,9 +5,34 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";
+import {Base_Test} from "test/BaseTest.sol";
 
-contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
+contract GetPrice_Unit_Concrete_Test is Base_Test {
+    /// @dev A and B are either base or quote tokens, C and D are intermediate tokens
+    /// and E is the reference currency of the oracle registry
+    uint256 internal constant PRICE_A_E = 150;
+    uint256 internal constant PRICE_A_C = 50;
+    uint256 internal constant PRICE_C_E = 3;
+
+    uint256 internal constant PRICE_B_E = 60000;
+    uint256 internal constant PRICE_B_D = 24;
+    uint256 internal constant PRICE_D_E = 2500;
+
+    uint256 internal constant PRICE_B_A = 400;
+
+    MockERC20 internal quoteToken;
+
+    MockPriceFeed internal basePriceFeed1;
+    MockPriceFeed internal basePriceFeed2;
+    MockPriceFeed internal quotePriceFeed1;
+    MockPriceFeed internal quotePriceFeed2;
+
+    function setUp() public override {
+        Base_Test.setUp();
+        baseToken = new MockERC20("Base Token", "BT", 18);
+        quoteToken = new MockERC20("Quote Token", "QT", 8);
+    }
+
     function test_cannotGetPriceWithUnitializedQuoteTokenFeedData() public {
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
@@ -242,12 +267,12 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(price, PRICE_A_B * (10 ** 18));
+        assertEq(price, (10 ** 8) / PRICE_B_A);
     }
 
     function test_getPrice_B_A() public {
-        baseToken = new MockERC20("Base Token", "BT", 18);
-        quoteToken = new MockERC20("Quote Token", "QT", 8);
+        baseToken = new MockERC20("Base Token", "BT", 8);
+        quoteToken = new MockERC20("Quote Token", "QT", 18);
 
         basePriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_D * (10 ** 18)), block.timestamp);
         basePriceFeed2 = new MockPriceFeed(18, int256(PRICE_D_E * (10 ** 18)), block.timestamp);
@@ -272,6 +297,6 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         vm.stopPrank();
 
         uint256 price = oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-        assertEq(price, (10 ** 8) / PRICE_A_B);
+        assertEq(price, PRICE_B_A * (10 ** 18));
     }
 }

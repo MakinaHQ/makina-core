@@ -12,20 +12,23 @@ import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_cannotAddBaseTokenWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
-    function test_cannotAddSameBaseTokenTwice() public withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID) {
+    function test_cannotAddSameBaseTokenTwice()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
         vm.expectRevert(ICaliber.BaseTokenAlreadyExists.selector);
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID + 1);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
     function test_cannotAddBaseTokenWithoutRegisteredFeedData() public {
         MockERC20 baseToken2;
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken2), BASE_TOKEN_POS_ID + 1);
+        caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
     function test_cannotAddBaseTokenWithZeroId() public {
@@ -38,9 +41,9 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         vm.startPrank(dao);
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken), accountingTokenPosId);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
 
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         MockERC20 baseToken2 = new MockERC20("Base Token 2", "BT2", 18);
         oracleRegistry.setTokenFeedData(
@@ -48,20 +51,20 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         );
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
-        caliber.addBaseToken(address(baseToken2), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
     function test_addBaseToken() public {
         vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.PositionCreated(BASE_TOKEN_POS_ID);
+        emit ICaliber.PositionCreated(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         assertEq(caliber.isBaseToken(address(baseToken)), true);
         assertEq(caliber.getPositionsLength(), 2);
-        assertEq(caliber.getPositionId(1), BASE_TOKEN_POS_ID);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).isBaseToken, true);
+        assertEq(caliber.getPositionId(1), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).isBaseToken, true);
     }
 }

@@ -1,0 +1,19 @@
+swap.t.sol
+├── given approval or execution target is not set for given DEX aggregator
+│  └── it should revert with DexAggregatorNotSet
+└── given both targets are set for given DEX aggregator
+   ├── given the swapper has insufficient input token allowance from sender
+   │  └── it should revert with ERC20InsufficientAllowance
+   └── given the swapper has sufficient input token allowance from sender
+      ├── given the sender has insufficient input token balance
+      │  └── it should revert with ERC20InsufficientBalance
+      └── given the sender has sufficient input token balance
+         ├── given the DEX aggregator fails
+         │  └── it should revert with SwapFailed
+         └── given the DEX aggregator succeeds
+            ├── given the output amount is smaller that given minimum
+            │  └── it should revert with AmountOutTooLow
+            └── given the output amount is not smaller that given minimum
+               ├── it should emit a Swapped event
+               ├── it should decrease the input token balance of the sender by input amount
+               └── it should increase the output token balance of the sender by output amount

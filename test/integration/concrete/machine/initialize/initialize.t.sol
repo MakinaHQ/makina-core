@@ -76,7 +76,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-            hubCaliberAccountingTokenPosID: accountingTokenPosId,
+            hubCaliberAccountingTokenPosID: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
             hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
             hubCaliberAllowedInstrRoot: bytes32(""),
             hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

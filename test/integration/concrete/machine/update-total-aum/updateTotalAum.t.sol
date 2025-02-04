@@ -13,6 +13,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_cannotUpdateTotalAumWithStaleCaliber() public {
+        skip(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD + 1);
         vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, block.chainid));
         machine.updateTotalAum();
     }

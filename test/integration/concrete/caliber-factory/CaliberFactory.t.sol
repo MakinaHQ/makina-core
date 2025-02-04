@@ -4,20 +4,14 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
+import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 
-contract CaliberFactory_Integration_Concrete_Test is Base_Test {
-    event CaliberDeployed(address indexed caliber);
-
-    uint256 private constant PRICE_A_E = 150;
-
-    MockPriceFeed private aPriceFeed1;
-
-    function _setUp() public override {
-        aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
+contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
+    function setUp() public override {
+        Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
         oracleRegistry.setTokenFeedData(
@@ -42,13 +36,13 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
-        emit CaliberDeployed(address(0));
+        emit ICaliberFactory.CaliberDeployed(address(0));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
                 _machine,
                 address(accountingToken),
-                accountingTokenPosId,
+                HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 initialAllowedInstrRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -71,6 +65,6 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 1);
-        caliber.accountForBaseToken(accountingTokenPosId);
+        assertEq(caliber.getPositionId(0), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
     }
 }

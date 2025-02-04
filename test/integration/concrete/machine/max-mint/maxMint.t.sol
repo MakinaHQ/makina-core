@@ -11,7 +11,7 @@ contract MaxMint_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         assertEq(machine.maxMint(), type(uint256).max);
     }
 
-    function test_maxMintWhenShareLimitSmallerThanShareSupply() public {
+    function test_maxMintWhenShareLimitGreaterThanShareSupply() public {
         address shareToken = machine.shareToken();
         uint256 newShareLimit = 1e20;
         uint256 newShareSupply = 1e18;
@@ -25,7 +25,7 @@ contract MaxMint_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         assertEq(machine.maxMint(), newShareLimit - newShareSupply);
     }
 
-    function test_maxMintWhenShareLimitGreaterThanShareSupply() public {
+    function test_maxMintWhenShareLimitSmallerThanShareSupply() public {
         address shareToken = machine.shareToken();
         uint256 newShareLimit = 1e18;
         uint256 newShareSupply = 1e20;

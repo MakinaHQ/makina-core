@@ -7,10 +7,6 @@ import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 contract Caliber_Integration_Fuzz_Test is Base_Test {
-    uint256 private constant BASE_TOKEN_POS_ID = 2;
-
-    MockERC20 private baseToken;
-
     MockPriceFeed private b1PriceFeed1;
     MockPriceFeed private aPriceFeed1;
 
@@ -21,22 +17,16 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         uint8 aDecimals;
         uint8 b1Decimals;
         uint8 af1Decimals;
-        uint8 af2Decimals;
-        uint8 b1f1Decimals;
-        uint8 b1f2Decimals;
+        uint8 bf1Decimals;
         uint16 a_e_price; // price of accounting token in oracle registry's reference currency
         uint16 b_e_price; // price of base token in oracle registry's reference currency
-    }
-
-    constructor() {
-        mode = TestMode.FUZZ;
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
         data.aDecimals = uint8(bound(data.aDecimals, 6, 18));
         data.b1Decimals = uint8(bound(data.b1Decimals, 6, 18));
         data.af1Decimals = uint8(bound(data.af1Decimals, 6, 18));
-        data.b1f1Decimals = uint8(bound(data.b1f1Decimals, 6, 18));
+        data.bf1Decimals = uint8(bound(data.bf1Decimals, 6, 18));
 
         data.a_e_price = uint16(bound(data.a_e_price, 1, type(uint16).max));
         data.b_e_price = uint16(bound(data.b_e_price, 1, type(uint16).max));
@@ -47,12 +37,10 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         accountingTokenUnit = 10 ** data.aDecimals;
         baseTokenUnit = 10 ** data.b1Decimals;
 
-        accountingTokenPosId = 1;
-
         aPriceFeed1 =
             new MockPriceFeed(data.af1Decimals, int256(data.a_e_price * (10 ** data.af1Decimals)), block.timestamp);
         b1PriceFeed1 =
-            new MockPriceFeed(data.b1f1Decimals, int256(data.b_e_price * (10 ** data.b1f1Decimals)), block.timestamp);
+            new MockPriceFeed(data.bf1Decimals, int256(data.b_e_price * (10 ** data.bf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
@@ -63,63 +51,66 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(0), address(accountingToken), accountingTokenPosId, bytes32(0));
+        caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
-    function test_accountForATPosition_fuzz(Data memory data) public {
+    function test_accountForATPosition_fuzz(Data memory data, uint256 amount) public {
         _fuzzTestSetupAfter(data);
+        amount = bound(amount, 0, 1e30);
 
-        assertEq(caliber.getPosition(1).value, 0);
-        assertEq(caliber.getPosition(1).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, 0);
 
-        deal(address(accountingToken), address(caliber), 2 * accountingTokenUnit, true);
+        deal(address(accountingToken), address(caliber), amount, true);
 
-        assertEq(caliber.getPosition(1).value, 0);
-        assertEq(caliber.getPosition(1).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, 0);
 
         (uint256 value, int256 change) = caliber.accountForBaseToken(1);
 
-        assertEq(value, 2 * accountingTokenUnit);
+        assertEq(value, amount);
         assertEq(change, int256(value));
-        assertEq(caliber.getPosition(1).value, value);
-        assertEq(caliber.getPosition(1).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
     }
 
-    function test_accountForBTPosition_fuzz(Data memory data) public {
+    function test_accountForBTPosition_fuzz(Data memory data, uint256 amount1, uint256 amount2) public {
         _fuzzTestSetupAfter(data);
+        amount1 = bound(amount1, 0, 1e20);
+        amount2 = bound(amount2, 0, 1e20);
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, 0);
 
-        // set caliber's base tokens balance to 2
-        deal(address(baseToken), address(caliber), 2 * baseTokenUnit, true);
+        // mint amount1 base tokens to caliber
+        deal(address(baseToken), address(caliber), amount1, true);
 
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, 0);
 
-        (uint256 value, int256 change) = caliber.accountForBaseToken(2);
+        (uint256 value1, int256 change1) = caliber.accountForBaseToken(2);
 
-        assertEq(value, 2 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
-        assertEq(change, int256(value));
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(value1, amount1 * (data.b_e_price * accountingTokenUnit / data.a_e_price) / baseTokenUnit);
+        assertEq(change1, int256(value1));
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value1);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, block.timestamp);
 
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
 
-        // set caliber's base tokens balance to 3
-        deal(address(baseToken), address(caliber), 3 * baseTokenUnit, true);
-        // set caliber's accounting tokens balance to 10 to check there is no effect
-        deal(address(accountingToken), address(caliber), 10 * data.aDecimals, true);
+        // mint amount2 base tokens to caliber
+        deal(address(baseToken), address(caliber), amount2, true);
+        // increase caliber's accounting token balance to check that there is no effect
+        deal(address(accountingToken), address(caliber), 1000 * accountingTokenUnit, true);
 
-        (value, change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        (uint256 value2, int256 change2) = caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
-        assertEq(value, 3 * (accountingTokenUnit * data.b_e_price / data.a_e_price));
-        assertEq(change, int256(accountingTokenUnit * data.b_e_price / data.a_e_price));
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, newTimestamp);
+        assertEq(value2, amount2 * (data.b_e_price * accountingTokenUnit / data.a_e_price) / baseTokenUnit);
+        assertEq(change2, int256(value2) - int256(value1));
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value2);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, newTimestamp);
     }
 }

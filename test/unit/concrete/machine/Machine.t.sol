@@ -4,23 +4,20 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
-contract Machine_Unit_Concrete_Test is Base_Test {
-    MockPriceFeed internal aPriceFeed1;
-
-    function _setUp() public virtual override {
-        aPriceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
+contract Machine_Unit_Concrete_Test is Unit_Concrete_Test {
+    function setUp() public virtual override {
+        Unit_Concrete_Test.setUp();
 
         vm.prank(dao);
         oracleRegistry.setTokenFeedData(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        (machine,) = _deployMachine(address(accountingToken), accountingTokenPosId, bytes32(0));
+        (machine,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
     function test_machine_getters() public view {

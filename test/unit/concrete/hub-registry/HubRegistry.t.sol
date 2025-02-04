@@ -6,9 +6,9 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
-contract HubRegistry_Util_Concrete_Test is Base_Test {
+contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_hubRegistry_getters() public view {
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(hubRegistry.swapper(), address(swapper));

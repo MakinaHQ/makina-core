@@ -14,17 +14,12 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
         uint8 aDecimals;
     }
 
-    constructor() {
-        mode = TestMode.FUZZ;
-    }
-
     function _fuzzTestSetupAfter(Data memory data) public {
         data.aDecimals = uint8(
             bound(data.aDecimals, Constants.MIN_ACCOUNTING_TOKEN_DECIMALS, Constants.MAX_ACCOUNTING_TOKEN_DECIMALS)
         );
 
         accountingToken = new MockERC20("Accounting Token", "ACT", data.aDecimals);
-        accountingTokenPosId = 1;
 
         MockPriceFeed aPriceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
 
@@ -33,7 +28,7 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        (machine,) = _deployMachine(address(accountingToken), accountingTokenPosId, bytes32(0));
+        (machine,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
     function test_convertToShares_fuzz(Data memory data, uint256 assets) public {
@@ -73,6 +68,8 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
         assertEq(shareToken.totalSupply(), expectedShares1);
         assertEq(machine.lastTotalAum(), assets1);
 
+        uint256 expectedShares2 = machine.convertToShares(assets2);
+
         // generate yield
         if (yieldDirection) {
             yield = bound(yield, 0, type(uint256).max - assets1 - assets2);
@@ -85,7 +82,6 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
         deal(address(accountingToken), address(this), assets2, true);
 
         // 2nd deposit
-        uint256 expectedShares2 = machine.convertToShares(assets2);
         accountingToken.approve(address(machine), assets2);
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.Deposit(address(this), address(this), assets2, expectedShares2);

@@ -33,7 +33,7 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
         skip(1 hours);
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         uint256 inputAmount2 = 2e18;
         deal(address(baseToken), address(caliber), inputAmount2, true);
@@ -76,7 +76,7 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
 
     function test_cannotUpdateAndReportCaliberAUMWithInvalidInstruction()
         public
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -108,15 +108,16 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
 
         // position is a base token position
         accountingInstructions = new ICaliber.Instruction[](1);
-        accountingInstructions[0] =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault));
+        accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(
+            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
+        );
         vm.expectRevert(ICaliber.BaseTokenPosition.selector);
         caliber.updateAndReportCaliberAUM(accountingInstructions);
     }
 
     function test_cannotUpdateAndReportCaliberAUMWithStalePosition()
         public
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);

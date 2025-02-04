@@ -26,7 +26,10 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
-    function test_cannotSwapFromBTWithValueLossTooHigh() public withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID) {
+    function test_cannotSwapFromBTWithValueLossTooHigh()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
         _test_cannotSwapFromBTWithValueLossTooHigh(mechanic);
     }
 
@@ -56,7 +59,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
 
         // set baseToken as an actual base token
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         // swap accountingToken to baseToken
         uint256 previewOutputAmount2 = pool.previewSwap(address(accountingToken), previewOutputAmount1);
@@ -88,7 +91,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
 
     function test_cannotSwapIntoNonAccountingTokenWhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
         whileInRecoveryMode
     {
         ISwapper.SwapOrder memory order;
@@ -114,7 +117,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
 
     function test_cannotSwapFromBTWithValueLossTooHighWhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
         whileInRecoveryMode
     {
         _test_cannotSwapFromBTWithValueLossTooHigh(securityCouncil);

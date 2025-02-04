@@ -10,55 +10,55 @@ contract AccountForBaseToken_Integration_Concrete_Test is Caliber_Integration_Co
         vm.prank(dao);
 
         vm.expectRevert(ICaliber.NotBaseTokenPosition.selector);
-        caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
     function test_accountForATPosition() public {
-        assertEq(caliber.getPosition(accountingTokenPosId).value, 0);
-        assertEq(caliber.getPosition(accountingTokenPosId).lastAccountingTime, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, 0);
 
-        (uint256 value, int256 change) = caliber.accountForBaseToken(accountingTokenPosId);
+        (uint256 value, int256 change) = caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
 
         assertEq(value, 0);
         assertEq(change, 0);
-        assertEq(caliber.getPosition(accountingTokenPosId).value, value);
-        assertEq(caliber.getPosition(accountingTokenPosId).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
 
         deal(address(accountingToken), address(caliber), 1e18, true);
 
-        assertEq(caliber.getPosition(accountingTokenPosId).value, 0);
-        assertEq(caliber.getPosition(accountingTokenPosId).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
 
-        (value, change) = caliber.accountForBaseToken(accountingTokenPosId);
+        (value, change) = caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
 
         assertEq(value, 1e18);
         assertEq(change, 1e18);
-        assertEq(caliber.getPosition(accountingTokenPosId).value, value);
-        assertEq(caliber.getPosition(accountingTokenPosId).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
     }
 
-    function test_accountForBTPosition() public withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID) {
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, 0);
+    function test_accountForBTPosition() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, 0);
 
-        (uint256 value, int256 change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        (uint256 value, int256 change) = caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         assertEq(value, 0);
         assertEq(change, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, block.timestamp);
 
         deal(address(baseToken), address(caliber), 1e18, true);
 
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, 0);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, block.timestamp);
 
-        (value, change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        (value, change) = caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         assertEq(value, 1e18 * PRICE_B_A);
         assertEq(change, int256(1e18 * PRICE_B_A));
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, block.timestamp);
 
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
@@ -67,23 +67,23 @@ contract AccountForBaseToken_Integration_Concrete_Test is Caliber_Integration_Co
         // this should not affect the accounting
         deal(address(accountingToken), address(caliber), 10e18, true);
 
-        (value, change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        (value, change) = caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         assertEq(value, 3e18 * PRICE_B_A);
         assertEq(change, int256(2e18 * PRICE_B_A));
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, newTimestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, newTimestamp);
 
         newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
 
         deal(address(baseToken), address(caliber), 2e18, true);
 
-        (value, change) = caliber.accountForBaseToken(BASE_TOKEN_POS_ID);
+        (value, change) = caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         assertEq(value, 2e18 * PRICE_B_A);
         assertEq(change, -1 * int256(1e18 * PRICE_B_A));
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).value, value);
-        assertEq(caliber.getPosition(BASE_TOKEN_POS_ID).lastAccountingTime, newTimestamp);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, value);
+        assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, newTimestamp);
     }
 }

@@ -19,11 +19,7 @@ contract Deploy_Test is Base_Test {
     DeployMakinaCore public deployMakinaCore;
     DeployCalibers public deployCalibers;
 
-    constructor() {
-        mode = TestMode.CUSTOM;
-    }
-
-    function _setUp() public override {
+    function setUp() public override {
         deployMakinaCore = new DeployMakinaCore();
         deployCalibers = new DeployCalibers();
 

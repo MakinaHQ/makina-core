@@ -29,56 +29,31 @@ abstract contract Base_Test is Base {
 
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
-    TestMode public mode = TestMode.CONCRETE;
+    uint256 public constant HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1;
+
+    uint256 public constant HUB_CALIBER_BASE_TOKEN_1_POS_ID = 2;
 
     MockERC20 public accountingToken;
-    uint256 public accountingTokenPosId;
+    MockERC20 public baseToken;
 
     Machine public machine;
     Caliber public caliber;
 
     address public machineDepositor = makeAddr("MachineDepositor");
 
-    enum TestMode {
-        CONCRETE,
-        FUZZ,
-        CUSTOM
-    }
-
-    function setUp() public {
-        // vm.selectFork(vm.createFork(MAINNET_RPC_URL));
-
+    function setUp() public virtual {
         deployer = address(this);
 
-        if (mode == TestMode.CONCRETE) {
-            _testSetupMakinaGovernance();
-            _coreSetup();
-            _testSetupRegistry();
-            _testSetupAccessManager();
-            _testSetupTokens();
-            _setUp();
-        } else if (mode == TestMode.FUZZ) {
-            _testSetupMakinaGovernance();
-            _coreSetup();
-            _testSetupRegistry();
-            _testSetupAccessManager();
-        } else if (mode == TestMode.CUSTOM) {
-            _setUp();
-        }
+        _testSetupMakinaGovernance();
+        _coreSetup();
+        _testSetupRegistry();
+        _testSetupAccessManager();
     }
-
-    /// @dev Can be overriden to provide additional configuration
-    function _setUp() public virtual {}
 
     function _testSetupMakinaGovernance() public {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
         securityCouncil = makeAddr("SecurityCouncil");
-    }
-
-    function _testSetupTokens() public {
-        accountingToken = new MockERC20("accountingToken", "ACT", 18);
-        accountingTokenPosId = 1;
     }
 
     function _testSetupRegistry() public {
@@ -92,6 +67,11 @@ abstract contract Base_Test is Base {
     function _testSetupAccessManager() public {
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
+    }
+
+    function _deployMockTokens() public {
+        accountingToken = new MockERC20("accountingToken", "ACT", 18);
+        baseToken = new MockERC20("baseToken", "BT", 18);
     }
 
     function _deployMachine(address _accountingToken, uint256 _accountingTokenPosId, bytes32 allowedInstrMerkleRoot)

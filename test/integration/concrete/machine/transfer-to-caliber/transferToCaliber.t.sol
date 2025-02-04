@@ -52,7 +52,10 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         assertEq(accountingToken.balanceOf(address(caliber)), inputAmount);
     }
 
-    function test_transferToCaliber_baseToken() public withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID) {
+    function test_transferToCaliber_baseToken()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(machine), inputAmount, true);
 

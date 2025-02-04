@@ -13,11 +13,11 @@ import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     uint256 private inputAmount;
 
-    function _setUp() public override {
-        Caliber_Integration_Concrete_Test._setUp();
+    function setUp() public override {
+        Caliber_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), BASE_TOKEN_POS_ID);
+        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
 
         inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -41,8 +41,9 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
     }
 
     function test_cannotAccountForPositionWithBaseTokenPosition() public {
-        ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), BASE_TOKEN_POS_ID, address(vault));
+        ICaliber.Instruction memory instruction = WeirollUtils._build4626AccountingInstruction(
+            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
+        );
 
         vm.expectRevert(ICaliber.BaseTokenPosition.selector);
         caliber.accountForPosition(instruction);
