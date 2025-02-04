@@ -13,6 +13,7 @@ The `Caliber` contract is the execution engine from which assets are deployed to
 ### Mailboxes
 
 Data passing and fund transfers between calibers and machines is managed by mailboxes.
+
 - For hub calibers, a single `HubDualMailbox` is used to handle communication between a machine and a caliber.
 - For spoke calibers, a `SpokeMachineMailbox` (deployed on the hub chain) communicates with an associated `SpokeCaliberMailbox` (deployed on the same spoke chain as their associated caliber) via bridging of message and funds.
 
@@ -21,6 +22,7 @@ Data passing and fund transfers between calibers and machines is managed by mail
 Calibers can manage and account for positions by executing authorized instructions, which leverage the Weiroll command-chaining framework. A large set of instructions can be pre-approved and registered in a Merkle Tree, whose root is stored in the caliber and used to verify authorization proof.
 
 #### Standard Operations:
+
 - Can add a base token with `addBaseToken()`.
 - Can account for a base token position with `accountForBaseToken()`.
 - Can account for a non-base-token position with `accountForPosition()`.
@@ -42,4 +44,5 @@ The `OracleRegistry` contract acts as an aggregator of Chainlink price feeds, an
 Contracts in this repository implement the [OpenZeppelin AccessManager](https://docs.openzeppelin.com/contracts/5.x/api/access#accessmanager). The Makina protocol provides an instance of `AccessManager` with addresses defined by the Makina DAO, but institutions that require it can deploy machines with their own `AccessManager`. See [PERMISSIONS.md](https://github.com/makinaHQ/makina-core/blob/main/PERMISSIONS.md) for full list of permissions.
 
 Roles use in makina core contracts are defined as follows:
+
 - `ADMIN_ROLE` - roleId `0` - the Access Manager super admin. Can grant and revoke any role. Set by default in the Access Manager constructor.
