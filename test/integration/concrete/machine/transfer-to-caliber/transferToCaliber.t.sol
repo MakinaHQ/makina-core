@@ -10,7 +10,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_cannotTransferToCaliberWithoutMechanicWhileNotInRecoveryMode() public {
+    function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         machine.transferToCaliber(address(accountingToken), 1e18, block.chainid);
 
@@ -19,7 +19,7 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         machine.transferToCaliber(address(accountingToken), 1e18, block.chainid);
     }
 
-    function test_cannotTransferToCaliberWithoutBaseToken() public {
+    function test_RevertWhen_ProvidedTokenNonBaseToken() public {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -28,7 +28,7 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         machine.transferToCaliber(address(baseToken), inputAmount, block.chainid);
     }
 
-    function test_cannotTransferToCaliberWithInsufficientBalance() public {
+    function test_RevertGiven_InsufficientBalance() public {
         uint256 inputAmount = 1e18;
 
         vm.prank(address(mechanic));
@@ -38,7 +38,7 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         machine.transferToCaliber(address(accountingToken), inputAmount, block.chainid);
     }
 
-    function test_transferToCaliber_accountingToken() public {
+    function test_TransferToCaliber_AccountingToken() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
 
@@ -52,7 +52,7 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         assertEq(accountingToken.balanceOf(address(caliber)), inputAmount);
     }
 
-    function test_transferToCaliber_baseToken()
+    function test_TransferToCaliber_BaseToken()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
@@ -69,7 +69,7 @@ contract TransferToCaliber_Integration_Concrete_Test is Machine_Integration_Conc
         assertEq(baseToken.balanceOf(address(caliber)), inputAmount);
     }
 
-    function test_cannotTransferToCaliberWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.prank(securityCouncil);
         vm.expectRevert(IMachine.RecoveryMode.selector);
         machine.transferToCaliber(address(accountingToken), 1e18, block.chainid);

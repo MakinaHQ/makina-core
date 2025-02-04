@@ -53,7 +53,7 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
     }
 
     // 2 base feeds and 2 quote feeds
-    function test_getPrice_1_fuzz(Data memory data) public {
+    function testFuzz_GetPrice_1(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
         basePriceFeed1 =
@@ -87,7 +87,7 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
     }
 
     // 2 base feeds and 1 quote feed
-    function test_getPrice_2_fuzz(Data memory data) public {
+    function testFuzz_GetPrice_2(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
         basePriceFeed1 =
@@ -115,7 +115,7 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
     }
 
     // 1 base feed and 2 quote feeds
-    function test_getPrice_3_fuzz(Data memory data) public {
+    function testFuzz_GetPrice_3(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
         basePriceFeed1 =
@@ -143,7 +143,7 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
     }
 
     // 1 base feed and 1 quote feed
-    function test_getPrice_4_fuzz(Data memory data) public {
+    function testFuzz_GetPrice_4(Data memory data) public {
         _fuzzTestSetupAfter(data);
 
         basePriceFeed1 =

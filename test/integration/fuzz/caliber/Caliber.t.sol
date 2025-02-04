@@ -54,7 +54,7 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
-    function test_accountForATPosition_fuzz(Data memory data, uint256 amount) public {
+    function testFuzz_AccountForATPosition(Data memory data, uint256 amount) public {
         _fuzzTestSetupAfter(data);
         amount = bound(amount, 0, 1e30);
 
@@ -74,7 +74,7 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
     }
 
-    function test_accountForBTPosition_fuzz(Data memory data, uint256 amount1, uint256 amount2) public {
+    function testFuzz_AccountForBTPosition(Data memory data, uint256 amount1, uint256 amount2) public {
         _fuzzTestSetupAfter(data);
         amount1 = bound(amount1, 0, 1e20);
         amount2 = bound(amount2, 0, 1e20);

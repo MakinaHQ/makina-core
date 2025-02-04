@@ -9,7 +9,7 @@ import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
 contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
-    function test_hubRegistry_getters() public view {
+    function test_Getters() public view {
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(hubRegistry.swapper(), address(swapper));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
@@ -20,12 +20,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.authority(), address(accessManager));
     }
 
-    function test_cannotSetOracleRegistryWithoutRole() public {
+    function test_SetOracleRegistry_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setOracleRegistry(address(0));
     }
 
-    function test_setOracleRegistry() public {
+    function test_SetOracleRegistry() public {
         address newOracleRegistry = makeAddr("newOracleRegistry");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
         emit IBaseMakinaRegistry.OracleRegistryChange(address(oracleRegistry), newOracleRegistry);
@@ -34,12 +34,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.oracleRegistry(), newOracleRegistry);
     }
 
-    function test_cannotSetSwapperWithoutRole() public {
+    function test_SetSwapper_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setSwapper(address(0));
     }
 
-    function test_setSwapper() public {
+    function test_SetSwapper() public {
         address newSwapper = makeAddr("newSwapper");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
         emit IBaseMakinaRegistry.SwapperChange(address(swapper), newSwapper);
@@ -48,12 +48,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.swapper(), newSwapper);
     }
 
-    function test_cannotSetCaliberBeaconWithoutRole() public {
+    function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setCaliberBeacon(address(0));
     }
 
-    function test_setCaliberBeacon() public {
+    function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(false, false, false, false, address(hubRegistry));
         emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
@@ -62,12 +62,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.caliberBeacon(), newCaliberBeacon);
     }
 
-    function test_cannotSetCaliberFactoryWithoutRole() public {
+    function test_SetCaliberFactory_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setCaliberFactory(address(0));
     }
 
-    function test_setCaliberFactory() public {
+    function test_SetCaliberFactory() public {
         address newCaliberFactory = makeAddr("newCaliberFactory");
         vm.expectEmit(false, false, false, false, address(hubRegistry));
         emit IBaseMakinaRegistry.CaliberFactoryChange(address(caliberFactory), newCaliberFactory);
@@ -76,12 +76,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.caliberFactory(), newCaliberFactory);
     }
 
-    function test_cannotSetMachineBeaconWithoutRole() public {
+    function test_SetMachineBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setMachineBeacon(address(0));
     }
 
-    function test_setMachineBeacon() public {
+    function test_SetMachineBeacon() public {
         address newMachineBeacon = makeAddr("newMachineBeacon");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
         emit IHubRegistry.MachineBeaconChange(address(machineBeacon), newMachineBeacon);
@@ -90,12 +90,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.machineBeacon(), newMachineBeacon);
     }
 
-    function test_cannotSetMachineFactoryWithoutRole() public {
+    function test_SetMachineFactory_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setMachineFactory(address(0));
     }
 
-    function test_setMachineFactory() public {
+    function test_SetMachineFactory() public {
         address newMachineFactory = makeAddr("newMachineFactory");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
         emit IHubRegistry.MachineFactoryChange(address(machineFactory), newMachineFactory);
@@ -104,12 +104,12 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(hubRegistry.machineFactory(), newMachineFactory);
     }
 
-    function test_cannotSetHubDualMailboxBeaconWithoutRole() public {
+    function test_SetHubDualMailboxBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         hubRegistry.setHubDualMailboxBeacon(address(0));
     }
 
-    function test_setHubDualMailboxBeacon() public {
+    function test_SetHubDualMailboxBeacon() public {
         address newHubDualMailboxBeacon = makeAddr("newHubDualMailboxBeacon");
         vm.expectEmit(false, false, false, false, address(hubRegistry));
         emit IHubRegistry.HubDualMailboxBeaconChange(address(hubDualMailboxBeacon), newHubDualMailboxBeacon);

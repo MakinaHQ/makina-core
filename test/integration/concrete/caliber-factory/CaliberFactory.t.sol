@@ -19,19 +19,19 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
         );
     }
 
-    function test_getters() public view {
+    function test_Getters() public view {
         assertEq(caliberFactory.registry(), address(hubRegistry));
         assertEq(caliberFactory.isCaliber(address(0)), false);
     }
 
-    function test_cannotDeployCaliberWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliberFactory.deployCaliber(
             address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0), address(0)
         );
     }
 
-    function test_deployCaliber() public {
+    function test_DeployCaliber() public {
         address _machine = makeAddr("machine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 

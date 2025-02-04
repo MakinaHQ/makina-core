@@ -21,7 +21,7 @@ contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Test {
         shareToken = IMachineShare(machine.shareToken());
     }
 
-    function test_hubDualMailbox_getters() public view {
+    function test_Getters() public view {
         assertEq(shareToken.machine(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);

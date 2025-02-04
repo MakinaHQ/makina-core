@@ -10,12 +10,12 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_cannotAddBaseTokenWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
-    function test_cannotAddSameBaseTokenTwice()
+    function test_RevertWhen_AlreadyExistingBaseToken()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
@@ -24,20 +24,20 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
-    function test_cannotAddBaseTokenWithoutRegisteredFeedData() public {
+    function test_RevertGiven_FeedDataNotRegistered() public {
         MockERC20 baseToken2;
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
-    function test_cannotAddBaseTokenWithZeroId() public {
+    function test_RevertWhen_PositionIdZero() public {
         vm.expectRevert(ICaliber.ZeroPositionId.selector);
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken), 0);
     }
 
-    function test_cannotAddBaseTokenWithSamePosIdTwice() public {
+    function test_RevertWhen_AlreadyExistingPosId() public {
         vm.startPrank(dao);
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
@@ -54,7 +54,7 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
-    function test_addBaseToken() public {
+    function test_AddBaseToken() public {
         vm.expectEmit(true, true, false, true, address(caliber));
         emit ICaliber.PositionCreated(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
         vm.prank(dao);

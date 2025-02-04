@@ -31,7 +31,7 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
         (machine,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
-    function test_convertToShares_fuzz(Data memory data, uint256 assets) public {
+    function testFuzz_ConvertToShares(Data memory data, uint256 assets) public {
         _fuzzTestSetupAfter(data);
         assets = bound(assets, 0, 1e40);
 
@@ -44,7 +44,7 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
         assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** Constants.SHARE_TOKEN_DECIMALS);
     }
 
-    function test_deposit_fuzz(Data memory data, uint256 assets1, uint256 assets2, uint256 yield, bool yieldDirection)
+    function testFuzz_Deposit(Data memory data, uint256 assets1, uint256 assets2, uint256 yield, bool yieldDirection)
         public
     {
         _fuzzTestSetupAfter(data);

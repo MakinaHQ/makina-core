@@ -24,18 +24,18 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Test {
         );
     }
 
-    function test_getters() public view {
+    function test_Getters() public view {
         assertEq(machineFactory.registry(), address(hubRegistry));
         assertEq(machineFactory.isMachine(address(0)), false);
     }
 
-    function test_cannotDeployMachineWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         machineFactory.deployMachine(params);
     }
 
-    function test_deployMachine() public {
+    function test_DeployMachine() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(machineFactory));

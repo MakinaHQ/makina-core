@@ -7,7 +7,7 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_updateAndReportCaliberAUM() public {
+    function test_UpdateAndReportCaliberAUM() public {
         vm.startPrank(dao);
         oracleRegistry.setFeedStaleThreshold(address(aPriceFeed1), 1 days);
         oracleRegistry.setFeedStaleThreshold(address(bPriceFeed1), 1 days);
@@ -74,7 +74,7 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
         assertEq(caliber.lastReportedAUMTime(), block.timestamp);
     }
 
-    function test_cannotUpdateAndReportCaliberAUMWithInvalidInstruction()
+    function test_RevertWhen_ProvidedInstructionInvalid()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
@@ -115,7 +115,7 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
         caliber.updateAndReportCaliberAUM(accountingInstructions);
     }
 
-    function test_cannotUpdateAndReportCaliberAUMWithStalePosition()
+    function test_RevertGiven_PositionStale()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {

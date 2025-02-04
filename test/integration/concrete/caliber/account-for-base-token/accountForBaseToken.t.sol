@@ -6,14 +6,14 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract AccountForBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_cannotAccountForUnexistingBTPosition() public {
+    function test_RevertGiven_UnexistingBTPosition() public {
         vm.prank(dao);
 
         vm.expectRevert(ICaliber.NotBaseTokenPosition.selector);
         caliber.accountForBaseToken(HUB_CALIBER_BASE_TOKEN_1_POS_ID);
     }
 
-    function test_accountForATPosition() public {
+    function test_AccountForATPosition() public {
         assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).value, 0);
         assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, 0);
 
@@ -37,7 +37,7 @@ contract AccountForBaseToken_Integration_Concrete_Test is Caliber_Integration_Co
         assertEq(caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID).lastAccountingTime, block.timestamp);
     }
 
-    function test_accountForBTPosition() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
+    function test_AccountForBTPosition() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
         assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).value, 0);
         assertEq(caliber.getPosition(HUB_CALIBER_BASE_TOKEN_1_POS_ID).lastAccountingTime, 0);
 

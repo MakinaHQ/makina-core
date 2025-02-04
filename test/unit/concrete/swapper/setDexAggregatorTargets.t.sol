@@ -7,12 +7,12 @@ import {ISwapper} from "src/interfaces/ISwapper.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 contract SetDexAggregatorTargets_Unit_Concrete_Test is Base_Test {
-    function test_cannotSetDexAggregatorTargetsWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(0), address(0));
     }
 
-    function test_setDexAggregatorTargets() public {
+    function test_SetDexAggregatorTargets() public {
         address newApprovalTarget = makeAddr("newApprovalTarget");
         address newExecutionTarget = makeAddr("newExecutionTarget");
 

@@ -32,7 +32,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.managePosition(vaultInstructions);
     }
 
-    function test_cannotAccountForPositionBatchWithNonExistingPosition() public {
+    function test_RevertWhen_ProvidedPositionNonExisting() public {
         // 1st instruction is not an accounting instruction
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
@@ -48,7 +48,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
-    function test_cannotAccountForPositionBatchWithBaseTokenPosition() public {
+    function test_RevertWhen_ProvidedPositionBaseToken() public {
         // 1st instruction is for a base token position
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(
@@ -68,7 +68,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
-    function test_cannotAccountForPositionBatchWithNonAccountingInstruction() public {
+    function test_RevertWhen_ProvidedInstructionNonAccountingType() public {
         // 1st instruction is not of accounting type
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] =
@@ -86,7 +86,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
-    function test_cannotAccountForPositionBatchWithInvalidProof() public {
+    function test_RevertWhen_ProvidedProofInvalid() public {
         MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
 
         // 1st instruction uses wrong vault
@@ -106,7 +106,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
-    function test_cannotAccountForPositionBatchWithInvalidAccounting() public {
+    function test_RevertGiven_AccountingOutputStateInvalid() public {
         // 1st instruction has invalid accounting
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] =
@@ -127,7 +127,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
-    function test_accountForPositionBatch() public {
+    function test_AccountForPositionBatch() public {
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
         assertEq(vault.balanceOf(address(caliber)), previewShares);
@@ -148,7 +148,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         assertEq(caliber.getPosition(VAULT_POS_ID).value, previewAssets * PRICE_B_A);
     }
 
-    function test_cannotAccountForPositionBatchWithWrongRoot() public {
+    function test_RevertGiven_WrongRoot() public {
         // schedule root update with a wrong root
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));

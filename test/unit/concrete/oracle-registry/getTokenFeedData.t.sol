@@ -6,7 +6,7 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 contract GetTokenFeedData_Unit_Concrete_Test is Base_Test {
-    function test_cannotGetUnitializedTokenFeedData() public {
+    function test_RevertGiven_TokenFeedDataUnregistered() public {
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         oracleRegistry.getTokenFeedData(address(0));
     }

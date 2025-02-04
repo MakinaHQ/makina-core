@@ -11,12 +11,12 @@ import {Base_Test} from "test/BaseTest.sol";
 contract SetFeedStaleThreshold_Unit_Concrete_Test is Base_Test {
     MockPriceFeed internal priceFeed1;
 
-    function test_cannotSetFeedStaleThresholdWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         oracleRegistry.setFeedStaleThreshold(address(0), 0);
     }
 
-    function test_setFeedStaleThreshold() public {
+    function test_SetFeedStaleThreshold() public {
         priceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 0);

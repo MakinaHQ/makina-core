@@ -10,7 +10,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_cannotTransferToHubMachineWithoutMechanicWhileNotInRecoveryMode() public {
+    function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18);
 
@@ -19,7 +19,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(accountingToken), 1e18);
     }
 
-    function test_cannotTransferToHubMachineWithoutPriceableToken() public {
+    function test_RevertWhen_TokenNonPriceable() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1e18;
         deal(address(baseToken2), address(caliber), inputAmount, true);
@@ -29,7 +29,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(baseToken2), inputAmount);
     }
 
-    function test_cannotTransferToHubMachineWithInsufficientBalance() public {
+    function test_RevertGiven_InsufficientBalance() public {
         uint256 inputAmount = 1e18;
 
         vm.prank(address(mechanic));
@@ -39,7 +39,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(accountingToken), inputAmount);
     }
 
-    function test_transferToHubMachine() public {
+    function test_TransferToHubMachine() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
@@ -53,7 +53,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
     }
 
-    function test_cannotTransferToHubMachineWithoutSecurityCouncilWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18);
 
@@ -62,7 +62,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(accountingToken), 1e18);
     }
 
-    function test_cannotTransferToHubMachineWithoutPriceableTokenWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertWhen_TokenNonPriceable_WhileInRecoveryMode() public whileInRecoveryMode {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1e18;
         deal(address(baseToken2), address(caliber), inputAmount, true);
@@ -72,7 +72,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(baseToken2), inputAmount);
     }
 
-    function test_cannotTransferToHubMachineWithInsufficientBalanceWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertGiven_InsufficientBalance_WhileInRecoveryMode() public whileInRecoveryMode {
         uint256 inputAmount = 1e18;
 
         vm.prank(address(securityCouncil));
@@ -82,7 +82,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(accountingToken), inputAmount);
     }
 
-    function test_transferToHubMachineWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_TransferToHubMachine_WhileInRecoveryMode() public whileInRecoveryMode {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 

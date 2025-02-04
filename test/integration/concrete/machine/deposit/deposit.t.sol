@@ -8,7 +8,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_cannotDepositWhenExceedingMaxMint() public {
+    function test_RevertGiven_MaxMintExceeded() public {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = machine.convertToShares(inputAmount);
         uint256 newShareLimit = expectedShares - 1;
@@ -23,7 +23,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         machine.deposit(inputAmount, address(this));
     }
 
-    function test_deposit() public {
+    function test_Deposit() public {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = machine.convertToShares(inputAmount);
 
@@ -40,12 +40,12 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_cannotDepositWithoutDepositorWhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
+    function test_RevertWhen_CallerNotDepositor_WhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
         vm.expectRevert(IMachine.UnauthorizedDepositor.selector);
         machine.deposit(1e18, address(this));
     }
 
-    function test_cannotDepositWhenExceedingMaxMintWhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
+    function test_RevertWhen_MaxMintExceeded_WhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = machine.convertToShares(inputAmount);
         uint256 newShareLimit = expectedShares - 1;
@@ -62,7 +62,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         machine.deposit(inputAmount, address(this));
     }
 
-    function test_depositWhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
+    function test_Deposit_WhileInDepositorOnlyMode() public whileInDepositorOnlyMode {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = machine.convertToShares(inputAmount);
 
@@ -80,7 +80,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_cannotDepositWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMachine.RecoveryMode.selector);
         machine.deposit(1e18, address(this));
     }

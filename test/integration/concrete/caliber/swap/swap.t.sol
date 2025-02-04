@@ -8,7 +8,7 @@ import {MockPool} from "test/mocks/MockPool.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_cannotSwapWithoutMechanicWhileNotInRecoveryMode() public {
+    function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ISwapper.SwapOrder memory order;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
@@ -19,21 +19,21 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
-    function test_cannotSwapIntoNonBaseToken() public {
+    function test_RevertWhen_OutputTokenNonBaseToken() public {
         ISwapper.SwapOrder memory order;
         vm.expectRevert(ICaliber.InvalidOutputToken.selector);
         vm.prank(mechanic);
         caliber.swap(order);
     }
 
-    function test_cannotSwapFromBTWithValueLossTooHigh()
+    function test_RevertGiven_SwapFromBTWithValueLossTooHigh()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
-        _test_cannotSwapFromBTWithValueLossTooHigh(mechanic);
+        _test_RevertGiven_SwapFromBTWithValueLossTooHigh(mechanic);
     }
 
-    function test_swap() public {
+    function test_Swap() public {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
@@ -78,7 +78,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         assertGe(baseToken.balanceOf(address(caliber)), previewOutputAmount2);
     }
 
-    function test_cannotSwapWithoutSCWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ISwapper.SwapOrder memory order;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
@@ -89,7 +89,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
-    function test_cannotSwapIntoNonAccountingTokenWhileInRecoveryMode()
+    function test_RevertWhen_OutputTokenNonAccountingToken_WhileInRecoveryMode()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
         whileInRecoveryMode
@@ -115,15 +115,15 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
-    function test_cannotSwapFromBTWithValueLossTooHighWhileInRecoveryMode()
+    function test_RevertGiven_SwapFromBTWithValueLossTooHigh_WhileInRecoveryMode()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
         whileInRecoveryMode
     {
-        _test_cannotSwapFromBTWithValueLossTooHigh(securityCouncil);
+        _test_RevertGiven_SwapFromBTWithValueLossTooHigh(securityCouncil);
     }
 
-    function test_swapWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_Swap_WhileInRecoveryMode() public whileInRecoveryMode {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
@@ -152,7 +152,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     /// Helper functions
     ///
 
-    function _test_cannotSwapFromBTWithValueLossTooHigh(address sender) public {
+    function _test_RevertGiven_SwapFromBTWithValueLossTooHigh(address sender) public {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;

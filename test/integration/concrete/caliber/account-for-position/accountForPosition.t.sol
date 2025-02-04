@@ -32,7 +32,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.managePosition(vaultInstructions);
     }
 
-    function test_cannotAccountForPositionWithNonExistingPosition() public {
+    function test_RevertWhen_ProvidedPositionNonExisting() public {
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
 
@@ -40,7 +40,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(instruction);
     }
 
-    function test_cannotAccountForPositionWithBaseTokenPosition() public {
+    function test_RevertWhen_ProvidedPositionBaseToken() public {
         ICaliber.Instruction memory instruction = WeirollUtils._build4626AccountingInstruction(
             address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
         );
@@ -49,7 +49,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(instruction);
     }
 
-    function test_cannotAccountForPositionWithNonAccountingInstruction() public {
+    function test_RevertWhen_ProvidedInstructionNonAccountingType() public {
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
 
@@ -57,7 +57,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(instruction);
     }
 
-    function test_cannotAccountForPositionWithInvalidProof() public {
+    function test_RevertWhen_ProvidedProofInvalid() public {
         // use wrong vault
         MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
         ICaliber.Instruction memory instruction =
@@ -90,7 +90,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(instruction);
     }
 
-    function test_cannotAccountForPositionWithInvalidAccountingOutputState() public {
+    function test_RevertGiven_AccountingOutputStateInvalid() public {
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         // replace end flag with null value in accounting output state
@@ -99,7 +99,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(instruction);
     }
 
-    function test_accountForPosition_4626() public {
+    function test_AccountForPosition_4626() public {
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
         assertEq(vault.balanceOf(address(caliber)), previewShares);
@@ -118,7 +118,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         assertEq(caliber.getPosition(VAULT_POS_ID).value, previewAssets * PRICE_B_A);
     }
 
-    function test_cannotAccountForPositionWithWrongRoot() public {
+    function test_RevertGiven_WrongRoot() public {
         // schedule root update with a wrong root
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));

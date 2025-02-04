@@ -26,7 +26,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         pool.addLiquidity(initialPoolLiquidityOneSide, initialPoolLiquidityOneSide);
     }
 
-    function test_cannotSwapWithAggregatorTargetsNotSet() public {
+    function test_RevertGiven_TargetsNotSet() public {
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
             data: bytes(""),
@@ -50,7 +50,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         swapper.swap(order);
     }
 
-    function test_cannotSwapWithInsufficientAllowance() public {
+    function test_RevertGiven_InsufficientAllowance() public {
         vm.prank(dao);
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
@@ -71,7 +71,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         swapper.swap(order);
     }
 
-    function test_cannotSwapWithInsufficientBalance() public {
+    function test_RevertGiven_InsufficientBalance() public {
         vm.prank(dao);
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
@@ -91,7 +91,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         swapper.swap(order);
     }
 
-    function test_swapRevertsIfDexAggregatorFails() public {
+    function test_RevertGiven_DexAggregatorExecutionFails() public {
         vm.prank(dao);
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
@@ -112,7 +112,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         swapper.swap(order);
     }
 
-    function test_cannotSwapIfAmountOutTooLow() public {
+    function test_RevertGiven_AmountOutTooLow() public {
         vm.prank(dao);
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
@@ -135,7 +135,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
         swapper.swap(order);
     }
 
-    function test_swap() public {
+    function test_Swap() public {
         vm.prank(dao);
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
