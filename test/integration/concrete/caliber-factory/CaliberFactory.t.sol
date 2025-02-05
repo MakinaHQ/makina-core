@@ -10,15 +10,6 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 
 contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
-    function setUp() public override {
-        Integration_Concrete_Test.setUp();
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-    }
-
     function test_Getters() public view {
         assertEq(caliberFactory.registry(), address(hubRegistry));
         assertEq(caliberFactory.isCaliber(address(0)), false);

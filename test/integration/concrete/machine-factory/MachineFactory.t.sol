@@ -15,15 +15,6 @@ import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Test {
     bytes32 private initialAllowedInstrRoot;
 
-    function setUp() public override {
-        Integration_Concrete_Test.setUp();
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-    }
-
     function test_Getters() public view {
         assertEq(machineFactory.registry(), address(hubRegistry));
         assertEq(machineFactory.isMachine(address(0)), false);
