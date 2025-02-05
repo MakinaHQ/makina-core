@@ -11,7 +11,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {VM} from "./vm/VM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberMailbox, IMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IMailbox} from "../interfaces/IMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
