@@ -24,13 +24,6 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
-    function test_RevertGiven_FeedDataNotRegistered() public {
-        MockERC20 baseToken2;
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
-    }
-
     function test_RevertWhen_PositionIdZero() public {
         vm.expectRevert(ICaliber.ZeroPositionId.selector);
         vm.prank(dao);
@@ -52,6 +45,13 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
 
         vm.expectRevert(ICaliber.PositionAlreadyExists.selector);
         caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
+    }
+
+    function test_RevertGiven_FeedDataNotRegistered() public {
+        MockERC20 baseToken2;
+        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.prank(dao);
+        caliber.addBaseToken(address(baseToken2), HUB_CALIBER_BASE_TOKEN_1_POS_ID + 1);
     }
 
     function test_AddBaseToken() public {

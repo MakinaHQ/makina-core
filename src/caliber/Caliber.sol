@@ -276,6 +276,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         Instruction calldata accountingInstruction = instructions[1];
 
         uint256 posId = managingInstruction.positionId;
+        if (posId == 0) {
+            revert ZeroPositionId();
+        }
         if (posId != accountingInstruction.positionId) {
             revert UnmatchingInstructions();
         }
@@ -461,28 +464,21 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if ($._baseTokenToPositionId[token] != 0) {
             revert BaseTokenAlreadyExists();
         }
-
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+        if (posId == 0) {
+            revert ZeroPositionId();
+        }
+        if (!$._positionIds.add(posId)) {
+            revert PositionAlreadyExists();
+        }
 
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 
-        Position memory pos = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
-        _addPosition(pos, posId);
-    }
-
-    /// @dev Adds a new position to storage.
-    function _addPosition(Position memory pos, uint256 posId) internal {
-        if (posId == 0) {
-            revert ZeroPositionId();
-        }
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._positionIds.add(posId)) {
-            revert PositionAlreadyExists();
-        }
-        $._positionById[posId] = pos;
+        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
         emit PositionCreated(posId);
+
+        // Reverts if no price feed is registered for token in the oracle registry.
+        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
     }
 
     /// @dev Computes the accounting value of a non-base-token position. Depending on last and current value, the

@@ -5,14 +5,14 @@ addBaseToken.t.sol
    ├── given the base token is already registered in the Caliber
    │  └── it should revert with BaseTokenAlreadyExists
    └── given the base token is not already registered in the Caliber
-      ├── given the base token does not have corresponding registered feeds in oracle registry
-      │  └── it should revert with FeedDataNotRegistered
-      └── given the base token has corresponding registered feeds in oracle registry
-         ├── when the position ID is zero
-         │  └── it should revert with ZeroPositionId
-         └── when the position ID is not zero
-            ├── given the position ID is already registered in the Caliber
-            │  └── it should revert with PositionAlreadyExists
-            └── given the position ID is not already registered in the Caliber
+      ├── when the position ID is zero
+      │  └── it should revert with ZeroPositionId
+      └── when the position ID is not zero
+         ├── given the position ID is already registered in the Caliber
+         │  └── it should revert with PositionAlreadyExists
+         └── given the position ID is not already registered in the Caliber
+            ├── given the base token does not have corresponding registered feeds in oracle registry
+            │  └── it should revert with FeedDataNotRegistered
+            └── given the base token has corresponding registered feeds in oracle registry
                ├── it should register the position ID in the Caliber
                └── it should emit a PositionCreated event

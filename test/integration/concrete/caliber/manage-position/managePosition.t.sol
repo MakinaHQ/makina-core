@@ -49,6 +49,19 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
+    function test_RevertWhen_PositionIdZero() public {
+        uint256 inputAmount = 3e18;
+
+        vm.startPrank(mechanic);
+
+        // instructions have different positionId
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] = WeirollUtils._build4626DepositInstruction(address(caliber), 0, address(vault), inputAmount);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
+        vm.expectRevert(ICaliber.ZeroPositionId.selector);
+        caliber.managePosition(instructions);
+    }
+
     function test_RevertWhen_ProvidedInstructionsUnmatching() public {
         uint256 inputAmount = 3e18;
 
