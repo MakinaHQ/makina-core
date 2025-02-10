@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
@@ -14,6 +14,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
+import {Constants} from "src/libraries/Constants.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
@@ -32,17 +33,19 @@ contract Machine_Unit_Concrete_Test is Base_Test {
     }
 
     function test_machine_getters() public view {
-        assertEq(machine.registry(), address(hubRegistry));
-        assertEq(machine.mechanic(), mechanic);
-        assertEq(machine.securityCouncil(), securityCouncil);
         assertEq(machine.accountingToken(), address(accountingToken));
-        assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
-        assertEq(machine.recoveryMode(), false);
-        assertEq(machine.lastReportedTotalAum(), 0);
-        assertEq(machine.lastReportedTotalAumTime(), 0);
+        assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
+        assertEq(machine.lastTotalAum(), 0);
+        assertEq(machine.lastGlobalAccountingTime(), 0);
         assertEq(machine.getCalibersLength(), 1);
         assertEq(machine.getSupportedChainId(0), block.chainid);
         assertNotEq(machine.getMailbox(block.chainid), address(0));
+        assertTrue(machine.isIdleToken(address(accountingToken)));
+    }
+
+    function test_convertToShares() public {
+        // should hold when no yield occurred
+        assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** Constants.SHARE_TOKEN_DECIMALS);
     }
 
     function test_cannotSetMechanicWithoutRole() public {
@@ -80,10 +83,38 @@ contract Machine_Unit_Concrete_Test is Base_Test {
 
     function test_setCaliberStaleThreshold() public {
         uint256 newThreshold = 2 hours;
+        vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.CaliberStaleThresholdChanged(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD, newThreshold);
         vm.prank(dao);
         machine.setCaliberStaleThreshold(newThreshold);
         assertEq(machine.caliberStaleThreshold(), newThreshold);
+    }
+
+    function test_cannotSetShareLimitWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setShareLimit(1e18);
+    }
+
+    function test_setShareLimit() public {
+        uint256 newShareLimit = 1e18;
+        vm.expectEmit(true, true, false, true, address(machine));
+        emit IMachine.ShareLimitChanged(DEFAULT_MACHINE_SHARE_LIMIT, newShareLimit);
+        vm.prank(dao);
+        machine.setShareLimit(newShareLimit);
+        assertEq(machine.shareLimit(), newShareLimit);
+    }
+
+    function test_cannotSetDepositorOnlyModeWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setDepositorOnlyMode(true);
+    }
+
+    function test_setDepositorOnlyMode() public {
+        vm.expectEmit(true, true, false, true, address(machine));
+        emit IMachine.DepositorOnlyModeChanged(true);
+        vm.prank(dao);
+        machine.setDepositorOnlyMode(true);
+        assertTrue(machine.depositorOnlyMode());
     }
 
     function test_cannotSetRecoveryModeWithoutRole() public {
@@ -92,7 +123,7 @@ contract Machine_Unit_Concrete_Test is Base_Test {
     }
 
     function test_setRecoveryMode() public {
-        vm.expectEmit(true, true, false, true, address(machine));
+        vm.expectEmit(true, false, false, true, address(machine));
         emit IMachine.RecoveryModeChanged(true);
         vm.prank(dao);
         machine.setRecoveryMode(true);

@@ -4,16 +4,22 @@ pragma solidity 0.8.28;
 interface IMachine {
     error CaliberAccountingStale(uint256 caliberChainId);
     error InvalidDecimals();
+    error ExceededMaxMint(uint256 shares, uint256 max);
     error MailboxAlreadyExists();
     error NotMailbox();
     error RecoveryMode();
+    error UnauthorizedDepositor();
     error UnauthorizedOperator();
 
-    event HubCaliberDeployed(address indexed caliber, address indexed mailbox);
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
+    event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 amount);
+    event DepositorOnlyModeChanged(bool indexed restricted);
+    event HubCaliberDeployed(address indexed caliber, address indexed mailbox);
+    event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
+    event ShareTokenDeployed(address indexed shareToken);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
 
@@ -22,25 +28,35 @@ interface IMachine {
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
+    /// @param depositor The address of the optional depositor.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
+    /// @param initialShareLimit The share cap value.
     /// @param hubCaliberAccountingTokenPosID The position ID of the hub caliber's accounting token.
     /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
     /// @param hubCaliberAllowedInstrRoot The root of the Merkle tree containing allowed caliber instructions.
     /// @param hubCaliberTimelockDuration The duration of the hub caliber's Merkle tree root update timelock.
     /// @param hubCaliberMaxMgmtLossBps The max allowed value loss (in basis point) in the hub caliber when managing a position.
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
+    /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
+    /// @param shareTokenName The name of the share token.
+    /// @param shareTokenSymbol The symbol of the share token.
     struct MachineInitParams {
         address accountingToken;
         address initialMechanic;
         address initialSecurityCouncil;
         address initialAuthority;
+        address depositor;
         uint256 initialCaliberStaleThreshold;
+        uint256 initialShareLimit;
         uint256 hubCaliberAccountingTokenPosID;
         uint256 hubCaliberPosStaleThreshold;
         bytes32 hubCaliberAllowedInstrRoot;
         uint256 hubCaliberTimelockDuration;
         uint256 hubCaliberMaxMgmtLossBps;
         uint256 hubCaliberMaxSwapLossBps;
+        bool depositorOnlyMode;
+        string shareTokenName;
+        string shareTokenSymbol;
     }
 
     /// @notice Initializer of the contract.
@@ -56,20 +72,32 @@ interface IMachine {
     /// @notice Address of the security council.
     function securityCouncil() external view returns (address);
 
+    /// @notice Address of the share token.
+    function shareToken() external view returns (address);
+
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
 
     /// @notice Maximum duration a caliber can remain unaccounted for before it is considered stale.
     function caliberStaleThreshold() external view returns (uint256);
 
+    /// @notice Share token supply limit that cannot be exceeded by new deposits.
+    function shareLimit() external view returns (uint256);
+
+    /// @notice Maximum amount of shares that can currently be minted through asset deposits.
+    function maxMint() external view returns (uint256);
+
+    /// @notice Wether deposits are restricted to the depositor.
+    function depositorOnlyMode() external view returns (bool);
+
     /// @notice Whether the machine is in recovery mode.
     function recoveryMode() external view returns (bool);
 
-    /// @notice Last reported total machine AUM.
-    function lastReportedTotalAum() external view returns (uint256);
+    /// @notice Last total machine AUM.
+    function lastTotalAum() external view returns (uint256);
 
-    /// @notice Timestamp of the last reported total machine AUM.
-    function lastReportedTotalAumTime() external view returns (uint256);
+    /// @notice Timestamp of the last global machine accounting.
+    function lastGlobalAccountingTime() external view returns (uint256);
 
     /// @notice Number of calibers associated with the machine.
     function getCalibersLength() external view returns (uint256);
@@ -88,6 +116,11 @@ interface IMachine {
     /// @param token The address of the token.
     function isIdleToken(address token) external view returns (bool);
 
+    /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
+    /// @param assets The amount of assets.
+    /// @return shares The amount of shares.
+    function convertToShares(uint256 assets) external view returns (uint256);
+
     /// @notice Notifies the machine of an incoming token transfer.
     /// @param token The address of the token.
     function notifyIncomingTransfer(address token) external;
@@ -99,7 +132,14 @@ interface IMachine {
     function transferToCaliber(address token, uint256 amount, uint256 chainId) external;
 
     /// @notice Updates the total AUM of the machine.
+    /// @return totalAum The updated total AUM.
     function updateTotalAum() external returns (uint256);
+
+    /// @notice Deposits accounting tokens into the machine and mints shares to the receiver
+    /// @param assets The amount of accounting tokens to deposit
+    /// @param receiver The receiver of minted shares
+    /// @return shares The amount of shares minted
+    function deposit(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.
@@ -113,7 +153,15 @@ interface IMachine {
     /// @param newCaliberStaleThreshold The new threshold in seconds.
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external;
 
-    /// @notice Sets the recovery mode.
+    /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
+    /// @param newShareLimit The new share limit
+    function setShareLimit(uint256 newShareLimit) external;
+
+    /// @notice Sets the deposit restriction status.
+    /// @param isRestricted True to restrict deposits to the depositor, false to allow deposits from any address.
+    function setDepositorOnlyMode(bool isRestricted) external;
+
+    /// @notice Sets the recovery mode status.
     /// @param enabled True to enable recovery mode, false to disable.
     function setRecoveryMode(bool enabled) external;
 }

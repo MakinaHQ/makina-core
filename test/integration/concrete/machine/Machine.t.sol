@@ -80,6 +80,12 @@ contract Machine_Integration_Concrete_Test is Base_Test {
         _;
     }
 
+    modifier whileInDepositorOnlyMode() {
+        vm.prank(dao);
+        machine.setDepositorOnlyMode(true);
+        _;
+    }
+
     modifier withTokenAsBT(address _token, uint256 _posId) {
         vm.prank(dao);
         caliber.addBaseToken(_token, _posId);

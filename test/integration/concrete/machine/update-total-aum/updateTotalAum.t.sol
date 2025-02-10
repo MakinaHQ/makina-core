@@ -27,7 +27,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), 0);
+        assertEq(machine.lastTotalAum(), 0);
     }
 
     function test_updateTotalAumDoesNotAccountForUnnotifiedToken() public {
@@ -39,7 +39,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), 0);
+        assertEq(machine.lastTotalAum(), 0);
     }
 
     function test_updateTotalAumWithIdleAccountingToken() public {
@@ -51,7 +51,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), inputAmount);
+        assertEq(machine.lastTotalAum(), inputAmount);
     }
 
     function test_updateTotalAumWithIdleBaseToken() public {
@@ -66,7 +66,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount * PRICE_B_A, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), inputAmount * PRICE_B_A);
+        assertEq(machine.lastTotalAum(), inputAmount * PRICE_B_A);
     }
 
     function test_updateTotalAumWithPositiveHubCaliberAum() public {
@@ -78,7 +78,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), inputAmount);
+        assertEq(machine.lastTotalAum(), inputAmount);
     }
 
     function test_updateTotalAumWithPositiveHubCaliberAumAndIdleToken() public {
@@ -93,7 +93,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), inputAmount);
+        assertEq(machine.lastTotalAum(), inputAmount);
 
         // fund caliber with accountingToken
         deal(address(accountingToken), address(caliber), inputAmount);
@@ -102,6 +102,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(2 * inputAmount, block.timestamp);
         machine.updateTotalAum();
-        assertEq(machine.lastReportedTotalAum(), 2 * inputAmount);
+        assertEq(machine.lastTotalAum(), 2 * inputAmount);
     }
 }

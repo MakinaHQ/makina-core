@@ -24,32 +24,7 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
     }
 
     /// @inheritdoc IMachineFactory
-    function deployMachine(
-        address _accountingToken,
-        address _initialMechanic,
-        address _initialSecurityCouncil,
-        address _initialAuthority,
-        uint256 _initialCaliberStaleThreshold,
-        uint256 _hubCaliberAccountingTokenPosID,
-        uint256 _hubCaliberPosStaleThreshold,
-        bytes32 _hubCaliberAllowedInstrRoot,
-        uint256 _hubCaliberTimelockDuration,
-        uint256 _hubCaliberMaxMgmtLossBps,
-        uint256 _hubCaliberMaxSwapLossBps
-    ) external override restricted returns (address) {
-        IMachine.MachineInitParams memory params = IMachine.MachineInitParams({
-            accountingToken: _accountingToken,
-            initialMechanic: _initialMechanic,
-            initialSecurityCouncil: _initialSecurityCouncil,
-            initialAuthority: _initialAuthority,
-            initialCaliberStaleThreshold: _initialCaliberStaleThreshold,
-            hubCaliberAccountingTokenPosID: _hubCaliberAccountingTokenPosID,
-            hubCaliberPosStaleThreshold: _hubCaliberPosStaleThreshold,
-            hubCaliberAllowedInstrRoot: _hubCaliberAllowedInstrRoot,
-            hubCaliberTimelockDuration: _hubCaliberTimelockDuration,
-            hubCaliberMaxMgmtLossBps: _hubCaliberMaxMgmtLossBps,
-            hubCaliberMaxSwapLossBps: _hubCaliberMaxSwapLossBps
-        });
+    function deployMachine(IMachine.MachineInitParams calldata params) external override restricted returns (address) {
         address machine = address(
             new BeaconProxy(IHubRegistry(registry).machineBeacon(), abi.encodeCall(IMachine.initialize, (params)))
         );

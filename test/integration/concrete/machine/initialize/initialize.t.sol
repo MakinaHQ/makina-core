@@ -72,14 +72,19 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             accountingToken: accountingToken,
             initialMechanic: mechanic,
             initialSecurityCouncil: securityCouncil,
+            depositor: machineDepositor,
             initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+            initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
             hubCaliberAccountingTokenPosID: accountingTokenPosId,
             hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
             hubCaliberAllowedInstrRoot: bytes32(""),
             hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
             hubCaliberMaxMgmtLossBps: DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
-            hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS
+            hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+            depositorOnlyMode: false,
+            shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+            shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
         });
     }
 }

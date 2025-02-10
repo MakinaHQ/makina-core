@@ -7,10 +7,12 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {MachineShare} from "./MachineShare.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
+import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -25,13 +27,17 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @custom:storage-location erc7201:makina.storage.Machine
     struct MachineStorage {
+        address _shareToken;
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
+        address _depositor;
         uint256 _caliberStaleThreshold;
-        uint256 _lastReportedTotalAum;
-        uint256 _lastReportedTotalAumTime;
-        uint256 _sharePrice;
+        uint256 _lastTotalAum;
+        uint256 _lastGlobalAccountingTime;
+        uint256 _shareTokenDecimalsOffset;
+        uint256 _shareLimit;
+        bool _depositorOnlyMode;
         bool _recoveryMode;
         mapping(uint256 chainId => address mailbox) _chainIdToMailbox;
         mapping(address mailbox => uint256 chainId) _mailboxToChainId;
@@ -68,9 +74,15 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         $._accountingToken = params.accountingToken;
         $._idleTokens.add(params.accountingToken);
 
+        $._shareToken = _deployShareToken(params);
+        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
+
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
+        $._depositor = params.depositor;
         $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
+        $._shareLimit = params.initialShareLimit;
+        $._depositorOnlyMode = params.depositorOnlyMode;
         __AccessManaged_init(params.initialAuthority);
 
         address mailbox = _deployHubCaliber(params);
@@ -95,6 +107,14 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         _;
     }
 
+    modifier onlyAllowedDepositor() {
+        MachineStorage storage $ = _getMachineStorage();
+        if ($._depositorOnlyMode && msg.sender != $._depositor) {
+            revert UnauthorizedDepositor();
+        }
+        _;
+    }
+
     modifier notRecoveryMode() {
         MachineStorage storage $ = _getMachineStorage();
         if ($._recoveryMode) {
@@ -114,6 +134,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function shareToken() external view override returns (address) {
+        return _getMachineStorage()._shareToken;
+    }
+
+    /// @inheritdoc IMachine
     function accountingToken() external view override returns (address) {
         return _getMachineStorage()._accountingToken;
     }
@@ -124,18 +149,38 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function shareLimit() external view override returns (uint256) {
+        return _getMachineStorage()._shareLimit;
+    }
+
+    /// @inheritdoc IMachine
+    function maxMint() public view override returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        if ($._shareLimit == type(uint256).max) {
+            return type(uint256).max;
+        }
+        uint256 totalSupply = IERC20Metadata($._shareToken).totalSupply();
+        return totalSupply < $._shareLimit ? $._shareLimit - totalSupply : 0;
+    }
+
+    /// @inheritdoc IMachine
+    function depositorOnlyMode() external view override returns (bool) {
+        return _getMachineStorage()._depositorOnlyMode;
+    }
+
+    /// @inheritdoc IMachine
     function recoveryMode() public view override returns (bool) {
         return _getMachineStorage()._recoveryMode;
     }
 
     /// @inheritdoc IMachine
-    function lastReportedTotalAum() external view override returns (uint256) {
-        return _getMachineStorage()._lastReportedTotalAum;
+    function lastTotalAum() external view override returns (uint256) {
+        return _getMachineStorage()._lastTotalAum;
     }
 
     /// @inheritdoc IMachine
-    function lastReportedTotalAumTime() external view override returns (uint256) {
-        return _getMachineStorage()._lastReportedTotalAumTime;
+    function lastGlobalAccountingTime() external view override returns (uint256) {
+        return _getMachineStorage()._lastGlobalAccountingTime;
     }
 
     /// @inheritdoc IMachine
@@ -156,6 +201,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function isIdleToken(address token) external view override returns (bool) {
         return _getMachineStorage()._idleTokens.contains(token);
+    }
+
+    /// @inheritdoc IMachine
+    function convertToShares(uint256 assets) external view override returns (uint256) {
+        return _convertToShares(assets, Math.Rounding.Floor);
     }
 
     /// @inheritdoc IMachine
@@ -191,11 +241,33 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     function updateTotalAum() external override notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
         uint256 totalAum = _getTotalAum();
-        uint256 currenTimestamp = block.timestamp;
-        emit TotalAumUpdated(totalAum, currenTimestamp);
-        $._lastReportedTotalAum = totalAum;
-        $._lastReportedTotalAumTime = currenTimestamp;
+        uint256 currentTimestamp = block.timestamp;
+        emit TotalAumUpdated(totalAum, currentTimestamp);
+        $._lastTotalAum = totalAum;
+        $._lastGlobalAccountingTime = currentTimestamp;
         return totalAum;
+    }
+
+    /// @inheritdoc IMachine
+    function deposit(uint256 assets, address receiver)
+        external
+        notRecoveryMode
+        onlyAllowedDepositor
+        returns (uint256)
+    {
+        MachineStorage storage $ = _getMachineStorage();
+        uint256 shares = _convertToShares(assets, Math.Rounding.Floor);
+        uint256 _maxMint = maxMint();
+        if (shares > _maxMint) {
+            revert ExceededMaxMint(shares, _maxMint);
+        }
+
+        IERC20Metadata($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
+        IMachineShare($._shareToken).mint(receiver, shares);
+        $._lastTotalAum += assets;
+        emit Deposit(msg.sender, receiver, assets, shares);
+
+        return shares;
     }
 
     /// @inheritdoc IMachine
@@ -220,6 +292,22 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function setShareLimit(uint256 newShareLimit) public override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit ShareLimitChanged($._shareLimit, newShareLimit);
+        $._shareLimit = newShareLimit;
+    }
+
+    /// @inheritdoc IMachine
+    function setDepositorOnlyMode(bool enabled) public restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        if ($._depositorOnlyMode != enabled) {
+            $._depositorOnlyMode = enabled;
+            emit DepositorOnlyModeChanged(enabled);
+        }
+    }
+
+    /// @inheritdoc IMachine
     function setRecoveryMode(bool enabled) public override restricted {
         MachineStorage storage $ = _getMachineStorage();
         if ($._recoveryMode != enabled) {
@@ -228,8 +316,16 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         }
     }
 
-    /// @dev Deploys the hub caliber and associated dual mailbox
-    /// @return mailbox The address of the mailbox
+    /// @dev Deploys the share token.
+    function _deployShareToken(MachineInitParams calldata params) internal onlyInitializing returns (address) {
+        address _shareToken =
+            address(new MachineShare(params.shareTokenName, params.shareTokenSymbol, Constants.SHARE_TOKEN_DECIMALS));
+        emit ShareTokenDeployed(_shareToken);
+        return _shareToken;
+    }
+
+    /// @dev Deploys the hub caliber and associated dual mailbox.
+    /// @return mailbox The address of the mailbox.
     function _deployHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
         ICaliber.InitParams memory caliberParams = ICaliber.InitParams({
             hubMachineEndpoint: address(this),
@@ -282,5 +378,15 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         uint256 price = IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+    }
+
+    /// @dev Converts accounting token amount to share amount, with support for rounding direction.
+    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view virtual returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        return assets.mulDiv(
+            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset,
+            $._lastTotalAum + 1,
+            rounding
+        );
     }
 }
