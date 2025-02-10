@@ -6,12 +6,12 @@ import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {HubDualMailbox_Unit_Concrete_Test} from "../HubDualMailbox.t.sol";
 
 contract NotifyAccountingSlim_Unit_Concrete_Test is HubDualMailbox_Unit_Concrete_Test {
-    function test_cannotNotifyAccountingSlimWithoutCaliber() public {
+    function test_RevertWhen_CallerNotCaliber() public {
         vm.expectRevert(ICaliberMailbox.NotCaliber.selector);
         hubDualMailbox.notifyAccountingSlim(0);
     }
 
-    function test_notifyAccountingSlim() public {
+    function test_NotifyAccountingSlim() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 

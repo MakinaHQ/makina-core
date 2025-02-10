@@ -10,7 +10,7 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_cannotHarvestWithoutMechanicWhileNotInRecoveryMode() public {
+    function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory instruction;
         ISwapper.SwapOrder[] memory swapOrders;
 
@@ -22,23 +22,23 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function test_cannotHarvestWithoutHarvestInstruction() public {
-        _test_cannotHarvestWithoutHarvestInstruction(mechanic);
+    function test_RevertWhen_InstructionNonHarvestingType() public {
+        _test_RevertWhen_InstructionNonHarvestingType(mechanic);
     }
 
-    function test_cannotHarvestWithInvalidProof() public {
-        _test_cannotHarvestWithInvalidProof(mechanic);
+    function test_RevertWhen_ProofInvalid() public {
+        _test_RevertWhen_ProofInvalid(mechanic);
     }
 
-    function test_cannotHarvestWithWrongRoot() public {
-        _test_cannotHarvestWithWrongRoot(mechanic);
+    function test_RevertGiven_WrongRoot() public {
+        _test_RevertGiven_WrongRoot(mechanic);
     }
 
-    function test_harvestWithoutSwap() public {
-        _test_harvestWithoutSwap(mechanic);
+    function test_Harvest_NoSwap() public {
+        _test_Harvest_NoSwap(mechanic);
     }
 
-    function test_cannotHarvestWithSwapIntoNonBaseToken() public {
+    function test_RevertWhen_OutputTokenNonBaseToken() public {
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
@@ -49,15 +49,15 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function test_cannotHarvestWithSwapFromBTWithValueLossTooHigh() public {
-        _test_cannotHarvestWithSwapFromBTWithValueLossTooHigh(mechanic);
+    function test_RevertGiven_SwapFromBTWithValueLossTooHigh() public {
+        _test_RevertGiven_SwapFromBTWithValueLossTooHigh(mechanic);
     }
 
-    function test_harvestWithSwap() public {
-        _test_harvestWithSwap(mechanic);
+    function test_Harvest_WithSwap() public {
+        _test_Harvest_WithSwap(mechanic);
     }
 
-    function test_cannotHarvestWithoutSCWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction memory instruction;
         ISwapper.SwapOrder[] memory swapOrders;
 
@@ -69,23 +69,23 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function test_cannotHarvestWithoutHarvestInstructionWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_cannotHarvestWithoutHarvestInstruction(securityCouncil);
+    function test_RevertWhen_InstructionNonHarvesting_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_RevertWhen_InstructionNonHarvestingType(securityCouncil);
     }
 
-    function test_cannotHarvestWithInvalidProofWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_cannotHarvestWithInvalidProof(securityCouncil);
+    function test_RevertWhen_ProofInvalid_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_RevertWhen_ProofInvalid(securityCouncil);
     }
 
-    function test_cannotHarvestWithWrongRootWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_cannotHarvestWithWrongRoot(securityCouncil);
+    function test_RevertGiven_WrongRoot_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_RevertGiven_WrongRoot(securityCouncil);
     }
 
-    function test_harvestWithoutSwapWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_harvestWithoutSwap(securityCouncil);
+    function test_Harvest_NoSwap_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_Harvest_NoSwap(securityCouncil);
     }
 
-    function test_cannotHarvestWithSwapIntoNonAccountingTokenWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertWhen_OutputTokenNonAccountingToken_WhileInRecoveryMode() public whileInRecoveryMode {
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
@@ -110,19 +110,19 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function test_cannotHarvestWithSwapFromBTWithValueLossTooHighWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_cannotHarvestWithSwapFromBTWithValueLossTooHigh(securityCouncil);
+    function test_RevertGiven_SwapFromBTWithValueLossTooHigh_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_RevertGiven_SwapFromBTWithValueLossTooHigh(securityCouncil);
     }
 
-    function test_harvestWithSwapWhileInRecoveryMode() public whileInRecoveryMode {
-        _test_harvestWithSwap(securityCouncil);
+    function test_HarvestWithSwap_WhileInRecoveryMode() public whileInRecoveryMode {
+        _test_Harvest_WithSwap(securityCouncil);
     }
 
     ///
     /// Helper functions
     ///
 
-    function _test_cannotHarvestWithoutHarvestInstruction(address sender) internal {
+    function _test_RevertWhen_InstructionNonHarvestingType(address sender) internal {
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
@@ -131,7 +131,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function _test_cannotHarvestWithInvalidProof(address sender) internal {
+    function _test_RevertWhen_ProofInvalid(address sender) internal {
         vm.startPrank(sender);
 
         uint256 harvestAmount = 1e18;
@@ -172,7 +172,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         vm.stopPrank();
     }
 
-    function _test_cannotHarvestWithWrongRoot(address sender) internal {
+    function _test_RevertGiven_WrongRoot(address sender) internal {
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
@@ -214,7 +214,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         vm.stopPrank();
     }
 
-    function _test_harvestWithoutSwap(address sender) internal {
+    function _test_Harvest_NoSwap(address sender) internal {
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
@@ -225,9 +225,9 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         assertEq(baseToken.balanceOf(address(caliber)), harvestAmount);
     }
 
-    function _test_cannotHarvestWithSwapFromBTWithValueLossTooHigh(address sender)
+    function _test_RevertGiven_SwapFromBTWithValueLossTooHigh(address sender)
         internal
-        withTokenAsBT(address(baseToken), BASE_TOKEN_POS_ID)
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
@@ -258,7 +258,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         caliber.harvest(instruction, swapOrders);
     }
 
-    function _test_harvestWithSwap(address sender) internal {
+    function _test_Harvest_WithSwap(address sender) internal {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;

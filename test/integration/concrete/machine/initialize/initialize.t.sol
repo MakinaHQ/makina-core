@@ -13,7 +13,7 @@ import {Constants} from "src/libraries/Constants.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_cannotInitializeWithAccoutingTokenDecimalsTooLow() public {
+    function test_RevertWhen_ProvidedAccountingTokenDecimalsTooLow() public {
         MockERC20 accountingToken2 =
             new MockERC20("Accounting Token 2", "AT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
 
@@ -24,7 +24,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
     }
 
-    function test_cannotInitializeWithAccoutingTokenDecimalsTooHigh() public {
+    function test_RevertWhen_ProvidedAccountingTokenDecimalsTooHigh() public {
         MockERC20 accountingToken2 =
             new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
 
@@ -35,7 +35,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
     }
 
-    function test_cannotInitializeWithNonPriceableAccountingToken() public {
+    function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         new BeaconProxy(
@@ -44,7 +44,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
     }
 
-    function test_initialize() public {
+    function test_Initialize() public {
         machine = Machine(
             address(
                 new BeaconProxy(
@@ -76,7 +76,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-            hubCaliberAccountingTokenPosID: accountingTokenPosId,
+            hubCaliberAccountingTokenPosID: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
             hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
             hubCaliberAllowedInstrRoot: bytes32(""),
             hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

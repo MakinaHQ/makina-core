@@ -10,13 +10,13 @@
     "@openzeppelin/merkle-tree": "^1.0.7",
     "ethers": "^6.13.4",
     "prettier": "3.3.3",
-    "solhint": "5.0.3"
+    "solhint": "5.0.5"
   },
   "scripts": {
     "lint": "yarn lint:sol && yarn prettier:check",
     "lint:sol": "forge fmt --check && yarn solhint \"{script,src,test}/**/*.sol\"",
-    "prettier:check": "prettier --check \"**/*.{js,json,md,yml}\"",
-    "prettier:write": "prettier --write \"**/*.{js,json,md,yml}\"",
+    "prettier:check": "prettier --check \"**/*.{js,json,md,yml}\" \"!script/constants/output/**/*\"",
+    "prettier:write": "prettier --write \"**/*.{js,json,md,yml}\" \"!script/constants/output/**/*\"",
     "coverage": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\"",
     "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\" --report debug",
     "genMerkleDataMock": "node script/merkle/generateMerkleTreeDataMock.js",

@@ -2,49 +2,35 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 
-contract MachineFactory_Integration_Concrete_Test is Base_Test {
-    event MachineDeployed(address indexed machine);
-
-    MockPriceFeed private aPriceFeed1;
-
+contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Test {
     bytes32 private initialAllowedInstrRoot;
 
-    function _setUp() public override {
-        aPriceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-    }
-
-    function test_getters() public view {
+    function test_Getters() public view {
         assertEq(machineFactory.registry(), address(hubRegistry));
         assertEq(machineFactory.isMachine(address(0)), false);
     }
 
-    function test_cannotDeployMachineWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         machineFactory.deployMachine(params);
     }
 
-    function test_deployMachine() public {
+    function test_DeployMachine() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
-        // vm.expectEmit(false, false, false, false, address(machineFactory));
-        // emit MachineDeployed(address(0));
+        vm.expectEmit(false, false, false, false, address(machineFactory));
+        emit IMachineFactory.MachineDeployed(address(0));
         vm.prank(dao);
         machine = Machine(
             machineFactory.deployMachine(
@@ -56,7 +42,7 @@ contract MachineFactory_Integration_Concrete_Test is Base_Test {
                     depositor: machineDepositor,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberAccountingTokenPosID: accountingTokenPosId,
+                    hubCaliberAccountingTokenPosID: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     hubCaliberAllowedInstrRoot: initialAllowedInstrRoot,
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

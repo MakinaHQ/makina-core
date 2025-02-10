@@ -2,33 +2,37 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 
-import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";
+import {Base_Test} from "test/BaseTest.sol";
 
-contract SetTokenFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
-    function test_cannotSetFeedStaleThresholdWithoutRole() public {
+contract SetFeedStaleThreshold_Unit_Concrete_Test is Base_Test {
+    MockPriceFeed internal priceFeed1;
+
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         oracleRegistry.setFeedStaleThreshold(address(0), 0);
     }
 
-    function test_setFeedStaleThreshold() public {
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+    function test_SetFeedStaleThreshold() public {
+        priceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 0);
+        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 0);
 
         vm.prank(dao);
         oracleRegistry.setTokenFeedData(
-            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+            address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), DEFAULT_PF_STALE_THRSHLD);
+        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), DEFAULT_PF_STALE_THRSHLD);
 
         vm.expectEmit(true, true, true, true, address(oracleRegistry));
-        emit FeedStaleThresholdChange(address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
+        emit IOracleRegistry.FeedStaleThresholdChange(address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
         vm.prank(dao);
-        oracleRegistry.setFeedStaleThreshold(address(basePriceFeed1), 1 days);
+        oracleRegistry.setFeedStaleThreshold(address(priceFeed1), 1 days);
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(basePriceFeed1)), 1 days);
+        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 1 days);
     }
 }

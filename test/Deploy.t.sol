@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import "forge-std/Test.sol";
-import "forge-std/StdJson.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+
 import {DeployMakinaCore} from "../script/DeployMakinaCore.s.sol";
 import {DeployCalibers} from "../script/DeployCalibers.s.sol";
 import {ICaliber} from "../src/interfaces/ICaliber.sol";
@@ -11,7 +11,6 @@ import {Base_Test} from "./BaseTest.sol";
 
 contract Deploy_Test is Base_Test {
     using stdJson for string;
-    using stdStorage for StdStorage;
 
     string public constantsFilename = vm.envString("CONSTANTS_FILENAME");
     string public jsonConstants;
@@ -20,11 +19,7 @@ contract Deploy_Test is Base_Test {
     DeployMakinaCore public deployMakinaCore;
     DeployCalibers public deployCalibers;
 
-    constructor() {
-        mode = TestMode.CUSTOM;
-    }
-
-    function _setUp() public override {
+    function setUp() public override {
         deployMakinaCore = new DeployMakinaCore();
         deployCalibers = new DeployCalibers();
 

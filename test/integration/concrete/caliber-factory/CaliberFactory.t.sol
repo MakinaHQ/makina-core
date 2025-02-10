@@ -4,53 +4,36 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
 
-contract CaliberFactory_Integration_Concrete_Test is Base_Test {
-    event CaliberDeployed(address indexed caliber);
-
-    uint256 private constant PRICE_A_E = 150;
-
-    MockPriceFeed private aPriceFeed1;
-
-    function _setUp() public override {
-        aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-    }
-
-    function test_getters() public view {
+contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
+    function test_Getters() public view {
         assertEq(caliberFactory.registry(), address(hubRegistry));
         assertEq(caliberFactory.isCaliber(address(0)), false);
     }
 
-    function test_cannotDeployCaliberWithoutRole() public {
+    function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliberFactory.deployCaliber(
             address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0), address(0)
         );
     }
 
-    function test_deployCaliber() public {
+    function test_DeployCaliber() public {
         address _machine = makeAddr("machine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(caliberFactory));
-        emit CaliberDeployed(address(caliber));
+        emit ICaliberFactory.CaliberDeployed(address(0));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
                 _machine,
                 address(accountingToken),
-                accountingTokenPosId,
+                HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                 DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                 initialAllowedInstrRoot,
                 DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -73,6 +56,6 @@ contract CaliberFactory_Integration_Concrete_Test is Base_Test {
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 1);
-        caliber.accountForBaseToken(accountingTokenPosId);
+        assertEq(caliber.getPositionId(0), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
     }
 }

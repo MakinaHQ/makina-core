@@ -9,18 +9,18 @@ import {IMachineMailbox} from "src/interfaces/IMachineMailbox.sol";
 import {HubDualMailbox_Unit_Concrete_Test} from "../HubDualMailbox.t.sol";
 
 contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox_Unit_Concrete_Test {
-    function test_cannotManageTransferFromMachineToCaliberWithoutMachine() public {
+    function test_RevertWhen_CallerNotMachine() public {
         vm.expectRevert(IMachineMailbox.NotMachine.selector);
         hubDualMailbox.manageTransferFromMachineToCaliber(address(accountingToken), 1e18);
     }
 
-    function test_cannotManageTransferFromMachineToCaliberWithoutBaseToken() public {
+    function test_RevertWhen_ProvidedTokenBaseToken() public {
         vm.prank(address(machine));
         vm.expectRevert(IHubDualMailbox.NotBaseToken.selector);
         hubDualMailbox.manageTransferFromMachineToCaliber(address(baseToken), 1e18);
     }
 
-    function test_cannotManageTransferFromMachineToCaliberWithInsufficientAllowance() public {
+    function test_RevertGiven_InsufficientAllowance() public {
         uint256 inputAmount = 1e18;
 
         vm.prank(address(machine));
@@ -32,7 +32,7 @@ contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox
         hubDualMailbox.manageTransferFromMachineToCaliber(address(accountingToken), inputAmount);
     }
 
-    function test_cannotManageTransferFromMachineToCaliberWithInsufficientBalance() public {
+    function test_RevertGiven_InsufficientBalance() public {
         uint256 inputAmount = 1e18;
 
         vm.startPrank(address(machine));
@@ -43,7 +43,7 @@ contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox
         hubDualMailbox.manageTransferFromMachineToCaliber(address(accountingToken), inputAmount);
     }
 
-    function test_manageTransferFromMachineToCaliber() public {
+    function test_ManageTransferFromMachineToCaliber() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
 

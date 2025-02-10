@@ -10,6 +10,7 @@
     "no-console": "off",
     "not-rely-on-time": "off",
     "const-name-snakecase": "off",
-    "no-inline-assembly": "off"
+    "no-inline-assembly": "off",
+    "contract-name-capwords": "off"
   }
 }

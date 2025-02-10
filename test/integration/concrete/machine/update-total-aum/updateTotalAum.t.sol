@@ -2,26 +2,23 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_cannotUpdateTotalAumWhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMachine.RecoveryMode.selector);
         machine.updateTotalAum();
     }
 
-    function test_cannotUpdateTotalAumWithStaleCaliber() public {
+    function test_RevertGiven_CaliberStale() public {
+        skip(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD + 1);
         vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, block.chainid));
         machine.updateTotalAum();
     }
 
-    function test_updateTotalAumWithZeroAum() public {
+    function test_UpdateTotalAum_WithZeroAum() public {
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -30,7 +27,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), 0);
     }
 
-    function test_updateTotalAumDoesNotAccountForUnnotifiedToken() public {
+    function test_UpdateTotalAum_UnnoticedToken() public {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(machine), inputAmount);
 
@@ -39,10 +36,11 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
         machine.updateTotalAum();
+        // check that unnoticed token is not accounted for
         assertEq(machine.lastTotalAum(), 0);
     }
 
-    function test_updateTotalAumWithIdleAccountingToken() public {
+    function test_UpdateTotalAum_IdleAccountingToken() public {
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         uint256 inputAmount = 1e18;
@@ -54,7 +52,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_updateTotalAumWithIdleBaseToken() public {
+    function test_UpdateTotalAum_IdleBaseToken() public {
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         uint256 inputAmount = 1e18;
@@ -69,7 +67,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount * PRICE_B_A);
     }
 
-    function test_updateTotalAumWithPositiveHubCaliberAum() public {
+    function test_UpdateTotalAum_PositiveHubCaliberAum() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount);
 
@@ -81,7 +79,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_updateTotalAumWithPositiveHubCaliberAumAndIdleToken() public {
+    function test_UpdateTotalAum_PositiveHubCaliberAumAndIdleToken() public {
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         // fund machine with accountingToken

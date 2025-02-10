@@ -8,12 +8,12 @@ import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {HubDualMailbox_Unit_Concrete_Test} from "../HubDualMailbox.t.sol";
 
 contract ManageTransferFromCaliberToMachine_Unit_Concrete_Test is HubDualMailbox_Unit_Concrete_Test {
-    function test_cannotManageTransferFromCaliberToMachineWithoutCaliber() public {
+    function test_RevertWhen_CallerNotCaliber() public {
         vm.expectRevert(ICaliberMailbox.NotCaliber.selector);
         hubDualMailbox.manageTransferFromCaliberToMachine(address(accountingToken), 1e18);
     }
 
-    function test_cannotManageTransferFromCaliberToMachineWithInsufficientAllowance() public {
+    function test_RevertGiven_InsufficientAllowance() public {
         uint256 inputAmount = 1e18;
 
         vm.prank(address(caliber));
@@ -25,7 +25,7 @@ contract ManageTransferFromCaliberToMachine_Unit_Concrete_Test is HubDualMailbox
         hubDualMailbox.manageTransferFromCaliberToMachine(address(accountingToken), inputAmount);
     }
 
-    function test_cannotManageTransferFromCaliberToMachineWithInsufficientBalance() public {
+    function test_RevertGiven_InsufficientBalance() public {
         uint256 inputAmount = 1e18;
 
         vm.startPrank(address(caliber));
@@ -36,7 +36,7 @@ contract ManageTransferFromCaliberToMachine_Unit_Concrete_Test is HubDualMailbox
         hubDualMailbox.manageTransferFromCaliberToMachine(address(accountingToken), inputAmount);
     }
 
-    function test_manageTransferFromCaliberToMachine() public {
+    function test_ManageTransferFromCaliberToMachine() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
