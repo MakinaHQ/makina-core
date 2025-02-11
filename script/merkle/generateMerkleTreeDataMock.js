@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { StandardMerkleTree } from "@openzeppelin/merkle-tree";
 import fs from "fs";
 
-// arguments to pass : caliberAddress mockAccountingTokenAddress mockBaseTokenAddress mockERC4626Address mockPoolAddress mockERC4626PosId
+// arguments to pass : caliberAddress mockAccountingTokenAddress mockBaseTokenAddress mockERC4626Address mockBorrowModuleAddress mockBorrowModulePosId mockPoolAddress mockERC4626PosId
 
 // instructions format: [commandsHash, stateHash, stateBitmap, positionId, affectedTokensHash, instructionType]
 
@@ -11,8 +11,10 @@ const mockAccountingTokenAddr = process.argv[3];
 const mockBaseTokenAddr = process.argv[4];
 const mockERC4626Addr = process.argv[5];
 const mockERC4626PosId = process.argv[6];
-const mockPoolAddr = process.argv[7];
-const mockPoolAddrPosId = process.argv[8];
+const mockBorrowModuleAddr = process.argv[7];
+const mockBorrowModulePosId = process.argv[8];
+const mockPoolAddr = process.argv[9];
+const mockPoolAddrPosId = process.argv[10];
 
 const depositMock4626Instruction = [
   keccak256EncodePacked([
@@ -25,6 +27,7 @@ const depositMock4626Instruction = [
   ]),
   "0xa0000000000000000000000000000000",
   mockERC4626PosId,
+  false,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -39,6 +42,7 @@ const redeemMock4626Instruction = [
   ]),
   "0x60000000000000000000000000000000",
   mockERC4626PosId,
+  false,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -52,6 +56,44 @@ const accountingMock4626Instruction = [
   getStateHash([ethers.zeroPadValue(caliberAddr, 32)]),
   "0x20000000000000000000000000000000",
   mockERC4626PosId,
+  false,
+  keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
+  "1",
+];
+
+const borrowMockBorrowModuleInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0xc5ebeaec0100ffffffffffff", mockBorrowModuleAddr]),
+  ]),
+  getStateHash([]),
+  "0x00000000000000000000000000000000",
+  mockBorrowModulePosId,
+  true,
+  keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
+  "0",
+];
+
+const repayMockBorrowModuleInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0x095ea7b3010001ffffffffff", mockBaseTokenAddr]),
+    ethers.concat(["0x371fd8e60101ffffffffffff", mockBorrowModuleAddr]),
+  ]),
+  getStateHash([ethers.zeroPadValue(mockBorrowModuleAddr, 32)]),
+  "0x80000000000000000000000000000000",
+  mockBorrowModulePosId,
+  true,
+  keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
+  "0",
+];
+
+const accountingMockBorrowModuleInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0xd283e75f0200ffffffffff00", mockBorrowModuleAddr]),
+  ]),
+  getStateHash([ethers.zeroPadValue(caliberAddr, 32)]),
+  "0x80000000000000000000000000000000",
+  mockBorrowModulePosId,
+  true,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -65,6 +107,7 @@ const addLiquidityMockPoolInstruction = [
   getStateHash([ethers.zeroPadValue(mockPoolAddr, 32)]),
   "0x80000000000000000000000000000000",
   mockPoolAddrPosId,
+  false,
   keccak256EncodePacked([
     ethers.zeroPadValue(mockAccountingTokenAddr, 32),
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
@@ -83,6 +126,7 @@ const addLiquidityOneSide0MockPoolInstruction = [
   ]),
   "0xa0000000000000000000000000000000",
   mockPoolAddrPosId,
+  false,
   keccak256EncodePacked([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
   "0",
 ];
@@ -94,6 +138,7 @@ const removeLiquidityOneSide1MockPoolInstruction = [
   getStateHash([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0x40000000000000000000000000000000",
   mockPoolAddrPosId,
+  false,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -109,6 +154,7 @@ const accountingMockPoolInstruction = [
   ]),
   "0xa0000000000000000000000000000000",
   mockPoolAddrPosId,
+  false,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -120,6 +166,7 @@ const harvestMockBaseTokenInstruction = [
   getStateHash([ethers.zeroPadValue(caliberAddr, 32)]),
   "0x80000000000000000000000000000000",
   0,
+  false,
   keccak256EncodePacked([]),
   "2",
 ];
@@ -128,6 +175,9 @@ const values = [
   depositMock4626Instruction,
   redeemMock4626Instruction,
   accountingMock4626Instruction,
+  borrowMockBorrowModuleInstruction,
+  repayMockBorrowModuleInstruction,
+  accountingMockBorrowModuleInstruction,
   addLiquidityMockPoolInstruction,
   addLiquidityOneSide0MockPoolInstruction,
   removeLiquidityOneSide1MockPoolInstruction,
@@ -140,6 +190,7 @@ const tree = StandardMerkleTree.of(values, [
   "bytes32",
   "uint128",
   "uint256",
+  "bool",
   "bytes32",
   "uint256",
 ]);
@@ -149,11 +200,14 @@ const treeData = {
   proofDepositMock4626: tree.getProof(0),
   proofRedeemMock4626: tree.getProof(1),
   proofAccountingMock4626: tree.getProof(2),
-  proofAddLiquidityMockPool: tree.getProof(3),
-  proofAddLiquidityOneSide0MockPool: tree.getProof(4),
-  proofRemoveLiquidityOneSide1MockPool: tree.getProof(5),
-  proofAccountingMockPool: tree.getProof(6),
-  proofHarvestMockBaseToken: tree.getProof(7),
+  proofBorrowMockBorrowModule: tree.getProof(3),
+  proofRepayMockBorrowModule: tree.getProof(4),
+  proofAccountingMockBorrowModule: tree.getProof(5),
+  proofAddLiquidityMockPool: tree.getProof(6),
+  proofAddLiquidityOneSide0MockPool: tree.getProof(7),
+  proofRemoveLiquidityOneSide1MockPool: tree.getProof(8),
+  proofAccountingMockPool: tree.getProof(9),
+  proofHarvestMockBaseToken: tree.getProof(10),
 };
 
 fs.writeFileSync(

@@ -18,7 +18,9 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
         caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(address(caliber), address(accountingToken), address(0), address(0), 0, address(0), 0);
+        _generateMerkleData(
+            address(caliber), address(accountingToken), address(0), address(0), 0, address(0), 0, address(0), 0
+        );
 
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());

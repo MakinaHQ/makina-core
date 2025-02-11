@@ -6,9 +6,9 @@ managePosition.t.sol
 │     ├── when not 2 instructions are provided
 │     │  └── it should revert with InvalidInstructionsLength
 │     └── when 2 instructions are provided
-│        ├── when the 2 instructions position IDs do not match
+│        ├── when the 2 instructions position IDs or isDebt flags do not match
 │        │  └── it should revert with UnmatchingInstructions
-│        └── when the 2 instructions position IDs match
+│        └── when the 2 instructions position IDs and isDebt flags match
 │           ├── when the first instruction is not of type management
 │           │  └── it should revert with InvalidInstructionType
 │           └── when the first instruction is of type management

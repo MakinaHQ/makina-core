@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
+import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
@@ -19,9 +20,11 @@ abstract contract Integration_Concrete_Test is Base_Test {
     uint256 internal constant PRICE_B_A = 400;
 
     uint256 internal constant VAULT_POS_ID = 3;
-    uint256 internal constant POOL_POS_ID = 4;
+    uint256 internal constant BORROW_POS_ID = 4;
+    uint256 internal constant POOL_POS_ID = 5;
 
     MockERC4626 internal vault;
+    MockBorrowModule internal borrowModule;
     MockPool internal pool;
 
     MockPriceFeed internal aPriceFeed1;
@@ -32,6 +35,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         _deployMockTokens();
 
         vault = new MockERC4626("vault", "VLT", IERC20(baseToken), 0);
+        borrowModule = new MockBorrowModule(IERC20(baseToken));
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
@@ -86,6 +90,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
             address(baseToken),
             address(vault),
             VAULT_POS_ID,
+            address(borrowModule),
+            BORROW_POS_ID,
             address(pool),
             POOL_POS_ID
         );

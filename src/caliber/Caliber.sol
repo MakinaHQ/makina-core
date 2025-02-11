@@ -242,22 +242,26 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._positionIds.length();
         uint256 aum;
+        uint256 debt;
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
+            Position memory pos = $._positionById[posId];
             if ($._positionIdToBaseToken[posId] != address(0)) {
                 (uint256 value,) = accountForBaseToken(posId);
                 aum += value;
-            } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+            } else if (currentTimestamp - pos.lastAccountingTime > $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
+            } else if (pos.isDebt) {
+                debt += pos.value;
             } else {
-                aum += $._positionById[posId].value;
+                aum += pos.value;
             }
         }
 
-        $._lastReportedAUM = aum;
+        $._lastReportedAUM = aum > debt ? aum - debt : 0;
         $._lastReportedAUMTime = currentTimestamp;
 
-        ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
+        ICaliberMailbox($._mailbox).notifyAccountingSlim($._lastReportedAUM);
     }
 
     /// @inheritdoc ICaliber
@@ -279,7 +283,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if (posId == 0) {
             revert ZeroPositionId();
         }
-        if (posId != accountingInstruction.positionId) {
+        if (posId != accountingInstruction.positionId || managingInstruction.isDebt != accountingInstruction.isDebt) {
             revert UnmatchingInstructions();
         }
         if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
@@ -474,7 +478,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 
-        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
+        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true, isDebt: false});
         emit PositionCreated(posId);
 
         // Reverts if no price feed is registered for token in the oracle registry.
@@ -523,6 +527,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             pos.value = currentValue;
             pos.lastAccountingTime = block.timestamp;
             if (lastValue == 0) {
+                pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
                 emit PositionCreated(posId);
             }
@@ -576,6 +581,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
                 stateHash,
                 instruction.stateBitmap,
                 instruction.positionId,
+                instruction.isDebt,
                 affectedTokensHash,
                 instruction.instructionType
             )
@@ -599,12 +605,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         bytes32 stateHash,
         uint128 stateBitmap,
         uint256 posId,
+        bool isDebt,
         bytes32 affectedTokensHash,
         InstructionType instructionType
     ) internal returns (bool) {
-        // The state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type.
-        bytes32 stateTransitionHash =
-            keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, affectedTokensHash, instructionType));
+        // The state transition hash is the hash of the commands, state, bitmap, position ID, isDebt flag, affected tokens and instruction type.
+        bytes32 stateTransitionHash = keccak256(
+            abi.encode(commandsHash, stateHash, stateBitmap, posId, isDebt, affectedTokensHash, instructionType)
+        );
         return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
     }
 

@@ -29,6 +29,18 @@ library MerkleProofs {
         return _getMerkleData().readBytes32Array(".proofAccountingMock4626");
     }
 
+    function _getBorrowMockBorrowModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofBorrowMockBorrowModule");
+    }
+
+    function _getRepayMockBorrowModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofRepayMockBorrowModule");
+    }
+
+    function _getAccountingMockBorrowModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofAccountingMockBorrowModule");
+    }
+
     function _getAddLiquidityMockPoolInstrProof() internal view returns (bytes32[] memory) {
         return _getMerkleData().readBytes32Array(".proofAddLiquidityMockPool");
     }

@@ -9,6 +9,7 @@ interface ICaliber {
     error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidPositionValueChange();
     error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
@@ -75,6 +76,7 @@ interface ICaliber {
 
     /// @notice Instruction parameters.
     /// @param positionId The ID of the position concerned.
+    /// @param isDebt Whether the position is a debt.
     /// @param instructionType The type of the instruction.
     /// @param affectedTokens The array of affected tokens.
     /// @param commands The array of commands.
@@ -83,6 +85,7 @@ interface ICaliber {
     /// @param merkleProof The array of Merkle proof elements.
     struct Instruction {
         uint256 positionId;
+        bool isDebt;
         InstructionType instructionType;
         address[] affectedTokens;
         bytes32[] commands;
@@ -95,10 +98,12 @@ interface ICaliber {
     /// @param lastAccountingTime The last block timestamp when the position was accounted for.
     /// @param value The value of the position expressed in accounting token.
     /// @param isBaseToken Is the position a base token.
+    /// @param isDebt Whether the position is a debt.
     struct Position {
         uint256 lastAccountingTime;
         uint256 value;
         bool isBaseToken;
+        bool isDebt;
     }
 
     /// @notice Initializer of the contract.
