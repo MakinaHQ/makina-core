@@ -145,7 +145,7 @@ contract GetPrice_Unit_Concrete_Test is Base_Test {
         uint256 startTimestamp = block.timestamp;
         basePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
-        skip(DEFAULT_PF_STALE_THRSHLD + 1);
+        skip(DEFAULT_PF_STALE_THRSHLD);
 
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
@@ -168,7 +168,7 @@ contract GetPrice_Unit_Concrete_Test is Base_Test {
         uint256 startTimestamp = block.timestamp;
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, startTimestamp);
 
-        skip(DEFAULT_PF_STALE_THRSHLD + 1);
+        skip(DEFAULT_PF_STALE_THRSHLD);
 
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
@@ -191,7 +191,7 @@ contract GetPrice_Unit_Concrete_Test is Base_Test {
         uint256 startTimestamp = vm.getBlockNumber();
         basePriceFeed2 = new MockPriceFeed(18, 1e18, startTimestamp);
 
-        skip(DEFAULT_PF_STALE_THRSHLD + 1);
+        skip(DEFAULT_PF_STALE_THRSHLD);
 
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
@@ -219,7 +219,7 @@ contract GetPrice_Unit_Concrete_Test is Base_Test {
         uint256 startTimestamp = vm.getBlockNumber();
         quotePriceFeed2 = new MockPriceFeed(18, 1e18, startTimestamp);
 
-        skip(DEFAULT_PF_STALE_THRSHLD + 1);
+        skip(DEFAULT_PF_STALE_THRSHLD);
 
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);

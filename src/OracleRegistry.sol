@@ -70,7 +70,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @inheritdoc IOracleRegistry
     function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
         emit FeedStaleThresholdChange(feed, feedStaleThreshold[feed], newThreshold);
-        // zero is allowed in order to explicitly indicate that a feed is not used
+        // zero is allowed in order to disable a feed
         feedStaleThreshold[feed] = newThreshold;
     }
 
@@ -84,7 +84,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (answer < 0) {
             revert NegativeTokenPrice(feed);
         }
-        if (block.timestamp - updatedAt > feedStaleThreshold[feed]) {
+        if (block.timestamp - updatedAt >= feedStaleThreshold[feed]) {
             revert PriceFeedStale(feed, updatedAt);
         }
         return uint256(answer);

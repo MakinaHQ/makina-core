@@ -11,7 +11,8 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {VM} from "./vm/VM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberMailbox, IMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IMailbox} from "../interfaces/IMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
@@ -244,17 +245,19 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
             if ($._positionIdToBaseToken[posId] != address(0)) {
-                accountForBaseToken(posId);
+                (uint256 value,) = accountForBaseToken(posId);
+                aum += value;
             } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
+            } else {
+                aum += $._positionById[posId].value;
             }
-            aum += $._positionById[posId].value;
         }
 
         $._lastReportedAUM = aum;
         $._lastReportedAUMTime = currentTimestamp;
 
-        return ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
+        ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
     }
 
     /// @inheritdoc ICaliber
@@ -273,6 +276,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         Instruction calldata accountingInstruction = instructions[1];
 
         uint256 posId = managingInstruction.positionId;
+        if (posId == 0) {
+            revert ZeroPositionId();
+        }
         if (posId != accountingInstruction.positionId) {
             revert UnmatchingInstructions();
         }
@@ -458,29 +464,21 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if ($._baseTokenToPositionId[token] != 0) {
             revert BaseTokenAlreadyExists();
         }
-
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+        if (posId == 0) {
+            revert ZeroPositionId();
+        }
+        if (!$._positionIds.add(posId)) {
+            revert PositionAlreadyExists();
+        }
 
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 
-        Position memory pos = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
-        _addPosition(pos, posId);
-    }
-
-    /// @dev Adds a new position to storage.
-    function _addPosition(Position memory pos, uint256 posId) internal {
-        if (posId == 0) {
-            revert ZeroPositionId();
-        }
-        CaliberStorage storage $ = _getCaliberStorage();
-        if ($._positionIds.contains(posId)) {
-            revert PositionAlreadyExists();
-        }
-        $._positionIds.add(posId);
-        $._positionById[posId] = pos;
+        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
         emit PositionCreated(posId);
+
+        // Reverts if no price feed is registered for token in the oracle registry.
+        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
     }
 
     /// @dev Computes the accounting value of a non-base-token position. Depending on last and current value, the
