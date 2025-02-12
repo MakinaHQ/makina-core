@@ -467,7 +467,9 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // a1 < 0.99 * (a0 + a1)
         // <=> a1 < (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) - 1;
+        uint256 assets1 = (
+            1e30 * (10_000 - DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS) / DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS
+        ) - 1;
         deal(address(accountingToken), address(caliber), assets0, true);
         deal(address(baseToken), address(caliber), assets1, true);
 
@@ -489,7 +491,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
-        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS + 1);
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
@@ -510,7 +512,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        uint256 assets1 =
+            (1e30 * (10_000 - DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS) / DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
         deal(address(accountingToken), address(caliber), assets0, true);
         deal(address(baseToken), address(caliber), assets1, true);
 
@@ -551,13 +554,20 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+        // increase debt value
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS + 1);
 
         instructions[0] =
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.managePosition(instructions);
+
+        // check that execution succeeds when the position increase loss threshold,
+        // intended to be stricter than the position decrease loss threshold
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS + 1);
+        vm.prank(mechanic);
         caliber.managePosition(instructions);
     }
 
@@ -629,7 +639,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        uint256 assets1 =
+            (1e30 * (10_000 - DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS) / DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
         uint256 previewLpts = pool.previewAddLiquidity(assets0, assets1);
 
         deal(address(accountingToken), address(caliber), assets0, true);
@@ -882,7 +893,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = 1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS;
+        uint256 assets1 =
+            1e30 * (10_000 - DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS) / DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS;
 
         deal(address(accountingToken), address(caliber), assets0, true);
         deal(address(baseToken), address(caliber), assets1, true);
@@ -1122,7 +1134,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        uint256 assets1 =
+            (1e30 * (10_000 - DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS) / DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
         deal(address(accountingToken), address(caliber), assets0, true);
         deal(address(baseToken), address(caliber), assets1, true);
 
@@ -1168,7 +1181,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
 
         // increase debt value
-        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS + 1);
 
         // turn on recovery mode
         vm.prank(dao);

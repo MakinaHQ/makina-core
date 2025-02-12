@@ -28,7 +28,12 @@ interface ICaliber {
     error ZeroPositionId();
 
     event MailboxDeployed(address indexed mailbox);
-    event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
+    event MaxPositionDecreaseLossBpsChanged(
+        uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
+    );
+    event MaxPositionIncreaseLossBpsChanged(
+        uint256 indexed oldMaxPositionIncreaseLossBps, uint256 indexed newMaxPositionIncreaseLossBps
+    );
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
@@ -54,7 +59,8 @@ interface ICaliber {
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
-    /// @param initialMaxMgmtLossBps The max allowed value loss (in basis point) for position management.
+    /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis point) for position increases.
+    /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
@@ -67,7 +73,8 @@ interface ICaliber {
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
-        uint256 initialMaxMgmtLossBps;
+        uint256 initialMaxPositionIncreaseLossBps;
+        uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         address initialSecurityCouncil;
@@ -149,8 +156,11 @@ interface ICaliber {
     /// @notice Effective time of the last scheduled allowedInstrRoot update.
     function pendingTimelockExpiry() external view returns (uint256);
 
-    /// @notice Max allowed value loss (in basis point) for position management.
-    function maxMgmtLossBps() external view returns (uint256);
+    /// @notice Max allowed value loss (in basis point) when increasing a position.
+    function maxPositionIncreaseLossBps() external view returns (uint256);
+
+    /// @notice Max allowed value loss (in basis point) when decreasing a position.
+    function maxPositionDecreaseLossBps() external view returns (uint256);
 
     /// @notice Max allowed value loss (in basis point) for base token swaps.
     function maxSwapLossBps() external view returns (uint256);
@@ -245,9 +255,13 @@ interface ICaliber {
     /// @param newMerkleRoot The root of the Merkle tree containing allowed instructions.
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
 
-    /// @notice Sets the max allowed value loss for position management.
-    /// @param newMaxMgmtLossBps The new max value loss in basis points.
-    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external;
+    /// @notice Sets the max allowed value loss for position increases.
+    /// @param newMaxPositionIncreaseLossBps The new max value loss in basis points.
+    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external;
+
+    /// @notice Sets the max allowed value loss for position decreases.
+    /// @param newMaxPositionDecreaseLossBps The new max value loss in basis points.
+    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps) external;
 
     /// @notice Sets the max allowed value loss for base token swaps.
     /// @param newMaxSwapLossBps The new max value loss in basis points.

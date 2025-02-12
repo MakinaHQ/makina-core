@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import "./Base.sol";
+import {ICaliberFactory} from "../src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "../src/interfaces/IMachine.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
@@ -25,7 +26,9 @@ abstract contract Base_Test is Base {
 
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
 
-    uint256 public constant DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS = 100;
+    uint256 public constant DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS = 100;
+
+    uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
 
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
@@ -93,7 +96,8 @@ abstract contract Base_Test is Base {
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     hubCaliberAllowedInstrRoot: allowedInstrMerkleRoot,
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                    hubCaliberMaxMgmtLossBps: DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
+                    hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                     depositorOnlyMode: false,
                     shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -114,17 +118,20 @@ abstract contract Base_Test is Base {
         vm.prank(dao);
         return Caliber(
             caliberFactory.deployCaliber(
-                _hubMachineEndpoint,
-                _accountingToken,
-                _accountingTokenPosId,
-                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                allowedInstrMerkleRoot,
-                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
-                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                mechanic,
-                securityCouncil,
-                address(accessManager)
+                ICaliberFactory.CaliberDeployParams({
+                    hubMachineEndpoint: _hubMachineEndpoint,
+                    accountingToken: _accountingToken,
+                    accountingTokenPosId: _accountingTokenPosId,
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: allowedInstrMerkleRoot,
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialAuthority: address(accessManager)
+                })
             )
         );
     }

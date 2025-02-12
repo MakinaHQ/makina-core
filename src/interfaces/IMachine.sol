@@ -35,7 +35,8 @@ interface IMachine {
     /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
     /// @param hubCaliberAllowedInstrRoot The root of the Merkle tree containing allowed caliber instructions.
     /// @param hubCaliberTimelockDuration The duration of the hub caliber's Merkle tree root update timelock.
-    /// @param hubCaliberMaxMgmtLossBps The max allowed value loss (in basis point) in the hub caliber when managing a position.
+    /// @param hubCaliberMaxPositionIncreaseLossBps The max allowed value loss (in basis point) in the hub caliber when increasing a position.
+    ///  @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
     /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
     /// @param shareTokenName The name of the share token.
@@ -52,7 +53,8 @@ interface IMachine {
         uint256 hubCaliberPosStaleThreshold;
         bytes32 hubCaliberAllowedInstrRoot;
         uint256 hubCaliberTimelockDuration;
-        uint256 hubCaliberMaxMgmtLossBps;
+        uint256 hubCaliberMaxPositionIncreaseLossBps;
+        uint256 hubCaliberMaxPositionDecreaseLossBps;
         uint256 hubCaliberMaxSwapLossBps;
         bool depositorOnlyMode;
         string shareTokenName;

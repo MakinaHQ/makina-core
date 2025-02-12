@@ -40,7 +40,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
-        uint256 _maxMgmtLossBps;
+        uint256 _maxPositionIncreaseLossBps;
+        uint256 _maxPositionDecreaseLossBps;
         uint256 _maxSwapLossBps;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
@@ -73,7 +74,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
         $._timelockDuration = params.initialTimelockDuration;
-        $._maxMgmtLossBps = params.initialMaxMgmtLossBps;
+        $._maxPositionIncreaseLossBps = params.initialMaxPositionIncreaseLossBps;
+        $._maxPositionDecreaseLossBps = params.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
@@ -154,8 +156,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function maxMgmtLossBps() public view override returns (uint256) {
-        return _getCaliberStorage()._maxMgmtLossBps;
+    function maxPositionIncreaseLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxPositionIncreaseLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function maxPositionDecreaseLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -317,12 +324,12 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
-        bool isExpectedPositiveIncrease = managingInstruction.isDebt == isBaseTokenInflow;
+        bool isExpectedPositionIncrease = managingInstruction.isDebt == isBaseTokenInflow;
         bool isPositionIncrease = change >= 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
-        // uint256 maxMgmtLossBps = isPositionIncrease ? $._maxIncreasePositionLossBps : $._maxDecreasePositionLossBps;
+        uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
-        if (isExpectedPositiveIncrease != isPositionIncrease) {
+        if (isExpectedPositionIncrease != isPositionIncrease) {
             revert InvalidPositionValueChange();
         }
 
@@ -331,9 +338,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         if (isBaseTokenInflow) {
-            _checkPositionMaxChange(absChange, affectedTokensValueAfter - affectedTokensValueBefore, $._maxMgmtLossBps);
+            _checkPositionMaxChange(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
         } else {
-            _checkPositionMinChange(absChange, affectedTokensValueBefore - affectedTokensValueAfter, $._maxMgmtLossBps);
+            _checkPositionMinChange(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
         return (value, change);
@@ -432,10 +439,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external override restricted {
+    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        emit MaxMgmtLossBpsChanged($._maxMgmtLossBps, newMaxMgmtLossBps);
-        $._maxMgmtLossBps = newMaxMgmtLossBps;
+        emit MaxPositionIncreaseLossBpsChanged($._maxPositionIncreaseLossBps, newMaxPositionIncreaseLossBps);
+        $._maxPositionIncreaseLossBps = newMaxPositionIncreaseLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit MaxPositionDecreaseLossBpsChanged($._maxPositionDecreaseLossBps, newMaxPositionDecreaseLossBps);
+        $._maxPositionDecreaseLossBps = newMaxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber

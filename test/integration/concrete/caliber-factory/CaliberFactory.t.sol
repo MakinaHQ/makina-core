@@ -16,10 +16,9 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
     }
 
     function test_RevertWhen_CallerWithoutRole() public {
+        ICaliberFactory.CaliberDeployParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.deployCaliber(
-            address(0), address(0), 0, 0, bytes32(0), 0, 0, 0, address(0), address(0), address(0)
-        );
+        caliberFactory.deployCaliber(params);
     }
 
     function test_DeployCaliber() public {
@@ -31,17 +30,20 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
-                _machine,
-                address(accountingToken),
-                HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
-                DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                initialAllowedInstrRoot,
-                DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS,
-                DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                mechanic,
-                securityCouncil,
-                address(accessManager)
+                ICaliberFactory.CaliberDeployParams({
+                    hubMachineEndpoint: _machine,
+                    accountingToken: address(accountingToken),
+                    accountingTokenPosId: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: initialAllowedInstrRoot,
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialAuthority: address(accessManager)
+                })
             )
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
@@ -51,6 +53,8 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Test {
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);
         assertEq(caliber.timelockDuration(), DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK);
+        assertEq(caliber.maxPositionIncreaseLossBps(), DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
+        assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.authority(), address(accessManager));

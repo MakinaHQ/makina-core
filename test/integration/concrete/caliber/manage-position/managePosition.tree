@@ -47,9 +47,9 @@ managePosition.t.sol
 │                                            │  │  └── it should not close or open the position
 │                                            │  │  └── it should return the new value and the value change both equal to zero
 │                                            │  └── given the new position value is positive
-│                                            │        ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+│                                            │        ├── given the relative value loss in the caliber is greater than maxPositionIncreaseLossBps
 │                                            │        │  └── it should revert with MaxValueLossExceeded
-│                                            │        └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+│                                            │        └── given the relative value loss in the caliber is not greater than maxPositionIncreaseLossBps
 │                                            │           ├── given the position was just created
 │                                            │           │  ├── it should register the position ID
 │                                            │           │  ├── it should emit a PositionCreated event
@@ -62,9 +62,9 @@ managePosition.t.sol
 │                                            │              ├── it should set position.value to the computed position value converted to accounting token
 │                                            │              └── it should return the new value and the value change since last accounting
 │                                            └── given the position value decreased
-│                                               ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+│                                               ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
 │                                               │  └── it should revert with MaxValueLossExceeded
-│                                               └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+│                                               └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
 │                                                  ├── given the new position value is positive
 │                                                  │  ├── it should set position.lastAccountingTime to current block timestmap
 │                                                  │  ├── it should set position.value to the computed position value converted to accounting token
@@ -83,9 +83,9 @@ managePosition.t.sol
          ├── given the position value did not decrease
          │  └── it should revert with RecoveryMode
          └── given the position value decreased
-            ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+            ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
             │  └── it should revert with MaxValueLossExceeded
-            └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+            └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
                ├── given the new position value is zero
                │  ├── it should unregister the position ID
                │  ├── it should emit a PositionClosed event
