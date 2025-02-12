@@ -10,8 +10,10 @@ contract MockBorrowModule {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
+    error RepayAmountExceedsDebt();
+
     IERC20 private _asset;
-    mapping(address => uint256) private _grossDebt;
+    mapping(address user => uint256 grossDebt) private _grossDebtOf;
 
     uint256 private BPS_DIVIDER = 10_000;
 
@@ -28,18 +30,22 @@ contract MockBorrowModule {
 
     function borrow(uint256 assets) public {
         address receiver = msg.sender;
-        _grossDebt[receiver] += assets;
+        _grossDebtOf[receiver] += assets;
         _asset.safeTransfer(receiver, assets);
     }
 
     function repay(uint256 assets) public {
         address sender = msg.sender;
         _asset.safeTransferFrom(sender, address(this), assets);
-        _grossDebt[sender] -= assets.mulDiv(BPS_DIVIDER, rateBps);
+        uint256 _grossDebtDelta = assets.mulDiv(BPS_DIVIDER, rateBps);
+        if (_grossDebtDelta > _grossDebtOf[sender]) {
+            revert RepayAmountExceedsDebt();
+        }
+        _grossDebtOf[sender] -= _grossDebtDelta;
     }
 
     function debtOf(address user) public view returns (uint256) {
-        return _grossDebt[user].mulDiv(rateBps, BPS_DIVIDER, Math.Rounding.Ceil);
+        return _grossDebtOf[user].mulDiv(rateBps, BPS_DIVIDER, Math.Rounding.Ceil);
     }
 
     function setRateBps(uint256 _rateBps) public {

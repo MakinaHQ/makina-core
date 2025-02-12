@@ -39,46 +39,58 @@ managePosition.t.sol
 │                                      ├── when the second instruction's affected tokens list contains non-base tokens
 │                                      │  └── it should revert with InvalidAffectedToken
 │                                      └── when the second instruction's affected tokens list only contains base tokens
-│                                         ├── given the position value did not decrease
-│                                         │  ├── given the new position value is zero
-│                                         │  │  └── it should not close or open the position
-│                                         │  │  └── it should return the new value and the value change since last accounting
-│                                         │  └── given the new position value is positive
-│                                         │        ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
-│                                         │        │  └── it should revert with MaxValueLossExceeded
-│                                         │        └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
-│                                         │           ├── given the position was just created
-│                                         │           │  ├── it should register the position ID
-│                                         │           │  ├── it should emit a PositionCreated event
-│                                         │           │  ├── it should set position.lastAccountingTime to current block timestmap
-│                                         │           │  ├── it should set position.value to the computed position value converted to accounting token
-│                                         │           │  └── it should return the new value and the value change since last accounting
-│                                         │           └── given the position already existed
-│                                         │              ├── it should not add a new position
-│                                         │              ├── it should set position.lastAccountingTime to current block timestmap
-│                                         │              ├── it should set position.value to the computed position value converted to accounting token
-│                                         │              └── it should return the new value and the value change since last accounting
-│                                         └── given the position value decreased
-│                                            ├── given the new position value is positive
-│                                            │  ├── it should set position.lastAccountingTime to current block timestmap
-│                                            │  ├── it should set position.value to the computed position value converted to accounting token
-│                                            │  └── it should return the new value and the value change since last accounting
-│                                            └── given the new position value is zero
-│                                               ├── it should unregister the position ID
-│                                               ├── it should emit a PositionClosed event
-│                                               └── it should return the new value and the value change since last accounting
+│                                         ├── given the position expected change direction does not correspond actual change direction
+│                                         │  └── it should revert with InvalidPositionValueChange
+│                                         └── given the position expected change direction corresponds to the actual change direction
+│                                            ├── given the position value did not decrease
+│                                            │  ├── given the new position value is zero
+│                                            │  │  └── it should not close or open the position
+│                                            │  │  └── it should return the new value and the value change both equal to zero
+│                                            │  └── given the new position value is positive
+│                                            │        ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+│                                            │        │  └── it should revert with MaxValueLossExceeded
+│                                            │        └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+│                                            │           ├── given the position was just created
+│                                            │           │  ├── it should register the position ID
+│                                            │           │  ├── it should emit a PositionCreated event
+│                                            │           │  ├── it should set position.lastAccountingTime to current block timestmap
+│                                            │           │  ├── it should set position.value to the computed position value converted to accounting token
+│                                            │           │  └── it should return the new value and the value change since last accounting
+│                                            │           └── given the position already existed
+│                                            │              ├── it should not add a new position
+│                                            │              ├── it should set position.lastAccountingTime to current block timestmap
+│                                            │              ├── it should set position.value to the computed position value converted to accounting token
+│                                            │              └── it should return the new value and the value change since last accounting
+│                                            └── given the position value decreased
+│                                               ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+│                                               │  └── it should revert with MaxValueLossExceeded
+│                                               └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+│                                                  ├── given the new position value is positive
+│                                                  │  ├── it should set position.lastAccountingTime to current block timestmap
+│                                                  │  ├── it should set position.value to the computed position value converted to accounting token
+│                                                  │  └── it should return the new value and the value change since last accounting
+│                                                  └── given the new position value is zero
+│                                                     ├── it should unregister the position ID
+│                                                     ├── it should emit a PositionClosed event
+│                                                     └── it should return the new value and the value change since last accounting
 └── given recovery mode is on
    ├── when sender is not the Security Council
    │  └── it should revert with UnauthorizedOperator
    └── when sender is the Security Council
-      └── given the position value did not decrease
+      ├── given the position expected change direction does not correspond actual change direction
+      │  └── it should revert with InvalidPositionValueChange
+      └── given the position expected change direction corresponds to the actual change direction
+         ├── given the position value did not decrease
          │  └── it should revert with RecoveryMode
          └── given the position value decreased
-            ├── given the new position value is zero
-            │  ├── it should unregister the position ID
-            │  ├── it should emit a PositionClosed event
-            │  └── it should return the new value and the value change since last accounting
-            └── given the new position value is positive
-               ├── it should set position.lastAccountingTime to current block timestmap
-               ├── it should set position.value to the computed position value converted to accounting token
-               └── it should return the new value and the value change since last accounting
+            ├── given the relative value loss in the caliber is greater than maxMgmtLossBps
+            │  └── it should revert with MaxValueLossExceeded
+            └── given the relative value loss in the caliber is not greater than maxMgmtLossBps
+               ├── given the new position value is zero
+               │  ├── it should unregister the position ID
+               │  ├── it should emit a PositionClosed event
+               │  └── it should return the new value and the value change since last accounting
+               └── given the new position value is positive
+                  ├── it should set position.lastAccountingTime to current block timestmap
+                  ├── it should set position.value to the computed position value converted to accounting token
+                  └── it should return the new value and the value change since last accounting

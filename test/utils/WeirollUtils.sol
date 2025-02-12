@@ -324,24 +324,24 @@ library WeirollUtils {
         );
     }
 
-    function _buildMockPoolAddLiquidityOneSide0Instruction(uint256 _posId, address _pool, uint256 _assets0)
+    function _buildMockPoolAddLiquidityOneSideInstruction(uint256 _posId, address _pool, uint256 _assets, bool _side)
         internal
         view
         returns (ICaliber.Instruction memory)
     {
-        address token0 = MockPool(_pool).token0();
+        address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
 
         address[] memory affectedTokens = new address[](1);
-        affectedTokens[0] = token0;
+        affectedTokens[0] = token;
 
         bytes32[] memory commands = new bytes32[](2);
-        // "0x095ea7b3010001ffffffffff" + token0
+        // "0x095ea7b3010001ffffffffff" + token
         commands[0] = buildCommand(
             IERC20.approve.selector,
             0x01, // call
             0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
             0xff, // ignore result
-            token0
+            token
         );
         // "0x8e022364010102ffffffffff" + _pool
         commands[1] = buildCommand(
@@ -354,10 +354,12 @@ library WeirollUtils {
 
         bytes[] memory state = new bytes[](3);
         state[0] = abi.encode(_pool);
-        state[1] = abi.encode(_assets0);
-        state[2] = abi.encode(token0);
+        state[1] = abi.encode(_assets);
+        state[2] = abi.encode(token);
 
-        bytes32[] memory merkleProof = MerkleProofs._getAddLiquidityOneSide0MockPoolInstrProof();
+        bytes32[] memory merkleProof = _side
+            ? MerkleProofs._getAddLiquidityOneSide1MockPoolInstrProof()
+            : MerkleProofs._getAddLiquidityOneSide0MockPoolInstrProof();
 
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
@@ -373,14 +375,15 @@ library WeirollUtils {
         );
     }
 
-    function _buildMockPoolRemoveLiquidityOneSide1Instruction(uint256 _posId, address _pool, uint256 _lpTokens)
-        internal
-        view
-        returns (ICaliber.Instruction memory)
-    {
-        address token1 = MockPool(_pool).token1();
+    function _buildMockPoolRemoveLiquidityOneSideInstruction(
+        uint256 _posId,
+        address _pool,
+        uint256 _lpTokens,
+        bool _side
+    ) internal view returns (ICaliber.Instruction memory) {
+        address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
         address[] memory affectedTokens = new address[](1);
-        affectedTokens[0] = token1;
+        affectedTokens[0] = token;
 
         bytes32[] memory commands = new bytes32[](1);
         // "0xdf7aebb9010001ffffffffff" + _pool
@@ -394,9 +397,11 @@ library WeirollUtils {
 
         bytes[] memory state = new bytes[](2);
         state[0] = abi.encode(_lpTokens);
-        state[1] = abi.encode(token1);
+        state[1] = abi.encode(token);
 
-        bytes32[] memory merkleProof = MerkleProofs._getRemoveLiquidityOneSide1MockPoolInstrProof();
+        bytes32[] memory merkleProof = _side
+            ? MerkleProofs._getRemoveLiquidityOneSide1MockPoolInstrProof()
+            : MerkleProofs._getRemoveLiquidityOneSide0MockPoolInstrProof();
 
         uint128 stateBitmap = 0x40000000000000000000000000000000;
 

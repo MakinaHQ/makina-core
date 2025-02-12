@@ -5,7 +5,6 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
-import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
@@ -309,7 +308,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
-            WeirollUtils._buildMockPoolAddLiquidityOneSide0Instruction(POOL_POS_ID, address(pool), inputAmount);
+            WeirollUtils._buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
         instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
 
         // replace end flag with null value in accounting output state
@@ -325,7 +324,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
-            WeirollUtils._buildMockPoolAddLiquidityOneSide0Instruction(POOL_POS_ID, address(pool), inputAmount);
+            WeirollUtils._buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
         instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
 
         vm.prank(mechanic);
@@ -333,7 +332,135 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertGiven_ValueLossTooHigh()
+    function test_RevertGiven_InvalidPositionValueChange_PositionIncrease_NonDebt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 yield = 2e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(caliber), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // generate negative yield in vault
+        deal(address(baseToken), address(vault), inputAmount1 - yield, true);
+
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount2);
+
+        // try increase position
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionIncrease_Debt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount1);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // decrease baseToken price
+        bPriceFeed1.setLatestAnswer(bPriceFeed1.latestAnswer() / 2);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+
+        // try increase position
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionDecrease_NonDebt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 yield = 2e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(caliber), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // generate positive yield in vault
+        deal(address(baseToken), address(vault), inputAmount1 + yield, true);
+
+        uint256 sharesToRedeem = vault.previewWithdraw(inputAmount2);
+
+        instructions[0] =
+            WeirollUtils._build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
+
+        // try decrease position
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionDecrease_Debt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount1);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // increase baseToken price
+        bPriceFeed1.setLatestAnswer(bPriceFeed1.latestAnswer() * 2);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+
+        // try decrease position
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_NonDebt()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
@@ -348,6 +475,86 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         instructions[0] =
             WeirollUtils._buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
         instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_Debt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount, true);
+
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_NonDebt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        // a1 >= 0.99 * (a0 + a1)
+        // <=> a1 >= (0.99 / 0.01) * a0
+        uint256 assets0 = 1e30 * PRICE_B_A;
+        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        deal(address(accountingToken), address(caliber), assets0, true);
+        deal(address(baseToken), address(caliber), assets1, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
+        instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        // open position with addLiquidity (both sides of pool)
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        instructions[0] = WeirollUtils._buildMockPoolRemoveLiquidityOneSideInstruction(
+            POOL_POS_ID, address(pool), pool.balanceOf(address(caliber)), false
+        );
+
+        // close position with removeLiquidityOneSide
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_Debt()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
@@ -419,8 +626,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
+        // a1 >= 0.99 * (a0 + a1)
+        // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
-        uint256 assets1 = 1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS;
+        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
         uint256 previewLpts = pool.previewAddLiquidity(assets0, assets1);
 
         deal(address(accountingToken), address(caliber), assets0, true);
@@ -461,8 +670,6 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         instructions[0] =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-
-        assertEq(caliber.getPositionsLength(), 2);
 
         // create position
         vm.prank(mechanic);
@@ -545,13 +752,16 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // decrease position
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        (uint256 value, int256 change) = caliber.managePosition(instructions);
 
         assertEq(caliber.getPositionsLength(), posLengthBefore);
         assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
+        assertEq(value, (previewShares - sharesToRedeem) * PRICE_B_A);
+        assertEq(change, -1 * int256(sharesToRedeem * PRICE_B_A));
         assertEq(
             caliber.getPosition(VAULT_POS_ID).value, vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A
         );
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
     }
 
@@ -618,7 +828,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         );
 
         // close position
-        vm.expectEmit(true, true, false, true, address(caliber));
+        vm.expectEmit(true, false, false, false, address(caliber));
         emit ICaliber.PositionClosed(VAULT_POS_ID);
         vm.prank(mechanic);
         caliber.managePosition(instructions);
@@ -669,6 +879,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
+        // a1 >= 0.99 * (a0 + a1)
+        // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
         uint256 assets1 = 1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS;
 
@@ -686,8 +898,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         uint256 posLengthBefore = caliber.getPositionsLength();
 
-        instructions[0] = WeirollUtils._buildMockPoolRemoveLiquidityOneSide1Instruction(
-            POOL_POS_ID, address(pool), pool.balanceOf(address(caliber))
+        instructions[0] = WeirollUtils._buildMockPoolRemoveLiquidityOneSideInstruction(
+            POOL_POS_ID, address(pool), pool.balanceOf(address(caliber)), true
         );
 
         // close position
@@ -711,6 +923,150 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.managePosition(dummyInstructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionIncrease_NonDebt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 yield = 2e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(caliber), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // generate negative yield in vault
+        deal(address(baseToken), address(vault), inputAmount1 - yield, true);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount2);
+
+        // try increase position
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionIncrease_Debt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount1);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // decrease baseToken price
+        bPriceFeed1.setLatestAnswer(bPriceFeed1.latestAnswer() / 2);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+
+        // try increase position
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionDecrease_NonDebt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 yield = 2e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(caliber), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // generate positive yield in vault
+        deal(address(baseToken), address(vault), inputAmount1 + yield, true);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        uint256 sharesToRedeem = vault.previewWithdraw(inputAmount2);
+
+        instructions[0] =
+            WeirollUtils._build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
+
+        // try decrease position
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_InvalidPositionValueChange_PositionDecrease_Debt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount1 = 3e18;
+        uint256 inputAmount2 = 1e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount1 + inputAmount2, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount1);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // increase baseToken price
+        bPriceFeed1.setLatestAnswer(bPriceFeed1.latestAnswer() * 2);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+
+        // try decrease position
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.InvalidPositionValueChange.selector);
+        caliber.managePosition(instructions);
     }
 
     function test_RevertGiven_PositionCreated_WhileInRecoveryMode()
@@ -756,6 +1112,73 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // check security council cannot increase position
         vm.prank(securityCouncil);
         vm.expectRevert(ICaliber.RecoveryMode.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_NonDebt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        // a1 >= 0.99 * (a0 + a1)
+        // <=> a1 >= (0.99 / 0.01) * a0
+        uint256 assets0 = 1e30 * PRICE_B_A;
+        uint256 assets1 = (1e30 * (10_000 - DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS) / DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        deal(address(accountingToken), address(caliber), assets0, true);
+        deal(address(baseToken), address(caliber), assets1, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), assets0, assets1);
+        instructions[1] = WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool));
+
+        // open position with addLiquidity (both sides of pool)
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        instructions[0] = WeirollUtils._buildMockPoolRemoveLiquidityOneSideInstruction(
+            POOL_POS_ID, address(pool), pool.balanceOf(address(caliber)), false
+        );
+
+        // close position with removeLiquidityOneSide
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        caliber.managePosition(instructions);
+    }
+
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_Debt_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(borrowModule), inputAmount, true);
+
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        // increase debt value
+        borrowModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS + 1);
+
+        // turn on recovery mode
+        vm.prank(dao);
+        caliber.setRecoveryMode(true);
+
+        instructions[0] =
+            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
         caliber.managePosition(instructions);
     }
 

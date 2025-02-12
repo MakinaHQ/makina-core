@@ -115,7 +115,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
         uint256 inputAmount = 3e18;
-        borrowModule.setRateBps(10_000 * 2);
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
         ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
@@ -129,6 +128,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(borrowModuleInstructions);
 
+        // increase caliber debt
+        borrowModule.setRateBps(10_000 * 2);
+        caliber.accountForPosition(borrowModuleInstructions[1]);
         caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -179,7 +181,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
 
         uint256 inputAmount2 = 1e18;
-        borrowModule.setRateBps(10_000 * 2);
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
 
         ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
@@ -192,6 +193,11 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // open debt position in caliber
         vm.prank(mechanic);
         caliber.managePosition(borrowModuleInstructions);
+
+        // increase caliber debt
+        borrowModule.setRateBps(10_000 * 2);
+        caliber.accountForPosition(borrowModuleInstructions[1]);
+        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         // check that machine total aum remains the same
         vm.expectEmit(false, false, false, true, address(machine));

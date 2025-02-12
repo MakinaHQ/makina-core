@@ -131,6 +131,34 @@ const addLiquidityOneSide0MockPoolInstruction = [
   "0",
 ];
 
+const addLiquidityOneSide1MockPoolInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0x095ea7b3010001ffffffffff", mockBaseTokenAddr]),
+    ethers.concat(["0x8e022364010102ffffffffff", mockPoolAddr]),
+  ]),
+  getStateHash([
+    ethers.zeroPadValue(mockPoolAddr, 32),
+    ethers.zeroPadValue(mockBaseTokenAddr, 32),
+  ]),
+  "0xa0000000000000000000000000000000",
+  mockPoolAddrPosId,
+  false,
+  keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
+  "0",
+];
+
+const removeLiquidityOneSide0MockPoolInstruction = [
+  keccak256EncodePacked([
+    ethers.concat(["0xdf7aebb9010001ffffffffff", mockPoolAddr]),
+  ]),
+  getStateHash([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
+  "0x40000000000000000000000000000000",
+  mockPoolAddrPosId,
+  false,
+  keccak256EncodePacked([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
+  "0",
+];
+
 const removeLiquidityOneSide1MockPoolInstruction = [
   keccak256EncodePacked([
     ethers.concat(["0xdf7aebb9010001ffffffffff", mockPoolAddr]),
@@ -180,6 +208,8 @@ const values = [
   accountingMockBorrowModuleInstruction,
   addLiquidityMockPoolInstruction,
   addLiquidityOneSide0MockPoolInstruction,
+  addLiquidityOneSide1MockPoolInstruction,
+  removeLiquidityOneSide0MockPoolInstruction,
   removeLiquidityOneSide1MockPoolInstruction,
   accountingMockPoolInstruction,
   harvestMockBaseTokenInstruction,
@@ -205,9 +235,11 @@ const treeData = {
   proofAccountingMockBorrowModule: tree.getProof(5),
   proofAddLiquidityMockPool: tree.getProof(6),
   proofAddLiquidityOneSide0MockPool: tree.getProof(7),
-  proofRemoveLiquidityOneSide1MockPool: tree.getProof(8),
-  proofAccountingMockPool: tree.getProof(9),
-  proofHarvestMockBaseToken: tree.getProof(10),
+  proofAddLiquidityOneSide1MockPool: tree.getProof(8),
+  proofRemoveLiquidityOneSide0MockPool: tree.getProof(9),
+  proofRemoveLiquidityOneSide1MockPool: tree.getProof(10),
+  proofAccountingMockPool: tree.getProof(11),
+  proofHarvestMockBaseToken: tree.getProof(12),
 };
 
 fs.writeFileSync(

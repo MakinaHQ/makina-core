@@ -295,39 +295,45 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
         _checkInstructionIsAllowed(managingInstruction);
 
-        uint256 inputTokensValueBefore;
-        if (!$._recoveryMode) {
-            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-                address _affectedToken = managingInstruction.affectedTokens[i];
-                if ($._baseTokenToPositionId[_affectedToken] == 0) {
-                    revert InvalidAffectedToken();
-                }
-                inputTokensValueBefore +=
-                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        uint256 affectedTokensValueBefore;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[_affectedToken] == 0) {
+                revert InvalidAffectedToken();
             }
+            affectedTokensValueBefore +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
 
         _execute(managingInstruction.commands, managingInstruction.state);
 
         (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
 
-        if (change >= 0) {
-            if ($._recoveryMode) {
-                revert RecoveryMode();
-            }
-            uint256 inputTokensValueAfter;
-            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-                address _affectedToken = managingInstruction.affectedTokens[i];
-                inputTokensValueAfter +=
-                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
-            }
-            int256 inputTokensValueChange = int256(inputTokensValueBefore) - int256(inputTokensValueAfter);
-            if (
-                inputTokensValueChange > 0
-                    && uint256(change) < uint256(inputTokensValueChange).mulDiv(MAX_BPS - $._maxMgmtLossBps, MAX_BPS)
-            ) {
-                revert MaxValueLossExceeded();
-            }
+        uint256 affectedTokensValueAfter;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            affectedTokensValueAfter +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
+        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
+        bool isExpectedPositiveIncrease = managingInstruction.isDebt == isBaseTokenInflow;
+        bool isPositionIncrease = change >= 0;
+        uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
+        // uint256 maxMgmtLossBps = isPositionIncrease ? $._maxIncreasePositionLossBps : $._maxDecreasePositionLossBps;
+
+        if (isExpectedPositiveIncrease != isPositionIncrease) {
+            revert InvalidPositionValueChange();
+        }
+
+        if (isPositionIncrease && $._recoveryMode) {
+            revert RecoveryMode();
+        }
+
+        if (isBaseTokenInflow) {
+            _checkPositionMaxChange(absChange, affectedTokensValueAfter - affectedTokensValueBefore, $._maxMgmtLossBps);
+        } else {
+            _checkPositionMinChange(absChange, affectedTokensValueBefore - affectedTokensValueAfter, $._maxMgmtLossBps);
         }
 
         return (value, change);
@@ -566,6 +572,28 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 price =
             IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+    }
+
+    /// @dev Checks that position value change is greater than minimum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMinChange(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+        internal
+        pure
+    {
+        uint256 minChange = affectedTokensValChange.mulDiv(MAX_BPS - maxLossBps, MAX_BPS);
+        if (positionValChange < minChange) {
+            revert MaxValueLossExceeded();
+        }
+    }
+
+    /// @dev Checks that position value change is less than maximum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMaxChange(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+        internal
+        pure
+    {
+        uint256 maxChange = affectedTokensValChange.mulDiv(MAX_BPS + maxLossBps, MAX_BPS);
+        if (positionValChange > maxChange) {
+            revert MaxValueLossExceeded();
+        }
     }
 
     /// @dev Checks if the instruction is allowed for a given position.
