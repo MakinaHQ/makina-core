@@ -10,10 +10,11 @@ import {AggregatorV2V3Interface} from "./interfaces/AggregatorV2V3Interface.sol"
 contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
 
+    /// @dev Token => Feed or pair of feeds used to price the token
+    mapping(address token => TokenFeedData feedData) private _tokenFeedData;
+
     /// @inheritdoc IOracleRegistry
     mapping(address feed => uint256 stalenessThreshold) public feedStaleThreshold;
-
-    mapping(address token => TokenFeedData feedData) private _tokenFeedData;
 
     function initialize(address initialAuthority_) public initializer {
         __AccessManaged_init(initialAuthority_);
@@ -31,6 +32,9 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
         uint8 quoteFDDecimalsSum = _getFeedDecimals(quoteFD.feed1) + _getFeedDecimals(quoteFD.feed2);
         uint8 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
+
+        // price = 10^(quoteTokenDecimals - quoteFeedsDecimalsSum - baseFeedsDecimalsSum) *
+        //  (baseFeedPrice1 * baseFeedPrice2) / (quoteFeedPrice1 * quoteFeedPrice2)
 
         if (quoteTokenDecimals + quoteFDDecimalsSum < baseFDDecimalsSum) {
             return (10 ** (quoteTokenDecimals + quoteFDDecimalsSum)).mulDiv(
