@@ -30,10 +30,18 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
         uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
         uint8 quoteFDDecimalsSum = _getFeedDecimals(quoteFD.feed1) + _getFeedDecimals(quoteFD.feed2);
+        uint8 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
 
-        return (10 ** IERC20Metadata(quoteToken).decimals()).mulDiv(
-            (10 ** quoteFDDecimalsSum) * _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
-            (10 ** baseFDDecimalsSum) * _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
+        if (quoteTokenDecimals + quoteFDDecimalsSum < baseFDDecimalsSum) {
+            return (10 ** (quoteTokenDecimals + quoteFDDecimalsSum)).mulDiv(
+                _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
+                (10 ** baseFDDecimalsSum) * _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
+            );
+        }
+
+        return (10 ** (quoteTokenDecimals + quoteFDDecimalsSum - baseFDDecimalsSum)).mulDiv(
+            _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
+            _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
         );
     }
 
