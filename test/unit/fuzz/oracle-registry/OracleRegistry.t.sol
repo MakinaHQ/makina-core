@@ -41,10 +41,10 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         data.qf1Decimals = uint8(bound(data.qf1Decimals, 6, 18));
         data.qf2Decimals = uint8(bound(data.qf2Decimals, 6, 18));
 
-        data.price_b_x = uint32(bound(data.price_b_x, 1, 1e4));
-        data.price_x_e = uint32(bound(data.price_x_e, 1, 1e2));
-        data.price_q_y = uint32(bound(data.price_q_y, 1, 1e4));
-        data.price_y_e = uint32(bound(data.price_y_e, 1, 1e2));
+        data.price_b_x = uint32(bound(data.price_b_x, 1, 1e5));
+        data.price_x_e = uint32(bound(data.price_x_e, 1, 1e4));
+        data.price_q_y = uint32(bound(data.price_q_y, 1, 1e5));
+        data.price_y_e = uint32(bound(data.price_y_e, 1, 1e4));
         price_b_e = data.price_b_x * data.price_x_e;
         price_q_e = data.price_q_y * data.price_y_e;
 
