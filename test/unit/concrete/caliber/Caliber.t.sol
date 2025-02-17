@@ -19,7 +19,17 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(
-            address(caliber), address(accountingToken), address(0), address(0), 0, address(0), 0, address(0), 0
+            address(caliber),
+            address(accountingToken),
+            address(0),
+            address(0),
+            0,
+            address(0),
+            0,
+            address(0),
+            0,
+            address(0),
+            0
         );
 
         vm.prank(dao);

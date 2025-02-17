@@ -9,7 +9,7 @@ interface ICaliber {
     error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidAffectedToken();
-    error InvalidPositionValueChange();
+    error InvalidPositionChangeDirection();
     error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
@@ -198,7 +198,7 @@ interface ICaliber {
     function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
 
     /// @notice Accounts for a batch of positions.
-    /// @dev If a position value goes to zero, it is closed.
+    /// @dev If a position value reaches zero, it is closed, i.e. removed from storage.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
 
@@ -206,13 +206,33 @@ interface ICaliber {
     /// @param instructions The array of accounting instructions to be performed before the AUM computation.
     function updateAndReportCaliberAUM(Instruction[] calldata instructions) external;
 
-    /// @notice Updates the state of a position.
-    /// @dev Each time a position is managed, the caliber also performs accounting,
-    /// and creates or closes it if needed.
-    /// @param instructions The array containing a manage instruction and optionally
-    /// and accounting instruction, both for the same position.
+    /// @notice Manages a position's state through paired management and accounting instructions
+    /// @dev Performs accounting updates and modifies contract storage by:
+    /// - Adding new positions to storage when created.
+    /// - Removing positions from storage when value reaches zero.
+    /// @dev Applies value preservation checks using a validation matrix to prevent
+    /// economic inconsistencies between position changes and token flows.
+    ///
+    /// The matrix evaluates three factors to determine required validations:
+    /// - Base Token Inflow - Whether the contract's base token balance increases during operation
+    /// - Debt Position - Whether position represents protocol liability (true) vs asset (false)
+    /// - Position Δ direction - Direction of position value change (increase/decrease)
+    ///
+    /// ┌───────────────────┬───────────────┬──────────────────────┬───────────────────────────┐
+    /// │ Base Token Inflow │ Debt Position │ Position Δ direction │ Action                    │
+    /// ├───────────────────┼───────────────┼──────────────────────┼───────────────────────────┤
+    /// │ No                │ No            │ Decrease             │ Revert: Invalid direction │
+    /// │ No                │ Yes           │ Increase             │ Revert: Invalid direction │
+    /// │ No                │ No            │ Increase             │ Minimum Δ Check           │
+    /// │ No                │ Yes           │ Decrease             │ Minimum Δ Check           │
+    /// │ Yes               │ No            │ Decrease             │ Maximum Δ Check           │
+    /// │ Yes               │ Yes           │ Increase             │ Maximum Δ Check           │
+    /// │ Yes               │ No            │ Increase             │ No check (favorable move) │
+    /// │ Yes               │ Yes           │ Decrease             │ No check (favorable move) │
+    /// └───────────────────┴───────────────┴──────────────────────┴───────────────────────────┘
+    /// @param instructions The array containing paired management and accounting instructions.
     /// @return value The new position value.
-    /// @return change The change in the position value.
+    /// @return change The signed position value delta.
     function managePosition(Instruction[] calldata instructions) external returns (uint256 value, int256 change);
 
     /// @notice Harvests one or multiple positions.

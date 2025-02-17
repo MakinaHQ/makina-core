@@ -300,6 +300,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenPosition();
         }
 
+        _accountForPosition(accountingInstruction);
+
         _checkInstructionIsAllowed(managingInstruction);
 
         uint256 affectedTokensValueBefore;
@@ -324,23 +326,23 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
 
         bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
-        bool isExpectedPositionIncrease = managingInstruction.isDebt == isBaseTokenInflow;
         bool isPositionIncrease = change >= 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
-
-        if (isExpectedPositionIncrease != isPositionIncrease) {
-            revert InvalidPositionValueChange();
-        }
 
         if (isPositionIncrease && $._recoveryMode) {
             revert RecoveryMode();
         }
 
         if (isBaseTokenInflow) {
-            _checkPositionMaxChange(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
+            if (managingInstruction.isDebt == isPositionIncrease) {
+                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
+            }
         } else {
-            _checkPositionMinChange(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
+            if (managingInstruction.isDebt == isPositionIncrease) {
+                revert InvalidPositionChangeDirection();
+            }
+            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
         return (value, change);
@@ -588,8 +590,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 
-    /// @dev Checks that position value change is greater than minimum value relative to affected token balance changes and loss tolerance.
-    function _checkPositionMinChange(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+    /// @dev Checks that absolute position value change is greater than minimum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMinDelta(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
         internal
         pure
     {
@@ -599,8 +601,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    /// @dev Checks that position value change is less than maximum value relative to affected token balance changes and loss tolerance.
-    function _checkPositionMaxChange(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+    /// @dev Checks that absolute position value change is less than maximum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMaxDelta(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
         internal
         pure
     {

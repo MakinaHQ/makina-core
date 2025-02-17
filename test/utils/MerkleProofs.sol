@@ -29,6 +29,18 @@ library MerkleProofs {
         return _getMerkleData().readBytes32Array(".proofAccountingMock4626");
     }
 
+    function _getSupplyMockSupplyModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofSupplyMockSupplyModule");
+    }
+
+    function _getWithdrawMockSupplyModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofWithdrawMockSupplyModule");
+    }
+
+    function _getAccountingMockSupplyModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofAccountingMockSupplyModule");
+    }
+
     function _getBorrowMockBorrowModuleInstrProof() internal view returns (bytes32[] memory) {
         return _getMerkleData().readBytes32Array(".proofBorrowMockBorrowModule");
     }
@@ -61,8 +73,12 @@ library MerkleProofs {
         return _getMerkleData().readBytes32Array(".proofRemoveLiquidityOneSide1MockPool");
     }
 
-    function _getAccountingMockPoolInstrProof() internal view returns (bytes32[] memory) {
-        return _getMerkleData().readBytes32Array(".proofAccountingMockPool");
+    function _getAccounting0MockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofAccounting0MockPool");
+    }
+
+    function _getAccounting1MockPoolInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofAccounting1MockPool");
     }
 
     function _getHarvestMockBaseTokenInstrProof() internal view returns (bytes32[] memory) {

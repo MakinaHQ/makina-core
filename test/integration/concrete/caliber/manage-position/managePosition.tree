@@ -39,9 +39,9 @@ managePosition.t.sol
 │                                      ├── when the second instruction's affected tokens list contains non-base tokens
 │                                      │  └── it should revert with InvalidAffectedToken
 │                                      └── when the second instruction's affected tokens list only contains base tokens
-│                                         ├── given the position expected change direction does not correspond actual change direction
-│                                         │  └── it should revert with InvalidPositionValueChange
-│                                         └── given the position expected change direction corresponds to the actual change direction
+│                                         ├── given calibers globally spends base tokens and the position value moves in wrong direction
+│                                         │  └── it should revert with InvalidPositionChangeDirection
+│                                         └── given calibers either globally receives base tokens or the position moves in expected direction
 │                                            ├── given the position value did not decrease
 │                                            │  ├── given the new position value is zero
 │                                            │  │  └── it should not close or open the position
@@ -76,13 +76,13 @@ managePosition.t.sol
 └── given recovery mode is on
    ├── when sender is not the Security Council
    │  └── it should revert with UnauthorizedOperator
-   └── when sender is the Security Council
-      ├── given the position expected change direction does not correspond actual change direction
-      │  └── it should revert with InvalidPositionValueChange
-      └── given the position expected change direction corresponds to the actual change direction
-         ├── given the position value did not decrease
-         │  └── it should revert with RecoveryMode
-         └── given the position value decreased
+   └── when sender is the Security Council  
+      ├── given the position value did not decrease
+      │  └── it should revert with RecoveryMode
+      └── given the position value decreased
+         ├── given calibers globally spends base tokens and the position value moves in wrong direction
+	      │  └── it should revert with InvalidPositionChangeDirection
+         └── given calibers either globally receives base tokens or the position moves in expected direction
             ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
             │  └── it should revert with MaxValueLossExceeded
             └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps

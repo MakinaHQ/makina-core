@@ -142,12 +142,14 @@ abstract contract Base_Test is Base {
         address _mockBaseToken,
         address _mockVault,
         uint256 _mockVaultPosId,
+        address _mockSupplyModule,
+        uint256 _mockSupplyModulePosId,
         address _mockBorrowModule,
         uint256 _mockBorrowModulePosId,
         address _mockPool,
         uint256 _mockPoolPosId
     ) internal {
-        string[] memory command = new string[](11);
+        string[] memory command = new string[](13);
         command[0] = "yarn";
         command[1] = "genMerkleDataMock";
         command[2] = vm.toString(_caliber);
@@ -155,10 +157,12 @@ abstract contract Base_Test is Base {
         command[4] = vm.toString(_mockBaseToken);
         command[5] = vm.toString(_mockVault);
         command[6] = vm.toString(_mockVaultPosId);
-        command[7] = vm.toString(_mockBorrowModule);
-        command[8] = vm.toString(_mockBorrowModulePosId);
-        command[9] = vm.toString(_mockPool);
-        command[10] = vm.toString(_mockPoolPosId);
+        command[7] = vm.toString(_mockSupplyModule);
+        command[8] = vm.toString(_mockSupplyModulePosId);
+        command[9] = vm.toString(_mockBorrowModule);
+        command[10] = vm.toString(_mockBorrowModulePosId);
+        command[11] = vm.toString(_mockPool);
+        command[12] = vm.toString(_mockPoolPosId);
         vm.ffi(command);
     }
 }
