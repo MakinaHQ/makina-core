@@ -24,35 +24,24 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     }
 
     /// @inheritdoc ICaliberFactory
-    function deployCaliber(
-        address hubMachineEndpoint,
-        address accountingToken,
-        uint256 accountingTokenPosId,
-        uint256 initialPositionStaleThreshold,
-        bytes32 initialAllowedInstrRoot,
-        uint256 initialTimelockDuration,
-        uint256 initialMaxMgmtLossBps,
-        uint256 initialMaxSwapLossBps,
-        address initialMechanic,
-        address initialSecurityCouncil,
-        address initialAuthority
-    ) external override restricted returns (address) {
-        ICaliber.InitParams memory params = ICaliber.InitParams({
-            hubMachineEndpoint: hubMachineEndpoint,
+    function deployCaliber(CaliberDeployParams calldata deployParams) external override restricted returns (address) {
+        ICaliber.InitParams memory initParams = ICaliber.InitParams({
+            hubMachineEndpoint: deployParams.hubMachineEndpoint,
             mailboxBeacon: IHubRegistry(registry).hubDualMailboxBeacon(),
-            accountingToken: accountingToken,
-            accountingTokenPosId: accountingTokenPosId,
-            initialPositionStaleThreshold: initialPositionStaleThreshold,
-            initialAllowedInstrRoot: initialAllowedInstrRoot,
-            initialTimelockDuration: initialTimelockDuration,
-            initialMaxMgmtLossBps: initialMaxMgmtLossBps,
-            initialMaxSwapLossBps: initialMaxSwapLossBps,
-            initialMechanic: initialMechanic,
-            initialSecurityCouncil: initialSecurityCouncil,
-            initialAuthority: initialAuthority
+            accountingToken: deployParams.accountingToken,
+            accountingTokenPosId: deployParams.accountingTokenPosId,
+            initialPositionStaleThreshold: deployParams.initialPositionStaleThreshold,
+            initialAllowedInstrRoot: deployParams.initialAllowedInstrRoot,
+            initialTimelockDuration: deployParams.initialTimelockDuration,
+            initialMaxPositionIncreaseLossBps: deployParams.initialMaxPositionIncreaseLossBps,
+            initialMaxPositionDecreaseLossBps: deployParams.initialMaxPositionDecreaseLossBps,
+            initialMaxSwapLossBps: deployParams.initialMaxSwapLossBps,
+            initialMechanic: deployParams.initialMechanic,
+            initialSecurityCouncil: deployParams.initialSecurityCouncil,
+            initialAuthority: deployParams.initialAuthority
         });
         address caliber = address(
-            new BeaconProxy(IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (params)))
+            new BeaconProxy(IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams)))
         );
         isCaliber[caliber] = true;
         emit CaliberDeployed(caliber);

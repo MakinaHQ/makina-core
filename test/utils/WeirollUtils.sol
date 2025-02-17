@@ -8,6 +8,8 @@ import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 import {MerkleProofs} from "./MerkleProofs.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
+import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 
 library WeirollUtils {
@@ -63,7 +65,14 @@ library WeirollUtils {
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -95,7 +104,14 @@ library WeirollUtils {
         bytes32[] memory merkleProof = MerkleProofs._getRedeem4626InstrProof();
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -142,7 +158,235 @@ library WeirollUtils {
         bytes32[] memory merkleProof = MerkleProofs._getAccounting4626InstrProof();
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.ACCOUNTING,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
+        );
+    }
+
+    function _buildMockSupplyModuleSupplyInstruction(uint256 _posId, address _supplyModule, uint256 _assets)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockSupplyModule(_supplyModule).asset();
+
+        bytes32[] memory commands = new bytes32[](2);
+        // "0x095ea7b3010001ffffffffff" + MockSupplyModule(_supplyModule).asset()
+        commands[0] = buildCommand(
+            IERC20.approve.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            MockSupplyModule(_supplyModule).asset()
+        );
+        // "0x354030230101ffffffffffff" + _supplyModule
+        commands[1] = buildCommand(
+            MockSupplyModule.supply.selector,
+            0x01, // call
+            0x01ffffffffff, // 1 input at indices 1 of state
+            0xff, // ignore result
+            _supplyModule
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_supplyModule);
+        state[1] = abi.encode(_assets);
+
+        bytes32[] memory merkleProof = MerkleProofs._getSupplyMockSupplyModuleInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
+        );
+    }
+
+    function _buildMockSupplyModuleWithdrawInstruction(uint256 _posId, address _supplyModule, uint256 _assets)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockSupplyModule(_supplyModule).asset();
+
+        bytes32[] memory commands = new bytes32[](1);
+        // "0x2e1a7d4d0100ffffffffffff" + _supplyModule
+        commands[0] = buildCommand(
+            MockSupplyModule.withdraw.selector,
+            0x01, // call
+            0x00ffffffffff, // 1 input at indices 0 of state
+            0xff, // ignore result
+            _supplyModule
+        );
+
+        bytes[] memory state = new bytes[](1);
+        state[0] = abi.encode(_assets);
+
+        bytes32[] memory merkleProof = MerkleProofs._getWithdrawMockSupplyModuleInstrProof();
+
+        uint128 stateBitmap = 0x00000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
+        );
+    }
+
+    function _buildMockSupplyModuleAccountingInstruction(address _caliber, uint256 _posId, address _supplyModule)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockSupplyModule(_supplyModule).asset();
+
+        bytes32[] memory commands = new bytes32[](1);
+        // "0x1aefb1070200ffffffffff00" + _supplyModule
+        commands[0] = buildCommand(
+            MockSupplyModule.collateralOf.selector,
+            0x02, // static call
+            0x00ffffffffff, // 1 input at index 0 of state
+            0x00, // store fixed size result at index 0 of state
+            _supplyModule
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_caliber);
+        state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+
+        bytes32[] memory merkleProof = MerkleProofs._getAccountingMockSupplyModuleInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId,
+            false,
+            ICaliber.InstructionType.ACCOUNTING,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
+        );
+    }
+
+    function _buildMockBorrowModuleBorrowInstruction(uint256 _posId, address _borrowModule, uint256 _assets)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockBorrowModule(_borrowModule).asset();
+
+        bytes32[] memory commands = new bytes32[](1);
+        // "0xc5ebeaec0100ffffffffffff" + _borrowModule
+        commands[0] = buildCommand(
+            MockBorrowModule.borrow.selector,
+            0x01, // call
+            0x00ffffffffff, // 1 input at indices 0 of state
+            0xff, // ignore result
+            _borrowModule
+        );
+
+        bytes[] memory state = new bytes[](1);
+        state[0] = abi.encode(_assets);
+
+        bytes32[] memory merkleProof = MerkleProofs._getBorrowMockBorrowModuleInstrProof();
+
+        uint128 stateBitmap = 0x00000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, true, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockBorrowModuleRepayInstruction(uint256 _posId, address _borrowModule, uint256 _assets)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockBorrowModule(_borrowModule).asset();
+
+        bytes32[] memory commands = new bytes32[](2);
+        // "0x095ea7b3010001ffffffffff" + MockBorrowModule(_borrowModule).asset()
+        commands[0] = buildCommand(
+            IERC20.approve.selector,
+            0x01, // call
+            0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
+            0xff, // ignore result
+            MockBorrowModule(_borrowModule).asset()
+        );
+        // "0x371fd8e60101ffffffffffff" + _borrowModule
+        commands[1] = buildCommand(
+            MockBorrowModule.repay.selector,
+            0x01, // call
+            0x01ffffffffff, // 1 input at indices 1 of state
+            0xff, // ignore result
+            _borrowModule
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_borrowModule);
+        state[1] = abi.encode(_assets);
+
+        bytes32[] memory merkleProof = MerkleProofs._getRepayMockBorrowModuleInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, true, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockBorrowModuleAccountingInstruction(address _caliber, uint256 _posId, address _borrowModule)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        address[] memory affectedTokens = new address[](1);
+        affectedTokens[0] = MockBorrowModule(_borrowModule).asset();
+
+        bytes32[] memory commands = new bytes32[](1);
+        // "0xd283e75f0200ffffffffff00" + _borrowModule
+        commands[0] = buildCommand(
+            MockBorrowModule.debtOf.selector,
+            0x02, // static call
+            0x00ffffffffff, // 1 input at index 0 of state
+            0x00, // store fixed size result at index 0 of state
+            _borrowModule
+        );
+
+        bytes[] memory state = new bytes[](2);
+        state[0] = abi.encode(_caliber);
+        state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+
+        bytes32[] memory merkleProof = MerkleProofs._getAccountingMockBorrowModuleInstrProof();
+
+        uint128 stateBitmap = 0x80000000000000000000000000000000;
+
+        return ICaliber.Instruction(
+            _posId, true, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -191,28 +435,35 @@ library WeirollUtils {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
-    function _buildMockPoolAddLiquidityOneSide0Instruction(uint256 _posId, address _pool, uint256 _assets0)
+    function _buildMockPoolAddLiquidityOneSideInstruction(uint256 _posId, address _pool, uint256 _assets, bool _side)
         internal
         view
         returns (ICaliber.Instruction memory)
     {
-        address token0 = MockPool(_pool).token0();
+        address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
 
         address[] memory affectedTokens = new address[](1);
-        affectedTokens[0] = token0;
+        affectedTokens[0] = token;
 
         bytes32[] memory commands = new bytes32[](2);
-        // "0x095ea7b3010001ffffffffff" + token0
+        // "0x095ea7b3010001ffffffffff" + token
         commands[0] = buildCommand(
             IERC20.approve.selector,
             0x01, // call
             0x0001ffffffff, // 2 inputs at indices 0 and 1 of state
             0xff, // ignore result
-            token0
+            token
         );
         // "0x8e022364010102ffffffffff" + _pool
         commands[1] = buildCommand(
@@ -225,26 +476,36 @@ library WeirollUtils {
 
         bytes[] memory state = new bytes[](3);
         state[0] = abi.encode(_pool);
-        state[1] = abi.encode(_assets0);
-        state[2] = abi.encode(token0);
+        state[1] = abi.encode(_assets);
+        state[2] = abi.encode(token);
 
-        bytes32[] memory merkleProof = MerkleProofs._getAddLiquidityOneSide0MockPoolInstrProof();
+        bytes32[] memory merkleProof = _side
+            ? MerkleProofs._getAddLiquidityOneSide1MockPoolInstrProof()
+            : MerkleProofs._getAddLiquidityOneSide0MockPoolInstrProof();
 
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
-    function _buildMockPoolRemoveLiquidityOneSide1Instruction(uint256 _posId, address _pool, uint256 _lpTokens)
-        internal
-        view
-        returns (ICaliber.Instruction memory)
-    {
-        address token1 = MockPool(_pool).token1();
+    function _buildMockPoolRemoveLiquidityOneSideInstruction(
+        uint256 _posId,
+        address _pool,
+        uint256 _lpTokens,
+        bool _side
+    ) internal view returns (ICaliber.Instruction memory) {
+        address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
         address[] memory affectedTokens = new address[](1);
-        affectedTokens[0] = token1;
+        affectedTokens[0] = token;
 
         bytes32[] memory commands = new bytes32[](1);
         // "0xdf7aebb9010001ffffffffff" + _pool
@@ -258,25 +519,35 @@ library WeirollUtils {
 
         bytes[] memory state = new bytes[](2);
         state[0] = abi.encode(_lpTokens);
-        state[1] = abi.encode(token1);
+        state[1] = abi.encode(token);
 
-        bytes32[] memory merkleProof = MerkleProofs._getRemoveLiquidityOneSide1MockPoolInstrProof();
+        bytes32[] memory merkleProof = _side
+            ? MerkleProofs._getRemoveLiquidityOneSide1MockPoolInstrProof()
+            : MerkleProofs._getRemoveLiquidityOneSide0MockPoolInstrProof();
 
         uint128 stateBitmap = 0x40000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
-    /// @dev Builds a mock pool accounting instruction for removing liquidity one-sided from a pool (only token1)
-    function _buildMockPoolAccountingInstruction(address _caliber, uint256 _posId, address _pool)
+    /// @dev Builds a mock pool accounting instruction which considers one-sided liquidity removal from a pool (only token1)
+    function _buildMockPoolAccountingInstruction(address _caliber, uint256 _posId, address _pool, bool _side)
         internal
         view
         returns (ICaliber.Instruction memory)
     {
+        address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
         address[] memory affectedTokens = new address[](1);
-        affectedTokens[0] = MockPool(_pool).token1();
+        affectedTokens[0] = token;
 
         bytes32[] memory commands = new bytes32[](2);
         // "0x70a082310202ffffffffff02" + _pool
@@ -297,16 +568,24 @@ library WeirollUtils {
         );
 
         bytes[] memory state = new bytes[](3);
-        state[0] = abi.encode(MockPool(_pool).token1());
+        state[0] = abi.encode(token);
         state[1] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
         state[2] = abi.encode(_caliber);
 
-        bytes32[] memory merkleProof = MerkleProofs._getAccountingMockPoolInstrProof();
+        bytes32[] memory merkleProof =
+            _side ? MerkleProofs._getAccounting1MockPoolInstrProof() : MerkleProofs._getAccounting0MockPoolInstrProof();
 
         uint128 stateBitmap = 0xa0000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            false,
+            ICaliber.InstructionType.ACCOUNTING,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -334,7 +613,7 @@ library WeirollUtils {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            0, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
+            0, false, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
         );
     }
 }

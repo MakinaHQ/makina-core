@@ -11,6 +11,7 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
         vm.startPrank(dao);
         oracleRegistry.setFeedStaleThreshold(address(aPriceFeed1), 1 days);
         oracleRegistry.setFeedStaleThreshold(address(bPriceFeed1), 1 days);
+        caliber.setPositionStaleThreshold(1 days);
         vm.stopPrank();
 
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](0);
@@ -62,6 +63,26 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
 
         skip(1 hours);
 
+        uint256 inputAmount3 = 5e18;
+        deal(address(baseToken), address(borrowModule), inputAmount3, true);
+
+        ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
+        borrowModuleInstructions[0] =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount3);
+        borrowModuleInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, address(borrowModule)
+        );
+
+        vm.prank(mechanic);
+        caliber.managePosition(borrowModuleInstructions);
+
+        // check that AUM remains the same after borrowing baseToken from borrowModule
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
         uint256 yield = 1e18;
         deal(address(baseToken), address(vault), inputAmount2 + yield, true);
 
@@ -71,6 +92,16 @@ contract UpdateAndReportCaliberAUM_Integration_Concrete_Test is Caliber_Integrat
         expectedCaliberAUM = inputAmount + vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A;
         caliber.updateAndReportCaliberAUM(accountingInstructions);
         assertEq(caliber.lastReportedAUM(), expectedCaliberAUM);
+        assertEq(caliber.lastReportedAUMTime(), block.timestamp);
+
+        skip(1 hours);
+
+        borrowModule.setRateBps(10_000 * 2);
+        caliber.accountForPosition(borrowModuleInstructions[1]);
+
+        // check that AUM is worth zero if total debt exceeds total aum
+        caliber.updateAndReportCaliberAUM(accountingInstructions);
+        assertEq(caliber.lastReportedAUM(), 0);
         assertEq(caliber.lastReportedAUMTime(), block.timestamp);
     }
 

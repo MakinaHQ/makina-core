@@ -9,6 +9,7 @@ interface ICaliber {
     error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidPositionChangeDirection();
     error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
@@ -27,7 +28,12 @@ interface ICaliber {
     error ZeroPositionId();
 
     event MailboxDeployed(address indexed mailbox);
-    event MaxMgmtLossBpsChanged(uint256 indexed oldMaxMgmtLossBps, uint256 indexed newMaxMgmtLossBps);
+    event MaxPositionDecreaseLossBpsChanged(
+        uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
+    );
+    event MaxPositionIncreaseLossBpsChanged(
+        uint256 indexed oldMaxPositionIncreaseLossBps, uint256 indexed newMaxPositionIncreaseLossBps
+    );
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
@@ -53,7 +59,8 @@ interface ICaliber {
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
-    /// @param initialMaxMgmtLossBps The max allowed value loss (in basis point) for position management.
+    /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis point) for position increases.
+    /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
@@ -66,7 +73,8 @@ interface ICaliber {
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
-        uint256 initialMaxMgmtLossBps;
+        uint256 initialMaxPositionIncreaseLossBps;
+        uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         address initialSecurityCouncil;
@@ -75,6 +83,7 @@ interface ICaliber {
 
     /// @notice Instruction parameters.
     /// @param positionId The ID of the position concerned.
+    /// @param isDebt Whether the position is a debt.
     /// @param instructionType The type of the instruction.
     /// @param affectedTokens The array of affected tokens.
     /// @param commands The array of commands.
@@ -83,6 +92,7 @@ interface ICaliber {
     /// @param merkleProof The array of Merkle proof elements.
     struct Instruction {
         uint256 positionId;
+        bool isDebt;
         InstructionType instructionType;
         address[] affectedTokens;
         bytes32[] commands;
@@ -95,10 +105,12 @@ interface ICaliber {
     /// @param lastAccountingTime The last block timestamp when the position was accounted for.
     /// @param value The value of the position expressed in accounting token.
     /// @param isBaseToken Is the position a base token.
+    /// @param isDebt Whether the position is a debt.
     struct Position {
         uint256 lastAccountingTime;
         uint256 value;
         bool isBaseToken;
+        bool isDebt;
     }
 
     /// @notice Initializer of the contract.
@@ -144,8 +156,11 @@ interface ICaliber {
     /// @notice Effective time of the last scheduled allowedInstrRoot update.
     function pendingTimelockExpiry() external view returns (uint256);
 
-    /// @notice Max allowed value loss (in basis point) for position management.
-    function maxMgmtLossBps() external view returns (uint256);
+    /// @notice Max allowed value loss (in basis point) when increasing a position.
+    function maxPositionIncreaseLossBps() external view returns (uint256);
+
+    /// @notice Max allowed value loss (in basis point) when decreasing a position.
+    function maxPositionDecreaseLossBps() external view returns (uint256);
 
     /// @notice Max allowed value loss (in basis point) for base token swaps.
     function maxSwapLossBps() external view returns (uint256);
@@ -183,7 +198,7 @@ interface ICaliber {
     function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
 
     /// @notice Accounts for a batch of positions.
-    /// @dev If a position value goes to zero, it is closed.
+    /// @dev If a position value reaches zero, it is closed, i.e. removed from storage.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
 
@@ -191,13 +206,33 @@ interface ICaliber {
     /// @param instructions The array of accounting instructions to be performed before the AUM computation.
     function updateAndReportCaliberAUM(Instruction[] calldata instructions) external;
 
-    /// @notice Updates the state of a position.
-    /// @dev Each time a position is managed, the caliber also performs accounting,
-    /// and creates or closes it if needed.
-    /// @param instructions The array containing a manage instruction and optionally
-    /// and accounting instruction, both for the same position.
+    /// @notice Manages a position's state through paired management and accounting instructions
+    /// @dev Performs accounting updates and modifies contract storage by:
+    /// - Adding new positions to storage when created.
+    /// - Removing positions from storage when value reaches zero.
+    /// @dev Applies value preservation checks using a validation matrix to prevent
+    /// economic inconsistencies between position changes and token flows.
+    ///
+    /// The matrix evaluates three factors to determine required validations:
+    /// - Base Token Inflow - Whether the contract's base token balance increases during operation
+    /// - Debt Position - Whether position represents protocol liability (true) vs asset (false)
+    /// - Position Δ direction - Direction of position value change (increase/decrease)
+    ///
+    /// ┌───────────────────┬───────────────┬──────────────────────┬───────────────────────────┐
+    /// │ Base Token Inflow │ Debt Position │ Position Δ direction │ Action                    │
+    /// ├───────────────────┼───────────────┼──────────────────────┼───────────────────────────┤
+    /// │ No                │ No            │ Decrease             │ Revert: Invalid direction │
+    /// │ No                │ Yes           │ Increase             │ Revert: Invalid direction │
+    /// │ No                │ No            │ Increase             │ Minimum Δ Check           │
+    /// │ No                │ Yes           │ Decrease             │ Minimum Δ Check           │
+    /// │ Yes               │ No            │ Decrease             │ Maximum Δ Check           │
+    /// │ Yes               │ Yes           │ Increase             │ Maximum Δ Check           │
+    /// │ Yes               │ No            │ Increase             │ No check (favorable move) │
+    /// │ Yes               │ Yes           │ Decrease             │ No check (favorable move) │
+    /// └───────────────────┴───────────────┴──────────────────────┴───────────────────────────┘
+    /// @param instructions The array containing paired management and accounting instructions.
     /// @return value The new position value.
-    /// @return change The change in the position value.
+    /// @return change The signed position value delta.
     function managePosition(Instruction[] calldata instructions) external returns (uint256 value, int256 change);
 
     /// @notice Harvests one or multiple positions.
@@ -240,9 +275,13 @@ interface ICaliber {
     /// @param newMerkleRoot The root of the Merkle tree containing allowed instructions.
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
 
-    /// @notice Sets the max allowed value loss for position management.
-    /// @param newMaxMgmtLossBps The new max value loss in basis points.
-    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external;
+    /// @notice Sets the max allowed value loss for position increases.
+    /// @param newMaxPositionIncreaseLossBps The new max value loss in basis points.
+    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external;
+
+    /// @notice Sets the max allowed value loss for position decreases.
+    /// @param newMaxPositionDecreaseLossBps The new max value loss in basis points.
+    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps) external;
 
     /// @notice Sets the max allowed value loss for base token swaps.
     /// @param newMaxSwapLossBps The new max value loss in basis points.

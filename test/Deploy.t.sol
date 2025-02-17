@@ -61,8 +61,8 @@ contract Deploy_Test is Base_Test {
         }
 
         // Check that Calibers are correctly set up
-        DeployCalibers.CaliberDeploymentParams[] memory _calibersToDeploy =
-            abi.decode(vm.parseJson(jsonConstants, ".calibersToDeploy"), (DeployCalibers.CaliberDeploymentParams[]));
+        DeployCalibers.DeploymentParams[] memory _calibersToDeploy =
+            abi.decode(vm.parseJson(jsonConstants, ".calibersToDeploy"), (DeployCalibers.DeploymentParams[]));
         for (uint256 i; i < _calibersToDeploy.length; i++) {
             address _caliber = deployCalibers.deployedCalibers(i);
             assertTrue(deployMakinaCore.caliberFactory().isCaliber(_caliber));
@@ -70,7 +70,12 @@ contract Deploy_Test is Base_Test {
             assertEq(ICaliber(_caliber).accountingToken(), _calibersToDeploy[i].accountingToken);
             assertEq(ICaliber(_caliber).getPositionId(0), _calibersToDeploy[i].accountingTokenPosId);
             assertEq(ICaliber(_caliber).allowedInstrRoot(), _calibersToDeploy[i].initialAllowedInstrRoot);
-            assertEq(ICaliber(_caliber).maxMgmtLossBps(), _calibersToDeploy[i].initialMaxMgmtLossBps);
+            assertEq(
+                ICaliber(_caliber).maxPositionIncreaseLossBps(), _calibersToDeploy[i].initialMaxPositionIncreaseLossBps
+            );
+            assertEq(
+                ICaliber(_caliber).maxPositionDecreaseLossBps(), _calibersToDeploy[i].initialMaxPositionDecreaseLossBps
+            );
             assertEq(ICaliber(_caliber).maxSwapLossBps(), _calibersToDeploy[i].initialMaxSwapLossBps);
             assertEq(ICaliber(_caliber).mechanic(), _calibersToDeploy[i].initialMechanic);
             assertEq(ICaliber(_caliber).positionStaleThreshold(), _calibersToDeploy[i].initialPositionStaleThreshold);

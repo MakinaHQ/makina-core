@@ -2,17 +2,21 @@
 pragma solidity 0.8.28;
 
 import "forge-std/StdJson.sol";
+
+import {ICaliberFactory} from "../src/interfaces/ICaliberFactory.sol";
+
 import "../test/Base.sol";
 
 contract DeployCalibers is Script {
     using stdJson for string;
 
-    struct CaliberDeploymentParams {
+    struct DeploymentParams {
         address accountingToken;
         uint256 accountingTokenPosId;
         address hubMachineEndpoint;
         bytes32 initialAllowedInstrRoot;
-        uint256 initialMaxMgmtLossBps;
+        uint256 initialMaxPositionIncreaseLossBps;
+        uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         uint256 initialPositionStaleThreshold;
@@ -39,8 +43,8 @@ contract DeployCalibers is Script {
 
         // load in vars
         jsonConstants = vm.readFile(path);
-        CaliberDeploymentParams[] memory _calibersToDeploy =
-            abi.decode(vm.parseJson(jsonConstants, ".calibersToDeploy"), (CaliberDeploymentParams[]));
+        DeploymentParams[] memory _calibersToDeploy =
+            abi.decode(vm.parseJson(jsonConstants, ".calibersToDeploy"), (DeploymentParams[]));
         securityCouncil = abi.decode(vm.parseJson(jsonConstants, ".securityCouncil"), (address));
 
         // Read output from DeploySpectraGovernance script
@@ -56,17 +60,20 @@ contract DeployCalibers is Script {
         for (uint256 i; i < _calibersToDeploy.length; i++) {
             deployedCalibers.push(
                 caliberFactory.deployCaliber(
-                    _calibersToDeploy[i].hubMachineEndpoint,
-                    _calibersToDeploy[i].accountingToken,
-                    _calibersToDeploy[i].accountingTokenPosId,
-                    _calibersToDeploy[i].initialPositionStaleThreshold,
-                    _calibersToDeploy[i].initialAllowedInstrRoot,
-                    _calibersToDeploy[i].initialTimelockDuration,
-                    _calibersToDeploy[i].initialMaxMgmtLossBps,
-                    _calibersToDeploy[i].initialMaxSwapLossBps,
-                    _calibersToDeploy[i].initialMechanic,
-                    securityCouncil,
-                    accessManager
+                    ICaliberFactory.CaliberDeployParams(
+                        _calibersToDeploy[i].hubMachineEndpoint,
+                        _calibersToDeploy[i].accountingToken,
+                        _calibersToDeploy[i].accountingTokenPosId,
+                        _calibersToDeploy[i].initialPositionStaleThreshold,
+                        _calibersToDeploy[i].initialAllowedInstrRoot,
+                        _calibersToDeploy[i].initialTimelockDuration,
+                        _calibersToDeploy[i].initialMaxPositionIncreaseLossBps,
+                        _calibersToDeploy[i].initialMaxPositionDecreaseLossBps,
+                        _calibersToDeploy[i].initialMaxSwapLossBps,
+                        _calibersToDeploy[i].initialMechanic,
+                        securityCouncil,
+                        accessManager
+                    )
                 )
             );
         }

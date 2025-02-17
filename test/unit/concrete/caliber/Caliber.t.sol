@@ -18,7 +18,19 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
         caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(address(caliber), address(accountingToken), address(0), address(0), 0, address(0), 0);
+        _generateMerkleData(
+            address(caliber),
+            address(accountingToken),
+            address(0),
+            address(0),
+            0,
+            address(0),
+            0,
+            address(0),
+            0,
+            address(0),
+            0
+        );
 
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
@@ -38,7 +50,8 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
         assertEq(caliber.timelockDuration(), 1 hours);
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
-        assertEq(caliber.maxMgmtLossBps(), DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS);
+        assertEq(caliber.maxPositionIncreaseLossBps(), DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
+        assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 1);
@@ -176,17 +189,30 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
     }
 
-    function test_SetMaxMgmtLossBps_RevertWhen_CallerWithoutRole() public {
+    function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.setMaxMgmtLossBps(1000);
+        caliber.setMaxPositionIncreaseLossBps(1000);
     }
 
-    function test_setMaxMgmtLossBps() public {
+    function test_setMaxPositionIncreaseLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
-        emit ICaliber.MaxMgmtLossBpsChanged(DEFAULT_CALIBER_MAX_MGMT_LOSS_BPS, 1000);
+        emit ICaliber.MaxPositionIncreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS, 1000);
         vm.prank(dao);
-        caliber.setMaxMgmtLossBps(1000);
-        assertEq(caliber.maxMgmtLossBps(), 1000);
+        caliber.setMaxPositionIncreaseLossBps(1000);
+        assertEq(caliber.maxPositionIncreaseLossBps(), 1000);
+    }
+
+    function test_SetMaxPositionDecreaseLossBps_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setMaxPositionDecreaseLossBps(1000);
+    }
+
+    function test_setMaxPositionDecreaseLossBps() public {
+        vm.expectEmit(true, true, true, true, address(caliber));
+        emit ICaliber.MaxPositionDecreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS, 1000);
+        vm.prank(dao);
+        caliber.setMaxPositionDecreaseLossBps(1000);
+        assertEq(caliber.maxPositionDecreaseLossBps(), 1000);
     }
 
     function test_SetMaxSwapLossBps_RevertWhen_CallerWithoutRole() public {

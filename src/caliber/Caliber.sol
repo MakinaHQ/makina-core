@@ -40,7 +40,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 _timelockDuration;
         bytes32 _pendingAllowedInstrRoot;
         uint256 _pendingTimelockExpiry;
-        uint256 _maxMgmtLossBps;
+        uint256 _maxPositionIncreaseLossBps;
+        uint256 _maxPositionDecreaseLossBps;
         uint256 _maxSwapLossBps;
         bool _recoveryMode;
         mapping(address bt => uint256 posId) _baseTokenToPositionId;
@@ -73,7 +74,8 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
         $._timelockDuration = params.initialTimelockDuration;
-        $._maxMgmtLossBps = params.initialMaxMgmtLossBps;
+        $._maxPositionIncreaseLossBps = params.initialMaxPositionIncreaseLossBps;
+        $._maxPositionDecreaseLossBps = params.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
@@ -154,8 +156,13 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function maxMgmtLossBps() public view override returns (uint256) {
-        return _getCaliberStorage()._maxMgmtLossBps;
+    function maxPositionIncreaseLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxPositionIncreaseLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function maxPositionDecreaseLossBps() public view override returns (uint256) {
+        return _getCaliberStorage()._maxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -242,22 +249,26 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._positionIds.length();
         uint256 aum;
+        uint256 debt;
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
+            Position memory pos = $._positionById[posId];
             if ($._positionIdToBaseToken[posId] != address(0)) {
                 (uint256 value,) = accountForBaseToken(posId);
                 aum += value;
-            } else if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+            } else if (currentTimestamp - pos.lastAccountingTime > $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
+            } else if (pos.isDebt) {
+                debt += pos.value;
             } else {
-                aum += $._positionById[posId].value;
+                aum += pos.value;
             }
         }
 
-        $._lastReportedAUM = aum;
+        $._lastReportedAUM = aum > debt ? aum - debt : 0;
         $._lastReportedAUMTime = currentTimestamp;
 
-        ICaliberMailbox($._mailbox).notifyAccountingSlim(aum);
+        ICaliberMailbox($._mailbox).notifyAccountingSlim($._lastReportedAUM);
     }
 
     /// @inheritdoc ICaliber
@@ -279,7 +290,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         if (posId == 0) {
             revert ZeroPositionId();
         }
-        if (posId != accountingInstruction.positionId) {
+        if (posId != accountingInstruction.positionId || managingInstruction.isDebt != accountingInstruction.isDebt) {
             revert UnmatchingInstructions();
         }
         if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
@@ -289,41 +300,49 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             revert BaseTokenPosition();
         }
 
+        _accountForPosition(accountingInstruction);
+
         _checkInstructionIsAllowed(managingInstruction);
 
-        uint256 inputTokensValueBefore;
-        if (!$._recoveryMode) {
-            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-                address _affectedToken = managingInstruction.affectedTokens[i];
-                if ($._baseTokenToPositionId[_affectedToken] == 0) {
-                    revert InvalidAffectedToken();
-                }
-                inputTokensValueBefore +=
-                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        uint256 affectedTokensValueBefore;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            if ($._baseTokenToPositionId[_affectedToken] == 0) {
+                revert InvalidAffectedToken();
             }
+            affectedTokensValueBefore +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
 
         _execute(managingInstruction.commands, managingInstruction.state);
 
         (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
 
-        if (change >= 0) {
-            if ($._recoveryMode) {
-                revert RecoveryMode();
+        uint256 affectedTokensValueAfter;
+        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
+            address _affectedToken = managingInstruction.affectedTokens[i];
+            affectedTokensValueAfter +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
+        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
+        bool isPositionIncrease = change >= 0;
+        uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
+        uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
+
+        if (isPositionIncrease && $._recoveryMode) {
+            revert RecoveryMode();
+        }
+
+        if (isBaseTokenInflow) {
+            if (managingInstruction.isDebt == isPositionIncrease) {
+                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
             }
-            uint256 inputTokensValueAfter;
-            for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-                address _affectedToken = managingInstruction.affectedTokens[i];
-                inputTokensValueAfter +=
-                    _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        } else {
+            if (managingInstruction.isDebt == isPositionIncrease) {
+                revert InvalidPositionChangeDirection();
             }
-            int256 inputTokensValueChange = int256(inputTokensValueBefore) - int256(inputTokensValueAfter);
-            if (
-                inputTokensValueChange > 0
-                    && uint256(change) < uint256(inputTokensValueChange).mulDiv(MAX_BPS - $._maxMgmtLossBps, MAX_BPS)
-            ) {
-                revert MaxValueLossExceeded();
-            }
+            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
         return (value, change);
@@ -422,10 +441,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function setMaxMgmtLossBps(uint256 newMaxMgmtLossBps) external override restricted {
+    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        emit MaxMgmtLossBpsChanged($._maxMgmtLossBps, newMaxMgmtLossBps);
-        $._maxMgmtLossBps = newMaxMgmtLossBps;
+        emit MaxPositionIncreaseLossBpsChanged($._maxPositionIncreaseLossBps, newMaxPositionIncreaseLossBps);
+        $._maxPositionIncreaseLossBps = newMaxPositionIncreaseLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit MaxPositionDecreaseLossBpsChanged($._maxPositionDecreaseLossBps, newMaxPositionDecreaseLossBps);
+        $._maxPositionDecreaseLossBps = newMaxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
@@ -474,7 +500,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         $._baseTokenToPositionId[token] = posId;
         $._positionIdToBaseToken[posId] = token;
 
-        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true});
+        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true, isDebt: false});
         emit PositionCreated(posId);
 
         // Reverts if no price feed is registered for token in the oracle registry.
@@ -523,6 +549,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             pos.value = currentValue;
             pos.lastAccountingTime = block.timestamp;
             if (lastValue == 0) {
+                pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
                 emit PositionCreated(posId);
             }
@@ -563,6 +590,28 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 
+    /// @dev Checks that absolute position value change is greater than minimum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMinDelta(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+        internal
+        pure
+    {
+        uint256 minChange = affectedTokensValChange.mulDiv(MAX_BPS - maxLossBps, MAX_BPS);
+        if (positionValChange < minChange) {
+            revert MaxValueLossExceeded();
+        }
+    }
+
+    /// @dev Checks that absolute position value change is less than maximum value relative to affected token balance changes and loss tolerance.
+    function _checkPositionMaxDelta(uint256 positionValChange, uint256 affectedTokensValChange, uint256 maxLossBps)
+        internal
+        pure
+    {
+        uint256 maxChange = affectedTokensValChange.mulDiv(MAX_BPS + maxLossBps, MAX_BPS);
+        if (positionValChange > maxChange) {
+            revert MaxValueLossExceeded();
+        }
+    }
+
     /// @dev Checks if the instruction is allowed for a given position.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
@@ -576,6 +625,7 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
                 stateHash,
                 instruction.stateBitmap,
                 instruction.positionId,
+                instruction.isDebt,
                 affectedTokensHash,
                 instruction.instructionType
             )
@@ -599,12 +649,14 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         bytes32 stateHash,
         uint128 stateBitmap,
         uint256 posId,
+        bool isDebt,
         bytes32 affectedTokensHash,
         InstructionType instructionType
     ) internal returns (bool) {
-        // The state transition hash is the hash of the commands, state, bitmap, position ID, affected tokens and instruction type.
-        bytes32 stateTransitionHash =
-            keccak256(abi.encode(commandsHash, stateHash, stateBitmap, posId, affectedTokensHash, instructionType));
+        // The state transition hash is the hash of the commands, state, bitmap, position ID, isDebt flag, affected tokens and instruction type.
+        bytes32 stateTransitionHash = keccak256(
+            abi.encode(commandsHash, stateHash, stateBitmap, posId, isDebt, affectedTokensHash, instructionType)
+        );
         return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
     }
 
