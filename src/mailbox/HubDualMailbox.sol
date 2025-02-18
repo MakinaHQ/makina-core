@@ -58,4 +58,12 @@ contract HubDualMailbox is Initializable, IHubDualMailbox {
         lastReportedAum = aum;
         lastReportedAumTime = block.timestamp;
     }
+
+    /// @inheritdoc ICaliberMailbox
+    function getAccountingData() external view override returns (AccountingData memory) {
+        AccountingData memory _data;
+        (_data.totalAccountingTokenValue, _data.positions) = ICaliber(caliber).getPositionsValues();
+        _data.accountingTime = block.timestamp;
+        return _data;
+    }
 }

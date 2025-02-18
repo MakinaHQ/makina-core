@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 
 import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
 contract HubDualMailbox_Unit_Concrete_Test is Unit_Concrete_Test {
-    IHubDualMailbox internal hubDualMailbox;
-
     function setUp() public override {
         Unit_Concrete_Test.setUp();
 
@@ -17,7 +15,7 @@ contract HubDualMailbox_Unit_Concrete_Test is Unit_Concrete_Test {
         );
 
         (machine, caliber) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
-        hubDualMailbox = IHubDualMailbox(caliber.mailbox());
+        hubDualMailbox = HubDualMailbox(caliber.mailbox());
     }
 
     function test_Getters() public view {

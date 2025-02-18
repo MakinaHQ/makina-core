@@ -179,6 +179,9 @@ interface ICaliber {
     /// @dev Token => Registered as base token in this caliber
     function isBaseToken(address token) external view returns (bool);
 
+    /// @dev Checks if the accounting age of each non-base-token position is below the position staleness threshold.
+    function isAccountingFresh() external view returns (bool);
+
     /// @notice Adds a new base token.
     /// @param token The address of the base token.
     /// @param positionId The ID for the base token position.
@@ -205,6 +208,11 @@ interface ICaliber {
     /// @notice Updates and reports the caliber's AUM to the hub machine.
     /// @param instructions The array of accounting instructions to be performed before the AUM computation.
     function updateAndReportCaliberAUM(Instruction[] calldata instructions) external;
+
+    /// @notice Gets the caliber's AUM and individual positions values.
+    /// @return aum The caliber's AUM, i.e the total value of all positions.
+    /// @return positionsValues The array of encoded tuples of the form (positionId, value, isDebt).
+    function getPositionsValues() external view returns (uint256 aum, bytes[] memory positionsValues);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:
