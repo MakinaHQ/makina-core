@@ -8,8 +8,4 @@ interface ICaliberMailbox is IMailbox {
 
     /// @notice Address of the associated caliber.
     function caliber() external view returns (address);
-
-    /// @notice Notifies the mailbox with the last aum reported by the caliber.
-    /// @param aum The last reported aum.
-    function notifyAccountingSlim(uint256 aum) external;
 }

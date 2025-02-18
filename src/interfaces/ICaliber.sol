@@ -132,12 +132,6 @@ interface ICaliber {
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
 
-    /// @notice Caliber's AUM (expressed in accounting token) as of the last report to the hub machine.
-    function lastReportedAUM() external view returns (uint256);
-
-    /// @notice Timestamp of the last caliber's AUM report to the hub machine.
-    function lastReportedAUMTime() external view returns (uint256);
-
     /// @notice Maximum duration a position can remain unaccounted for before it is considered stale.
     function positionStaleThreshold() external view returns (uint256);
 
@@ -204,10 +198,6 @@ interface ICaliber {
     /// @dev If a position value reaches zero, it is closed, i.e. removed from storage.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
-
-    /// @notice Updates and reports the caliber's AUM to the hub machine.
-    /// @param instructions The array of accounting instructions to be performed before the AUM computation.
-    function updateAndReportCaliberAUM(Instruction[] calldata instructions) external;
 
     /// @notice Gets the caliber's AUM and individual positions values.
     /// @return aum The caliber's AUM, i.e the total value of all positions.

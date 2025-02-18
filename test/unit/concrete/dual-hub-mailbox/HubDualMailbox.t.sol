@@ -21,7 +21,5 @@ contract HubDualMailbox_Unit_Concrete_Test is Unit_Concrete_Test {
     function test_Getters() public view {
         assertEq(hubDualMailbox.machine(), address(machine));
         assertEq(hubDualMailbox.caliber(), address(caliber));
-        assertEq(hubDualMailbox.lastReportedAum(), 0);
-        assertEq(hubDualMailbox.lastReportedAumTime(), 0);
     }
 }

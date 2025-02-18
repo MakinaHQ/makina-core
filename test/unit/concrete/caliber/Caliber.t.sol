@@ -42,8 +42,6 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.accountingToken(), address(accountingToken));
-        assertEq(caliber.lastReportedAUM(), 0);
-        assertEq(caliber.lastReportedAUMTime(), 0);
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.recoveryMode(), false);
         assertEq(caliber.allowedInstrRoot(), MerkleProofs._getAllowedInstrMerkleRoot());
