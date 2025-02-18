@@ -26,8 +26,7 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Test {
         assertEq(machine.lastTotalAum(), 0);
         assertEq(machine.lastGlobalAccountingTime(), 0);
         assertEq(machine.getCalibersLength(), 1);
-        assertEq(machine.getSupportedChainId(0), block.chainid);
-        assertNotEq(machine.getMailbox(block.chainid), address(0));
+        assertNotEq(machine.hubCaliberMailbox(), address(0));
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 

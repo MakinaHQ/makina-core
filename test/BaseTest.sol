@@ -107,7 +107,7 @@ abstract contract Base_Test is Base {
                 })
             )
         );
-        Caliber _caliber = Caliber(ICaliberMailbox(_machine.getMailbox(block.chainid)).caliber());
+        Caliber _caliber = Caliber(ICaliberMailbox(_machine.hubCaliberMailbox()).caliber());
         return (_machine, _caliber);
     }
 

@@ -14,14 +14,14 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Machine_Integration
     }
 
     function test_NotifyIncomingTransfer_EmptyBalance() public {
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(baseToken));
         assertFalse(machine.isIdleToken(address(baseToken)));
     }
 
     function test_NotifyIncomingTransfer_EmptyBalanceAndNonPriceableToken() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(baseToken2));
         assertFalse(machine.isIdleToken(address(baseToken2)));
     }
@@ -29,7 +29,7 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Machine_Integration
     function test_NotifyIncomingTransfer_AccountingToken() public {
         uint256 inputAmount = 1;
         deal(address(accountingToken), address(machine), inputAmount, true);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(accountingToken));
         // call passes and token is still registered as idle
         assertTrue(machine.isIdleToken(address(accountingToken)));
@@ -39,7 +39,7 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Machine_Integration
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1;
         deal(address(baseToken2), address(machine), inputAmount, true);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         machine.notifyIncomingTransfer(address(baseToken2));
     }
@@ -47,7 +47,7 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Machine_Integration
     function test_NotifyIncomingTransfer_BaseToken() public {
         uint256 inputAmount = 1;
         deal(address(baseToken), address(machine), inputAmount, true);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(baseToken));
         assertTrue(machine.isIdleToken(address(baseToken)));
     }

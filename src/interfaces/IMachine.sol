@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 interface IMachine {
     error CaliberAccountingStale(uint256 caliberChainId);
+    error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);
     error MailboxAlreadyExists();
@@ -61,6 +62,16 @@ interface IMachine {
         string shareTokenSymbol;
     }
 
+    struct SpokeCaliberData {
+        uint256 chainId;
+        address machineMailbox;
+        uint256 timestamp;
+        uint256 netAum;
+        bytes[] positions; // abi.encode(positionId, positionSize)
+        bytes[] totalReceivedFromHM; // abi.encode(baseToken, nativeValue)
+        bytes[] totalSentToHM; // abi.encode(baseToken, nativeValue)
+    }
+
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
     function initialize(MachineInitParams calldata params) external;
@@ -103,16 +114,6 @@ interface IMachine {
 
     /// @notice Number of calibers associated with the machine.
     function getCalibersLength() external view returns (uint256);
-
-    /// @notice Returns the chain ID associated with the idx's caliber deployment.
-    /// @param idx The index of the caliber deployment.
-    /// @return chainId The chain ID of the caliber deployment.
-    function getSupportedChainId(uint256 idx) external view returns (uint256);
-
-    /// @notice Returns the mailbox for the caliber associated with the given chain ID.
-    /// @param chainId The chain ID of the caliber deployment.
-    /// @return mailbox The address of the mailbox.
-    function getMailbox(uint256 chainId) external view returns (address);
 
     /// @notice Returns whether a token is an idle token help by the machine.
     /// @param token The address of the token.
