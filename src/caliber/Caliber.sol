@@ -12,7 +12,6 @@ import {VM} from "./vm/VM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
-import {IMailbox} from "../interfaces/IMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
@@ -488,7 +487,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         returns (address)
     {
         address _mailbox = address(
-            new BeaconProxy(mailboxBeacon, abi.encodeCall(IMailbox.initialize, (hubMachineEndpoint, address(this))))
+            new BeaconProxy(
+                mailboxBeacon, abi.encodeCall(ICaliberMailbox.initialize, (hubMachineEndpoint, address(this)))
+            )
         );
         emit MailboxDeployed(_mailbox);
         return _mailbox;

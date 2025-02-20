@@ -3,18 +3,24 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
-import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
+import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
+import {Machine} from "src/machine/Machine.sol";
+import {Caliber} from "src/caliber/Caliber.sol";
+import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
     /// @dev A denotes the accounting token, B denotes the base token
     /// and E is the reference currency of the oracle registry.
     uint256 internal constant PRICE_A_E = 150;
@@ -26,6 +32,9 @@ abstract contract Integration_Concrete_Test is Base_Test {
     uint256 internal constant BORROW_POS_ID = 5;
     uint256 internal constant POOL_POS_ID = 6;
 
+    MockERC20 public accountingToken;
+    MockERC20 public baseToken;
+
     MockERC4626 internal vault;
     MockSupplyModule internal supplyModule;
     MockBorrowModule internal borrowModule;
@@ -36,7 +45,10 @@ abstract contract Integration_Concrete_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        _deployMockTokens();
+        _coreSharedSetup();
+
+        accountingToken = new MockERC20("accountingToken", "ACT", 18);
+        baseToken = new MockERC20("baseToken", "BT", 18);
 
         vault = new MockERC4626("vault", "VLT", IERC20(baseToken), 0);
         supplyModule = new MockSupplyModule(IERC20(baseToken));
@@ -46,7 +58,6 @@ abstract contract Integration_Concrete_Test is Base_Test {
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
-        vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
@@ -54,10 +65,65 @@ abstract contract Integration_Concrete_Test is Base_Test {
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
-        vm.stopPrank();
+    }
 
-        (machine, caliber) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
-        hubDualMailbox = HubDualMailbox(caliber.mailbox());
+    ///
+    /// Helper functions
+    ///
+
+    function _setUpCaliberMerkleRoot(Caliber _caliber) internal {
+        // generate merkle tree for instructions involving mock base token and vault
+        _generateMerkleData(
+            address(_caliber),
+            address(accountingToken),
+            address(baseToken),
+            address(vault),
+            VAULT_POS_ID,
+            address(supplyModule),
+            SUPPLY_POS_ID,
+            address(borrowModule),
+            BORROW_POS_ID,
+            address(pool),
+            POOL_POS_ID
+        );
+
+        vm.prank(dao);
+        _caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
+        skip(_caliber.timelockDuration() + 1);
+    }
+
+    function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {
+        deal(address(accountingToken), address(this), _amount1, true);
+        deal(address(baseToken), address(this), _amount2, true);
+        accountingToken.approve(address(pool), _amount1);
+        baseToken.approve(address(pool), _amount2);
+        pool.addLiquidity(_amount1, _amount2);
+    }
+
+    function _checkEncodedCaliberPosValue(
+        bytes memory encodedData,
+        uint256 expectedId,
+        uint256 expectedValue,
+        bool expectedIsDebt
+    ) internal pure {
+        (uint256 id, uint256 value, bool isDebt) = abi.decode(encodedData, (uint256, uint256, bool));
+        assertEq(id, expectedId);
+        assertEq(value, expectedValue);
+        assertEq(isDebt, expectedIsDebt);
+    }
+}
+
+abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test {
+    Machine public machine;
+    Caliber public caliber;
+    HubDualMailbox public hubDualMailbox;
+
+    function setUp() public virtual override {
+        Integration_Concrete_Test.setUp();
+        _hubSetup();
+
+        (machine, caliber, hubDualMailbox) =
+            _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
     ///
@@ -83,49 +149,33 @@ abstract contract Integration_Concrete_Test is Base_Test {
         caliber.addBaseToken(_token, _posId);
         _;
     }
+}
+
+abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test {
+    Caliber public caliber;
+    SpokeCaliberMailbox public spokeCaliberMailbox;
+
+    function setUp() public virtual override {
+        Integration_Concrete_Test.setUp();
+        _spokeSetup();
+
+        (caliber, spokeCaliberMailbox) =
+            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+    }
 
     ///
-    /// Helper functions
+    /// Modifiers
     ///
 
-    function _setUpCaliberMerkleRoot() internal {
-        // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(
-            address(caliber),
-            address(accountingToken),
-            address(baseToken),
-            address(vault),
-            VAULT_POS_ID,
-            address(supplyModule),
-            SUPPLY_POS_ID,
-            address(borrowModule),
-            BORROW_POS_ID,
-            address(pool),
-            POOL_POS_ID
-        );
-
+    modifier whileInRecoveryMode() {
         vm.prank(dao);
-        caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
-        skip(caliber.timelockDuration() + 1);
+        caliber.setRecoveryMode(true);
+        _;
     }
 
-    function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {
-        deal(address(accountingToken), address(this), _amount1, true);
-        deal(address(baseToken), address(this), _amount2, true);
-        accountingToken.approve(address(pool), _amount1);
-        baseToken.approve(address(pool), _amount2);
-        pool.addLiquidity(_amount1, _amount2);
-    }
-
-    function _checkEncodedCaliberPosValue(
-        bytes memory encodedData,
-        uint256 expectedId,
-        uint256 expectedValue,
-        bool expectedIsDebt
-    ) internal pure {
-        (uint256 id, uint256 value, bool isDebt) = abi.decode(encodedData, (uint256, uint256, bool));
-        assertEq(id, expectedId);
-        assertEq(value, expectedValue);
-        assertEq(isDebt, expectedIsDebt);
+    modifier withTokenAsBT(address _token, uint256 _posId) {
+        vm.prank(dao);
+        caliber.addBaseToken(_token, _posId);
+        _;
     }
 }

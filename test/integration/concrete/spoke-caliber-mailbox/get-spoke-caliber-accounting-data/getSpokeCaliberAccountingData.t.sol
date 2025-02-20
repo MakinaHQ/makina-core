@@ -2,15 +2,15 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
+import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
-import {Integration_Concrete_Test} from "../../IntegrationConcrete.t.sol";
+import {Integration_Concrete_Spoke_Test} from "../../integrationConcrete.t.sol";
 
-contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Concrete_Test {
+contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
     function setUp() public override {
-        Integration_Concrete_Test.setUp();
-        _setUpCaliberMerkleRoot();
+        Integration_Concrete_Spoke_Test.setUp();
+        _setUpCaliberMerkleRoot(caliber);
     }
 
     function test_RevertGiven_PositionStale()
@@ -31,7 +31,7 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
 
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
-        hubDualMailbox.getHubCaliberAccountingData();
+        spokeCaliberMailbox.getSpokeCaliberAccountingData();
     }
 
     function test_GetPositionsValues() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
@@ -41,18 +41,23 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
         // check accounting token position is correctly accounted for in AUM
-        IHubDualMailbox.HubCaliberAccountingData memory data = hubDualMailbox.getHubCaliberAccountingData();
+        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory data =
+            spokeCaliberMailbox.getSpokeCaliberAccountingData();
         assertEq(data.netAum, inputAmount);
         assertEq(data.positions.length, 2);
+        assertEq(data.totalReceivedFromHM.length, 0);
+        assertEq(data.totalSentToHM.length, 0);
         _checkEncodedCaliberPosValue(data.positions[0], HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, inputAmount, false);
         _checkEncodedCaliberPosValue(data.positions[1], HUB_CALIBER_BASE_TOKEN_1_POS_ID, 0, false);
 
         skip(1 days);
 
         // check data is the same after a day
-        data = hubDualMailbox.getHubCaliberAccountingData();
+        data = spokeCaliberMailbox.getSpokeCaliberAccountingData();
         assertEq(data.netAum, inputAmount);
         assertEq(data.positions.length, 2);
+        assertEq(data.totalReceivedFromHM.length, 0);
+        assertEq(data.totalSentToHM.length, 0);
         _checkEncodedCaliberPosValue(data.positions[0], HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, inputAmount, false);
         _checkEncodedCaliberPosValue(data.positions[1], HUB_CALIBER_BASE_TOKEN_1_POS_ID, 0, false);
     }

@@ -6,16 +6,16 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 import {MockPool} from "test/mocks/MockPool.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 
-import {Unit_Concrete_Test} from "../../UnitConcrete.t.sol";
+import {Swapper_Unit_Concrete_Test} from "../Swapper.t.sol";
 
-contract Swap_Unit_Concrete_Test is Unit_Concrete_Test {
+contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
     // mock pool contract to simulate Dex aggregrator
     MockPool internal pool;
 
     uint256 internal initialPoolLiquidityOneSide;
 
     function setUp() public override {
-        Unit_Concrete_Test.setUp();
+        Swapper_Unit_Concrete_Test.setUp();
 
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MPL");
         initialPoolLiquidityOneSide = 1e30;

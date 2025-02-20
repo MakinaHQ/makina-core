@@ -7,7 +7,6 @@ import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "../src/interfaces/IMachine.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {HubDualMailbox} from "../src/mailbox/HubDualMailbox.sol";
-import {MockERC20} from "./mocks/MockERC20.sol";
 
 abstract contract Base_Test is Base {
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
@@ -16,72 +15,58 @@ abstract contract Base_Test is Base {
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
-
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL = "MS";
-
     uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
-
     uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
 
     uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
-
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
-
     uint256 public constant DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS = 100;
-
     uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
-
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
     uint256 public constant HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1;
-
     uint256 public constant HUB_CALIBER_BASE_TOKEN_1_POS_ID = 2;
 
-    MockERC20 public accountingToken;
-    MockERC20 public baseToken;
-
-    Machine public machine;
-    Caliber public caliber;
-    HubDualMailbox public hubDualMailbox;
+    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1001;
+    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_1_POS_ID = 1002;
 
     address public machineDepositor = makeAddr("MachineDepositor");
 
     function setUp() public virtual {
         deployer = address(this);
-
-        _testSetupMakinaGovernance();
-        _coreSetup();
-        _testSetupRegistry();
-        _testSetupAccessManager();
+        hubChainId = block.chainid;
+        _makinaGovernanceTestSetup();
     }
 
-    function _testSetupMakinaGovernance() public {
+    /// @dev Should follow _coreSharedSetup() when used.
+    function _hubSetup() public {
+        _coreHubSetup();
+        _hubRegistrySetup();
+        _accessManagerTestSetup();
+    }
+
+    /// @dev Should follow _coreSharedSetup() when used.
+    function _spokeSetup() public {
+        _coreSpokeSetup();
+        _spokeRegistrySetup();
+        _accessManagerTestSetup();
+    }
+
+    function _makinaGovernanceTestSetup() public {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
         securityCouncil = makeAddr("SecurityCouncil");
     }
 
-    function _testSetupRegistry() public {
-        hubRegistry.setCaliberBeacon(address(caliberBeacon));
-        hubRegistry.setCaliberFactory(address(caliberFactory));
-        hubRegistry.setMachineBeacon(address(machineBeacon));
-        hubRegistry.setMachineFactory(address(machineFactory));
-        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
-    }
-
-    function _testSetupAccessManager() public {
+    function _accessManagerTestSetup() public {
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
     }
 
-    function _deployMockTokens() public {
-        accountingToken = new MockERC20("accountingToken", "ACT", 18);
-        baseToken = new MockERC20("baseToken", "BT", 18);
-    }
-
     function _deployMachine(address _accountingToken, uint256 _accountingTokenPosId, bytes32 allowedInstrMerkleRoot)
         public
-        returns (Machine, Caliber)
+        returns (Machine, Caliber, HubDualMailbox)
     {
         vm.prank(dao);
         Machine _machine = Machine(
@@ -108,7 +93,8 @@ abstract contract Base_Test is Base {
             )
         );
         Caliber _caliber = Caliber(ICaliberMailbox(_machine.hubCaliberMailbox()).caliber());
-        return (_machine, _caliber);
+        HubDualMailbox _mailbox = HubDualMailbox(_machine.hubCaliberMailbox());
+        return (_machine, _caliber, _mailbox);
     }
 
     function _deployCaliber(
@@ -116,10 +102,10 @@ abstract contract Base_Test is Base {
         address _accountingToken,
         uint256 _accountingTokenPosId,
         bytes32 allowedInstrMerkleRoot
-    ) public returns (Caliber) {
+    ) public returns (Caliber, SpokeCaliberMailbox) {
         vm.prank(dao);
-        return Caliber(
-            caliberFactory.deployCaliber(
+        Caliber _caliber = Caliber(
+            spokeCaliberFactory.deployCaliber(
                 ICaliberFactory.CaliberDeployParams({
                     hubMachineEndpoint: _hubMachineEndpoint,
                     accountingToken: _accountingToken,
@@ -136,6 +122,8 @@ abstract contract Base_Test is Base {
                 })
             )
         );
+        SpokeCaliberMailbox _mailbox = SpokeCaliberMailbox(_caliber.mailbox());
+        return (_caliber, _mailbox);
     }
 
     function _generateMerkleData(

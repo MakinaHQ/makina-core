@@ -10,9 +10,9 @@ import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {Machine} from "src/machine/Machine.sol";
 
-import {Integration_Concrete_Test} from "../IntegrationConcrete.t.sol";
+import {Integration_Concrete_Hub_Test} from "../integrationConcrete.t.sol";
 
-contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Test {
+contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     bytes32 private initialAllowedInstrRoot;
 
     function test_Getters() public view {

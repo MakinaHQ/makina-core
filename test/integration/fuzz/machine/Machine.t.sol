@@ -4,14 +4,29 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {Machine} from "src/machine/Machine.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
 contract Machine_Integration_Fuzz_Test is Base_Test {
+    MockERC20 public accountingToken;
+    MockERC20 public baseToken;
+
+    Machine public machine;
+
+    uint256 private accountingTokenUnit;
+    uint256 private baseTokenUnit;
+
     struct Data {
         uint8 aDecimals;
+    }
+
+    function setUp() public override {
+        Base_Test.setUp();
+        _coreSharedSetup();
+        _hubSetup();
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
@@ -28,7 +43,7 @@ contract Machine_Integration_Fuzz_Test is Base_Test {
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        (machine,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (machine,,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
     function testFuzz_ConvertToShares(Data memory data, uint256 assets) public {

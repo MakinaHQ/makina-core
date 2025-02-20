@@ -10,6 +10,7 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         address _machineFactory;
         address _machineBeacon;
         address _hubDualMailboxBeacon;
+        address _spokeMachineMailboxBeacon;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.HubRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -46,6 +47,11 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
+    function spokeMachineMailboxBeacon() public view override returns (address) {
+        return _getHubRegistryStorage()._spokeMachineMailboxBeacon;
+    }
+
+    /// @inheritdoc IHubRegistry
     function setMachineFactory(address _machineFactory) external override restricted {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
         emit MachineFactoryChange($._machineFactory, _machineFactory);
@@ -64,5 +70,12 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
         emit HubDualMailboxBeaconChange($._hubDualMailboxBeacon, _hubDualMailboxBeacon);
         $._hubDualMailboxBeacon = _hubDualMailboxBeacon;
+    }
+
+    /// @inheritdoc IHubRegistry
+    function setSpokeMachineMailboxBeacon(address _spokeMachineMailboxBeacon) external override restricted {
+        HubRegistryStorage storage $ = _getHubRegistryStorage();
+        emit SpokeMachineMailboxBeaconChange($._spokeMachineMailboxBeacon, _spokeMachineMailboxBeacon);
+        $._spokeMachineMailboxBeacon = _spokeMachineMailboxBeacon;
     }
 }

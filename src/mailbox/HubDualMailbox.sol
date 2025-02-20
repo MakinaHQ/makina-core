@@ -7,7 +7,6 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
-import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IMailbox} from "../interfaces/IMailbox.sol";
 

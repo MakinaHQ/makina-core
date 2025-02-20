@@ -2,10 +2,10 @@
 pragma solidity 0.8.28;
 
 import "forge-std/StdJson.sol";
-import "../test/Base.sol";
+import "test/Base.sol";
 import {ISwapper} from "../src/interfaces/ISwapper.sol";
 
-contract DeployMakinaCore is Base {
+abstract contract DeployMakinaCoreShared is Base {
     using stdJson for string;
 
     struct PriceFeedData {
@@ -23,24 +23,16 @@ contract DeployMakinaCore is Base {
     }
 
     string public basePath;
-    string public path;
+    string public inputPath;
+    string public outputPath;
 
-    string public constantsFilename = vm.envString("CONSTANTS_FILENAME");
-    string public outputFilename = vm.envString("OUTPUT_FILENAME");
+    string public constantsFilename;
+    string public outputFilename;
 
     string public jsonConstants;
 
     PriceFeedData[] public priceFeedData;
     DexAggregatorData[] public dexAggregatorsData;
-
-    constructor() {
-        string memory root = vm.projectRoot();
-        basePath = string.concat(root, "/script/constants/");
-
-        // load constants
-        path = string.concat(basePath, constantsFilename);
-        jsonConstants = vm.readFile(path);
-    }
 
     function run() public {
         _deploySetupBefore();
@@ -48,12 +40,9 @@ contract DeployMakinaCore is Base {
         _deploySetupAfter();
     }
 
-    function _deploySetupBefore() public {
-        // Loading output and use output path to later save deployed contracts
-        path = string.concat(basePath, "output/");
-        path = string.concat(path, "DeployMakinaCore-");
-        path = string.concat(path, outputFilename);
+    function _coreSetup() public virtual {}
 
+    function _deploySetupBefore() public {
         PriceFeedData[] memory _priceFeedData =
             abi.decode(vm.parseJson(jsonConstants, ".priceFeedData"), (PriceFeedData[]));
         for (uint256 i; i < _priceFeedData.length; i++) {
@@ -74,33 +63,7 @@ contract DeployMakinaCore is Base {
         (, deployer,) = vm.readCallers();
     }
 
-    function _deploySetupAfter() public {
-        _setupHubRegistry();
-        _setupOracleRegistry();
-        _setupSwapper();
-
-        // @TODO setup access manager
-
-        // finish broadcasting transactions
-        vm.stopBroadcast();
-
-        string memory key = "key-deploy-makina-core-output-file";
-
-        // write to file;
-        vm.writeJson(vm.serializeAddress(key, "AccessManager", address(accessManager)), path);
-        vm.writeJson(vm.serializeAddress(key, "CaliberBeacon", address(caliberBeacon)), path);
-        vm.writeJson(vm.serializeAddress(key, "CaliberFactory", address(caliberFactory)), path);
-        vm.writeJson(vm.serializeAddress(key, "HubDualMailboxBeacon", address(hubDualMailboxBeacon)), path);
-        vm.writeJson(vm.serializeAddress(key, "HubRegistry", address(hubRegistry)), path);
-        vm.writeJson(vm.serializeAddress(key, "OracleRegistry", address(oracleRegistry)), path);
-        vm.writeJson(vm.serializeAddress(key, "Swapper", address(swapper)), path);
-    }
-
-    function _setupHubRegistry() public {
-        hubRegistry.setCaliberBeacon(address(caliberBeacon));
-        hubRegistry.setCaliberFactory(address(caliberFactory));
-        hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
-    }
+    function _deploySetupAfter() public virtual {}
 
     function _setupOracleRegistry() public {
         for (uint256 i; i < priceFeedData.length; i++) {

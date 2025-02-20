@@ -1,6 +1,7 @@
 {
   "extends": "solhint:recommended",
   "rules": {
+    "one-contract-per-file": "off",
     "code-complexity": ["error", 13],
     "compiler-version": ["error", ">=0.8.20"],
     "func-name-mixedcase": "off",
@@ -11,6 +12,7 @@
     "not-rely-on-time": "off",
     "const-name-snakecase": "off",
     "no-inline-assembly": "off",
-    "contract-name-capwords": "off"
+    "contract-name-capwords": "off",
+    "max-states-count": ["error", 50]
   }
 }

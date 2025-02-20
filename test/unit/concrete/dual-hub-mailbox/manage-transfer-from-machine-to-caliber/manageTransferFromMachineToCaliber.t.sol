@@ -6,9 +6,9 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachineMailbox} from "src/interfaces/IMachineMailbox.sol";
 
-import {HubDualMailbox_Unit_Concrete_Test} from "../HubDualMailbox.t.sol";
+import {Unit_Concrete_Hub_Test} from "../../UnitConcrete.t.sol";
 
-contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is HubDualMailbox_Unit_Concrete_Test {
+contract ManageTransferFromMachineToCaliber_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_RevertWhen_CallerNotMachine() public {
         vm.expectRevert(IMachineMailbox.NotMachine.selector);
         hubDualMailbox.manageTransferFromMachineToCaliber(address(accountingToken), 1e18);
