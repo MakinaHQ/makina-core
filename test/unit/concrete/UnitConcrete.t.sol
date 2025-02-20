@@ -12,6 +12,8 @@ import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 abstract contract Unit_Concrete_Test is Base_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 
@@ -36,7 +38,6 @@ abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test {
     Machine public machine;
     Caliber public caliber;
     HubDualMailbox public hubDualMailbox;
-    SpokeMachineMailbox public spokeMachineMailbox;
 
     function setUp() public virtual override {
         Unit_Concrete_Test.setUp();

@@ -1,0 +1,6 @@
+createSpokeMailbox.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── it should deploy a SpokeMachineMailbox instance and map it to rpovided chain id in machine storage
+   └── it should emit a SpokeMailboxDeployed event

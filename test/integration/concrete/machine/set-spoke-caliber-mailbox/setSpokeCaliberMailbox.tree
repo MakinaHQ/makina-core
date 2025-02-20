@@ -1,0 +1,12 @@
+setSpokeCaliberMailbox.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── when machine mailbox does not exist for provided chain id
+   │  └── it should revert with SpokeMailboxDoesNotExist
+   └── when machine mailbox exists for provided chain id
+      ├── given a caliber mailbox address is already set in the relevant machine mailbox
+      │  └── it should revert with SpokeCaliberMailboxAlreadySet
+      └── given no caliber mailbox address is set in the relevant machine mailbox
+         ├── it should set the provided spoke caliber mailbox address in the storage of relevant machine mailbox 
+         └── it should emit a SpokeCaliberMailboxSet event

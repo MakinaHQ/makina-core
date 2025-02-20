@@ -15,6 +15,7 @@ import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {ISpokeMachineMailbox} from "../interfaces/ISpokeMachineMailbox.sol";
 import {Constants} from "../libraries/Constants.sol";
 
 contract Machine is AccessManagedUpgradeable, IMachine {
@@ -268,6 +269,39 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         emit Deposit(msg.sender, receiver, assets, shares);
 
         return shares;
+    }
+
+    /// @inheritdoc IMachine
+    function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
+        MachineStorage storage $ = _getMachineStorage();
+        if ($._foreignChainIdToSpokeCaliberData[chainId].chainId == chainId) {
+            revert SpokeMailboxAlreadyExists();
+        }
+        address mailbox = address(
+            new BeaconProxy(
+                IHubRegistry(registry).spokeMachineMailboxBeacon(),
+                abi.encodeCall(ISpokeMachineMailbox.initialize, (address(this), $._hubChainId))
+            )
+        );
+
+        $._isMachineMailbox[mailbox] = true;
+        $._foreignChainIds.push(chainId);
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        data.chainId = chainId;
+        data.machineMailbox = mailbox;
+        emit SpokeMailboxDeployed(mailbox, chainId);
+
+        return mailbox;
+    }
+
+    /// @inheritdoc IMachine
+    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        if (data.chainId != chainId) {
+            revert SpokeMailboxDoesNotExist();
+        }
+        ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
     }
 
     /// @inheritdoc IMachine

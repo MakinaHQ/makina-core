@@ -11,20 +11,30 @@ contract SpokeMachineMailbox is Initializable, ISpokeMachineMailbox {
     address public spokeCaliberMailbox;
     uint256 public spokeChainId;
 
-    function initialize(address _machine, uint256 _spokeChainId) external initializer {
+    modifier onlyMachine() {
+        if (msg.sender != machine) {
+            revert NotMachine();
+        }
+        _;
+    }
+
+    /// @inheritdoc ISpokeMachineMailbox
+    function initialize(address _machine, uint256 _spokeChainId) external override initializer {
         machine = _machine;
         spokeChainId = _spokeChainId;
     }
 
-    function setSpokeCaliberMailbox(address _spokeCaliberMailbox) external {
+    /// @inheritdoc ISpokeMachineMailbox
+    function setSpokeCaliberMailbox(address _spokeCaliberMailbox) external override onlyMachine {
         if (spokeCaliberMailbox != address(0)) {
             revert SpokeCaliberMailboxAlreadySet();
         }
         spokeCaliberMailbox = _spokeCaliberMailbox;
+        emit SpokeCaliberMailboxSet(_spokeCaliberMailbox);
     }
 
     /// @inheritdoc IMailbox
-    function manageTransferFromMachineToCaliber(address token, uint256 amount) external override {}
+    function manageTransferFromMachineToCaliber(address token, uint256 amount) external override onlyMachine {}
 
     /// @inheritdoc IMailbox
     function manageTransferFromCaliberToMachine(address token, uint256 amount) external override {}

@@ -141,6 +141,7 @@ abstract contract Base is Script, Test {
         hubRegistry.setMachineBeacon(address(machineBeacon));
         hubRegistry.setMachineFactory(address(machineFactory));
         hubRegistry.setHubDualMailboxBeacon(address(hubDualMailboxBeacon));
+        hubRegistry.setSpokeMachineMailboxBeacon(address(spokeMachineMailboxBeacon));
     }
 
     function _spokeRegistrySetup() public {
