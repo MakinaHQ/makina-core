@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
@@ -56,6 +57,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         vm.stopPrank();
 
         (machine, caliber) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        hubDualMailbox = HubDualMailbox(caliber.mailbox());
     }
 
     ///
@@ -113,5 +115,17 @@ abstract contract Integration_Concrete_Test is Base_Test {
         accountingToken.approve(address(pool), _amount1);
         baseToken.approve(address(pool), _amount2);
         pool.addLiquidity(_amount1, _amount2);
+    }
+
+    function _checkEncodedCaliberPosValue(
+        bytes memory encodedData,
+        uint256 expectedId,
+        uint256 expectedValue,
+        bool expectedIsDebt
+    ) internal pure {
+        (uint256 id, uint256 value, bool isDebt) = abi.decode(encodedData, (uint256, uint256, bool));
+        assertEq(id, expectedId);
+        assertEq(value, expectedValue);
+        assertEq(isDebt, expectedIsDebt);
     }
 }

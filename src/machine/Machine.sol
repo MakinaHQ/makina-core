@@ -9,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {MachineShare} from "./MachineShare.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
@@ -38,9 +39,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         uint256 _shareLimit;
         bool _depositorOnlyMode;
         bool _recoveryMode;
-        mapping(uint256 chainId => address mailbox) _chainIdToMailbox;
-        mapping(address mailbox => uint256 chainId) _mailboxToChainId;
-        uint256[] _supportedChainIds;
+        uint256 _hubChainId;
+        address _hubCaliberMailbox;
+        uint256[] _foreignChainIds;
+        mapping(uint256 foreignChainId => SpokeCaliberData) _foreignChainIdToSpokeCaliberData;
+        mapping(address addr => bool isMailbox) _isMachineMailbox;
         EnumerableSet.AddressSet _idleTokens;
     }
 
@@ -84,10 +87,10 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         $._depositorOnlyMode = params.depositorOnlyMode;
         __AccessManaged_init(params.initialAuthority);
 
+        $._hubChainId = block.chainid;
         address mailbox = _deployHubCaliber(params);
-        $._chainIdToMailbox[block.chainid] = mailbox;
-        $._mailboxToChainId[mailbox] = block.chainid;
-        $._supportedChainIds.push(block.chainid);
+        $._hubCaliberMailbox = mailbox;
+        $._isMachineMailbox[mailbox] = true;
     }
 
     modifier onlyOperator() {
@@ -100,7 +103,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     modifier onlyMailbox() {
         MachineStorage storage $ = _getMachineStorage();
-        if ($._mailboxToChainId[msg.sender] == 0) {
+        if (!$._isMachineMailbox[msg.sender]) {
             revert NotMailbox();
         }
         _;
@@ -140,6 +143,10 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function accountingToken() external view override returns (address) {
         return _getMachineStorage()._accountingToken;
+    }
+
+    function hubCaliberMailbox() external view returns (address) {
+        return _getMachineStorage()._hubCaliberMailbox;
     }
 
     /// @inheritdoc IMachine
@@ -184,17 +191,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @inheritdoc IMachine
     function getCalibersLength() external view override returns (uint256) {
-        return _getMachineStorage()._supportedChainIds.length;
-    }
-
-    /// @inheritdoc IMachine
-    function getSupportedChainId(uint256 idx) external view override returns (uint256) {
-        return _getMachineStorage()._supportedChainIds[idx];
-    }
-
-    /// @inheritdoc IMachine
-    function getMailbox(uint256 chainId) external view override returns (address) {
-        return _getMachineStorage()._chainIdToMailbox[chainId];
+        return _getMachineStorage()._foreignChainIds.length + 1;
     }
 
     /// @inheritdoc IMachine
@@ -220,16 +217,20 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function transferToCaliber(address token, uint256 amount, uint256 chainId)
+    function transferToCaliber(address token, uint256 amount, uint256 /*chainId*/ )
         external
         override
         notRecoveryMode
         onlyOperator
     {
         MachineStorage storage $ = _getMachineStorage();
-        address mailbox = $._chainIdToMailbox[chainId];
+
+        address mailbox = $._hubCaliberMailbox;
+
+        // @TODO implement mailboxes for spoke calibers
+
         IERC20Metadata(token).forceApprove(mailbox, amount);
-        emit TransferToCaliber(chainId, token, amount);
+        emit TransferToCaliber($._hubChainId, token, amount);
         IMachineMailbox(mailbox).manageTransferFromMachineToCaliber(token, amount);
         if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
@@ -356,16 +357,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         uint256 totalAum;
 
-        uint256 len = $._supportedChainIds.length;
-        for (uint256 i; i < len; i++) {
-            address mailbox = $._chainIdToMailbox[$._supportedChainIds[i]];
-            if (block.timestamp - IMachineMailbox(mailbox).lastReportedAumTime() > $._caliberStaleThreshold) {
-                revert CaliberAccountingStale($._supportedChainIds[i]);
-            }
-            // @TODO take async bridging into account in spoke mailboxes
-            totalAum += IMachineMailbox(mailbox).lastReportedAum();
-        }
-        len = $._idleTokens.length();
+        // local caliber net AUM
+        totalAum += IHubDualMailbox($._hubCaliberMailbox).getHubCaliberAccountingData().netAum;
+
+        // @TODO spoke calibers net AUM
+
+        // idle tokens
+        uint256 len = $._idleTokens.length();
         for (uint256 i; i < len; i++) {
             address token = $._idleTokens.at(i);
             totalAum += _accountingValueOf(token, IERC20Metadata(token).balanceOf(address(this)));

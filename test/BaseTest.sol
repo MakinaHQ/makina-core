@@ -6,6 +6,7 @@ import {ICaliberFactory} from "../src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "../src/interfaces/IMachine.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
+import {HubDualMailbox} from "../src/mailbox/HubDualMailbox.sol";
 import {MockERC20} from "./mocks/MockERC20.sol";
 
 abstract contract Base_Test is Base {
@@ -41,6 +42,7 @@ abstract contract Base_Test is Base {
 
     Machine public machine;
     Caliber public caliber;
+    HubDualMailbox public hubDualMailbox;
 
     address public machineDepositor = makeAddr("MachineDepositor");
 
@@ -105,7 +107,7 @@ abstract contract Base_Test is Base {
                 })
             )
         );
-        Caliber _caliber = Caliber(ICaliberMailbox(_machine.getMailbox(block.chainid)).caliber());
+        Caliber _caliber = Caliber(ICaliberMailbox(_machine.hubCaliberMailbox()).caliber());
         return (_machine, _caliber);
     }
 

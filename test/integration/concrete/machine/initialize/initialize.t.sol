@@ -61,10 +61,10 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         assertEq(machine.getCalibersLength(), 1);
 
-        address hubDualMailbox = machine.getMailbox(block.chainid);
-        address caliber = IHubDualMailbox(hubDualMailbox).caliber();
-        assertEq(IHubDualMailbox(hubDualMailbox).machine(), address(machine));
-        assertEq(ICaliber(caliber).mailbox(), hubDualMailbox);
+        address dualMailbox = machine.hubCaliberMailbox();
+        address caliber = IHubDualMailbox(dualMailbox).caliber();
+        assertEq(IHubDualMailbox(dualMailbox).machine(), address(machine));
+        assertEq(ICaliber(caliber).mailbox(), dualMailbox);
     }
 
     function _getMachineInitParams(address accountingToken) internal view returns (IMachine.MachineInitParams memory) {

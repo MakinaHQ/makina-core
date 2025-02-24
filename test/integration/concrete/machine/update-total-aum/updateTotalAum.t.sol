@@ -13,15 +13,29 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
     }
 
-    function test_RevertGiven_CaliberStale() public {
-        skip(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD + 1);
-        vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, block.chainid));
+    function test_RevertGiven_CaliberStale()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        uint256 inputAmount = 1e18;
+        deal(address(baseToken), address(caliber), inputAmount);
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        instructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+        );
+
+        // create position in caliber
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
         machine.updateTotalAum();
     }
 
     function test_UpdateTotalAum_WithZeroAum() public {
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
         machine.updateTotalAum();
@@ -32,8 +46,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(machine), inputAmount);
 
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
         machine.updateTotalAum();
@@ -42,8 +54,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_IdleAccountingToken() public {
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount);
 
@@ -54,12 +64,10 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_IdleBaseToken() public {
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(machine), inputAmount);
 
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(baseToken));
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -71,8 +79,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_PositiveHubCaliberAum() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount);
-
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
@@ -102,8 +108,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(borrowModuleInstructions);
 
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
         machine.updateTotalAum();
@@ -131,7 +135,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // increase caliber debt
         borrowModule.setRateBps(10_000 * 2);
         caliber.accountForPosition(borrowModuleInstructions[1]);
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
@@ -140,12 +143,10 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_PositiveHubCaliberAumAndIdleToken() public {
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         // fund machine with accountingToken
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(accountingToken));
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -155,7 +156,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // fund caliber with accountingToken
         deal(address(accountingToken), address(caliber), inputAmount);
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(2 * inputAmount, block.timestamp);
@@ -167,12 +167,10 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
-
         // fund machine with accountingToken
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount);
-        vm.prank(machine.getMailbox(block.chainid));
+        vm.prank(machine.hubCaliberMailbox());
         machine.notifyIncomingTransfer(address(accountingToken));
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -197,7 +195,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // increase caliber debt
         borrowModule.setRateBps(10_000 * 2);
         caliber.accountForPosition(borrowModuleInstructions[1]);
-        caliber.updateAndReportCaliberAUM(new ICaliber.Instruction[](0));
 
         // check that machine total aum remains the same
         vm.expectEmit(false, false, false, true, address(machine));

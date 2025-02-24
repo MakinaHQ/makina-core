@@ -17,9 +17,6 @@ contract HubDualMailbox is Initializable, IHubDualMailbox {
     address public machine;
     address public caliber;
 
-    uint256 public lastReportedAum;
-    uint256 public lastReportedAumTime;
-
     function initialize(address _machine, address _caliber) external override initializer {
         machine = _machine;
         caliber = _caliber;
@@ -53,9 +50,8 @@ contract HubDualMailbox is Initializable, IHubDualMailbox {
         IMachine(machine).notifyIncomingTransfer(token);
     }
 
-    /// @inheritdoc ICaliberMailbox
-    function notifyAccountingSlim(uint256 aum) external override onlyCaliber {
-        lastReportedAum = aum;
-        lastReportedAumTime = block.timestamp;
+    /// @inheritdoc IHubDualMailbox
+    function getHubCaliberAccountingData() external view override returns (HubCaliberAccountingData memory data) {
+        (data.netAum, data.positions) = ICaliber(caliber).getPositionsValues();
     }
 }

@@ -6,4 +6,13 @@ import {ICaliberMailbox} from "./ICaliberMailbox.sol";
 
 interface IHubDualMailbox is IMachineMailbox, ICaliberMailbox {
     error NotBaseToken();
+
+    struct HubCaliberAccountingData {
+        uint256 netAum;
+        bytes[] positions; // abi.encode(positionId, positionSize)
+    }
+
+    /// @notice Returns the accounting data of the associated caliber.
+    /// @return data The accounting data.
+    function getHubCaliberAccountingData() external view returns (HubCaliberAccountingData memory);
 }

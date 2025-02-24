@@ -33,8 +33,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
-        uint256 _lastReportedAUM;
-        uint256 _lastReportedAUMTime;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
@@ -109,16 +107,6 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
-    }
-
-    /// @inheritdoc ICaliber
-    function lastReportedAUM() public view override returns (uint256) {
-        return _getCaliberStorage()._lastReportedAUM;
-    }
-
-    /// @inheritdoc ICaliber
-    function lastReportedAUMTime() public view returns (uint256) {
-        return _getCaliberStorage()._lastReportedAUMTime;
     }
 
     /// @inheritdoc ICaliber
@@ -241,34 +229,57 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function updateAndReportCaliberAUM(Instruction[] calldata instructions) external override {
-        accountForPositionBatch(instructions);
+    function isAccountingFresh() external view returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
-        // ICaliberMailbox($._mailbox).withdrawPendingReceivedAmounts();
+
+        uint256 len = $._positionIds.length();
+        uint256 currentTimestamp = block.timestamp;
+        for (uint256 i; i < len; i++) {
+            uint256 posId = $._positionIds.at(i);
+            address bt = $._positionIdToBaseToken[posId];
+            if (
+                bt == address(0)
+                    && (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold)
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// @inheritdoc ICaliber
+    function getPositionsValues() external view override returns (uint256, bytes[] memory) {
+        CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._positionIds.length();
         uint256 aum;
         uint256 debt;
+        bytes[] memory positionsValues = new bytes[](len);
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
-            Position memory pos = $._positionById[posId];
-            if ($._positionIdToBaseToken[posId] != address(0)) {
-                (uint256 value,) = accountForBaseToken(posId);
+            address bt = $._positionIdToBaseToken[posId];
+            if (bt != address(0)) {
+                uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
+                uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
                 aum += value;
-            } else if (currentTimestamp - pos.lastAccountingTime > $._positionStaleThreshold) {
-                revert PositionAccountingStale(posId);
-            } else if (pos.isDebt) {
-                debt += pos.value;
+                positionsValues[i] = abi.encode(posId, value, false);
             } else {
-                aum += pos.value;
+                Position memory pos = $._positionById[posId];
+                if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+                    revert PositionAccountingStale(posId);
+                } else if (pos.isDebt) {
+                    debt += pos.value;
+                } else {
+                    aum += pos.value;
+                }
+                positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
             }
         }
+        uint256 netAum = aum > debt ? aum - debt : 0;
 
-        $._lastReportedAUM = aum > debt ? aum - debt : 0;
-        $._lastReportedAUMTime = currentTimestamp;
-
-        ICaliberMailbox($._mailbox).notifyAccountingSlim($._lastReportedAUM);
+        return (netAum, positionsValues);
     }
 
     /// @inheritdoc ICaliber
