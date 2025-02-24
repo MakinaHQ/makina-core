@@ -19,8 +19,6 @@ import {ISwapper} from "src/interfaces/ISwapper.sol";
 import {Base_Test} from "test/BaseTest.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-
     /// @dev A denotes the accounting token, B denotes the base token
     /// and E is the reference currency of the oracle registry.
     uint256 internal constant PRICE_A_E = 150;
@@ -114,6 +112,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
 }
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
     Machine public machine;
     Caliber public caliber;
     HubDualMailbox public hubDualMailbox;
@@ -125,10 +125,6 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test {
         (machine, caliber, hubDualMailbox) =
             _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
-
-    ///
-    /// Modifiers
-    ///
 
     modifier whileInRecoveryMode() {
         vm.startPrank(dao);
@@ -162,10 +158,6 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test {
         (caliber, spokeCaliberMailbox) =
             _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
-
-    ///
-    /// Modifiers
-    ///
 
     modifier whileInRecoveryMode() {
         vm.prank(dao);

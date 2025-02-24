@@ -5,7 +5,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
-import {Integration_Concrete_Hub_Test} from "../../integrationConcrete.t.sol";
+import {Integration_Concrete_Hub_Test} from "../../IntegrationConcrete.t.sol";
 
 contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     function setUp() public override {

@@ -10,8 +10,10 @@ on:
 env:
   FOUNDRY_PROFILE: ci
   MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-  CONSTANTS_FILENAME: VTNMainnet.json
-  OUTPUT_FILENAME: ci.json
+  HUB_CONSTANTS_FILENAME: VTNMainnet.json
+  HUB_OUTPUT_FILENAME: ci.json
+  SPOKE_CONSTANTS_FILENAME: VTNMainnet.json
+  SPOKE_OUTPUT_FILENAME: ci.json
 
 jobs:
   check:

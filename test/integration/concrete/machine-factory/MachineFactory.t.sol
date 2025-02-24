@@ -10,7 +10,7 @@ import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {Machine} from "src/machine/Machine.sol";
 
-import {Integration_Concrete_Hub_Test} from "../integrationConcrete.t.sol";
+import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     bytes32 private initialAllowedInstrRoot;
@@ -64,13 +64,12 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getSpokeCalibersLength(), 0);
 
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         assertEq(shareToken.machine(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
-
-        assertEq(machine.getCalibersLength(), 1);
 
         address dualMailbox = machine.hubCaliberMailbox();
         address caliber = IHubDualMailbox(dualMailbox).caliber();

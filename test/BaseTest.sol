@@ -7,6 +7,7 @@ import {ICaliberMailbox} from "../src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "../src/interfaces/IMachine.sol";
 import {Caliber} from "../src/caliber/Caliber.sol";
 import {HubDualMailbox} from "../src/mailbox/HubDualMailbox.sol";
+import {MockWormhole} from "./mocks/MockWormhole.sol";
 
 abstract contract Base_Test is Base {
     /// @dev set MAINNET_RPC_URL in .env to run mainnet tests
@@ -31,6 +32,8 @@ abstract contract Base_Test is Base {
     uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1001;
     uint256 public constant SPOKE_CALIBER_BASE_TOKEN_1_POS_ID = 1002;
 
+    uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
+
     address public machineDepositor = makeAddr("MachineDepositor");
 
     function setUp() public virtual {
@@ -41,6 +44,7 @@ abstract contract Base_Test is Base {
 
     /// @dev Should follow _coreSharedSetup() when used.
     function _hubSetup() public {
+        _wormholeSetup();
         _coreHubSetup();
         _hubRegistrySetup();
         _accessManagerTestSetup();
@@ -57,6 +61,10 @@ abstract contract Base_Test is Base {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
         securityCouncil = makeAddr("SecurityCouncil");
+    }
+
+    function _wormholeSetup() public {
+        wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
     function _accessManagerTestSetup() public {

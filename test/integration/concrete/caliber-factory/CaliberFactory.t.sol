@@ -7,7 +7,7 @@ import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 
-import {Integration_Concrete_Spoke_Test} from "../integrationConcrete.t.sol";
+import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
     function test_Getters() public view {

@@ -5,10 +5,10 @@ import {IMachineMailbox} from "src/interfaces/IMachineMailbox.sol";
 import {ISpokeMachineMailbox} from "src/interfaces/ISpokeMachineMailbox.sol";
 import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 
-import {Integration_Concrete_Hub_Test} from "../../integrationConcrete.t.sol";
+import {Integration_Concrete_Hub_Test} from "../../IntegrationConcrete.t.sol";
 
 contract SetSpokeCaliberMailbox_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    SpokeMachineMailbox spokeMachineMailbox;
+    SpokeMachineMailbox public spokeMachineMailbox;
 
     function setUp() public override {
         super.setUp();

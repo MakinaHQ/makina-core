@@ -7,13 +7,10 @@ import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
 abstract contract Unit_Concrete_Test is Base_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 
@@ -35,6 +32,8 @@ abstract contract Unit_Concrete_Test is Base_Test {
 }
 
 abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
     Machine public machine;
     Caliber public caliber;
     HubDualMailbox public hubDualMailbox;

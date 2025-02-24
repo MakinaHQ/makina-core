@@ -58,8 +58,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
-
-        assertEq(machine.getCalibersLength(), 1);
+        assertEq(machine.getSpokeCalibersLength(), 0);
 
         address dualMailbox = machine.hubCaliberMailbox();
         address caliber = IHubDualMailbox(dualMailbox).caliber();

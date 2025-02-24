@@ -8,6 +8,8 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+
 import {OracleRegistry} from "../src/OracleRegistry.sol";
 import {Swapper} from "../src/swap/Swapper.sol";
 import {HubRegistry} from "../src/registries/HubRegistry.sol";
@@ -28,6 +30,9 @@ abstract contract Base is Script, Test {
     address public dao;
     address public mechanic;
     address public securityCouncil;
+
+    // Wormhole
+    IWormhole public wormhole;
 
     // Shared
     AccessManager public accessManager;
@@ -87,7 +92,7 @@ abstract contract Base is Script, Test {
         address caliberImplemAddr = address(new Caliber(address(hubRegistry)));
         hubCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
-        address machineImplemAddr = address(new Machine(address(hubRegistry)));
+        address machineImplemAddr = address(new Machine(address(hubRegistry), address(wormhole)));
         machineBeacon = new UpgradeableBeacon(machineImplemAddr, dao);
 
         address machineFactoryImplemAddr = address(new MachineFactory(address(hubRegistry)));

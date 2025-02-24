@@ -5,7 +5,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
-import {Integration_Concrete_Spoke_Test} from "../../integrationConcrete.t.sol";
+import {Integration_Concrete_Spoke_Test} from "../../IntegrationConcrete.t.sol";
 
 contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
     function setUp() public override {
