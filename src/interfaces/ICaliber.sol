@@ -17,6 +17,7 @@ interface ICaliber {
     error InvalidOutputToken();
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
+    error NoPendingUpdate();
     error NotBaseTokenPosition();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
@@ -36,6 +37,7 @@ interface ICaliber {
     );
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
+    event NewAllowedInstrRootCancelled(bytes32 indexed cancelledMerkleRoot);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event PositionClosed(uint256 indexed id);
     event PositionCreated(uint256 indexed id);
@@ -272,6 +274,10 @@ interface ICaliber {
     /// at the time of the call.
     /// @param newMerkleRoot The root of the Merkle tree containing allowed instructions.
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
+
+    /// @notice Cancels a scheduled update of the root of the Merkle tree containing allowed instructions.
+    /// @dev Reverts if no pending update exists or if the timelock has expired.
+    function cancelAllowedInstrRootUpdate() external;
 
     /// @notice Sets the max allowed value loss for position increases.
     /// @param newMaxPositionIncreaseLossBps The new max value loss in basis points.

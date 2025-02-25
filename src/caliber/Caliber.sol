@@ -451,6 +451,17 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function cancelAllowedInstrRootUpdate() external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry) {
+            revert NoPendingUpdate();
+        }
+        emit NewAllowedInstrRootCancelled($._pendingAllowedInstrRoot);
+        delete $._pendingAllowedInstrRoot;
+        delete $._pendingTimelockExpiry;
+    }
+
+    /// @inheritdoc ICaliber
     function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxPositionIncreaseLossBpsChanged($._maxPositionIncreaseLossBps, newMaxPositionIncreaseLossBps);

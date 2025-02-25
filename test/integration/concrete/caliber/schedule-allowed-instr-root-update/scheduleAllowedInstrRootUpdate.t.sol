@@ -1,0 +1,76 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.28;
+
+import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+
+import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {MerkleProofs} from "test/utils/MerkleProofs.sol";
+
+import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
+
+contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.scheduleAllowedInstrRootUpdate(bytes32(0));
+    }
+
+    function test_RevertGiven_ActivePendingUpdate() public {
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.startPrank(dao);
+
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+
+        vm.expectRevert(ICaliber.ActiveUpdatePending.selector);
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+
+        vm.warp(effectiveUpdateTime);
+
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+    }
+
+    function test_ScheduleAllowedInstrRootUpdate() public {
+        bytes32 currentRoot = MerkleProofs._getAllowedInstrMerkleRoot();
+
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit ICaliber.NewAllowedInstrRootScheduled(newRoot, effectiveUpdateTime);
+        vm.prank(dao);
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+
+        assertEq(caliber.allowedInstrRoot(), currentRoot);
+        assertEq(caliber.pendingAllowedInstrRoot(), newRoot);
+        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
+
+        vm.warp(effectiveUpdateTime);
+
+        assertEq(caliber.allowedInstrRoot(), newRoot);
+        assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
+        assertEq(caliber.pendingTimelockExpiry(), 0);
+    }
+
+    function test_SetTimelockDuration_DoesNotAffectPendingRootUpdate() public {
+        assertEq(caliber.timelockDuration(), 1 hours);
+
+        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
+        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
+
+        vm.startPrank(dao);
+
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+        caliber.setTimelockDuration(2 hours);
+
+        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
+
+        vm.warp(effectiveUpdateTime);
+
+        assertEq(caliber.allowedInstrRoot(), newRoot);
+        assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
+        assertEq(caliber.pendingTimelockExpiry(), 0);
+
+        caliber.scheduleAllowedInstrRootUpdate(newRoot);
+    }
+}
