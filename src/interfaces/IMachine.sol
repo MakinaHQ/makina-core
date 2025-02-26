@@ -10,6 +10,7 @@ interface IMachine {
     error RecoveryMode();
     error SpokeMailboxAlreadyExists();
     error SpokeMailboxDoesNotExist();
+    error StaleData();
     error UnauthorizedDepositor();
     error UnauthorizedOperator();
     error UnexpectedResultLength();

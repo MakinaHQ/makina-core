@@ -1,0 +1,20 @@
+updateSpokeCaliberAccountingData.t.sol
+├── when the provided signature is invalid for the provided data
+│  └── it should revert with VerificationFailed
+└── when the provided signature is valid for the provided data
+   ├── when the provided data format is invalid
+   │  └── it should revert
+   └── when the provided data format is valid
+      ├── when data references an invalid chain
+      │  └── it should revert with InvalidChainId
+      └── when data does not reference an invalid chain
+         ├── when more than one result is returned for a given chainId
+         │  └── it should revert with UnexpectedResultLength
+         └── when no more than one result is returned per chainId
+            ├── when a received result does not come from a registered spoke caliber mailbox
+            │  └── it should revert with InvalidContractAddress
+            └── when all received results come from a registered spoke caliber mailbox
+               ├── when a received result does not come from the right function signature
+               │  └── it should revert with InvalidFunctionSignature
+               └── when all received results come from the right function signature
+                  └── it should update the accounting data for concerned spoke calibers

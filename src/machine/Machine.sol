@@ -310,9 +310,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             EthCallQueryResponse memory eqr = QueryResponseLib.parseEthCallQueryResponse(r.responses[i]);
 
             // Validate that update is not older than current chain last update, nor stale.
-            QueryResponseLib.validateBlockTime(
-                eqr.blockTime, Math.max(caliberData.timestamp, block.timestamp - $._caliberStaleThreshold)
-            );
+            uint256 responseTimestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
+            if (
+                responseTimestamp < caliberData.timestamp
+                    || block.timestamp - responseTimestamp >= $._caliberStaleThreshold
+            ) {
+                revert StaleData();
+            }
 
             // Validate that only one result is returned.
             if (eqr.results.length != 1) {
@@ -333,7 +337,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             caliberData.positions = accountingData.positions;
             caliberData.totalReceivedFromHM = accountingData.totalReceivedFromHM;
             caliberData.totalSentToHM = accountingData.totalSentToHM;
-            caliberData.timestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
+            caliberData.timestamp = responseTimestamp;
 
             unchecked {
                 ++i;
