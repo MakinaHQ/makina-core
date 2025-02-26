@@ -4,34 +4,22 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
 contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
+    bytes32 defaultRoot;
+
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();
 
         (caliber,) =
             _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
-        // generate merkle tree for instructions involving mock base token and vault
-        MerkleProofs._generateMerkleData(
-            address(caliber),
-            address(accountingToken),
-            address(0),
-            address(0),
-            0,
-            address(0),
-            0,
-            address(0),
-            0,
-            address(0),
-            0
-        );
+        defaultRoot = keccak256(abi.encodePacked("defaultRoot"));
 
         vm.prank(dao);
-        caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
+        caliber.scheduleAllowedInstrRootUpdate(defaultRoot);
         skip(caliber.timelockDuration() + 1);
     }
 
@@ -42,7 +30,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.recoveryMode(), false);
-        assertEq(caliber.allowedInstrRoot(), MerkleProofs._getAllowedInstrMerkleRoot());
+        assertEq(caliber.allowedInstrRoot(), defaultRoot);
         assertEq(caliber.timelockDuration(), 1 hours);
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
@@ -126,8 +114,6 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     }
 
     function test_ScheduleAllowedInstrRootUpdate() public {
-        bytes32 currentRoot = MerkleProofs._getAllowedInstrMerkleRoot();
-
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
 
@@ -136,7 +122,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         vm.prank(dao);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
-        assertEq(caliber.allowedInstrRoot(), currentRoot);
+        assertEq(caliber.allowedInstrRoot(), defaultRoot);
         assertEq(caliber.pendingAllowedInstrRoot(), newRoot);
         assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
 
