@@ -1,0 +1,19 @@
+{
+  "accountingToken": "0x0000000000000000000000000000000000000000",
+  "initialMechanic": "0x0000000000000000000000000000000000000000",
+  "initialSecurityCouncil": "0x0000000000000000000000000000000000000000",
+  "initialAuthority": "0x0000000000000000000000000000000000000000",
+  "depositor": "0x0000000000000000000000000000000000000000",
+  "initialCaliberStaleThreshold": 0,
+  "initialShareLimit": 0,
+  "hubCaliberAccountingTokenPosID": 0,
+  "hubCaliberPosStaleThreshold": 0,
+  "hubCaliberAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "hubCaliberTimelockDuration": 0,
+  "hubCaliberMaxPositionIncreaseLossBps": 0,
+  "hubCaliberMaxPositionDecreaseLossBps": 0,
+  "hubCaliberMaxSwapLossBps": 0,
+  "depositorOnlyMode": false,
+  "shareTokenName": "",
+  "shareTokenSymbol": ""
+}

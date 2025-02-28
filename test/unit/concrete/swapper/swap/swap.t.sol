@@ -3,12 +3,16 @@ pragma solidity 0.8.28;
 
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 
 import {Swapper_Unit_Concrete_Test} from "../Swapper.t.sol";
 
 contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
+    MockERC20 internal token0;
+    MockERC20 internal token1;
+
     // mock pool contract to simulate Dex aggregrator
     MockPool internal pool;
 
@@ -17,12 +21,15 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
     function setUp() public override {
         Swapper_Unit_Concrete_Test.setUp();
 
-        pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MPL");
+        token0 = new MockERC20("token0", "T1", 18);
+        token1 = new MockERC20("token1", "T2", 18);
+
+        pool = new MockPool(address(token0), address(token1), "MockPool", "MPL");
         initialPoolLiquidityOneSide = 1e30;
-        deal(address(accountingToken), address(this), initialPoolLiquidityOneSide, true);
-        deal(address(baseToken), address(this), initialPoolLiquidityOneSide, true);
-        accountingToken.approve(address(pool), initialPoolLiquidityOneSide);
-        baseToken.approve(address(pool), initialPoolLiquidityOneSide);
+        deal(address(token0), address(this), initialPoolLiquidityOneSide, true);
+        deal(address(token1), address(this), initialPoolLiquidityOneSide, true);
+        token0.approve(address(pool), initialPoolLiquidityOneSide);
+        token1.approve(address(pool), initialPoolLiquidityOneSide);
         pool.addLiquidity(initialPoolLiquidityOneSide, initialPoolLiquidityOneSide);
     }
 
@@ -31,7 +38,7 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
             aggregator: ISwapper.DexAggregator.ZEROX,
             data: bytes(""),
             inputToken: address(0),
-            outputToken: address(baseToken),
+            outputToken: address(token1),
             inputAmount: 1e18,
             minOutputAmount: 0
         });
@@ -57,7 +64,7 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
             data: bytes(""),
-            inputToken: address(baseToken),
+            inputToken: address(token1),
             outputToken: address(0),
             inputAmount: 1e18,
             minOutputAmount: 0
@@ -78,13 +85,13 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
             data: bytes(""),
-            inputToken: address(baseToken),
+            inputToken: address(token1),
             outputToken: address(0),
             inputAmount: 1e18,
             minOutputAmount: 0
         });
 
-        baseToken.approve(address(swapper), order.inputAmount);
+        token1.approve(address(swapper), order.inputAmount);
         vm.expectRevert(
             abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, order.inputAmount)
         );
@@ -96,14 +103,14 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = initialPoolLiquidityOneSide + 1;
-        deal(address(accountingToken), address(this), inputAmount, true);
-        accountingToken.approve(address(swapper), inputAmount);
+        deal(address(token0), address(this), inputAmount, true);
+        token0.approve(address(swapper), inputAmount);
 
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
-            data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
-            inputToken: address(accountingToken),
-            outputToken: address(baseToken),
+            data: abi.encodeCall(MockPool.swap, (address(token0), inputAmount)),
+            inputToken: address(token0),
+            outputToken: address(token1),
             inputAmount: inputAmount,
             minOutputAmount: 0
         });
@@ -117,16 +124,16 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(this), inputAmount, true);
-        accountingToken.approve(address(swapper), inputAmount);
+        deal(address(token0), address(this), inputAmount, true);
+        token0.approve(address(swapper), inputAmount);
 
-        uint256 previewSwap = pool.previewSwap(address(accountingToken), inputAmount);
+        uint256 previewSwap = pool.previewSwap(address(token0), inputAmount);
 
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
-            data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
-            inputToken: address(accountingToken),
-            outputToken: address(baseToken),
+            data: abi.encodeCall(MockPool.swap, (address(token0), inputAmount)),
+            inputToken: address(token0),
+            outputToken: address(token1),
             inputAmount: inputAmount,
             minOutputAmount: previewSwap + 1
         });
@@ -140,32 +147,27 @@ contract Swap_Unit_Concrete_Test is Swapper_Unit_Concrete_Test {
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(this), inputAmount, true);
-        accountingToken.approve(address(swapper), inputAmount);
+        deal(address(token0), address(this), inputAmount, true);
+        token0.approve(address(swapper), inputAmount);
 
-        uint256 previewSwap = pool.previewSwap(address(accountingToken), inputAmount);
+        uint256 previewSwap = pool.previewSwap(address(token0), inputAmount);
 
         ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
             aggregator: ISwapper.DexAggregator.ZEROX,
-            data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
-            inputToken: address(accountingToken),
-            outputToken: address(baseToken),
+            data: abi.encodeCall(MockPool.swap, (address(token0), inputAmount)),
+            inputToken: address(token0),
+            outputToken: address(token1),
             inputAmount: inputAmount,
             minOutputAmount: previewSwap
         });
 
         vm.expectEmit(true, true, true, true, address(swapper));
         emit ISwapper.Swapped(
-            address(this),
-            ISwapper.DexAggregator.ZEROX,
-            address(accountingToken),
-            address(baseToken),
-            inputAmount,
-            previewSwap
+            address(this), ISwapper.DexAggregator.ZEROX, address(token0), address(token1), inputAmount, previewSwap
         );
         uint256 outputAmount = swapper.swap(order);
 
         assertEq(outputAmount, previewSwap);
-        assertEq(baseToken.balanceOf(address(this)), outputAmount);
+        assertEq(token1.balanceOf(address(this)), outputAmount);
     }
 }

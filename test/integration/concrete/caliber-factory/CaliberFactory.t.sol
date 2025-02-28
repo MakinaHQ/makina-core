@@ -11,25 +11,25 @@ import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
     function test_Getters() public view {
-        assertEq(spokeCaliberFactory.registry(), address(spokeRegistry));
-        assertEq(spokeCaliberFactory.isCaliber(address(0)), false);
+        assertEq(caliberFactory.registry(), address(spokeRegistry));
+        assertEq(caliberFactory.isCaliber(address(0)), false);
     }
 
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliberFactory.CaliberDeployParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeCaliberFactory.deployCaliber(params);
+        caliberFactory.deployCaliber(params);
     }
 
     function test_DeployCaliber() public {
         address _machine = makeAddr("machine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
-        vm.expectEmit(false, false, false, false, address(spokeCaliberFactory));
+        vm.expectEmit(false, false, false, false, address(caliberFactory));
         emit ICaliberFactory.CaliberDeployed(address(0));
         vm.prank(dao);
         caliber = Caliber(
-            spokeCaliberFactory.deployCaliber(
+            caliberFactory.deployCaliber(
                 ICaliberFactory.CaliberDeployParams({
                     hubMachineEndpoint: _machine,
                     accountingToken: address(accountingToken),
@@ -46,7 +46,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                 })
             )
         );
-        assertEq(spokeCaliberFactory.isCaliber(address(caliber)), true);
+        assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
         assertEq(ISpokeCaliberMailbox(caliber.mailbox()).caliber(), address(caliber));
         assertEq(caliber.accountingToken(), address(accountingToken));

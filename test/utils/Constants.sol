@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: Unlicense
+pragma solidity 0.8.28;
+
+contract Constants {
+    uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
+
+    string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
+    string public constant DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL = "MS";
+    uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
+    uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
+
+    uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
+    uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
+    uint256 public constant DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS = 100;
+    uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
+    uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
+
+    uint256 public constant HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1;
+    uint256 public constant HUB_CALIBER_BASE_TOKEN_1_POS_ID = 2;
+
+    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1001;
+    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_1_POS_ID = 1002;
+
+    uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
+}

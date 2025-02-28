@@ -6,9 +6,9 @@ import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
-import {Machine_Integration_Fuzz_Test} from "./Machine.t.sol";
+import {Base_Hub_Test} from "test/base/Base.t.sol";
 
-contract ConvertToShares_Integration_Fuzz_Test is Machine_Integration_Fuzz_Test {
+contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
     MockERC20 public accountingToken;
 
     Machine public machine;

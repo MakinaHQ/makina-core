@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {console} from "forge-std/console.sol";
-
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
@@ -22,9 +20,9 @@ import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Base_Hub_Test} from "test/base/Base.t.sol";
 
-contract UpdateTotalAum_Integration_Fuzz_Test is Base_Test {
+contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
 
     uint256 internal constant VAULT_POS_ID = 3;
@@ -62,9 +60,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Test {
     // uint256 spokeCaliberTotalBaseTokenSentToHub;
 
     function setUp() public override {
-        Base_Test.setUp();
-        _coreSharedSetup();
-        _hubSetup();
+        Base_Hub_Test.setUp();
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {

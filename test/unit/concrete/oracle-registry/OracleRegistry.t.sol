@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Base_Test} from "test/base/Base.t.sol";
 
 contract OracleRegistry_Unit_Concrete_Test is Base_Test {
     MockERC20 internal baseToken;
@@ -11,7 +11,7 @@ contract OracleRegistry_Unit_Concrete_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        _coreSharedSetup();
-        _accessManagerTestSetup();
+        (accessManager, oracleRegistry,) = deploySharedCore(deployer, dao);
+        setupAccessManager(accessManager, dao);
     }
 }
