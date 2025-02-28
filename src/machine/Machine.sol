@@ -157,6 +157,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         return _getMachineStorage()._accountingToken;
     }
 
+    /// @inheritdoc IMachine
     function hubCaliberMailbox() external view returns (address) {
         return _getMachineStorage()._hubCaliberMailbox;
     }

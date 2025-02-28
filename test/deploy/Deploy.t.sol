@@ -89,8 +89,8 @@ contract Deploy_Test is Base_Test {
         DeployHubMachine.MachineInitParamsSorted memory machineInitParams =
             abi.decode(vm.parseJson(deployHubMachine.paramsJson()), (DeployHubMachine.MachineInitParamsSorted));
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
-        // IHubDualMailbox dualMailbox = IHubDualMailbox(machine.hubCaliberMailbox());
-        // ICaliber hubCaliber = ICaliber(dualMailbox.caliber());
+        IHubDualMailbox dualMailbox = IHubDualMailbox(machine.hubCaliberMailbox());
+        ICaliber hubCaliber = ICaliber(dualMailbox.caliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
         assertEq(machine.mechanic(), machineInitParams.initialMechanic);
@@ -99,8 +99,8 @@ contract Deploy_Test is Base_Test {
         assertEq(machine.shareLimit(), machineInitParams.initialShareLimit);
         assertEq(IAccessManaged(address(machine)).authority(), machineInitParams.initialAuthority);
         assertEq(machine.getSpokeCalibersLength(), 0);
-        // assertEq(dualMailbox.machine(), address(machine));
-        // assertEq(hubCaliber.mailbox(), dualMailbox);
+        assertEq(dualMailbox.machine(), address(machine));
+        assertEq(hubCaliber.mailbox(), address(dualMailbox));
         assertEq(shareToken.name(), machineInitParams.shareTokenName);
         assertEq(shareToken.symbol(), machineInitParams.shareTokenSymbol);
     }
