@@ -1,0 +1,4 @@
+manageTransferFromCaliberToMachine.t.sol
+├── when sender is not the associated caliber
+│  └── it should revert with NotCaliber
+└── when sender is the associated caliber

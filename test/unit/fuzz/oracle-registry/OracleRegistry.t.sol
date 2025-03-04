@@ -6,6 +6,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
 contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
+    MockERC20 internal baseToken;
     MockERC20 internal quoteToken;
     MockPriceFeed internal basePriceFeed1;
     MockPriceFeed internal basePriceFeed2;
@@ -31,6 +32,12 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         uint32 price_x_e;
         uint32 price_q_y;
         uint32 price_y_e;
+    }
+
+    function setUp() public override {
+        Base_Test.setUp();
+        _coreSharedSetup();
+        _accessManagerTestSetup();
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {

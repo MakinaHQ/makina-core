@@ -5,9 +5,9 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {OracleRegistry_Unit_Concrete_Test} from "../OracleRegistry.t.sol";
 
-contract GetPrice_Unit_Concrete_Test is Base_Test {
+contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     /// @dev A and B are either base or quote tokens, C and D are intermediate tokens
     /// and E is the reference currency of the oracle registry
     uint256 internal constant PRICE_A_E = 150;
@@ -20,15 +20,13 @@ contract GetPrice_Unit_Concrete_Test is Base_Test {
 
     uint256 internal constant PRICE_B_A = 400;
 
-    MockERC20 internal quoteToken;
-
     MockPriceFeed internal basePriceFeed1;
     MockPriceFeed internal basePriceFeed2;
     MockPriceFeed internal quotePriceFeed1;
     MockPriceFeed internal quotePriceFeed2;
 
     function setUp() public override {
-        Base_Test.setUp();
+        OracleRegistry_Unit_Concrete_Test.setUp();
         baseToken = new MockERC20("Base Token", "BT", 18);
         quoteToken = new MockERC20("Quote Token", "QT", 8);
     }

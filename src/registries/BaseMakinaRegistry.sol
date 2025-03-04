@@ -53,11 +53,6 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function caliberFactory() public view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._caliberFactory;
-    }
-
-    /// @inheritdoc IBaseMakinaRegistry
     function setOracleRegistry(address _oracleRegistry) external override restricted {
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit OracleRegistryChange($._oracleRegistry, _oracleRegistry);
@@ -76,12 +71,5 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit CaliberBeaconChange($._caliberBeacon, _caliberBeacon);
         $._caliberBeacon = _caliberBeacon;
-    }
-
-    /// @inheritdoc IBaseMakinaRegistry
-    function setCaliberFactory(address _caliberFactory) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
-        emit CaliberFactoryChange($._caliberFactory, _caliberFactory);
-        $._caliberFactory = _caliberFactory;
     }
 }

@@ -7,6 +7,12 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {EthCallQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
+import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
+import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
+
 import {MachineShare} from "./MachineShare.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
@@ -15,6 +21,8 @@ import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {ISpokeCaliberMailbox} from "../interfaces/ISpokeCaliberMailbox.sol";
+import {ISpokeMachineMailbox} from "../interfaces/ISpokeMachineMailbox.sol";
 import {Constants} from "../libraries/Constants.sol";
 
 contract Machine is AccessManagedUpgradeable, IMachine {
@@ -24,6 +32,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @inheritdoc IMachine
     address public immutable registry;
+
+    /// @inheritdoc IMachine
+    address public immutable wormhole;
 
     /// @custom:storage-location erc7201:makina.storage.Machine
     struct MachineStorage {
@@ -56,8 +67,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         }
     }
 
-    constructor(address _registry) {
+    constructor(address _registry, address _wormhole) {
         registry = _registry;
+        wormhole = _wormhole;
         _disableInitializers();
     }
 
@@ -190,8 +202,18 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function getCalibersLength() external view override returns (uint256) {
-        return _getMachineStorage()._foreignChainIds.length + 1;
+    function getSpokeCalibersLength() external view override returns (uint256) {
+        return _getMachineStorage()._foreignChainIds.length;
+    }
+
+    /// @inheritdoc IMachine
+    function getSpokeChainId(uint256 idx) external view override returns (uint256) {
+        return _getMachineStorage()._foreignChainIds[idx];
+    }
+
+    /// @inheritdoc IMachine
+    function getSpokeCaliberAccountingData(uint256 chainId) external view override returns (SpokeCaliberData memory) {
+        return _getMachineStorage()._foreignChainIdToSpokeCaliberData[chainId];
     }
 
     /// @inheritdoc IMachine
@@ -227,7 +249,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
         address mailbox = $._hubCaliberMailbox;
 
-        // @TODO implement mailboxes for spoke calibers
+        // @TODO implement fund bridging to spoke calibers
 
         IERC20Metadata(token).forceApprove(mailbox, amount);
         emit TransferToCaliber($._hubChainId, token, amount);
@@ -268,6 +290,92 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         emit Deposit(msg.sender, receiver, assets, shares);
 
         return shares;
+    }
+
+    function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
+        external
+    {
+        MachineStorage storage $ = _getMachineStorage();
+
+        QueryResponse memory r = QueryResponseLib.parseAndVerifyQueryResponse(wormhole, response, signatures);
+        uint256 numResponses = r.responses.length;
+
+        for (uint256 i; i < numResponses;) {
+            uint256 _chainId = r.responses[i].chainId;
+            SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[_chainId];
+            if (caliberData.chainId != _chainId) {
+                revert InvalidChainId();
+            }
+
+            EthCallQueryResponse memory eqr = QueryResponseLib.parseEthCallQueryResponse(r.responses[i]);
+
+            // Validate that update is not older than current chain last update, nor stale.
+            uint256 responseTimestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
+            if (
+                responseTimestamp < caliberData.timestamp
+                    || block.timestamp - responseTimestamp >= $._caliberStaleThreshold
+            ) {
+                revert StaleData();
+            }
+
+            // Validate that only one result is returned.
+            if (eqr.results.length != 1) {
+                revert UnexpectedResultLength();
+            }
+
+            // Validate addresses and function signatures.
+            address[] memory validAddresses = new address[](1);
+            bytes4[] memory validFunctionSignatures = new bytes4[](1);
+            validAddresses[0] = ISpokeMachineMailbox(caliberData.machineMailbox).spokeCaliberMailbox();
+            validFunctionSignatures[0] = ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector;
+            QueryResponseLib.validateEthCallRecord(eqr.results[0], validAddresses, validFunctionSignatures);
+
+            // Decode and update accounting data.
+            ISpokeCaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+                abi.decode(eqr.results[0].result, (ISpokeCaliberMailbox.SpokeCaliberAccountingData));
+            caliberData.netAum = accountingData.netAum;
+            caliberData.positions = accountingData.positions;
+            caliberData.totalReceivedFromHM = accountingData.totalReceivedFromHM;
+            caliberData.totalSentToHM = accountingData.totalSentToHM;
+            caliberData.timestamp = responseTimestamp;
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @inheritdoc IMachine
+    function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
+        MachineStorage storage $ = _getMachineStorage();
+        if ($._foreignChainIdToSpokeCaliberData[chainId].chainId == chainId) {
+            revert SpokeMailboxAlreadyExists();
+        }
+        address mailbox = address(
+            new BeaconProxy(
+                IHubRegistry(registry).spokeMachineMailboxBeacon(),
+                abi.encodeCall(ISpokeMachineMailbox.initialize, (address(this), $._hubChainId))
+            )
+        );
+
+        $._isMachineMailbox[mailbox] = true;
+        $._foreignChainIds.push(chainId);
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        data.chainId = chainId;
+        data.machineMailbox = mailbox;
+        emit SpokeMailboxDeployed(mailbox, chainId);
+
+        return mailbox;
+    }
+
+    /// @inheritdoc IMachine
+    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        if (data.chainId != chainId) {
+            revert SpokeMailboxDoesNotExist();
+        }
+        ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
     }
 
     /// @inheritdoc IMachine
@@ -360,13 +468,30 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         // local caliber net AUM
         totalAum += IHubDualMailbox($._hubCaliberMailbox).getHubCaliberAccountingData().netAum;
 
-        // @TODO spoke calibers net AUM
+        uint256 currentTimestamp = block.timestamp;
+        uint256 len = $._foreignChainIds.length;
+        for (uint256 i; i < len;) {
+            uint256 chainId = $._foreignChainIds[i];
+            SpokeCaliberData memory spokeCaliberData = $._foreignChainIdToSpokeCaliberData[chainId];
+            if (currentTimestamp - spokeCaliberData.timestamp > $._caliberStaleThreshold) {
+                revert CaliberAccountingStale(chainId);
+            }
+            totalAum += spokeCaliberData.netAum;
+            // @TODO take async fund bridging into account
+
+            unchecked {
+                ++i;
+            }
+        }
 
         // idle tokens
-        uint256 len = $._idleTokens.length();
-        for (uint256 i; i < len; i++) {
+        len = $._idleTokens.length();
+        for (uint256 i; i < len;) {
             address token = $._idleTokens.at(i);
             totalAum += _accountingValueOf(token, IERC20Metadata(token).balanceOf(address(this)));
+            unchecked {
+                ++i;
+            }
         }
         return totalAum;
     }

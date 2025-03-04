@@ -7,6 +7,9 @@ interface IHubRegistry is IBaseMakinaRegistry {
     event MachineBeaconChange(address indexed oldMachineBeacon, address indexed newMachineBeacon);
     event MachineFactoryChange(address indexed oldMachineFactory, address indexed newMachineFactory);
     event HubDualMailboxBeaconChange(address indexed oldHubDualMailboxBeacon, address indexed newHubDualMailboxBeacon);
+    event SpokeMachineMailboxBeaconChange(
+        address indexed oldSpokeMachineMailboxBeacon, address indexed newSpokeMachineMailboxBeacon
+    );
 
     /// @notice Address of the machine factory.
     function machineFactory() external view returns (address);
@@ -16,6 +19,9 @@ interface IHubRegistry is IBaseMakinaRegistry {
 
     /// @notice Address of the hub dual mailbox beacon contract.
     function hubDualMailboxBeacon() external view returns (address);
+
+    /// @notice Address of the spoke machine mailbox beacon contract.
+    function spokeMachineMailboxBeacon() external view returns (address);
 
     /// @notice Sets the machine factory address.
     /// @param _machineFactory The machine factory address.
@@ -28,4 +34,8 @@ interface IHubRegistry is IBaseMakinaRegistry {
     /// @notice Sets the hub dual mailbox beacon address.
     /// @param _hubDualMailboxBeacon The machine hub dual mailbox beacon address.
     function setHubDualMailboxBeacon(address _hubDualMailboxBeacon) external;
+
+    /// @notice Sets the spoke machine mailbox beacon address.
+    /// @param _spokeMachineMailboxBeacon The spoke machine mailbox beacon address.
+    function setSpokeMachineMailboxBeacon(address _spokeMachineMailboxBeacon) external;
 }

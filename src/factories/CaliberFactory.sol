@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
+import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 
@@ -27,7 +27,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     function deployCaliber(CaliberDeployParams calldata deployParams) external override restricted returns (address) {
         ICaliber.InitParams memory initParams = ICaliber.InitParams({
             hubMachineEndpoint: deployParams.hubMachineEndpoint,
-            mailboxBeacon: IHubRegistry(registry).hubDualMailboxBeacon(),
+            mailboxBeacon: ISpokeRegistry(registry).spokeCaliberMailboxBeacon(),
             accountingToken: deployParams.accountingToken,
             accountingTokenPosId: deployParams.accountingTokenPosId,
             initialPositionStaleThreshold: deployParams.initialPositionStaleThreshold,
@@ -41,7 +41,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
             initialAuthority: deployParams.initialAuthority
         });
         address caliber = address(
-            new BeaconProxy(IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams)))
+            new BeaconProxy(ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams)))
         );
         isCaliber[caliber] = true;
         emit CaliberDeployed(caliber);

@@ -3,12 +3,18 @@ pragma solidity 0.8.28;
 
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {Caliber} from "src/caliber/Caliber.sol";
 
 import {Base_Test} from "test/BaseTest.sol";
 
 contract Caliber_Integration_Fuzz_Test is Base_Test {
+    MockERC20 public accountingToken;
+    MockERC20 public baseToken;
+
     MockPriceFeed private b1PriceFeed1;
     MockPriceFeed private aPriceFeed1;
+
+    Caliber public caliber;
 
     uint256 private accountingTokenUnit;
     uint256 private baseTokenUnit;
@@ -20,6 +26,12 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         uint8 bf1Decimals;
         uint16 a_e_price; // price of accounting token in oracle registry's reference currency
         uint16 b_e_price; // price of base token in oracle registry's reference currency
+    }
+
+    function setUp() public override {
+        Base_Test.setUp();
+        _coreSharedSetup();
+        _spokeSetup();
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
@@ -51,7 +63,8 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
         );
         vm.stopPrank();
 
-        caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (caliber,) =
+            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 
     function testFuzz_AccountForATPosition(Data memory data, uint256 amount) public {

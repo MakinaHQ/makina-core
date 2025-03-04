@@ -7,13 +7,12 @@ import {ICaliberFactory} from "../src/interfaces/ICaliberFactory.sol";
 
 import "../test/Base.sol";
 
-contract DeployCalibers is Script {
+contract DeploySpokeCalibers is Script {
     using stdJson for string;
 
     struct DeploymentParams {
         address accountingToken;
         uint256 accountingTokenPosId;
-        address hubMachineEndpoint;
         bytes32 initialAllowedInstrRoot;
         uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxPositionDecreaseLossBps;
@@ -21,15 +20,16 @@ contract DeployCalibers is Script {
         address initialMechanic;
         uint256 initialPositionStaleThreshold;
         uint256 initialTimelockDuration;
+        address spokeMachineMailbox;
     }
 
-    string public constantsFilename = vm.envString("CONSTANTS_FILENAME");
-    string public outputFilename = vm.envString("OUTPUT_FILENAME");
+    string public constantsFilename = vm.envString("SPOKE_CONSTANTS_FILENAME");
+    string public outputFilename = vm.envString("SPOKE_OUTPUT_FILENAME");
 
     string public jsonConstants;
     string public jsonOutput;
 
-    CaliberFactory public caliberFactory;
+    CaliberFactory public spokeCaliberFactory;
 
     address public accessManager;
     address public securityCouncil;
@@ -48,10 +48,10 @@ contract DeployCalibers is Script {
         securityCouncil = abi.decode(vm.parseJson(jsonConstants, ".securityCouncil"), (address));
 
         // Read output from DeploySpectraGovernance script
-        path = string.concat(basePath, "output/DeployMakinaCore-");
+        path = string.concat(basePath, "output/DeployMakinaCore-Spoke-");
         path = string.concat(path, outputFilename);
         jsonOutput = vm.readFile(path);
-        caliberFactory = CaliberFactory(abi.decode(vm.parseJson(jsonOutput, ".CaliberFactory"), (address)));
+        spokeCaliberFactory = CaliberFactory(abi.decode(vm.parseJson(jsonOutput, ".CaliberFactory"), (address)));
         accessManager = abi.decode(vm.parseJson(jsonOutput, ".AccessManager"), (address));
 
         vm.startBroadcast();
@@ -59,9 +59,9 @@ contract DeployCalibers is Script {
         // Deploy all calibers
         for (uint256 i; i < _calibersToDeploy.length; i++) {
             deployedCalibers.push(
-                caliberFactory.deployCaliber(
+                spokeCaliberFactory.deployCaliber(
                     ICaliberFactory.CaliberDeployParams(
-                        _calibersToDeploy[i].hubMachineEndpoint,
+                        _calibersToDeploy[i].spokeMachineMailbox,
                         _calibersToDeploy[i].accountingToken,
                         _calibersToDeploy[i].accountingTokenPosId,
                         _calibersToDeploy[i].initialPositionStaleThreshold,
@@ -80,9 +80,9 @@ contract DeployCalibers is Script {
         vm.stopBroadcast();
 
         // Write to file
-        path = string.concat(basePath, "output/DeployCalibers-");
+        path = string.concat(basePath, "output/DeploySpokeCalibers-");
         path = string.concat(path, outputFilename);
-        string memory key = "key-deploy-calibers-output-file";
+        string memory key = "key-deploy-spoke-calibers-output-file";
         vm.writeJson(vm.serializeAddress(key, "calibers", deployedCalibers), path);
     }
 }

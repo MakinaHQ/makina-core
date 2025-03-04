@@ -3,12 +3,13 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";
 
-contract SetFeedStaleThreshold_Unit_Concrete_Test is Base_Test {
+contract SetFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     MockPriceFeed internal priceFeed1;
 
     function test_RevertWhen_CallerWithoutRole() public {
@@ -17,6 +18,7 @@ contract SetFeedStaleThreshold_Unit_Concrete_Test is Base_Test {
     }
 
     function test_SetFeedStaleThreshold() public {
+        baseToken = new MockERC20("Base Token", "BT", 18);
         priceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 0);

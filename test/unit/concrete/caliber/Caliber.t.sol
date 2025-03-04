@@ -6,16 +6,14 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
-import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
+import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
-contract Caliber_Unit_Concrete_Test is Unit_Concrete_Test {
+contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function setUp() public override {
-        Unit_Concrete_Test.setUp();
+        Unit_Concrete_Spoke_Test.setUp();
 
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(address(accountingToken), address(aPriceFeed1), 0, address(0), 0);
-
-        caliber = _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (caliber,) =
+            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
         _generateMerkleData(

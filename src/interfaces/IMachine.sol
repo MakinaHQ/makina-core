@@ -6,11 +6,14 @@ interface IMachine {
     error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);
-    error MailboxAlreadyExists();
     error NotMailbox();
     error RecoveryMode();
+    error SpokeMailboxAlreadyExists();
+    error SpokeMailboxDoesNotExist();
+    error StaleData();
     error UnauthorizedDepositor();
     error UnauthorizedOperator();
+    error UnexpectedResultLength();
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 amount);
@@ -21,6 +24,7 @@ interface IMachine {
     event RecoveryModeChanged(bool indexed enabled);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event ShareTokenDeployed(address indexed shareToken);
+    event SpokeMailboxDeployed(address spokeMailbox, uint256 indexed spokeChainId);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
 
@@ -37,7 +41,7 @@ interface IMachine {
     /// @param hubCaliberAllowedInstrRoot The root of the Merkle tree containing allowed caliber instructions.
     /// @param hubCaliberTimelockDuration The duration of the hub caliber's Merkle tree root update timelock.
     /// @param hubCaliberMaxPositionIncreaseLossBps The max allowed value loss (in basis point) in the hub caliber when increasing a position.
-    ///  @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
+    /// @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
     /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
     /// @param shareTokenName The name of the share token.
@@ -79,6 +83,9 @@ interface IMachine {
     /// @notice Address of the registry.
     function registry() external view returns (address);
 
+    /// @notice Address of the Wormhole Core Bridge.
+    function wormhole() external view returns (address);
+
     /// @notice Address of the mechanic.
     function mechanic() external view returns (address);
 
@@ -112,12 +119,18 @@ interface IMachine {
     /// @notice Timestamp of the last global machine accounting.
     function lastGlobalAccountingTime() external view returns (uint256);
 
-    /// @notice Number of calibers associated with the machine.
-    function getCalibersLength() external view returns (uint256);
-
     /// @notice Returns whether a token is an idle token help by the machine.
     /// @param token The address of the token.
     function isIdleToken(address token) external view returns (bool);
+
+    /// @notice Number of calibers associated with the machine.
+    function getSpokeCalibersLength() external view returns (uint256);
+
+    /// @notice Spoke caliber index => Spoke Chain ID.
+    function getSpokeChainId(uint256 idx) external view returns (uint256);
+
+    /// @notice Spoke Chain ID => Spoke Caliber Data.
+    function getSpokeCaliberAccountingData(uint256 chainId) external view returns (SpokeCaliberData memory);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
@@ -143,6 +156,15 @@ interface IMachine {
     /// @param receiver The receiver of minted shares
     /// @return shares The amount of shares minted
     function deposit(uint256 assets, address receiver) external returns (uint256);
+
+    /// @notice Deploys a new machine mailbox for a spoke caliber.
+    /// @param chainId The foreign chain ID of the spoke caliber.
+    function createSpokeMailbox(uint256 chainId) external returns (address);
+
+    /// @notice Sets the spoke caliber mailbox in the machine mailbox associated to given spoke chain ID.
+    /// @param chainId The foreign chain ID of the spoke caliber.
+    /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
+    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

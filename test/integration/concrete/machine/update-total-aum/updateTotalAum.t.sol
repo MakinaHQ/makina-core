@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
+import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -13,7 +17,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
     }
 
-    function test_RevertGiven_CaliberStale()
+    function test_RevertGiven_HubCaliberStale()
         public
         withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
     {
@@ -32,6 +36,20 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
+        machine.updateTotalAum();
+    }
+
+    function test_RevertGiven_SpokeCaliberStale()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        // deploy and setup spoke machine mailbox
+        vm.startPrank(dao);
+        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
+        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
         machine.updateTotalAum();
     }
 
@@ -201,5 +219,63 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
+    }
+
+    function test_UpdateTotalAum_PositiveSpokeCaliberValue()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        // deploy and setup spoke machine mailbox
+        vm.startPrank(dao);
+        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
+        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        vm.stopPrank();
+
+        // update spoke caliber accounting data
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingData(false, false);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.TotalAumUpdated(queriedData.netAum, block.timestamp);
+        machine.updateTotalAum();
+        assertEq(machine.lastTotalAum(), queriedData.netAum);
+    }
+
+    function test_UpdateTotalAum_NegativeSpokeCaliberValue()
+        public
+        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+    {
+        // deploy and setup spoke machine mailbox
+        vm.startPrank(dao);
+        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
+        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        vm.stopPrank();
+
+        // update spoke caliber accounting data
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingData(true, false);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        // vm.expectEmit(false, false, false, true, address(machine));
+        // emit IMachine.TotalAumUpdated(0, block.timestamp);
+        machine.updateTotalAum();
+        assertEq(machine.lastTotalAum(), 0);
     }
 }

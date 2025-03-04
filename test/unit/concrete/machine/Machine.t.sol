@@ -6,28 +6,17 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
-import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
+import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
-contract Machine_Unit_Concrete_Test is Unit_Concrete_Test {
-    function setUp() public virtual override {
-        Unit_Concrete_Test.setUp();
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-
-        (machine,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
-    }
-
+contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
         assertEq(machine.lastGlobalAccountingTime(), 0);
-        assertEq(machine.getCalibersLength(), 1);
         assertNotEq(machine.hubCaliberMailbox(), address(0));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getSpokeCalibersLength(), 0);
     }
 
     function test_ConvertToShares() public view {
