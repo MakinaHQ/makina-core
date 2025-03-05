@@ -5,26 +5,23 @@ import {Test} from "forge-std/Test.sol";
 
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
-import {ChainsData} from "../utils/ChainsData.sol";
+import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/OracleRegistry.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {Swapper} from "src/swap/Swapper.sol";
 
@@ -129,7 +126,7 @@ abstract contract Base_Spoke_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        hubChainId = ChainsData.CHAIN_ID_ETHEREUM;
+        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
 
         SpokeCore memory deployment = deploySpokeCore(deployer, dao, hubChainId);
         accessManager = deployment.accessManager;

@@ -23,8 +23,7 @@ contract DeployMakinaCoreHub is DeployMakinaCore {
         paramsJson = vm.readFile(paramsPath);
 
         // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "output/");
-        outputPath = string.concat(outputPath, "DeployMakinaCore-Hub-");
+        outputPath = string.concat(basePath, "output/DeployMakinaCore-Hub-");
         outputPath = string.concat(outputPath, outputFilename);
     }
 

@@ -23,8 +23,7 @@ contract DeployMakinaCoreSpoke is DeployMakinaCore {
         paramsJson = vm.readFile(paramsPath);
 
         // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "output/");
-        outputPath = string.concat(outputPath, "DeployMakinaCore-Spoke-");
+        outputPath = string.concat(basePath, "output/DeployMakinaCore-Spoke-");
         outputPath = string.concat(outputPath, outputFilename);
     }
 

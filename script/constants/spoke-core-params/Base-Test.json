@@ -1,7 +1,7 @@
 {
-  "dao": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
-  "governor": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
-  "securityCouncil": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
+  "dao": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "governor": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "securityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
   "hubChainId": 1,
   "priceFeedData": [
     {

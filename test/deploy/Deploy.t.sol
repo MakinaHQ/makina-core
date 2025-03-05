@@ -6,7 +6,7 @@ import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {ChainsData} from "test/utils/ChainsData.sol";
+import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {DeployMakinaCoreHub} from "script/deployments/DeployMakinaCoreHub.s.sol";
 import {DeployMakinaCoreSpoke} from "script/deployments/DeployMakinaCoreSpoke.s.sol";
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
@@ -19,7 +19,7 @@ import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 
 import {Base_Test} from "../base/Base.t.sol";
 
-contract Deploy_Test is Base_Test {
+contract Deploy_Scripts_Test is Base_Test {
     using stdJson for string;
     using stdStorage for StdStorage;
 
@@ -30,8 +30,8 @@ contract Deploy_Test is Base_Test {
     DeployHubMachine public deployHubMachine;
 
     function testLoadedState() public {
-        vm.setEnv("HUB_CORE_PARAMS_FILENAME", "Mainnet-Test.json");
-        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", "Base-Test.json");
+        vm.setEnv("HUB_CORE_PARAMS_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM).constantsFilename);
+        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE).constantsFilename);
 
         deployMakinaCoreHub = new DeployMakinaCoreHub();
         deployMakinaCoreSpoke = new DeployMakinaCoreSpoke();
@@ -50,13 +50,13 @@ contract Deploy_Test is Base_Test {
     }
 
     function testDeployScriptHub() public {
-        ChainsData.ChainData memory chainData = ChainsData.getChainData(ChainsData.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainData.foundryAlias});
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_PARAMS_FILENAME", chainData.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainData.constantsFilename);
-        vm.setEnv("HUB_MACHINE_PARAMS_FILENAME", chainData.constantsFilename);
-        vm.setEnv("HUB_MACHINE_OUTPUT_FILENAME", chainData.constantsFilename);
+        vm.setEnv("HUB_CORE_PARAMS_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_MACHINE_PARAMS_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_MACHINE_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         deployMakinaCoreHub = new DeployMakinaCoreHub();
         deployMakinaCoreHub.run();
@@ -106,13 +106,13 @@ contract Deploy_Test is Base_Test {
     }
 
     function testDeployScriptSpoke() public {
-        ChainsData.ChainData memory chainData = ChainsData.getChainData(ChainsData.CHAIN_ID_BASE);
-        vm.createSelectFork({urlOrAlias: chainData.foundryAlias});
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", chainData.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainData.constantsFilename);
-        vm.setEnv("SPOKE_CALIBER_PARAMS_FILENAME", chainData.constantsFilename);
-        vm.setEnv("SPOKE_CALIBER_OUTPUT_FILENAME", chainData.constantsFilename);
+        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CALIBER_PARAMS_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CALIBER_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         deployMakinaCoreSpoke = new DeployMakinaCoreSpoke();
         deployMakinaCoreSpoke.run();

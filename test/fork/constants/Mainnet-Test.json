@@ -1,7 +1,9 @@
 {
-  "dao": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "governor": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "securityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "dao": "0x0000000000000000000000000000000000000DA0",
+  "mechanic": "0x00000000000000000000000000000000000003EC",
+  "securityCouncil": "0x000000000000000000000000000000000000005C",
+  "usdc": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "weth": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
   "wormhole": "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B",
   "priceFeedData": [
     {
@@ -35,6 +37,13 @@
     {
       "token": "0x4c9EDD5852cd905f086C759E8383e09bff1E68B3",
       "feed1": "0xa569d910839Ae8865Da8F8e70FfFb0cBA869F961",
+      "stalenessThreshold1": 86400,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    },
+    {
+      "token": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "feed1": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
       "stalenessThreshold1": 86400,
       "feed2": "0x0000000000000000000000000000000000000000",
       "stalenessThreshold2": 0

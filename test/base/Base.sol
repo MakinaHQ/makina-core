@@ -5,8 +5,6 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
-
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";

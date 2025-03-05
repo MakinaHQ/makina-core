@@ -20,7 +20,7 @@
     "coverage": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\"",
     "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test|src/caliber/vm)\" --report debug",
     "genMerkleDataMock": "node script/merkle/generateMerkleTreeDataMock.js",
-    "deployMakinaCoreVTNMainnet": "forge script script/DeployMakinaCore.s.sol --rpc-url vtnmainnet --account MAKINA_TEST_DEPLOYER --slow --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv",
-    "deployCalibersVTNMainnet": "forge script script/DeployCalibers.s.sol --rpc-url vtnmainnet --account MAKINA_TEST_DEPLOYER --slow --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv"
+    "deployMakinaCoreHubVTN": "source .env && HUB_CORE_PARAMS_FILENAME=Mainnet-test.json HUB_CORE_OUTPUT_FILENAME=Mainnet-VTN.json forge script script/deployments/DeployMakinaCoreHub.s.sol --rpc-url vtn_mainnet --account $DEPLOYER_ACCOUNT_NAME --slow  --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv",
+    "deployHubMachineVTN": "source .env && HUB_CORE_OUTPUT_FILENAME=Mainnet-VTN.json HUB_MACHINE_PARAMS_FILENAME=Mainnet-test.json HUB_MACHINE_OUTPUT_FILENAME=Mainnet-VTN.json forge script script/deployments/DeployHubMachine.s.sol --rpc-url vtn_mainnet --account $DEPLOYER_ACCOUNT_NAME --slow --broadcast --verify --etherscan-api-key $VTN_MAINNET_ETHERSCAN_API_KEY -vvvv"
   }
 }

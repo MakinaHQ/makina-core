@@ -2,102 +2,86 @@
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {ChainsData} from "../utils/ChainsData.sol";
+import {Constants} from "../utils/Constants.sol";
+import {ChainsInfo} from "../utils/ChainsInfo.sol";
 
 import {Base} from "../base/Base.sol";
 
-abstract contract Fork_Test is Base, Test {
-    uint256 hubChainId;
+abstract contract Fork_Test is Base, Test, Constants {
+    uint256 public hubChainId;
     uint256[] public spokeChainIds;
 
-    HubFork public hubFork;
-    mapping(uint256 chainId => SpokeFork spokeForkData) public spokeForks;
+    HubCore hubCore;
+    mapping(uint256 spokeChainId => SpokeCore spokeCore) public spokeCores;
 
-    struct HubFork {
+    mapping(uint256 chainId => ForkData forkData) public forksData;
+
+    struct ForkData {
+        // fork id
         uint256 forkId;
+        // tokens
+        address usdc;
+        address weth;
+        // governance
         address dao;
         address mechanic;
         address securityCouncil;
-        IWormhole wormhole;
-        HubCore deployment;
-    }
-
-    struct SpokeFork {
-        uint256 forkId;
-        address dao;
-        address mechanic;
-        address securityCouncil;
-        SpokeCore deployment;
     }
 
     function _setUp() public {
-        _setupHub();
+        _setupChain(hubChainId);
 
         for (uint256 i = 0; i < spokeChainIds.length; i++) {
-            _setupSpoke(spokeChainIds[i]);
+            _setupChain(spokeChainIds[i]);
         }
     }
 
-    function _setupHub() internal {
-        ChainsData.ChainData memory chainData = ChainsData.getChainData(hubChainId);
-        hubFork.forkId = vm.createSelectFork({urlOrAlias: chainData.foundryAlias});
+    function _setupChain(uint256 chainId) internal {
+        ForkData storage forkData = forksData[chainId];
 
-        string memory paramsPath = string.concat(vm.projectRoot(), "/script/constants/");
-        paramsPath = string.concat(paramsPath, "hub-core-params/");
-        string memory paramsJson = vm.readFile(string.concat(paramsPath, chainData.constantsFilename));
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(chainId);
 
-        hubFork.dao = abi.decode(vm.parseJson(paramsJson, ".dao"), (address));
-        hubFork.wormhole = abi.decode(vm.parseJson(paramsJson, ".wormhole"), (IWormhole));
+        // create and select fork
+        forkData.forkId = vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        string memory paramsPath = string.concat(vm.projectRoot(), "/test/fork/constants/");
+        string memory paramsJson = vm.readFile(string.concat(paramsPath, chainInfo.constantsFilename));
+
+        // read misc addresses from json
+        forkData.dao = abi.decode(vm.parseJson(paramsJson, ".dao"), (address));
+        forkData.mechanic = abi.decode(vm.parseJson(paramsJson, ".mechanic"), (address));
+        forkData.securityCouncil = abi.decode(vm.parseJson(paramsJson, ".securityCouncil"), (address));
+        forkData.usdc = abi.decode(vm.parseJson(paramsJson, ".usdc"), (address));
+        forkData.weth = abi.decode(vm.parseJson(paramsJson, ".weth"), (address));
+
+        bool isHub = chainId == hubChainId;
 
         // deploy core contracts
-        hubFork.deployment = deployHubCore(address(this), hubFork.dao, address(hubFork.wormhole));
+        if (isHub) {
+            address wormhole = abi.decode(vm.parseJson(paramsJson, ".wormhole"), (address));
+            hubCore = deployHubCore(address(this), forkData.dao, wormhole);
+        } else {
+            spokeCores[chainId] = deploySpokeCore(address(this), forkData.dao, hubChainId);
+        }
 
-        // setup hub registry
-        setupHubRegistry(hubFork.deployment);
+        // setup makina registry
+        if (isHub) {
+            setupHubRegistry(hubCore);
+        } else {
+            setupSpokeRegistry(spokeCores[chainId]);
+        }
 
         // setup oracle registry
         PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(paramsJson, ".priceFeedData"), (PriceFeedData[]));
-        setupOracleRegistry(hubFork.deployment.oracleRegistry, priceFeedData);
+        setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedData);
 
         // setup swapper
         DexAggregatorData[] memory dexAggregatorsData =
             abi.decode(vm.parseJson(paramsJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        setupSwapper(hubFork.deployment.swapper, dexAggregatorsData);
+        setupSwapper(isHub ? hubCore.swapper : spokeCores[chainId].swapper, dexAggregatorsData);
 
         // setup access manager
-        setupAccessManager(hubFork.deployment.accessManager, hubFork.dao);
-    }
-
-    function _setupSpoke(uint256 chainId) internal {
-        SpokeFork storage spokeFork = spokeForks[chainId];
-
-        ChainsData.ChainData memory chainData = ChainsData.getChainData(chainId);
-        spokeFork.forkId = vm.createSelectFork({urlOrAlias: chainData.foundryAlias});
-
-        string memory paramsPath = string.concat(vm.projectRoot(), "/script/constants/");
-        paramsPath = string.concat(paramsPath, "spoke-core-params/");
-        string memory paramsJson = vm.readFile(string.concat(paramsPath, chainData.constantsFilename));
-
-        spokeFork.dao = abi.decode(vm.parseJson(paramsJson, ".dao"), (address));
-
-        // deploy core contracts
-        spokeFork.deployment = deploySpokeCore(address(this), spokeFork.dao, hubChainId);
-
-        // setup spoke registry
-        setupSpokeRegistry(spokeFork.deployment);
-
-        // setup oracle registry
-        PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(paramsJson, ".priceFeedData"), (PriceFeedData[]));
-        setupOracleRegistry(spokeFork.deployment.oracleRegistry, priceFeedData);
-
-        // setup swapper
-        DexAggregatorData[] memory dexAggregatorsData =
-            abi.decode(vm.parseJson(paramsJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        setupSwapper(spokeFork.deployment.swapper, dexAggregatorsData);
-
-        // setup access manager
-        setupAccessManager(spokeFork.deployment.accessManager, spokeFork.dao);
+        setupAccessManager(isHub ? hubCore.accessManager : spokeCores[chainId].accessManager, forkData.dao);
     }
 }

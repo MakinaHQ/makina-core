@@ -8,7 +8,7 @@
   "initialMaxPositionIncreaseLossBps": 300,
   "initialMaxPositionDecreaseLossBps": 3000,
   "initialMaxSwapLossBps": 300,
-  "initialMechanic": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
+  "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
   "initialAuthority": "0x0000000000000000000000000000000000000000",
-  "initialSecurityCouncil": "0x750af8495Fc5ca305161CccF8b1012715fBE7462"
+  "initialSecurityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f"
 }

@@ -4,16 +4,11 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
-import {Constants} from "src/libraries/Constants.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
