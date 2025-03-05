@@ -76,6 +76,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
     function test_SetPositionStaleThreshold() public {
         uint256 newThreshold = 2 hours;
+        vm.expectEmit(true, true, false, false, address(caliber));
         emit ICaliber.PositionStaleThresholdChanged(DEFAULT_CALIBER_POS_STALE_THRESHOLD, newThreshold);
         vm.prank(dao);
         caliber.setPositionStaleThreshold(newThreshold);
@@ -102,6 +103,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
     function test_SetTimelockDuration() public {
         uint256 newDuration = 2 hours;
+        vm.expectEmit(true, true, false, false, address(caliber));
         emit ICaliber.TimelockDurationChanged(DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK, newDuration);
         vm.prank(dao);
         caliber.setTimelockDuration(newDuration);
