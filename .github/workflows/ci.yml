@@ -10,10 +10,9 @@ on:
 env:
   FOUNDRY_PROFILE: ci
   MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
-  HUB_CONSTANTS_FILENAME: VTNMainnet.json
-  HUB_OUTPUT_FILENAME: ci.json
-  SPOKE_CONSTANTS_FILENAME: VTNMainnet.json
-  SPOKE_OUTPUT_FILENAME: ci.json
+  BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
+  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+  BASE_SEPOLIA_RPC_URL: ${{ secrets.BASE_SEPOLIA_RPC_URL }}
 
 jobs:
   check:

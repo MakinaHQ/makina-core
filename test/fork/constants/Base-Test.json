@@ -1,0 +1,30 @@
+{
+  "dao": "0x0000000000000000000000000000000000000DA0",
+  "mechanic": "0x00000000000000000000000000000000000003EC",
+  "securityCouncil": "0x000000000000000000000000000000000000005C",
+  "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "weth": "0x4200000000000000000000000000000000000006",
+  "priceFeedData": [
+    {
+      "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "feed1": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",
+      "stalenessThreshold1": 86400,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    },
+    {
+      "token": "0x4200000000000000000000000000000000000006",
+      "feed1": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70",
+      "stalenessThreshold1": 86400,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    }
+  ],
+  "dexAggregatorsTargets": [
+    {
+      "aggregatorId": 1,
+      "approvalTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1",
+      "executionTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1"
+    }
+  ]
+}

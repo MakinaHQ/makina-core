@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {Base_Test} from "test/BaseTest.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+
+import {Base_Test} from "test/base/Base.t.sol";
 
 contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
     MockERC20 internal baseToken;
@@ -36,8 +37,8 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
 
     function setUp() public override {
         Base_Test.setUp();
-        _coreSharedSetup();
-        _accessManagerTestSetup();
+        (accessManager, oracleRegistry,) = deploySharedCore(deployer, dao);
+        setupAccessManager(accessManager, dao);
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {

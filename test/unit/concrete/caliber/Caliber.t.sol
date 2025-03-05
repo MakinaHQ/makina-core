@@ -16,7 +16,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
             _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
 
         // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(
+        MerkleProofs._generateMerkleData(
             address(caliber),
             address(accountingToken),
             address(0),

@@ -1,7 +1,8 @@
 {
-  "dao": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
-  "governor": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
-  "securityCouncil": "0x750af8495Fc5ca305161CccF8b1012715fBE7462",
+  "dao": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "governor": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "securityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "wormhole": "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B",
   "priceFeedData": [
     {
       "token": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
@@ -44,20 +45,6 @@
       "aggregatorId": 1,
       "approvalTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559",
       "executionTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559"
-    }
-  ],
-  "calibersToDeploy": [
-    {
-      "spokeMachineMailbox": "0x0000000000000000000000000000000000000000",
-      "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-      "accountingTokenPosId": 1,
-      "initialPositionStaleThreshold": 10800,
-      "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-      "initialTimelockDuration": 0,
-      "initialMaxPositionIncreaseLossBps": 300,
-      "initialMaxPositionDecreaseLossBps": 3000,
-      "initialMaxSwapLossBps": 300,
-      "initialMechanic": "0x750af8495Fc5ca305161CccF8b1012715fBE7462"
     }
   ]
 }

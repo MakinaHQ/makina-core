@@ -8,7 +8,7 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
 abstract contract Unit_Concrete_Test is Base_Test {
     MockERC20 public accountingToken;
@@ -18,42 +18,43 @@ abstract contract Unit_Concrete_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        _coreSharedSetup();
 
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
         baseToken = new MockERC20("baseToken", "BT", 18);
 
         aPriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
+        vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
+        vm.stopPrank();
     }
 }
 
-abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test {
+abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test, Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
 
     Machine public machine;
     Caliber public caliber;
     HubDualMailbox public hubDualMailbox;
 
-    function setUp() public virtual override {
+    function setUp() public virtual override(Unit_Concrete_Test, Base_Hub_Test) {
+        Base_Hub_Test.setUp();
         Unit_Concrete_Test.setUp();
-        _hubSetup();
 
         (machine, caliber, hubDualMailbox) =
             _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
     }
 }
 
-abstract contract Unit_Concrete_Spoke_Test is Unit_Concrete_Test {
+abstract contract Unit_Concrete_Spoke_Test is Unit_Concrete_Test, Base_Spoke_Test {
     Caliber public caliber;
     SpokeCaliberMailbox public spokeCaliberMailbox;
 
-    function setUp() public virtual override {
+    function setUp() public virtual override(Unit_Concrete_Test, Base_Spoke_Test) {
+        Base_Spoke_Test.setUp();
         Unit_Concrete_Test.setUp();
-        _spokeSetup();
 
         (caliber, spokeCaliberMailbox) =
             _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));

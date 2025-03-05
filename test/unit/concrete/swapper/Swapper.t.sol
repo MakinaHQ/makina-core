@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
+import {Base_Test} from "test/base/Base.t.sol";
 
-contract Swapper_Unit_Concrete_Test is Unit_Concrete_Test {
+contract Swapper_Unit_Concrete_Test is Base_Test {
     function setUp() public virtual override {
-        Unit_Concrete_Test.setUp();
-        _accessManagerTestSetup();
+        Base_Test.setUp();
+        (accessManager,, swapper) = deploySharedCore(deployer, dao);
+        setupAccessManager(accessManager, dao);
     }
 }

@@ -13,7 +13,7 @@ contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(spokeRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(spokeRegistry.swapper(), address(swapper));
         assertEq(spokeRegistry.caliberBeacon(), address(spokeCaliberBeacon));
-        assertEq(spokeRegistry.caliberFactory(), address(spokeCaliberFactory));
+        assertEq(spokeRegistry.caliberFactory(), address(caliberFactory));
         assertEq(spokeRegistry.spokeCaliberMailboxBeacon(), address(spokeCaliberMailboxBeacon));
         assertEq(spokeRegistry.authority(), address(accessManager));
     }
@@ -68,7 +68,7 @@ contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_SetCaliberFactory() public {
         address newCaliberFactory = makeAddr("newCaliberFactory");
         vm.expectEmit(false, false, false, false, address(spokeRegistry));
-        emit ISpokeRegistry.CaliberFactoryChange(address(spokeCaliberFactory), newCaliberFactory);
+        emit ISpokeRegistry.CaliberFactoryChange(address(caliberFactory), newCaliberFactory);
         vm.prank(dao);
         spokeRegistry.setCaliberFactory(newCaliberFactory);
         assertEq(spokeRegistry.caliberFactory(), newCaliberFactory);

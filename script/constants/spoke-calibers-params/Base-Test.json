@@ -1,0 +1,14 @@
+{
+  "spokeMachineMailbox": "0x0000000000000000000000000000000000000000",
+  "accountingToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "accountingTokenPosId": 1,
+  "initialPositionStaleThreshold": 10800,
+  "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "initialTimelockDuration": 0,
+  "initialMaxPositionIncreaseLossBps": 300,
+  "initialMaxPositionDecreaseLossBps": 3000,
+  "initialMaxSwapLossBps": 300,
+  "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "initialAuthority": "0x0000000000000000000000000000000000000000",
+  "initialSecurityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f"
+}

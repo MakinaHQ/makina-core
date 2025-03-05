@@ -98,6 +98,9 @@ interface IMachine {
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
 
+    /// @notice Address of the mailbox connecting the machine and the hub caliber.
+    function hubCaliberMailbox() external view returns (address);
+
     /// @notice Maximum duration a caliber can remain unaccounted for before it is considered stale.
     function caliberStaleThreshold() external view returns (uint256);
 

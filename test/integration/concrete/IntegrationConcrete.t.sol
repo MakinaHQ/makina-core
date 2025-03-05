@@ -16,7 +16,7 @@ import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
     /// @dev A denotes the accounting token, B denotes the base token
@@ -42,9 +42,6 @@ abstract contract Integration_Concrete_Test is Base_Test {
     MockPriceFeed internal bPriceFeed1;
 
     function setUp() public virtual override {
-        Base_Test.setUp();
-        _coreSharedSetup();
-
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
         baseToken = new MockERC20("baseToken", "BT", 18);
 
@@ -56,6 +53,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
+        vm.startPrank(dao);
         oracleRegistry.setTokenFeedData(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
@@ -63,6 +61,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+        vm.stopPrank();
     }
 
     ///
@@ -71,7 +70,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
 
     function _setUpCaliberMerkleRoot(Caliber _caliber) internal {
         // generate merkle tree for instructions involving mock base token and vault
-        _generateMerkleData(
+        MerkleProofs._generateMerkleData(
             address(_caliber),
             address(accountingToken),
             address(baseToken),
@@ -111,16 +110,16 @@ abstract contract Integration_Concrete_Test is Base_Test {
     }
 }
 
-abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test {
+abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
 
     Machine public machine;
     Caliber public caliber;
     HubDualMailbox public hubDualMailbox;
 
-    function setUp() public virtual override {
+    function setUp() public virtual override(Integration_Concrete_Test, Base_Hub_Test) {
+        Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
-        _hubSetup();
 
         (machine, caliber, hubDualMailbox) =
             _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
@@ -147,13 +146,13 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test {
     }
 }
 
-abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test {
+abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
     Caliber public caliber;
     SpokeCaliberMailbox public spokeCaliberMailbox;
 
-    function setUp() public virtual override {
+    function setUp() public virtual override(Integration_Concrete_Test, Base_Spoke_Test) {
+        Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
-        _spokeSetup();
 
         (caliber, spokeCaliberMailbox) =
             _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));

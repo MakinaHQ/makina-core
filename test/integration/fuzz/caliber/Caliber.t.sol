@@ -5,9 +5,9 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 
-import {Base_Test} from "test/BaseTest.sol";
+import {Base_Spoke_Test} from "test/base/Base.t.sol";
 
-contract Caliber_Integration_Fuzz_Test is Base_Test {
+contract Caliber_Integration_Fuzz_Test is Base_Spoke_Test {
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 
@@ -29,9 +29,7 @@ contract Caliber_Integration_Fuzz_Test is Base_Test {
     }
 
     function setUp() public override {
-        Base_Test.setUp();
-        _coreSharedSetup();
-        _spokeSetup();
+        Base_Spoke_Test.setUp();
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {

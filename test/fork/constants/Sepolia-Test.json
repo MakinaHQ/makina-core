@@ -1,0 +1,25 @@
+{
+  "dao": "0x0000000000000000000000000000000000000DA0",
+  "mechanic": "0x00000000000000000000000000000000000003EC",
+  "securityCouncil": "0x000000000000000000000000000000000000005C",
+  "usdc": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+  "weth": "0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c",
+  "wormhole": "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78",
+  "priceFeedData": [
+    {
+      "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+      "feed1": "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E",
+      "stalenessThreshold1": 86400,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    },
+    {
+      "token": "0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c",
+      "feed1": "0x694AA1769357215DE4FAC081bf1f309aDC325306",
+      "stalenessThreshold1": 86400,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    }
+  ],
+  "dexAggregatorsTargets": []
+}

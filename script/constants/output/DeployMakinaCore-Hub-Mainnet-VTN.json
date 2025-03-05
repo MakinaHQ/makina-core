@@ -1,0 +1,11 @@
+{
+  "AccessManager": "0xeb3ef63f6d182a0c2443228fb4d05942f694807d",
+  "CaliberBeacon": "0xe0963ac57d170eb80e03e3133c24c6ce114712a3",
+  "HubDualMailboxBeacon": "0x658d65feffb864b2298f188148508e6d447d2b08",
+  "HubRegistry": "0xe2a282e77d9eb89c399e16e80162c487c81dcfe9",
+  "MachineBeacon": "0x3ff09a357f50e244fab14d11887397adac474236",
+  "MachineFactory": "0xb730977055f8d141af61ff255f51a38dda734dc3",
+  "OracleRegistry": "0x7bce561b3c28cd7dbfa623d50b5032117d1689f1",
+  "SpokeMachineMailboxBeacon": "0x6f7e284d508982761983dccc92879223c3fad077",
+  "Swapper": "0x607baf9be5070abaf42b097ce35545968c88f3ca"
+}
