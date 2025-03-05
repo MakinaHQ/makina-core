@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 
@@ -25,6 +26,8 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         address _machine = makeAddr("machine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
+        vm.expectEmit(false, false, false, false);
+        emit ICaliber.MailboxDeployed(address(0));
         vm.expectEmit(false, false, false, false, address(caliberFactory));
         emit ICaliberFactory.CaliberDeployed(address(0));
         vm.prank(dao);
