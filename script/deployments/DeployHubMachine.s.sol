@@ -18,10 +18,10 @@ contract DeployHubMachine is DeployInstance {
         bool depositorOnlyMode;
         uint256 hubCaliberAccountingTokenPosID;
         bytes32 hubCaliberAllowedInstrRoot;
-        uint256 hubCaliberPosStaleThreshold;
-        uint256 hubCaliberMaxSwapLossBps;
-        uint256 hubCaliberMaxPositionIncreaseLossBps;
         uint256 hubCaliberMaxPositionDecreaseLossBps;
+        uint256 hubCaliberMaxPositionIncreaseLossBps;
+        uint256 hubCaliberMaxSwapLossBps;
+        uint256 hubCaliberPosStaleThreshold;
         uint256 hubCaliberTimelockDuration;
         address initialAuthority;
         uint256 initialCaliberStaleThreshold;

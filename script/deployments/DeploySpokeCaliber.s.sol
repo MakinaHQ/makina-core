@@ -16,8 +16,8 @@ contract DeploySpokeCaliber is DeployInstance {
         uint256 accountingTokenPosId;
         bytes32 initialAllowedInstrRoot;
         address initialAuthority;
-        uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxPositionDecreaseLossBps;
+        uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxSwapLossBps;
         address initialMechanic;
         uint256 initialPositionStaleThreshold;
