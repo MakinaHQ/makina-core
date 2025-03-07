@@ -6,16 +6,11 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {Base} from "test/base/Base.sol";
 
-abstract contract DeployMakinaCore is Base, Script {
+abstract contract DeployCore is Base, Script {
     using stdJson for string;
 
-    string public paramsPath;
+    string public inputJson;
     string public outputPath;
-
-    string public paramsFilename;
-    string public outputFilename;
-
-    string public paramsJson;
 
     PriceFeedData[] public priceFeedData;
     DexAggregatorData[] public dexAggregatorsData;
@@ -32,19 +27,18 @@ abstract contract DeployMakinaCore is Base, Script {
     function _coreSetup() public virtual {}
 
     function _deploySetupBefore() public {
-        PriceFeedData[] memory _priceFeedData =
-            abi.decode(vm.parseJson(paramsJson, ".priceFeedData"), (PriceFeedData[]));
+        PriceFeedData[] memory _priceFeedData = abi.decode(vm.parseJson(inputJson, ".priceFeedData"), (PriceFeedData[]));
         for (uint256 i; i < _priceFeedData.length; i++) {
             priceFeedData.push(_priceFeedData[i]);
         }
 
         DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(paramsJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
+            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
         for (uint256 i; i < _dexAggregatorsData.length; i++) {
             dexAggregatorsData.push(_dexAggregatorsData[i]);
         }
 
-        dao = abi.decode(vm.parseJson(paramsJson, ".dao"), (address));
+        dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));
 
         // start broadcasting transactions
         vm.startBroadcast();

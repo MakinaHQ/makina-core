@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 
-import {DeployInstance} from "./DeployInstance.s.sol";
-
-contract DeployHubMachine is DeployInstance {
+contract DeployHubMachine is Script {
     using stdJson for string;
+
+    string private coreOutputJson;
+
+    string public inputJson;
+    string public outputPath;
+
+    address public deployedInstance;
 
     struct MachineInitParamsSorted {
         address accountingToken;
@@ -33,30 +39,28 @@ contract DeployHubMachine is DeployInstance {
     }
 
     constructor() {
-        string memory root = vm.projectRoot();
-        string memory basePath = string.concat(root, "/script/constants/");
+        string memory inputFilename = vm.envString("HUB_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("HUB_OUTPUT_FILENAME");
 
-        string memory paramsFilename = vm.envString("HUB_MACHINE_PARAMS_FILENAME");
-        string memory outputFilename = vm.envString("HUB_MACHINE_OUTPUT_FILENAME");
-        string memory coreOutputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
-        // load in params
-        string memory paramsPath = string.concat(basePath, "hub-machines-params/");
-        paramsPath = string.concat(paramsPath, paramsFilename);
-        paramsJson = vm.readFile(paramsPath);
+        // load input params
+        string memory inputPath = string.concat(basePath, "inputs/hub-machines/");
+        inputPath = string.concat(inputPath, inputFilename);
+        inputJson = vm.readFile(inputPath);
 
         // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "output/DeployHubMachine-");
+        outputPath = string.concat(basePath, "outputs/hub-machines/");
         outputPath = string.concat(outputPath, outputFilename);
 
-        // load in output from DeployMakinaCoreHub script
-        string memory coreOutputPath = string.concat(basePath, "output/DeployMakinaCore-Hub-");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
+        // load output from DeployHubCore script
+        string memory coreOutputPath = string.concat(basePath, "outputs/hub-cores/");
+        coreOutputPath = string.concat(coreOutputPath, outputFilename);
         coreOutputJson = vm.readFile(coreOutputPath);
     }
 
     function run() public {
-        MachineInitParamsSorted memory initParams = abi.decode(vm.parseJson(paramsJson), (MachineInitParamsSorted));
+        MachineInitParamsSorted memory initParams = abi.decode(vm.parseJson(inputJson), (MachineInitParamsSorted));
 
         IMachineFactory machineFactory =
             IMachineFactory(abi.decode(vm.parseJson(coreOutputJson, ".MachineFactory"), (address)));
@@ -88,10 +92,8 @@ contract DeployHubMachine is DeployInstance {
 
         // Write to file
         string memory key = "key-deploy-hub-machine-output-file";
-        vm.writeJson(vm.serializeAddress(key, "machine", deployedInstance), outputPath);
-        vm.writeJson(
-            vm.serializeAddress(key, "hubCaliberMailbox", IMachine(deployedInstance).hubCaliberMailbox()), outputPath
-        );
+        vm.serializeAddress(key, "machine", deployedInstance);
+        vm.serializeAddress(key, "hubCaliberMailbox", IMachine(deployedInstance).hubCaliberMailbox());
         vm.writeJson(
             vm.serializeAddress(
                 key, "hubCaliber", ICaliberMailbox(IMachine(deployedInstance).hubCaliberMailbox()).caliber()
