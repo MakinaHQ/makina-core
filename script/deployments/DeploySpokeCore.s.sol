@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.28;
+
+import {stdJson} from "forge-std/StdJson.sol";
+
+import {DeployCore} from "./DeployCore.s.sol";
+
+contract DeploySpokeCore is DeployCore {
+    using stdJson for string;
+
+    SpokeCore public _deployment;
+
+    constructor() {
+        string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("SPOKE_OUTPUT_FILENAME");
+
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+
+        // load input params
+        string memory inputPath = string.concat(basePath, "inputs/spoke-cores/");
+        inputPath = string.concat(inputPath, inputFilename);
+        inputJson = vm.readFile(inputPath);
+
+        // output path to later save deployed contracts
+        outputPath = string.concat(basePath, "outputs/spoke-cores/");
+        outputPath = string.concat(outputPath, outputFilename);
+    }
+
+    function deployment() public view returns (SpokeCore memory) {
+        return _deployment;
+    }
+
+    function _coreSetup() public override {
+        uint256 hubChainId = abi.decode(vm.parseJson(inputJson, ".hubChainId"), (uint256));
+        _deployment = deploySpokeCore(deployer, dao, hubChainId);
+
+        setupSpokeRegistry(_deployment);
+        setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
+        setupSwapper(_deployment.swapper, dexAggregatorsData);
+
+        // @TODO setup access manager
+    }
+
+    function _deploySetupAfter() public override {
+        // finish broadcasting transactions
+        vm.stopBroadcast();
+
+        string memory key = "key-deploy-makina-core-spoke-output-file";
+
+        // write to file;
+        vm.serializeAddress(key, "AccessManager", address(_deployment.accessManager));
+        vm.serializeAddress(key, "CaliberBeacon", address(_deployment.spokeCaliberBeacon));
+        vm.serializeAddress(key, "CaliberFactory", address(_deployment.caliberFactory));
+        vm.serializeAddress(key, "SpokeCaliberMailboxBeacon", address(_deployment.spokeCaliberMailboxBeacon));
+        vm.serializeAddress(key, "SpokeRegistry", address(_deployment.spokeRegistry));
+        vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
+        vm.writeJson(vm.serializeAddress(key, "Swapper", address(_deployment.swapper)), outputPath);
+    }
+}

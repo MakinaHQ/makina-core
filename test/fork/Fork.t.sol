@@ -45,21 +45,21 @@ abstract contract Fork_Test is Base, Test, Constants {
         // create and select fork
         forkData.forkId = vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        string memory paramsPath = string.concat(vm.projectRoot(), "/test/fork/constants/");
-        string memory paramsJson = vm.readFile(string.concat(paramsPath, chainInfo.constantsFilename));
+        string memory inputPath = string.concat(vm.projectRoot(), "/test/fork/constants/");
+        string memory inputJson = vm.readFile(string.concat(inputPath, chainInfo.constantsFilename));
 
         // read misc addresses from json
-        forkData.dao = abi.decode(vm.parseJson(paramsJson, ".dao"), (address));
-        forkData.mechanic = abi.decode(vm.parseJson(paramsJson, ".mechanic"), (address));
-        forkData.securityCouncil = abi.decode(vm.parseJson(paramsJson, ".securityCouncil"), (address));
-        forkData.usdc = abi.decode(vm.parseJson(paramsJson, ".usdc"), (address));
-        forkData.weth = abi.decode(vm.parseJson(paramsJson, ".weth"), (address));
+        forkData.dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));
+        forkData.mechanic = abi.decode(vm.parseJson(inputJson, ".mechanic"), (address));
+        forkData.securityCouncil = abi.decode(vm.parseJson(inputJson, ".securityCouncil"), (address));
+        forkData.usdc = abi.decode(vm.parseJson(inputJson, ".usdc"), (address));
+        forkData.weth = abi.decode(vm.parseJson(inputJson, ".weth"), (address));
 
         bool isHub = chainId == hubChainId;
 
         // deploy core contracts
         if (isHub) {
-            address wormhole = abi.decode(vm.parseJson(paramsJson, ".wormhole"), (address));
+            address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
             hubCore = deployHubCore(address(this), forkData.dao, wormhole);
         } else {
             spokeCores[chainId] = deploySpokeCore(address(this), forkData.dao, hubChainId);
@@ -73,12 +73,12 @@ abstract contract Fork_Test is Base, Test, Constants {
         }
 
         // setup oracle registry
-        PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(paramsJson, ".priceFeedData"), (PriceFeedData[]));
+        PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(inputJson, ".priceFeedData"), (PriceFeedData[]));
         setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedData);
 
         // setup swapper
         DexAggregatorData[] memory dexAggregatorsData =
-            abi.decode(vm.parseJson(paramsJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
+            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
         setupSwapper(isHub ? hubCore.swapper : spokeCores[chainId].swapper, dexAggregatorsData);
 
         // setup access manager

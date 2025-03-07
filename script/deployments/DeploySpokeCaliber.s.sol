@@ -1,15 +1,21 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 
-import {DeployInstance} from "./DeployInstance.s.sol";
-
-contract DeploySpokeCaliber is DeployInstance {
+contract DeploySpokeCaliber is Script {
     using stdJson for string;
+
+    string private coreOutputJson;
+
+    string public inputJson;
+    string public outputPath;
+
+    address public deployedInstance;
 
     struct CaliberInitParamsSorted {
         address accountingToken;
@@ -27,30 +33,28 @@ contract DeploySpokeCaliber is DeployInstance {
     }
 
     constructor() {
-        string memory root = vm.projectRoot();
-        string memory basePath = string.concat(root, "/script/constants/");
+        string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("SPOKE_OUTPUT_FILENAME");
 
-        string memory paramsFilename = vm.envString("SPOKE_CALIBER_PARAMS_FILENAME");
-        string memory outputFilename = vm.envString("SPOKE_CALIBER_OUTPUT_FILENAME");
-        string memory coreOutputFilename = vm.envString("SPOKE_CORE_OUTPUT_FILENAME");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
-        // load in params
-        string memory paramsPath = string.concat(basePath, "spoke-calibers-params/");
-        paramsPath = string.concat(paramsPath, paramsFilename);
-        paramsJson = vm.readFile(paramsPath);
+        // load input params
+        string memory inputPath = string.concat(basePath, "inputs/spoke-calibers/");
+        inputPath = string.concat(inputPath, inputFilename);
+        inputJson = vm.readFile(inputPath);
 
         // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "output/DeploySpokeCaliber-");
+        outputPath = string.concat(basePath, "outputs/spoke-calibers/");
         outputPath = string.concat(outputPath, outputFilename);
 
-        // load in output from DeployMakinaCoreSpoke script
-        string memory coreOutputPath = string.concat(basePath, "output/DeployMakinaCore-Spoke-");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
+        // load output from DeploySpokeCore script
+        string memory coreOutputPath = string.concat(basePath, "outputs/spoke-cores/");
+        coreOutputPath = string.concat(coreOutputPath, outputFilename);
         coreOutputJson = vm.readFile(coreOutputPath);
     }
 
     function run() public {
-        CaliberInitParamsSorted memory deployParams = abi.decode(vm.parseJson(paramsJson), (CaliberInitParamsSorted));
+        CaliberInitParamsSorted memory deployParams = abi.decode(vm.parseJson(inputJson), (CaliberInitParamsSorted));
 
         ICaliberFactory caliberFactory =
             ICaliberFactory(abi.decode(vm.parseJson(coreOutputJson, ".CaliberFactory"), (address)));
@@ -77,7 +81,7 @@ contract DeploySpokeCaliber is DeployInstance {
 
         // Write to file
         string memory key = "key-deploy-spoke-caliber-output-file";
-        vm.writeJson(vm.serializeAddress(key, "caliber", deployedInstance), outputPath);
+        vm.serializeAddress(key, "caliber", deployedInstance);
         vm.writeJson(vm.serializeAddress(key, "caliberMailbox", ICaliber(deployedInstance).mailbox()), outputPath);
     }
 }

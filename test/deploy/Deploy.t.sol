@@ -7,10 +7,11 @@ import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
-import {DeployMakinaCoreHub} from "script/deployments/DeployMakinaCoreHub.s.sol";
-import {DeployMakinaCoreSpoke} from "script/deployments/DeployMakinaCoreSpoke.s.sol";
-import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
+import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
 import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
+import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
+import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
+import {DeploySpokeMachineMailboxes} from "script/deployments/DeploySpokeMachineMailboxes.s.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
@@ -24,27 +25,27 @@ contract Deploy_Scripts_Test is Base_Test {
     using stdStorage for StdStorage;
 
     // Scripts to test
-    DeployMakinaCoreHub public deployMakinaCoreHub;
-    DeployMakinaCoreSpoke public deployMakinaCoreSpoke;
-    DeploySpokeCaliber public deploySpokeCaliber;
+    DeployHubCore public deployHubCore;
     DeployHubMachine public deployHubMachine;
+    DeploySpokeMachineMailboxes public deploySpokeMachineMailboxes;
+    DeploySpokeCore public deploySpokeCore;
+    DeploySpokeCaliber public deploySpokeCaliber;
 
     function testLoadedState() public {
-        vm.setEnv("HUB_CORE_PARAMS_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM).constantsFilename);
-        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE).constantsFilename);
+        vm.setEnv("HUB_INPUT_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM).constantsFilename);
+        vm.setEnv("SPOKE_INPUT_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE).constantsFilename);
 
-        deployMakinaCoreHub = new DeployMakinaCoreHub();
-        deployMakinaCoreSpoke = new DeployMakinaCoreSpoke();
+        deployHubCore = new DeployHubCore();
+        deploySpokeCore = new DeploySpokeCore();
 
-        address hubDao = abi.decode(vm.parseJson(deployMakinaCoreHub.paramsJson(), ".dao"), (address));
-        address hubSecurityCouncil =
-            abi.decode(vm.parseJson(deployMakinaCoreHub.paramsJson(), ".securityCouncil"), (address));
+        address hubDao = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dao"), (address));
+        address hubSecurityCouncil = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".securityCouncil"), (address));
         assertTrue(hubDao != address(0));
         assertTrue(hubSecurityCouncil != address(0));
 
-        address spokeDao = abi.decode(vm.parseJson(deployMakinaCoreSpoke.paramsJson(), ".dao"), (address));
+        address spokeDao = abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dao"), (address));
         address spokeSecurityCouncil =
-            abi.decode(vm.parseJson(deployMakinaCoreSpoke.paramsJson(), ".securityCouncil"), (address));
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".securityCouncil"), (address));
         assertTrue(spokeDao != address(0));
         assertTrue(spokeSecurityCouncil != address(0));
     }
@@ -53,22 +54,17 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_PARAMS_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_MACHINE_PARAMS_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_MACHINE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
-        deployMakinaCoreHub = new DeployMakinaCoreHub();
-        deployMakinaCoreHub.run();
+        deployHubCore = new DeployHubCore();
+        deployHubCore.run();
 
-        deployHubMachine = new DeployHubMachine();
-        deployHubMachine.run();
-
-        HubCore memory hubCoreDeployment = deployMakinaCoreHub.deployment();
+        HubCore memory hubCoreDeployment = deployHubCore.deployment();
 
         // Check that OracleRegistry is correctly set up
         PriceFeedData[] memory _priceFeedData =
-            abi.decode(vm.parseJson(deployMakinaCoreHub.paramsJson(), ".priceFeedData"), (PriceFeedData[]));
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".priceFeedData"), (PriceFeedData[]));
         for (uint256 i; i < _priceFeedData.length; i++) {
             (address feed1, address feed2) = hubCoreDeployment.oracleRegistry.getTokenFeedData(_priceFeedData[i].token);
             assertEq(_priceFeedData[i].feed1, feed1);
@@ -77,7 +73,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Check that Swapper is correctly set up
         DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(deployMakinaCoreHub.paramsJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
         for (uint256 i; i < _dexAggregatorsData.length; i++) {
             (address approvalTarget, address executionTarget) =
                 hubCoreDeployment.swapper.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
@@ -85,46 +81,63 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
         }
 
+        deployHubMachine = new DeployHubMachine();
+        deployHubMachine.run();
+
         // Check that Hub Machine is correctly set up
         DeployHubMachine.MachineInitParamsSorted memory machineInitParams =
-            abi.decode(vm.parseJson(deployHubMachine.paramsJson()), (DeployHubMachine.MachineInitParamsSorted));
+            abi.decode(vm.parseJson(deployHubMachine.inputJson()), (DeployHubMachine.MachineInitParamsSorted));
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         IHubDualMailbox dualMailbox = IHubDualMailbox(machine.hubCaliberMailbox());
         ICaliber hubCaliber = ICaliber(dualMailbox.caliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
+        address authority = IAccessManaged(address(machine)).authority();
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
         assertEq(machine.mechanic(), machineInitParams.initialMechanic);
         assertEq(machine.accountingToken(), machineInitParams.accountingToken);
         assertEq(machine.caliberStaleThreshold(), machineInitParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), machineInitParams.initialShareLimit);
-        assertEq(IAccessManaged(address(machine)).authority(), machineInitParams.initialAuthority);
+        assertEq(authority, machineInitParams.initialAuthority);
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(dualMailbox.machine(), address(machine));
         assertEq(hubCaliber.mailbox(), address(dualMailbox));
         assertEq(shareToken.name(), machineInitParams.shareTokenName);
         assertEq(shareToken.symbol(), machineInitParams.shareTokenSymbol);
+
+        // set machine authority to core access manager for convenience
+        vm.prank(authority);
+        IAccessManaged(address(machine)).setAuthority(address(hubCoreDeployment.accessManager));
+
+        deploySpokeMachineMailboxes = new DeploySpokeMachineMailboxes();
+        deploySpokeMachineMailboxes.run();
+
+        // Check that Spoke Machine Mailboxes are correctly set up
+        uint256[] memory spokeChainIds =
+            abi.decode(vm.parseJson(deploySpokeMachineMailboxes.inputJson(), ".spokeChainIds"), (uint256[]));
+        for (uint256 i; i < spokeChainIds.length; i++) {
+            address mailbox = machine.getSpokeCaliberAccountingData(spokeChainIds[i]).machineMailbox;
+            assertEq(mailbox, deploySpokeMachineMailboxes.deployedInstances(i));
+        }
     }
 
     function testDeployScriptSpoke() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_PARAMS_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CALIBER_PARAMS_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CALIBER_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
-        deployMakinaCoreSpoke = new DeployMakinaCoreSpoke();
-        deployMakinaCoreSpoke.run();
+        deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.run();
 
         deploySpokeCaliber = new DeploySpokeCaliber();
         deploySpokeCaliber.run();
 
-        SpokeCore memory spokeCoreDeployment = deployMakinaCoreSpoke.deployment();
+        SpokeCore memory spokeCoreDeployment = deploySpokeCore.deployment();
 
         // Check that OracleRegistry is correctly set up
         PriceFeedData[] memory _priceFeedData =
-            abi.decode(vm.parseJson(deployMakinaCoreSpoke.paramsJson(), ".priceFeedData"), (PriceFeedData[]));
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".priceFeedData"), (PriceFeedData[]));
         for (uint256 i; i < _priceFeedData.length; i++) {
             (address feed1, address feed2) =
                 spokeCoreDeployment.oracleRegistry.getTokenFeedData(_priceFeedData[i].token);
@@ -133,9 +146,8 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that Swapper is correctly set up
-        DexAggregatorData[] memory _dexAggregatorsData = abi.decode(
-            vm.parseJson(deployMakinaCoreSpoke.paramsJson(), ".dexAggregatorsTargets"), (DexAggregatorData[])
-        );
+        DexAggregatorData[] memory _dexAggregatorsData =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
         for (uint256 i; i < _dexAggregatorsData.length; i++) {
             (address approvalTarget, address executionTarget) =
                 spokeCoreDeployment.swapper.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
@@ -145,7 +157,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Check that Spoke Caliber is correctly set up
         DeploySpokeCaliber.CaliberInitParamsSorted memory caliberInitParams =
-            abi.decode(vm.parseJson(deploySpokeCaliber.paramsJson()), (DeploySpokeCaliber.CaliberInitParamsSorted));
+            abi.decode(vm.parseJson(deploySpokeCaliber.inputJson()), (DeploySpokeCaliber.CaliberInitParamsSorted));
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
         assertEq(ICaliberMailbox(spokeCaliber.mailbox()).caliber(), address(spokeCaliber));

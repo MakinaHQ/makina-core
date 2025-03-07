@@ -11,12 +11,14 @@ fs_permissions = [{ access = "read-write", path = "./"}]
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 base = "${BASE_RPC_URL}"
-vtn_mainnet = "${VTN_MAINNET_RPC_URL}"
 sepolia = "${SEPOLIA_RPC_URL}"
 base_sepolia = "${BASE_SEPOLIA_RPC_URL}"
+vtn_mainnet = "${VTN_MAINNET_RPC_URL}"
+vtn_base = "${VTN_BASE_RPC_URL}"
 
 [etherscan]
 vtn_mainnet = { key = "${VTN_MAINNET_ETHERSCAN_API_KEY}", chain = 1, url = "${VTN_MAINNET_VERIFIER_URL}" }
+vtn_base = { key = "${VTN_BASE_ETHERSCAN_API_KEY}", chain = 8453, url = "${VTN_BASE_VERIFIER_URL}" }
 
 [fuzz]
 runs = 1024
