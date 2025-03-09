@@ -33,10 +33,10 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response,) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        IWormhole.Signature[] memory signatures = new IWormhole.Signature[](0);
+        signatures[0].v = 0;
 
         vm.expectRevert(VerificationFailed.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
