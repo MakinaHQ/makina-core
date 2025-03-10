@@ -54,7 +54,7 @@ contract DeploySpokeCaliber is Script {
     }
 
     function run() public {
-        CaliberInitParamsSorted memory deployParams = abi.decode(vm.parseJson(inputJson), (CaliberInitParamsSorted));
+        CaliberInitParamsSorted memory initParams = abi.decode(vm.parseJson(inputJson), (CaliberInitParamsSorted));
 
         ICaliberFactory caliberFactory =
             ICaliberFactory(abi.decode(vm.parseJson(coreOutputJson, ".CaliberFactory"), (address)));
@@ -62,19 +62,19 @@ contract DeploySpokeCaliber is Script {
         // Deploy caliber
         vm.startBroadcast();
         deployedInstance = caliberFactory.deployCaliber(
-            ICaliberFactory.CaliberDeployParams(
-                deployParams.spokeMachineMailbox,
-                deployParams.accountingToken,
-                deployParams.accountingTokenPosId,
-                deployParams.initialPositionStaleThreshold,
-                deployParams.initialAllowedInstrRoot,
-                deployParams.initialTimelockDuration,
-                deployParams.initialMaxPositionIncreaseLossBps,
-                deployParams.initialMaxPositionDecreaseLossBps,
-                deployParams.initialMaxSwapLossBps,
-                deployParams.initialMechanic,
-                deployParams.initialSecurityCouncil,
-                deployParams.initialAuthority
+            ICaliber.CaliberInitParams(
+                initParams.spokeMachineMailbox,
+                initParams.accountingToken,
+                initParams.accountingTokenPosId,
+                initParams.initialPositionStaleThreshold,
+                initParams.initialAllowedInstrRoot,
+                initParams.initialTimelockDuration,
+                initParams.initialMaxPositionIncreaseLossBps,
+                initParams.initialMaxPositionDecreaseLossBps,
+                initParams.initialMaxSwapLossBps,
+                initParams.initialMechanic,
+                initParams.initialSecurityCouncil,
+                initParams.initialAuthority
             )
         );
         vm.stopBroadcast();

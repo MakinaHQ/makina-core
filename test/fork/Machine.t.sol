@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
@@ -99,7 +99,7 @@ contract Machine_Fork_Test is Fork_Test {
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
             spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.deployCaliber(
-                ICaliberFactory.CaliberDeployParams({
+                ICaliber.CaliberInitParams({
                     hubMachineEndpoint: baseMachineMailbox,
                     accountingToken: baseForkData.usdc,
                     accountingTokenPosId: SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID,

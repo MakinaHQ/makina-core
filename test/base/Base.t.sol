@@ -14,7 +14,7 @@ import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
@@ -142,7 +142,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     }
 
     function _deployCaliber(
-        address _hubMachineEndpoint,
+        address _spokeMachineMailbox,
         address _accountingToken,
         uint256 _accountingTokenPosId,
         bytes32 allowedInstrMerkleRoot
@@ -150,8 +150,8 @@ abstract contract Base_Spoke_Test is Base_Test {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             caliberFactory.deployCaliber(
-                ICaliberFactory.CaliberDeployParams({
-                    hubMachineEndpoint: _hubMachineEndpoint,
+                ICaliber.CaliberInitParams({
+                    hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,
                     accountingTokenPosId: _accountingTokenPosId,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,

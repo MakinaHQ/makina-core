@@ -64,9 +64,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function initialize(InitParams calldata params) public override initializer {
+    function initialize(CaliberInitParams calldata params, address mailboxBeacon) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._mailbox = _deployMailbox(params.mailboxBeacon, params.hubMachineEndpoint);
+        $._mailbox = _deployMailbox(mailboxBeacon, params.hubMachineEndpoint);
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
