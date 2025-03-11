@@ -24,7 +24,7 @@ contract Machine_Fork_Test is Fork_Test {
     }
 
     function test_fork_Hub_USDC() public {
-        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM_SEPOLIA;
+        hubChainId = ChainsInfo.CHAIN_ID_SEPOLIA;
         spokeChainIds.push(ChainsInfo.CHAIN_ID_BASE_SEPOLIA);
         _setUp();
 

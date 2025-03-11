@@ -10,6 +10,7 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
@@ -50,6 +51,7 @@ abstract contract Base_Test is Base, Constants, Test {
 
 abstract contract Base_Hub_Test is Base_Test {
     HubRegistry public hubRegistry;
+    ChainRegistry public chainRegistry;
     MachineFactory public machineFactory;
     UpgradeableBeacon public machineBeacon;
     UpgradeableBeacon public hubCaliberBeacon;
@@ -70,6 +72,7 @@ abstract contract Base_Hub_Test is Base_Test {
         oracleRegistry = deployment.oracleRegistry;
         swapper = deployment.swapper;
         hubRegistry = deployment.hubRegistry;
+        chainRegistry = deployment.chainRegistry;
         machineFactory = deployment.machineFactory;
         machineBeacon = deployment.machineBeacon;
         hubDualMailboxBeacon = deployment.hubDualMailboxBeacon;

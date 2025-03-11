@@ -32,11 +32,13 @@ contract DeployHubCore is DeployCore {
 
     function _coreSetup() public override {
         address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
+        uint256[] memory supportedChains = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
         _deployment = deployHubCore(deployer, dao, wormhole);
 
         setupHubRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
         setupSwapper(_deployment.swapper, dexAggregatorsData);
+        setupChainRegistry(_deployment.chainRegistry, supportedChains);
 
         // @TODO setup access manager
     }
@@ -54,6 +56,7 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "MachineFactory", address(_deployment.machineFactory));
         vm.serializeAddress(key, "HubDualMailboxBeacon", address(_deployment.hubDualMailboxBeacon));
         vm.serializeAddress(key, "SpokeMachineMailboxBeacon", address(_deployment.spokeMachineMailboxBeacon));
+        vm.serializeAddress(key, "ChainRegistry", address(_deployment.chainRegistry));
         vm.serializeAddress(key, "HubRegistry", address(_deployment.hubRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
         vm.writeJson(vm.serializeAddress(key, "Swapper", address(_deployment.swapper)), outputPath);

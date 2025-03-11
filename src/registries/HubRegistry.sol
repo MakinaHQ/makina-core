@@ -7,6 +7,7 @@ import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     /// @custom:storage-location erc7201:makina.storage.HubRegistry
     struct HubRegistryStorage {
+        address _chainRegistry;
         address _machineFactory;
         address _machineBeacon;
         address _hubDualMailboxBeacon;
@@ -32,6 +33,11 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
+    function chainRegistry() public view override returns (address) {
+        return _getHubRegistryStorage()._chainRegistry;
+    }
+
+    /// @inheritdoc IHubRegistry
     function machineFactory() public view override returns (address) {
         return _getHubRegistryStorage()._machineFactory;
     }
@@ -49,6 +55,13 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     /// @inheritdoc IHubRegistry
     function spokeMachineMailboxBeacon() public view override returns (address) {
         return _getHubRegistryStorage()._spokeMachineMailboxBeacon;
+    }
+
+    /// @inheritdoc IHubRegistry
+    function setChainRegistry(address _chainRegistry) external override restricted {
+        HubRegistryStorage storage $ = _getHubRegistryStorage();
+        emit ChainRegistryChange($._chainRegistry, _chainRegistry);
+        $._chainRegistry = _chainRegistry;
     }
 
     /// @inheritdoc IHubRegistry
