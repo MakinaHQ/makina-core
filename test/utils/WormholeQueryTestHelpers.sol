@@ -40,7 +40,8 @@ library WormholeQueryTestHelpers {
     bytes private constant SIGNATURE =
         hex"ff0c222dc9e3655ec38e212e9792bf1860356d1277462b6bf747db865caca6fc08e6317b64ee3245264e371146b1d315d38c867fe1f69614368dc4430bb560f200";
     uint256 private constant DEVNET_GUARDIAN_PRIVATE_KEY =
-        0xcfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0; // address: 0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe
+        0xcfb12303a19cde580bb4dd771639b0d26bc68353645571a8cff516ab2ee113a0;
+    address public constant DEVNET_GUARDIAN_ADDRESS = 0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe;
 
     function getSignature(bytes memory response) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
         bytes32 responseDigest = QueryResponseLib.calcPrefixedResponseHash(response);

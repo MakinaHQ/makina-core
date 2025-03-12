@@ -19,6 +19,7 @@ import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
+    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
     uint256 internal constant VAULT_POS_ID = 3;
     uint256 internal constant SUPPLY_POS_ID = 4;
@@ -56,6 +57,9 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
 
     function setUp() public override {
         Base_Hub_Test.setUp();
+
+        vm.prank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
@@ -129,7 +133,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData;
         queriedData.netAum = data.spokeCaliberNetAum;
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""

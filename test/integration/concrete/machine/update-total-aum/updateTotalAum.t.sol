@@ -237,7 +237,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
             _buildSpokeCaliberAccountingData(false, false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
@@ -266,7 +266,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
             _buildSpokeCaliberAccountingData(true, false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            uint16(SPOKE_CHAIN_ID), blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""

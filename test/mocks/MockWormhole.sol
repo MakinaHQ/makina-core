@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {BytesLib} from "../utils/BytesLib.sol";
+import {WormholeQueryTestHelpers} from "../utils/WormholeQueryTestHelpers.sol";
 
 // File is copied from: https://github.com/wormhole-foundation/example-liquidity-layer/blob/main/evm/forge/modules/wormhole/MockWormhole.sol
 // and modified for testing purposes.
@@ -171,7 +172,7 @@ contract MockWormhole is IWormhole {
 
     function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
         address[] memory keys = new address[](1);
-        keys[0] = 0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe;
+        keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
 
         GuardianSet memory gset = GuardianSet({keys: keys, expirationTime: 999999999});
         return gset;
