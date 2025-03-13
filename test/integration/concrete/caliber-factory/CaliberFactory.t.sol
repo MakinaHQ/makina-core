@@ -17,13 +17,13 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
     }
 
     function test_RevertWhen_CallerWithoutRole() public {
-        ICaliberFactory.CaliberDeployParams memory params;
+        ICaliber.CaliberInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliberFactory.deployCaliber(params);
     }
 
     function test_DeployCaliber() public {
-        address _machine = makeAddr("machine");
+        address _machineMailbox = makeAddr("machineMailbox");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false);
@@ -33,8 +33,8 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.deployCaliber(
-                ICaliberFactory.CaliberDeployParams({
-                    hubMachineEndpoint: _machine,
+                ICaliber.CaliberInitParams({
+                    hubMachineEndpoint: _machineMailbox,
                     accountingToken: address(accountingToken),
                     accountingTokenPosId: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,

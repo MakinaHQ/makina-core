@@ -436,9 +436,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @dev Deploys the hub caliber and associated dual mailbox.
     /// @return mailbox The address of the mailbox.
     function _deployHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
-        ICaliber.InitParams memory caliberParams = ICaliber.InitParams({
+        ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
             hubMachineEndpoint: address(this),
-            mailboxBeacon: IHubRegistry(registry).hubDualMailboxBeacon(),
             accountingToken: params.accountingToken,
             accountingTokenPosId: params.hubCaliberAccountingTokenPosID,
             initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
@@ -453,7 +452,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         });
         address caliber = address(
             new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (caliberParams))
+                IHubRegistry(registry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (initParams, IHubRegistry(registry).hubDualMailboxBeacon()))
             )
         );
         address mailbox = ICaliber(caliber).mailbox();

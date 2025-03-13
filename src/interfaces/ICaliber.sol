@@ -55,7 +55,6 @@ interface ICaliber {
 
     /// @notice Initialization parameters.
     /// @param hubMachineEndpoint The address of the hub machine endpoints.
-    /// @param mailboxBeacon The address of the mailbox beacon.
     /// @param accountingToken The address of the accounting token.
     /// @param accountingTokenPosId The ID of the accounting token position.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
@@ -67,9 +66,8 @@ interface ICaliber {
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
-    struct InitParams {
+    struct CaliberInitParams {
         address hubMachineEndpoint;
-        address mailboxBeacon;
         address accountingToken;
         uint256 accountingTokenPosId;
         uint256 initialPositionStaleThreshold;
@@ -117,7 +115,8 @@ interface ICaliber {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
-    function initialize(InitParams calldata params) external;
+    /// @param mailboxBeacon The address of the mailbox beacon.
+    function initialize(CaliberInitParams calldata params, address mailboxBeacon) external;
 
     /// @notice Address of the Makina registry.
     function registry() external view returns (address);

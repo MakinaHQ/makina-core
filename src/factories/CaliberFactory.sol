@@ -24,24 +24,12 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     }
 
     /// @inheritdoc ICaliberFactory
-    function deployCaliber(CaliberDeployParams calldata deployParams) external override restricted returns (address) {
-        ICaliber.InitParams memory initParams = ICaliber.InitParams({
-            hubMachineEndpoint: deployParams.hubMachineEndpoint,
-            mailboxBeacon: ISpokeRegistry(registry).spokeCaliberMailboxBeacon(),
-            accountingToken: deployParams.accountingToken,
-            accountingTokenPosId: deployParams.accountingTokenPosId,
-            initialPositionStaleThreshold: deployParams.initialPositionStaleThreshold,
-            initialAllowedInstrRoot: deployParams.initialAllowedInstrRoot,
-            initialTimelockDuration: deployParams.initialTimelockDuration,
-            initialMaxPositionIncreaseLossBps: deployParams.initialMaxPositionIncreaseLossBps,
-            initialMaxPositionDecreaseLossBps: deployParams.initialMaxPositionDecreaseLossBps,
-            initialMaxSwapLossBps: deployParams.initialMaxSwapLossBps,
-            initialMechanic: deployParams.initialMechanic,
-            initialSecurityCouncil: deployParams.initialSecurityCouncil,
-            initialAuthority: deployParams.initialAuthority
-        });
+    function deployCaliber(ICaliber.CaliberInitParams calldata params) external override restricted returns (address) {
         address caliber = address(
-            new BeaconProxy(ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams)))
+            new BeaconProxy(
+                ISpokeRegistry(registry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (params, ISpokeRegistry(registry).spokeCaliberMailboxBeacon()))
+            )
         );
         isCaliber[caliber] = true;
         emit CaliberDeployed(caliber);
