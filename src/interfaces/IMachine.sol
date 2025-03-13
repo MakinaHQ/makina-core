@@ -67,7 +67,6 @@ interface IMachine {
     }
 
     struct SpokeCaliberData {
-        uint256 chainId;
         address machineMailbox;
         uint256 timestamp;
         uint256 netAum;

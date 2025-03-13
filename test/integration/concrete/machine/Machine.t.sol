@@ -21,6 +21,8 @@ contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
         _setUpCaliberMerkleRoot(caliber);
+        vm.prank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
     }
 
     ///

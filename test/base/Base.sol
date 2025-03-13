@@ -5,8 +5,10 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
@@ -24,6 +26,7 @@ abstract contract Base {
         OracleRegistry oracleRegistry;
         Swapper swapper;
         HubRegistry hubRegistry;
+        ChainRegistry chainRegistry;
         UpgradeableBeacon hubCaliberBeacon;
         UpgradeableBeacon machineBeacon;
         MachineFactory machineFactory;
@@ -109,6 +112,17 @@ abstract contract Base {
             )
         );
 
+        address chainRegistryImplemAddr = address(new ChainRegistry());
+        deployment.chainRegistry = ChainRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    chainRegistryImplemAddr,
+                    dao,
+                    abi.encodeCall(ChainRegistry.initialize, (address(deployment.accessManager)))
+                )
+            )
+        );
+
         address caliberImplemAddr = address(new Caliber(address(deployment.hubRegistry)));
         deployment.hubCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
@@ -181,16 +195,17 @@ abstract contract Base {
     ///
 
     function setupHubRegistry(HubCore memory deployment) public {
-        deployment.hubRegistry.setCaliberBeacon(address(deployment.hubCaliberBeacon));
-        deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
+        deployment.hubRegistry.setChainRegistry(address(deployment.chainRegistry));
         deployment.hubRegistry.setMachineFactory(address(deployment.machineFactory));
+        deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
+        deployment.hubRegistry.setCaliberBeacon(address(deployment.hubCaliberBeacon));
         deployment.hubRegistry.setHubDualMailboxBeacon(address(deployment.hubDualMailboxBeacon));
         deployment.hubRegistry.setSpokeMachineMailboxBeacon(address(deployment.spokeMachineMailboxBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {
-        deployment.spokeRegistry.setCaliberBeacon(address(deployment.spokeCaliberBeacon));
         deployment.spokeRegistry.setCaliberFactory(address(deployment.caliberFactory));
+        deployment.spokeRegistry.setCaliberBeacon(address(deployment.spokeCaliberBeacon));
         deployment.spokeRegistry.setSpokeCaliberMailboxBeacon(address(deployment.spokeCaliberMailboxBeacon));
     }
 
@@ -203,6 +218,13 @@ abstract contract Base {
                 priceFeedData[i].feed2,
                 priceFeedData[i].stalenessThreshold2
             );
+        }
+    }
+
+    function setupChainRegistry(ChainRegistry chainRegistry, uint256[] memory evmChainIds) public {
+        for (uint256 i; i < evmChainIds.length; i++) {
+            uint256 evmChainId = evmChainIds[i];
+            chainRegistry.setChainIds(evmChainId, ChainsInfo.getChainInfo(evmChainId).wormholeChainId);
         }
     }
 

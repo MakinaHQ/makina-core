@@ -81,6 +81,16 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
         }
 
+        // Check that ChainRegistry is correctly set up
+        uint256[] memory supportedChains =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".supportedChains"), (uint256[]));
+        for (uint256 i; i < supportedChains.length; i++) {
+            assertEq(
+                hubCoreDeployment.chainRegistry.evmToWhChainId(supportedChains[i]),
+                ChainsInfo.getChainInfo(supportedChains[i]).wormholeChainId
+            );
+        }
+
         deployHubMachine = new DeployHubMachine();
         deployHubMachine.run();
 

@@ -10,6 +10,7 @@ import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
 contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
+        assertEq(hubRegistry.chainRegistry(), address(chainRegistry));
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
         assertEq(hubRegistry.swapper(), address(swapper));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
@@ -17,6 +18,20 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(hubRegistry.caliberBeacon(), address(hubCaliberBeacon));
         assertEq(hubRegistry.hubDualMailboxBeacon(), address(hubDualMailboxBeacon));
         assertEq(hubRegistry.authority(), address(accessManager));
+    }
+
+    function test_SetChainRegistry_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        hubRegistry.setChainRegistry(address(0));
+    }
+
+    function test_SetChainRegistry() public {
+        address newChainRegistry = makeAddr("newChainRegistry");
+        vm.expectEmit(true, true, true, true, address(hubRegistry));
+        emit IHubRegistry.ChainRegistryChange(address(chainRegistry), newChainRegistry);
+        vm.prank(dao);
+        hubRegistry.setChainRegistry(newChainRegistry);
+        assertEq(hubRegistry.chainRegistry(), newChainRegistry);
     }
 
     function test_SetOracleRegistry_RevertWhen_CallerWithoutRole() public {

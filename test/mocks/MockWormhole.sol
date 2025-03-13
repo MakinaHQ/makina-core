@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {BytesLib} from "../utils/BytesLib.sol";
+import {WormholeQueryTestHelpers} from "../utils/WormholeQueryTestHelpers.sol";
 
 // File is copied from: https://github.com/wormhole-foundation/example-liquidity-layer/blob/main/evm/forge/modules/wormhole/MockWormhole.sol
 // and modified for testing purposes.
@@ -169,10 +170,9 @@ contract MockWormhole is IWormhole {
         return 0;
     }
 
-    function getGuardianSet(uint32 index) external pure override returns (GuardianSet memory) {
-        index = 0;
+    function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
         address[] memory keys = new address[](1);
-        keys[0] = 0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe;
+        keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
 
         GuardianSet memory gset = GuardianSet({keys: keys, expirationTime: 999999999});
         return gset;
@@ -214,11 +214,35 @@ contract MockWormhole is IWormhole {
         revert("unsupported verifyVM in wormhole mock");
     }
 
-    function verifySignatures(bytes32, /*hash*/ Signature[] memory, /*signatures*/ GuardianSet memory /*guardianSet*/ )
+    function verifySignatures(bytes32 hash, Signature[] memory signatures, GuardianSet memory guardianSet)
         external
         pure
-        returns (bool, /*valid*/ string memory /*reason*/ )
+        returns (bool valid, string memory reason)
     {
+        uint8 lastIndex = 0;
+        uint256 guardianCount = guardianSet.keys.length;
+        for (uint256 i = 0; i < signatures.length; i++) {
+            Signature memory sig = signatures[i];
+
+            /// Ensure that provided signature indices are ascending only
+            require(i == 0 || sig.guardianIndex > lastIndex, "signature indices must be ascending");
+            lastIndex = sig.guardianIndex;
+
+            /// @dev Ensure that the provided signature index is within the
+            /// bounds of the guardianSet. This is implicitly checked by the array
+            /// index operation below, so this check is technically redundant.
+            /// However, reverting explicitly here ensures that a bug is not
+            /// introduced accidentally later due to the nontrivial storage
+            /// semantics of solidity.
+            require(sig.guardianIndex < guardianCount, "guardian index out of bounds");
+
+            /// Check to see if the signer of the signature does not match a specific Guardian key at the provided index
+            if (ecrecover(hash, sig.v, sig.r, sig.s) != guardianSet.keys[sig.guardianIndex]) {
+                return (false, "VM signature invalid");
+            }
+        }
+
+        /// If we are here, we've validated that the provided signatures are valid for the provided guardianSet
         return (true, "");
     }
 

@@ -32,6 +32,5 @@ contract CreatSpokeMailbox_Integration_Concrete_Test is Machine_Integration_Conc
         assertEq(ISpokeMachineMailbox(mailbox).machine(), address(machine));
         IMachine.SpokeCaliberData memory spokeCaliberData = machine.getSpokeCaliberAccountingData(SPOKE_CHAIN_ID);
         assertEq(spokeCaliberData.machineMailbox, mailbox);
-        assertEq(spokeCaliberData.chainId, SPOKE_CHAIN_ID);
     }
 }

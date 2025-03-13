@@ -15,6 +15,7 @@ import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {MachineShare} from "./MachineShare.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -302,9 +303,10 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         uint256 numResponses = r.responses.length;
 
         for (uint256 i; i < numResponses;) {
-            uint256 _chainId = r.responses[i].chainId;
-            SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[_chainId];
-            if (caliberData.chainId != _chainId) {
+            uint16 _wmChainId = r.responses[i].chainId;
+            uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
+            SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[_evmChainId];
+            if (caliberData.machineMailbox == address(0)) {
                 revert InvalidChainId();
             }
 
@@ -314,7 +316,10 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             uint256 responseTimestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
             if (
                 responseTimestamp < caliberData.timestamp
-                    || block.timestamp - responseTimestamp >= $._caliberStaleThreshold
+                    || (
+                        block.timestamp > responseTimestamp
+                            && block.timestamp - responseTimestamp >= $._caliberStaleThreshold
+                    )
             ) {
                 revert StaleData();
             }
@@ -349,7 +354,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
         MachineStorage storage $ = _getMachineStorage();
-        if ($._foreignChainIdToSpokeCaliberData[chainId].chainId == chainId) {
+        if ($._foreignChainIdToSpokeCaliberData[chainId].machineMailbox != address(0)) {
             revert SpokeMailboxAlreadyExists();
         }
         address mailbox = address(
@@ -362,7 +367,6 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         $._isMachineMailbox[mailbox] = true;
         $._foreignChainIds.push(chainId);
         SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
-        data.chainId = chainId;
         data.machineMailbox = mailbox;
         emit SpokeMailboxDeployed(mailbox, chainId);
 
@@ -373,7 +377,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external restricted {
         MachineStorage storage $ = _getMachineStorage();
         SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
-        if (data.chainId != chainId) {
+        if (data.machineMailbox == address(0)) {
             revert SpokeMailboxDoesNotExist();
         }
         ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
@@ -474,7 +478,10 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         for (uint256 i; i < len;) {
             uint256 chainId = $._foreignChainIds[i];
             SpokeCaliberData memory spokeCaliberData = $._foreignChainIdToSpokeCaliberData[chainId];
-            if (currentTimestamp - spokeCaliberData.timestamp > $._caliberStaleThreshold) {
+            if (
+                currentTimestamp > spokeCaliberData.timestamp
+                    && currentTimestamp - spokeCaliberData.timestamp > $._caliberStaleThreshold
+            ) {
                 revert CaliberAccountingStale(chainId);
             }
             totalAum += spokeCaliberData.netAum;

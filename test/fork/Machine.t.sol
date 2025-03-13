@@ -2,13 +2,20 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
+import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
+import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
+import {WormholeCoreHijack} from "test/utils/WormholeCoreHijack.sol";
 
 import {Fork_Test} from "./Fork.t.sol";
 
@@ -24,7 +31,7 @@ contract Machine_Fork_Test is Fork_Test {
     }
 
     function test_fork_Hub_USDC() public {
-        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM_SEPOLIA;
+        hubChainId = ChainsInfo.CHAIN_ID_SEPOLIA;
         spokeChainIds.push(ChainsInfo.CHAIN_ID_BASE_SEPOLIA);
         _setUp();
 
@@ -64,15 +71,15 @@ contract Machine_Fork_Test is Fork_Test {
         );
         hubCaliber = Caliber(ICaliberMailbox(machine.hubCaliberMailbox()).caliber());
 
-        // user deposits 10_000 usdc
-        uint256 depositAmount = 10_000e6;
+        // user deposits 10000 usdc
+        uint256 depositAmount = 10000e6;
         deal({token: ethForkData.usdc, to: user, give: depositAmount});
         vm.startPrank(user);
         IERC20(ethForkData.usdc).approve(address(machine), depositAmount);
         machine.deposit(depositAmount, user);
         vm.stopPrank();
 
-        // mechanic transfers 2_000 usdc to caliber
+        // mechanic transfers 2000 usdc to caliber
         vm.startPrank(ethForkData.mechanic);
         machine.transferToCaliber(ethForkData.usdc, depositAmount / 5, 0);
         vm.stopPrank();
@@ -88,6 +95,10 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy mailbox for spoke caliber
         vm.prank(ethForkData.dao);
         address baseMachineMailbox = machine.createSpokeMailbox(ChainsInfo.CHAIN_ID_BASE_SEPOLIA);
+
+        // upgrade wormhole core with devnet guardian
+        address wormhole = machine.wormhole();
+        WormholeCoreHijack.hijackWormholeCore(wormhole);
 
         ///
         /// SWITCH TO BASE
@@ -115,6 +126,7 @@ contract Machine_Fork_Test is Fork_Test {
                 })
             )
         );
+        address spokeCaliberMailbox = spokeCaliber.mailbox();
 
         // fund spoke caliber
         uint256 spokeCaliberFund = 5_000e6;
@@ -124,6 +136,33 @@ contract Machine_Fork_Test is Fork_Test {
         (uint256 spokeCaliberAum,) = spokeCaliber.getPositionsValues();
         assertEq(spokeCaliberAum, spokeCaliberFund);
 
-        // @TODO test WH Queries
+        // read spoke caliber accounting data
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WormholeChains.CHAIN_ID_BASE_SEPOLIA,
+            uint64(block.number),
+            uint64(block.timestamp),
+            spokeCaliber.mailbox(),
+            abi.encode(ISpokeCaliberMailbox(spokeCaliber.mailbox()).getSpokeCaliberAccountingData())
+        );
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+
+        ///
+        /// SWITCH TO ETHEREUM
+        ///
+
+        vm.selectFork(ethForkData.forkId);
+
+        // set spoke caliber mailbox in machine mailbox
+        vm.prank(ethForkData.dao);
+        machine.setSpokeCaliberMailbox(ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox);
+
+        // write spoke caliber accounting data in machine
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        // check machine aum
+        machineAum = machine.updateTotalAum();
+        assertEq(machineAum, depositAmount + spokeCaliberAum);
     }
 }

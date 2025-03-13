@@ -1,0 +1,5 @@
+evmToWhChainId.t.sol
+├── when the provided EVM chain id is not registered
+│  └── it should revert with ChainIdNotRegistered
+└── when the provided EVM chain id is registered
+    └── it should return the associated wormhole chain id
