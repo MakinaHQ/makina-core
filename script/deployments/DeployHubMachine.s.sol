@@ -22,7 +22,6 @@ contract DeployHubMachine is Script {
         address accountingToken;
         address depositor;
         bool depositorOnlyMode;
-        uint256 hubCaliberAccountingTokenPosID;
         bytes32 hubCaliberAllowedInstrRoot;
         uint256 hubCaliberMaxPositionDecreaseLossBps;
         uint256 hubCaliberMaxPositionIncreaseLossBps;
@@ -76,7 +75,6 @@ contract DeployHubMachine is Script {
                 initParams.depositor,
                 initParams.initialCaliberStaleThreshold,
                 initParams.initialShareLimit,
-                initParams.hubCaliberAccountingTokenPosID,
                 initParams.hubCaliberPosStaleThreshold,
                 initParams.hubCaliberAllowedInstrRoot,
                 initParams.hubCaliberTimelockDuration,

@@ -1,5 +1,5 @@
 isAccountingFresh.t.sol
-├── given the accounting age of each caliber's non-base-token position is below the position staleness threshold
+├── given the accounting age of each caliber position is below the position staleness threshold
 │  └── it should return true
-└── given at least one of the caliber's non-base-token position accounting is stale
+└── given at least one of the caliber positions accounting is stale
    └── it should return false

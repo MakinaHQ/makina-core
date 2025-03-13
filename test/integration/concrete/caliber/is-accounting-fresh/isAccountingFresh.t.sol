@@ -7,13 +7,7 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_IsAccountingFresh() public {
-        assertTrue(caliber.isAccountingFresh());
-
-        // add base token
-        vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
-
+    function test_IsAccountingFresh() public withTokenAsBT(address(baseToken)) {
         assertTrue(caliber.isAccountingFresh());
 
         // open vault position

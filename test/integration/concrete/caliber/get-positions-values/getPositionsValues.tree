@@ -1,7 +1,7 @@
 getPositionsValues.t.sol
-├── given one of the non-base-token positions in the caliber is stale
+├── given one of the positions in the caliber is stale
 │  └── it should revert with PositionAccountingStale
-└── given no non-base-token position in the caliber is stale
+└── given no position in the caliber is stale
    ├── it should account for all base-token positions
-   ├── it should account for all non-base-token positions, debt and non-debt
+   ├── it should account for all positions, debt and non-debt
    └── it should return the caliber net AUM along with an array containing all encoded Caliber position IDs and their corresponding values and isDebt flags

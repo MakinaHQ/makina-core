@@ -13,10 +13,7 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         _setUpCaliberMerkleRoot(caliber);
     }
 
-    function test_RevertGiven_PositionStale()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_PositionStale() public withTokenAsBT(address(baseToken)) {
         // create a vault position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -34,26 +31,44 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         hubDualMailbox.getHubCaliberAccountingData();
     }
 
-    function test_GetPositionsValues() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
-        uint256 inputAmount = 3e18;
+    function test_GetPositionsValues() public withTokenAsBT(address(baseToken)) {
+        uint256 aInputAmount = 3e18;
+        uint256 bInputAmount = 5e18;
 
         // increase accounting token position
-        deal(address(accountingToken), address(caliber), inputAmount, true);
+        deal(address(accountingToken), address(caliber), aInputAmount, true);
+
+        // create supply position
+        deal(address(baseToken), address(caliber), bInputAmount, true);
+        ICaliber.Instruction[] memory supplyModuleInstructions = new ICaliber.Instruction[](2);
+        supplyModuleInstructions[0] =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
+        supplyModuleInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(supplyModuleInstructions);
 
         // check accounting token position is correctly accounted for in AUM
         IHubDualMailbox.HubCaliberAccountingData memory data = hubDualMailbox.getHubCaliberAccountingData();
-        assertEq(data.netAum, inputAmount);
-        assertEq(data.positions.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, inputAmount, false);
-        _checkEncodedCaliberPosValue(data.positions[1], HUB_CALIBER_BASE_TOKEN_1_POS_ID, 0, false);
+        assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
+        assertEq(data.positions.length, 1);
+        assertEq(data.baseTokens.length, 2);
+        _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);
+        _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
+        _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
 
-        skip(1 days);
+        skip(1 hours);
+
+        caliber.accountForPosition(supplyModuleInstructions[1]);
 
         // check data is the same after a day
         data = hubDualMailbox.getHubCaliberAccountingData();
-        assertEq(data.netAum, inputAmount);
-        assertEq(data.positions.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, inputAmount, false);
-        _checkEncodedCaliberPosValue(data.positions[1], HUB_CALIBER_BASE_TOKEN_1_POS_ID, 0, false);
+        assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
+        assertEq(data.positions.length, 1);
+        assertEq(data.baseTokens.length, 2);
+        _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);
+        _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
+        _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
     }
 }

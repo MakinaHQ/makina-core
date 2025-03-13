@@ -6,10 +6,10 @@ import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_SIZE = 3e18;
-    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_POS_SIZE = 4e18;
-    uint256 public constant SPOKE_CALIBER_VAULT_POS_SIZE = 5e18;
-    uint256 public constant SPOKE_CALIBER_BORROW_POS_SIZE = 20e18;
+    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE = 3e18;
+    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_VALUE = 4e18;
+    uint256 public constant SPOKE_CALIBER_VAULT_VALUE = 5e18;
+    uint256 public constant SPOKE_CALIBER_BORROW_VALUE = 20e18;
     uint256 public constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB = 30e18;
     uint256 public constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB = 20e18;
     uint256 public constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
@@ -48,16 +48,18 @@ contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
 
         data.netAum = negativeValue
             ? 0
-            : SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_SIZE + SPOKE_CALIBER_BASE_TOKEN_POS_SIZE + SPOKE_CALIBER_VAULT_POS_SIZE;
+            : SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
 
-        data.positions = new bytes[](negativeValue ? 4 : 3);
-        data.positions[0] = abi.encode(SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID, SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_SIZE);
-        data.positions[1] = abi.encode(SPOKE_CALIBER_BASE_TOKEN_1_POS_ID, SPOKE_CALIBER_BASE_TOKEN_POS_SIZE);
-        data.positions[2] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_POS_SIZE);
+        data.positions = new bytes[](negativeValue ? 2 : 1);
+        data.positions[0] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_VALUE, false);
 
         if (negativeValue) {
-            data.positions[3] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_POS_SIZE);
+            data.positions[1] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_VALUE, true);
         }
+
+        data.baseTokens = new bytes[](2);
+        data.baseTokens[0] = abi.encode(address(accountingToken), SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
+        data.baseTokens[1] = abi.encode(address(baseToken), SPOKE_CALIBER_BASE_TOKEN_VALUE);
 
         if (withTransfers) {
             data.totalReceivedFromHM = new bytes[](2);

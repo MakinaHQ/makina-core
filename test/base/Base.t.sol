@@ -87,7 +87,7 @@ abstract contract Base_Hub_Test is Base_Test {
         wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
-    function _deployMachine(address _accountingToken, uint256 _accountingTokenPosId, bytes32 allowedInstrMerkleRoot)
+    function _deployMachine(address _accountingToken, bytes32 allowedInstrMerkleRoot)
         public
         returns (Machine, Caliber, HubDualMailbox)
     {
@@ -102,7 +102,6 @@ abstract contract Base_Hub_Test is Base_Test {
                     depositor: machineDepositor,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberAccountingTokenPosID: _accountingTokenPosId,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     hubCaliberAllowedInstrRoot: allowedInstrMerkleRoot,
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -144,19 +143,16 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupAccessManager(accessManager, dao);
     }
 
-    function _deployCaliber(
-        address _spokeMachineMailbox,
-        address _accountingToken,
-        uint256 _accountingTokenPosId,
-        bytes32 allowedInstrMerkleRoot
-    ) public returns (Caliber, SpokeCaliberMailbox) {
+    function _deployCaliber(address _spokeMachineMailbox, address _accountingToken, bytes32 allowedInstrMerkleRoot)
+        public
+        returns (Caliber, SpokeCaliberMailbox)
+    {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             caliberFactory.deployCaliber(
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,
-                    accountingTokenPosId: _accountingTokenPosId,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: allowedInstrMerkleRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

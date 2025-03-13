@@ -20,11 +20,5 @@ contract Constants {
     uint256 internal constant BORROW_POS_ID = 5;
     uint256 internal constant POOL_POS_ID = 6;
 
-    uint256 public constant HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1;
-    uint256 public constant HUB_CALIBER_BASE_TOKEN_1_POS_ID = 2;
-
-    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1001;
-    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_1_POS_ID = 1002;
-
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 }

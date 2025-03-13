@@ -11,22 +11,31 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         ICaliber.Position memory position = caliber.getPosition(0);
         assertEq(position.lastAccountingTime, 0);
         assertEq(position.value, 0);
-        assertEq(position.isBaseToken, false);
     }
 
-    function test_GetPosition_ReturnsOldValuesForUnaccountedPosition() public {
-        deal(address(accountingToken), address(caliber), 1e18, true);
+    function test_GetPosition_ReturnsOldValuesForUnaccountedPosition() public withTokenAsBT(address(baseToken)) {
+        uint256 amount1 = 1e18;
 
-        ICaliber.Position memory position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
-        assertEq(position.lastAccountingTime, 0);
-        assertEq(position.value, 0);
-        assertEq(position.isBaseToken, true);
+        // deposit in vault
+        deal(address(baseToken), address(caliber), amount1, true);
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        uint256 oldTimestamp = block.timestamp;
+
+        skip(1 hours);
+        deal(address(vault), address(caliber), amount1, true);
+
+        ICaliber.Position memory position = caliber.getPosition(VAULT_POS_ID);
+        assertEq(position.lastAccountingTime, oldTimestamp);
+        assertEq(position.value, PRICE_B_A * amount1);
     }
 
-    function test_GetPosition_ReturnsUpdatedValuesForAccountedPosition()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_GetPosition_ReturnsUpdatedValuesForAccountedPosition() public withTokenAsBT(address(baseToken)) {
         uint256 amount1 = 1e18;
         // deposit in vault
         deal(address(baseToken), address(caliber), amount1, true);

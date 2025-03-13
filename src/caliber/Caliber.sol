@@ -18,6 +18,7 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 
 contract Caliber is AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
+    using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
     using SafeERC20 for IERC20Metadata;
 
@@ -45,10 +46,9 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         uint256 _maxPositionDecreaseLossBps;
         uint256 _maxSwapLossBps;
         bool _recoveryMode;
-        mapping(address bt => uint256 posId) _baseTokenToPositionId;
-        mapping(uint256 posId => address bt) _positionIdToBaseToken;
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
+        EnumerableSet.AddressSet _baseTokens;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff))
@@ -81,7 +81,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
-        _addBaseToken(params.accountingToken, params.accountingTokenPosId);
+        _addBaseToken(params.accountingToken);
         __AccessManaged_init(params.initialAuthority);
     }
 
@@ -184,12 +184,12 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
 
     /// @inheritdoc ICaliber
     function isBaseToken(address token) public view override returns (bool) {
-        return _getCaliberStorage()._baseTokenToPositionId[token] != 0;
+        return _getCaliberStorage()._baseTokens.contains(token);
     }
 
     /// @inheritdoc ICaliber
-    function addBaseToken(address token, uint256 positionId) public override restricted {
-        _addBaseToken(token, positionId);
+    function addBaseToken(address token) public override restricted {
+        _addBaseToken(token);
     }
 
     /// @inheritdoc ICaliber
@@ -197,9 +197,6 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
-        }
-        if ($._positionIdToBaseToken[instruction.positionId] != address(0)) {
-            revert BaseTokenPosition();
         }
         return _accountForPosition(instruction);
     }
@@ -219,12 +216,8 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         uint256 len = $._positionIds.length();
         uint256 currentTimestamp = block.timestamp;
         for (uint256 i; i < len; i++) {
-            uint256 posId = $._positionIds.at(i);
-            address bt = $._positionIdToBaseToken[posId];
-            if (
-                bt == address(0)
-                    && (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold)
-            ) {
+            if (currentTimestamp - $._positionById[$._positionIds.at(i)].lastAccountingTime > $._positionStaleThreshold)
+            {
                 return false;
             }
         }
@@ -233,37 +226,41 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function getPositionsValues() external view override returns (uint256, bytes[] memory) {
+    function getPositionsValues() external view override returns (uint256, bytes[] memory, bytes[] memory) {
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 currentTimestamp = block.timestamp;
-        uint256 len = $._positionIds.length();
         uint256 aum;
         uint256 debt;
+
+        uint256 len = $._positionIds.length();
         bytes[] memory positionsValues = new bytes[](len);
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
-            address bt = $._positionIdToBaseToken[posId];
-            if (bt != address(0)) {
-                uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
-                uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
-                aum += value;
-                positionsValues[i] = abi.encode(posId, value, false);
+            Position memory pos = $._positionById[posId];
+            if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+                revert PositionAccountingStale(posId);
+            } else if (pos.isDebt) {
+                debt += pos.value;
             } else {
-                Position memory pos = $._positionById[posId];
-                if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
-                    revert PositionAccountingStale(posId);
-                } else if (pos.isDebt) {
-                    debt += pos.value;
-                } else {
-                    aum += pos.value;
-                }
-                positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
+                aum += pos.value;
             }
+            positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
         }
+
+        len = $._baseTokens.length();
+        bytes[] memory baseTokensValues = new bytes[](len);
+        for (uint256 i; i < len; i++) {
+            address bt = $._baseTokens.at(i);
+            uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
+            uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
+            aum += value;
+            baseTokensValues[i] = abi.encode(bt, value);
+        }
+
         uint256 netAum = aum > debt ? aum - debt : 0;
 
-        return (netAum, positionsValues);
+        return (netAum, positionsValues, baseTokensValues);
     }
 
     /// @inheritdoc ICaliber
@@ -291,9 +288,6 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
-        if ($._positionIdToBaseToken[posId] != address(0)) {
-            revert BaseTokenPosition();
-        }
 
         _accountForPosition(accountingInstruction);
 
@@ -302,7 +296,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         uint256 affectedTokensValueBefore;
         for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
             address _affectedToken = managingInstruction.affectedTokens[i];
-            if ($._baseTokenToPositionId[_affectedToken] == 0) {
+            if (!$._baseTokens.contains(_affectedToken)) {
                 revert InvalidAffectedToken();
             }
             affectedTokensValueBefore +=
@@ -364,12 +358,12 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
-        } else if ($._baseTokenToPositionId[order.outputToken] == 0) {
+        } else if (!$._baseTokens.contains(order.outputToken)) {
             revert InvalidOutputToken();
         }
 
         uint256 valBefore;
-        bool isInputBaseToken = $._baseTokenToPositionId[order.inputToken] != 0;
+        bool isInputBaseToken = $._baseTokens.contains(order.inputToken);
         if (isInputBaseToken) {
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
@@ -492,30 +486,23 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @dev Adds a new base token to storage.
-    function _addBaseToken(address token, uint256 posId) internal {
+    function _addBaseToken(address token) internal {
         CaliberStorage storage $ = _getCaliberStorage();
 
-        if ($._baseTokenToPositionId[token] != 0) {
+        if (token == address(0)) {
+            revert ZeroTokenAddress();
+        }
+        if (!$._baseTokens.add(token)) {
             revert BaseTokenAlreadyExists();
         }
-        if (posId == 0) {
-            revert ZeroPositionId();
-        }
-        if (!$._positionIds.add(posId)) {
-            revert PositionAlreadyExists();
-        }
 
-        $._baseTokenToPositionId[token] = posId;
-        $._positionIdToBaseToken[posId] = token;
-
-        $._positionById[posId] = Position({lastAccountingTime: 0, value: 0, isBaseToken: true, isDebt: false});
-        emit PositionCreated(posId);
+        emit BaseTokenAdded(token);
 
         // Reverts if no price feed is registered for token in the oracle registry.
         IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
     }
 
-    /// @dev Computes the accounting value of a non-base-token position. Depending on last and current value, the
+    /// @dev Computes the accounting value of a position. Depending on last and current value, the
     /// position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
         if (instruction.instructionType != InstructionType.ACCOUNTING) {
@@ -542,7 +529,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         }
         for (uint256 i; i < len; i++) {
             address token = instruction.affectedTokens[i];
-            if ($._baseTokenToPositionId[token] == 0) {
+            if (!$._baseTokens.contains(token)) {
                 revert InvalidAffectedToken();
             }
             uint256 assetValue = _accountingValueOf(token, amounts[i]);

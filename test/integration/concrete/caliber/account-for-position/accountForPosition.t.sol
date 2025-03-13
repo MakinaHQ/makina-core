@@ -17,7 +17,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         Caliber_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
+        caliber.addBaseToken(address(baseToken));
 
         inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -37,15 +37,6 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
             WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
 
         vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
-        caliber.accountForPosition(instruction);
-    }
-
-    function test_RevertWhen_ProvidedPositionBaseToken() public {
-        ICaliber.Instruction memory instruction = WeirollUtils._build4626AccountingInstruction(
-            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
-        );
-
-        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
         caliber.accountForPosition(instruction);
     }
 

@@ -43,8 +43,7 @@ abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test, Base_Hub_Test {
         Base_Hub_Test.setUp();
         Unit_Concrete_Test.setUp();
 
-        (machine, caliber, hubDualMailbox) =
-            _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0));
     }
 }
 
@@ -56,7 +55,6 @@ abstract contract Unit_Concrete_Spoke_Test is Unit_Concrete_Test, Base_Spoke_Tes
         Base_Spoke_Test.setUp();
         Unit_Concrete_Test.setUp();
 
-        (caliber, spokeCaliberMailbox) =
-            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (caliber, spokeCaliberMailbox) = _deployCaliber(address(0), address(accountingToken), bytes32(0));
     }
 }

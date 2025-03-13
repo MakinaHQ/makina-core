@@ -13,8 +13,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();
 
-        (caliber,) =
-            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (caliber,) = _deployCaliber(address(0), address(accountingToken), bytes32(0));
 
         defaultRoot = keccak256(abi.encodePacked("defaultRoot"));
 
@@ -38,7 +37,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
-        assertEq(caliber.getPositionsLength(), 1);
+        assertEq(caliber.getPositionsLength(), 0);
     }
 
     function test_SetMechanic_RevertWhen_CallerWithoutRole() public {

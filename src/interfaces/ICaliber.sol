@@ -6,7 +6,6 @@ import {ISwapper} from "../interfaces/ISwapper.sol";
 interface ICaliber {
     error ActiveUpdatePending();
     error BaseTokenAlreadyExists();
-    error BaseTokenPosition();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidPositionChangeDirection();
@@ -25,8 +24,10 @@ interface ICaliber {
     error TimelockDurationTooShort();
     error UnauthorizedOperator();
     error UnmatchingInstructions();
+    error ZeroTokenAddress();
     error ZeroPositionId();
 
+    event BaseTokenAdded(address indexed token);
     event MailboxDeployed(address indexed mailbox);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
@@ -55,7 +56,6 @@ interface ICaliber {
     /// @notice Initialization parameters.
     /// @param hubMachineEndpoint The address of the hub machine endpoints.
     /// @param accountingToken The address of the accounting token.
-    /// @param accountingTokenPosId The ID of the accounting token position.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
@@ -68,7 +68,6 @@ interface ICaliber {
     struct CaliberInitParams {
         address hubMachineEndpoint;
         address accountingToken;
-        uint256 accountingTokenPosId;
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
@@ -176,13 +175,12 @@ interface ICaliber {
     /// @dev Token => Registered as base token in this caliber
     function isBaseToken(address token) external view returns (bool);
 
-    /// @dev Checks if the accounting age of each non-base-token position is below the position staleness threshold.
+    /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
 
     /// @notice Adds a new base token.
     /// @param token The address of the base token.
-    /// @param positionId The ID for the base token position.
-    function addBaseToken(address token, uint256 positionId) external;
+    function addBaseToken(address token) external;
 
     /// @notice Accounts for a position.
     /// @dev If the position value goes to zero, it is closed.
@@ -199,7 +197,11 @@ interface ICaliber {
     /// @notice Gets the caliber's AUM and individual positions values.
     /// @return aum The caliber's AUM, i.e the total value of all positions.
     /// @return positionsValues The array of encoded tuples of the form (positionId, value, isDebt).
-    function getPositionsValues() external view returns (uint256 aum, bytes[] memory positionsValues);
+    /// @return baseTokensValues The array of encoded tuples of the form (token, value).
+    function getPositionsValues()
+        external
+        view
+        returns (uint256 aum, bytes[] memory positionsValues, bytes[] memory baseTokensValues);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:

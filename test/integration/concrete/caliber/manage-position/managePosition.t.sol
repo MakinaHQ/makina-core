@@ -91,26 +91,6 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertWhen_ProvidedPositionBaseToken()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
-        uint256 inputAmount = 3e18;
-
-        // position is a base token position
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] = WeirollUtils._build4626DepositInstruction(
-            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault), inputAmount
-        );
-        instructions[1] = WeirollUtils._build4626AccountingInstruction(
-            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
-        );
-
-        vm.prank(mechanic);
-        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
-        caliber.managePosition(instructions);
-    }
-
     function test_RevertWhen_ProvidedFirstInstructionAffectedTokensListInvalid() public {
         uint256 inputAmount = 3e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
@@ -126,10 +106,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertWhen_ProvidedFirstInstructionProofInvalid()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertWhen_ProvidedFirstInstructionProofInvalid() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -196,7 +173,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertGiven_WrongRoot() public withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID) {
+    function test_RevertGiven_WrongRoot() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 3 * inputAmount, true);
@@ -240,10 +217,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertWhen_ProvidedSecondInstructionNonAccountingType()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertWhen_ProvidedSecondInstructionNonAccountingType() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -257,10 +231,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertWhen_ProvidedSecondInstructionProofInvalid()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertWhen_ProvidedSecondInstructionProofInvalid() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -300,10 +271,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_RevertGiven_AccountingOutputStateInvalid()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_AccountingOutputStateInvalid() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
@@ -336,10 +304,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // base tokens are spent but non-debt position decreases
-    function test_RevertGiven_InvalidPositionChangeDirection_NonDebt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_InvalidPositionChangeDirection_NonDebt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 2 * inputAmount, true);
@@ -365,10 +330,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // base tokens are spent but debt position increases
-    function test_RevertGiven_InvalidPositionChangeDirection_Debt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_InvalidPositionChangeDirection_Debt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
@@ -397,10 +359,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // non-debt position does not increase as much as expected
-    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_NonDebt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_NonDebt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -422,10 +381,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // non-debt position increases more than expected
-    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_Debt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_ValueLossTooHigh_PositionIncrease_Debt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
@@ -447,10 +403,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // non-debt position decreases more than expected
-    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_NonDebt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_NonDebt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -485,10 +438,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // debt position does not decrease as much as expected
-    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_Debt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_ValueLossTooHigh_PositionDecrease_Debt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
@@ -521,10 +471,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // base tokens are received but non-debt position increases
-    function test_FavorableMove_PositionIncrease_NonDebt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_FavorableMove_PositionIncrease_NonDebt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -552,10 +499,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // base tokens are received but debt position decreases
-    function test_FavorableMove_PositionDecrease_Debt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_FavorableMove_PositionDecrease_Debt() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
@@ -582,16 +526,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_ManagePosition_4626_Create()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_4626_Create() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
         deal(address(baseToken), address(caliber), 3e18, true);
-
-        uint256 posLengthBefore = caliber.getPositionsLength();
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
@@ -603,7 +542,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(instructions);
 
-        assertEq(caliber.getPositionsLength(), posLengthBefore + 1);
+        assertEq(caliber.getPositionsLength(), 1);
+        assertEq(caliber.getPositionId(0), VAULT_POS_ID);
         assertEq(vault.balanceOf(address(caliber)), previewShares);
         assertEq(value, uint256(change));
         assertEq(value, inputAmount * PRICE_B_A);
@@ -612,15 +552,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_SupplyModule_Create()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_SupplyModule_Create() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
-
-        uint256 posLengthBefore = caliber.getPositionsLength();
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
@@ -634,7 +569,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(instructions);
 
-        assertEq(caliber.getPositionsLength(), posLengthBefore + 1);
+        assertEq(caliber.getPositionsLength(), 1);
+        assertEq(caliber.getPositionId(0), SUPPLY_POS_ID);
         assertEq(supplyModule.collateralOf(address(caliber)), inputAmount);
         assertEq(value, uint256(change));
         assertEq(value, inputAmount * PRICE_B_A);
@@ -643,15 +579,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_BorrowModule_Create()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_BorrowModule_Create() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
-
-        uint256 posLengthBefore = caliber.getPositionsLength();
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
@@ -665,7 +596,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(instructions);
 
-        assertEq(caliber.getPositionsLength(), posLengthBefore + 1);
+        assertEq(caliber.getPositionsLength(), 1);
+        assertEq(caliber.getPositionId(0), BORROW_POS_ID);
         assertEq(borrowModule.debtOf(address(caliber)), inputAmount);
         assertEq(value, uint256(change));
         assertEq(value, inputAmount * PRICE_B_A);
@@ -674,10 +606,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
     }
 
-    function test_ManagePosition_MockPool_Create()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_MockPool_Create() public withTokenAsBT(address(baseToken)) {
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
@@ -687,8 +616,6 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         deal(address(accountingToken), address(caliber), assets0, true);
         deal(address(baseToken), address(caliber), assets1, true);
-
-        uint256 posLengthBefore = caliber.getPositionsLength();
 
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
         instructions[0] =
@@ -702,7 +629,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(instructions);
 
-        assertEq(caliber.getPositionsLength(), posLengthBefore + 1);
+        assertEq(caliber.getPositionsLength(), 1);
+        assertEq(caliber.getPositionId(0), POOL_POS_ID);
         assertEq(pool.balanceOf(address(caliber)), previewLpts);
         assertEq(value, uint256(change));
         assertEq(value, assets1 * PRICE_B_A);
@@ -711,10 +639,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(POOL_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_4626_Increase()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_4626_Increase() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
@@ -745,10 +670,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_SupplyModule_Increase()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_SupplyModule_Increase() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 2 * inputAmount, true);
@@ -779,10 +701,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_BorrowModule_Increase()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_BorrowModule_Increase() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
@@ -813,10 +732,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
     }
 
-    function test_ManagePosition_4626_Decrease()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_4626_Decrease() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
@@ -853,10 +769,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_SupplyModule_Decrease()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_SupplyModule_Decrease() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -892,10 +805,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_BorrowModule_Decrease()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_BorrowModule_Decrease() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
@@ -931,10 +841,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
     }
 
-    function test_ManagePosition_4626_Close()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_4626_Close() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -966,10 +873,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_SupplyModule_Close()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_SupplyModule_Close() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -1002,10 +906,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_BorrowModule_Close()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_BorrowModule_Close() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), inputAmount, true);
@@ -1038,10 +939,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, false);
     }
 
-    function test_ManagePosition_MockPool_Close()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_ManagePosition_MockPool_Close() public withTokenAsBT(address(baseToken)) {
         // a1 >= 0.99 * (a0 + a1)
         // <=> a1 >= (0.99 / 0.01) * a0
         uint256 assets0 = 1e30 * PRICE_B_A;
@@ -1092,7 +990,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
     function test_RevertGiven_PositionIncrease_NonDebt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
         whileInRecoveryMode
     {
         uint256 inputAmount = 3e18;
@@ -1114,7 +1012,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
     function test_RevertGiven_PositionIncrease_Debt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
         whileInRecoveryMode
     {
         uint256 inputAmount = 3e18;
@@ -1137,7 +1035,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     // base tokens are spent but non-debt position decreases
     function test_RevertGiven_InvalidPositionChangeDirection_NonDebt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
     {
         uint256 inputAmount = 3e18;
 
@@ -1170,7 +1068,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     // non-debt position decreases more than expected
     function test_RevertGiven_ValueLossTooHigh_PositionDecrease_NonDebt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
     {
         uint256 inputAmount = 3e18;
 
@@ -1212,7 +1110,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     // debt position does not decrease as much as expected
     function test_RevertGiven_ValueLossTooHigh_PositionDecrease_Debt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
     {
         uint256 inputAmount = 3e18;
 
@@ -1252,7 +1150,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     // base tokens are received but non-debt position increases
     function test_RevertGiven_FavorableMove_PositionIncrease_NonDebt_WhileInRecoveryMode()
         public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
+        withTokenAsBT(address(baseToken))
     {
         uint256 inputAmount = 3e18;
 
@@ -1286,10 +1184,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     // base tokens are received but debt position decreases
-    function test_FavorableMove_PositionDecrease_Debt_WhileInRecoveryMode()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_FavorableMove_PositionDecrease_Debt_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
@@ -1320,10 +1215,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(instructions);
     }
 
-    function test_PositionDecrease_WhileInRecoveryMode()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_PositionDecrease_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 2 * inputAmount, true);
@@ -1357,10 +1249,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         );
     }
 
-    function test_PositionClosed_WhileInRecoveryMode()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_PositionClosed_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 2 * inputAmount, true);
