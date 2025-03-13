@@ -25,11 +25,6 @@ abstract contract Integration_Concrete_Test is Base_Test {
     uint256 internal constant PRICE_B_E = 60000;
     uint256 internal constant PRICE_B_A = 400;
 
-    uint256 internal constant VAULT_POS_ID = 3;
-    uint256 internal constant SUPPLY_POS_ID = 4;
-    uint256 internal constant BORROW_POS_ID = 5;
-    uint256 internal constant POOL_POS_ID = 6;
-
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 

@@ -193,26 +193,6 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function accountForBaseToken(uint256 posId) public returns (uint256, int256) {
-        CaliberStorage storage $ = _getCaliberStorage();
-        Position storage pos = $._positionById[posId];
-        if ($._positionIdToBaseToken[posId] == address(0)) {
-            revert NotBaseTokenPosition();
-        }
-        uint256 lastValue = pos.value;
-        address bt = $._positionIdToBaseToken[posId];
-        uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
-        if (btBal == 0) {
-            pos.value = 0;
-        } else {
-            pos.value = _accountingValueOf(bt, btBal);
-        }
-        pos.lastAccountingTime = block.timestamp;
-
-        return (pos.value, int256(pos.value) - int256(lastValue));
-    }
-
-    /// @inheritdoc ICaliber
     function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {

@@ -21,11 +21,6 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
     uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
-    uint256 internal constant VAULT_POS_ID = 3;
-    uint256 internal constant SUPPLY_POS_ID = 4;
-    uint256 internal constant BORROW_POS_ID = 5;
-    uint256 internal constant POOL_POS_ID = 6;
-
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 

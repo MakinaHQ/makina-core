@@ -18,7 +18,6 @@ interface ICaliber {
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
     error NoPendingUpdate();
-    error NotBaseTokenPosition();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
@@ -184,12 +183,6 @@ interface ICaliber {
     /// @param token The address of the base token.
     /// @param positionId The ID for the base token position.
     function addBaseToken(address token, uint256 positionId) external;
-
-    /// @dev Accounts for a base token position.
-    /// @param posId The ID of the base token position.
-    /// @return value The new position value.
-    /// @return change The change in the position value.
-    function accountForBaseToken(uint256 posId) external returns (uint256 value, int256 change);
 
     /// @notice Accounts for a position.
     /// @dev If the position value goes to zero, it is closed.
