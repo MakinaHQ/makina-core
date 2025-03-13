@@ -121,6 +121,9 @@ interface ICaliber {
     /// @notice Address of the Makina registry.
     function registry() external view returns (address);
 
+    /// @notice Address of the Weiroll VM.
+    function weirollVm() external view returns (address);
+
     /// @notice Address of the mailbox.
     function mailbox() external view returns (address);
 

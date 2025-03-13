@@ -44,6 +44,11 @@ jobs:
           forge fmt --check
         id: fmt
 
+      - name: Run Forge build with IR
+        run: |
+          FOUNDRY_PROFILE=ir forge build
+        id: build-via-ir
+
       - name: Run Forge build
         run: |
           forge build --sizes
