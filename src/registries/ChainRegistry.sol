@@ -5,8 +5,8 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 
 contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
-    mapping(uint256 evmChainId => uint16 whChainId) public _evmToWhChainId;
-    mapping(uint16 whChainId => uint256 evmChainId) public _whToEvmChainId;
+    mapping(uint256 evmChainId => uint16 whChainId) private _evmToWhChainId;
+    mapping(uint16 whChainId => uint256 evmChainId) private _whToEvmChainId;
 
     function initialize(address _accessManager) public initializer {
         __AccessManaged_init(_accessManager);
