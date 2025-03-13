@@ -198,7 +198,7 @@ interface ICaliber {
     /// @return aum The caliber's AUM, i.e the total value of all positions.
     /// @return positionsValues The array of encoded tuples of the form (positionId, value, isDebt).
     /// @return baseTokensValues The array of encoded tuples of the form (token, value).
-    function getPositionsValues()
+    function getDetailedAum()
         external
         view
         returns (uint256 aum, bytes[] memory positionsValues, bytes[] memory baseTokensValues);

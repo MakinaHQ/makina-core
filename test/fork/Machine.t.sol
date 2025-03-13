@@ -84,7 +84,7 @@ contract Machine_Fork_Test is Fork_Test {
         vm.stopPrank();
 
         // check hub caliber aum
-        (uint256 hubCaliberAum,,) = hubCaliber.getPositionsValues();
+        (uint256 hubCaliberAum,,) = hubCaliber.getDetailedAum();
         assertEq(hubCaliberAum, depositAmount / 5);
 
         // check machine aum
@@ -131,7 +131,7 @@ contract Machine_Fork_Test is Fork_Test {
         deal({token: baseForkData.usdc, to: address(spokeCaliber), give: spokeCaliberFund});
 
         // check spoke caliber aum
-        (uint256 spokeCaliberAum,,) = spokeCaliber.getPositionsValues();
+        (uint256 spokeCaliberAum,,) = spokeCaliber.getDetailedAum();
         assertEq(spokeCaliberAum, spokeCaliberFund);
 
         // read spoke caliber accounting data

@@ -1,4 +1,4 @@
-getPositionsValues.t.sol
+getDetailedAum.t.sol
 ├── given one of the positions in the caliber is stale
 │  └── it should revert with PositionAccountingStale
 └── given no position in the caliber is stale

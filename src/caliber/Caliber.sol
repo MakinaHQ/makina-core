@@ -226,7 +226,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function getPositionsValues() external view override returns (uint256, bytes[] memory, bytes[] memory) {
+    function getDetailedAum() external view override returns (uint256, bytes[] memory, bytes[] memory) {
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 currentTimestamp = block.timestamp;

@@ -31,7 +31,7 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         hubDualMailbox.getHubCaliberAccountingData();
     }
 
-    function test_GetPositionsValues() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum() public withTokenAsBT(address(baseToken)) {
         uint256 aInputAmount = 3e18;
         uint256 bInputAmount = 5e18;
 

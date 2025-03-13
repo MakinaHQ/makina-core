@@ -32,7 +32,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         spokeCaliberMailbox.getSpokeCaliberAccountingData();
     }
 
-    function test_GetPositionsValues() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum() public withTokenAsBT(address(baseToken)) {
         uint256 aInputAmount = 3e18;
         uint256 bInputAmount = 5e18;
 

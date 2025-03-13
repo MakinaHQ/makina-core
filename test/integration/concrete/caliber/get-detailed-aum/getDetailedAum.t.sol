@@ -6,7 +6,7 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
-contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertGiven_PositionStale() public withTokenAsBT(address(baseToken)) {
         // create a vault position
         uint256 inputAmount = 3e18;
@@ -22,44 +22,44 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
 
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
-        caliber.getPositionsValues();
+        caliber.getDetailedAum();
     }
 
-    function test_GetPositionsValues_WithZeroAum() public view {
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+    function test_GetDetailedAum_WithZeroAum() public view {
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 0);
         assertEq(baseTokensValues.length, 1);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
     }
 
-    function test_GetPositionsValues_UnregisteredToken() public {
+    function test_GetDetailedAum_UnregisteredToken() public {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount);
 
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 0);
         assertEq(baseTokensValues.length, 1);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
     }
 
-    function test_GetPositionsValues_AccountingToken() public {
+    function test_GetDetailedAum_AccountingToken() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(caliber), inputAmount);
 
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount);
         assertEq(positionsValues.length, 0);
         assertEq(baseTokensValues.length, 1);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), inputAmount);
     }
 
-    function test_GetPositionsValues_BaseToken() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum_BaseToken() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount);
 
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount * PRICE_B_A);
         assertEq(positionsValues.length, 0);
         assertEq(baseTokensValues.length, 2);
@@ -67,7 +67,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), inputAmount * PRICE_B_A);
     }
 
-    function test_GetPositionsValues_NonDebtPosition() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum_NonDebtPosition() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
@@ -81,7 +81,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount * PRICE_B_A);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
@@ -90,7 +90,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
     }
 
-    function test_GetPositionsValues_DebtPosition() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum_DebtPosition() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
@@ -105,7 +105,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         vm.prank(mechanic);
         caliber.managePosition(instructions);
 
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
@@ -118,7 +118,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
 
         caliber.accountForPosition(instructions[1]);
 
-        (netAum, positionsValues, baseTokensValues) = caliber.getPositionsValues();
+        (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
@@ -127,7 +127,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), inputAmount * PRICE_B_A);
     }
 
-    function test_GetPositionsValues_MultiplePositions() public withTokenAsBT(address(baseToken)) {
+    function test_GetDetailedAum_MultiplePositions() public withTokenAsBT(address(baseToken)) {
         uint256 aInputAmount = 5e20;
         uint256 bInputAmount = 1e18;
 
@@ -160,7 +160,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.managePosition(supplyModuleInstructions);
 
         // check that AUM reflects all positions
-        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getPositionsValues();
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
@@ -175,7 +175,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         (, int256 change) = caliber.accountForPosition(borrowModuleInstructions[1]);
         expectedNetAUM -= uint256(change);
 
-        (netAum, positionsValues, baseTokensValues) = caliber.getPositionsValues();
+        (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
@@ -190,7 +190,7 @@ contract GetPositionsValues_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.accountForPosition(borrowModuleInstructions[1]);
         expectedNetAUM = 0;
 
-        (netAum, positionsValues, baseTokensValues) = caliber.getPositionsValues();
+        (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
