@@ -1,0 +1,9 @@
+scheduleAllowedInstrRootUpdate.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given there is already a pending root update
+   │  └── it should revert with ActiveUpdatePending
+   └── given there is no pending root update
+      ├── it should set the timelock expiry and pending root in the Caliber
+      └── it should emit a NewAllowedInstrRootScheduled event

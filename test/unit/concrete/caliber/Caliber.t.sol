@@ -110,69 +110,6 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(caliber.timelockDuration(), newDuration);
     }
 
-    function test_ScheduleAllowedInstrRootUpdate_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.scheduleAllowedInstrRootUpdate(bytes32(0));
-    }
-
-    function test_ScheduleAllowedInstrRootUpdate() public {
-        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
-        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
-
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.NewAllowedInstrRootScheduled(newRoot, effectiveUpdateTime);
-        vm.prank(dao);
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-
-        assertEq(caliber.allowedInstrRoot(), defaultRoot);
-        assertEq(caliber.pendingAllowedInstrRoot(), newRoot);
-        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
-
-        vm.warp(effectiveUpdateTime);
-
-        assertEq(caliber.allowedInstrRoot(), newRoot);
-        assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
-        assertEq(caliber.pendingTimelockExpiry(), 0);
-    }
-
-    function test_SetTimelockDuration_DoesNotAffectPendingRootUpdate() public {
-        assertEq(caliber.timelockDuration(), 1 hours);
-
-        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
-        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
-
-        vm.startPrank(dao);
-
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-        caliber.setTimelockDuration(2 hours);
-
-        assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
-
-        vm.warp(effectiveUpdateTime);
-
-        assertEq(caliber.allowedInstrRoot(), newRoot);
-        assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
-        assertEq(caliber.pendingTimelockExpiry(), 0);
-
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-    }
-
-    function test_ScheduleRootUpdate_RevertGiven_ActivePendingUpdate() public {
-        bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
-        uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
-
-        vm.startPrank(dao);
-
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-
-        vm.expectRevert(ICaliber.ActiveUpdatePending.selector);
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-
-        vm.warp(effectiveUpdateTime);
-
-        caliber.scheduleAllowedInstrRootUpdate(newRoot);
-    }
-
     function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         caliber.setMaxPositionIncreaseLossBps(1000);
