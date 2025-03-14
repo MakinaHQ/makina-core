@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
+import {StdCheats} from "forge-std/StdCheats.sol";
+
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -20,7 +22,7 @@ import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {Swapper} from "src/swap/Swapper.sol";
 
-abstract contract Base {
+abstract contract Base is StdCheats {
     struct HubCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
@@ -61,6 +63,10 @@ abstract contract Base {
     ///
     /// CORE DEPLOYMENTS
     ///
+
+    function deployWeirollVMViaIR() public returns (address weirollVM) {
+        weirollVM = deployCode("out-ir-based/WeirollVM.sol/WeirollVM.json");
+    }
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
@@ -123,7 +129,8 @@ abstract contract Base {
             )
         );
 
-        address caliberImplemAddr = address(new Caliber(address(deployment.hubRegistry)));
+        address weirollVMImplemAddr = deployWeirollVMViaIR();
+        address caliberImplemAddr = address(new Caliber(address(deployment.hubRegistry), weirollVMImplemAddr));
         deployment.hubCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
         address machineImplemAddr = address(new Machine(address(deployment.hubRegistry), wormhole));
@@ -172,7 +179,8 @@ abstract contract Base {
             )
         );
 
-        address caliberImplemAddr = address(new Caliber(address(deployment.spokeRegistry)));
+        address weirollVMImplemAddr = deployWeirollVMViaIR();
+        address caliberImplemAddr = address(new Caliber(address(deployment.spokeRegistry), weirollVMImplemAddr));
         deployment.spokeCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
         address caliberFactoryImplemAddr = address(new CaliberFactory(address(deployment.spokeRegistry)));

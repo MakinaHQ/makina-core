@@ -8,3 +8,6 @@
 	path = lib/wormhole-solidity-sdk
 	url = https://github.com/wormhole-foundation/wormhole-solidity-sdk
 	branch = main
+[submodule "lib/enso-weiroll"]
+	path = lib/enso-weiroll
+	url = https://github.com/EnsoBuild/enso-weiroll

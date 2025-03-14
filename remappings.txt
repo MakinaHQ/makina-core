@@ -1,3 +1,4 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @wormhole/sdk/=lib/wormhole-solidity-sdk/src/
+@enso-weiroll/=lib/enso-weiroll/contracts/

@@ -8,6 +8,15 @@ optimizer = true
 ffi = true
 fs_permissions = [{ access = "read-write", path = "./"}]
 
+# Only compile contracts which require IR-based codegen
+[profile.ir]
+src = "src-ir"
+test = "test-ir"
+script = "script-ir"
+libs = ["lib/enso-weiroll"]
+out = "out-ir-based"
+via_ir = true
+
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 base = "${BASE_RPC_URL}"

@@ -3,19 +3,20 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {VM} from "./vm/VM.sol";
+import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
-contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
+contract Caliber is AccessManagedUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
     using SafeERC20 for IERC20Metadata;
@@ -25,6 +26,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
 
     /// @inheritdoc ICaliber
     address public immutable registry;
+
+    /// @inheritdoc ICaliber
+    address public immutable weirollVm;
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
@@ -58,8 +62,9 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
         }
     }
 
-    constructor(address _registry) {
+    constructor(address _registry, address _weirollVm) {
         registry = _registry;
+        weirollVm = _weirollVm;
         _disableInitializers();
     }
 
@@ -720,5 +725,15 @@ contract Caliber is VM, AccessManagedUpgradeable, ICaliber {
             delete $._pendingTimelockExpiry;
         }
         return $._allowedInstrRoot;
+    }
+
+    /// @dev Executes a set of commands on the Weiroll VM, via a delegatecall.
+    /// @param commands The commands to execute.
+    /// @param state The state to pass to the VM.
+    /// @return outState The new state after executing the commands.
+    function _execute(bytes32[] calldata commands, bytes[] memory state) internal returns (bytes[] memory) {
+        bytes memory returndata =
+            Address.functionDelegateCall(weirollVm, abi.encodeCall(IWeirollVM.execute, (commands, state)));
+        return abi.decode(returndata, (bytes[]));
     }
 }
