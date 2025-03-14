@@ -1,0 +1,12 @@
+removeBaseToken.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given the base token is the accounting token of the Caliber
+   │  └── it should revert with AccountingToken
+   └── given the base token is not the accounting token of the Caliber
+      ├── given the base token is not registered in the Caliber
+      │  └── it should revert with BaseTokenDoesNotExist
+      └── given the base token is registered in the Caliber
+         ├── it should unregister the position ID from the Caliber
+         └── it should emit a BaseTokenRemoved event

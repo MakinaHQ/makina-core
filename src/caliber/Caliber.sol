@@ -203,6 +203,23 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function removeBaseToken(address token) public override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if (token == $._accountingToken) {
+            revert AccountingToken();
+        }
+        if (!$._baseTokens.remove(token)) {
+            revert BaseTokenDoesNotExist();
+        }
+        if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
+            revert NonZeroBalance();
+        }
+
+        emit BaseTokenRemoved(token);
+    }
+
+    /// @inheritdoc ICaliber
     function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {

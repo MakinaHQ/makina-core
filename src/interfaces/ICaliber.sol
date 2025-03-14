@@ -4,8 +4,10 @@ pragma solidity 0.8.28;
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
 interface ICaliber {
+    error AccountingToken();
     error ActiveUpdatePending();
     error BaseTokenAlreadyExists();
+    error BaseTokenDoesNotExist();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidPositionChangeDirection();
@@ -16,6 +18,7 @@ interface ICaliber {
     error InvalidOutputToken();
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
+    error NonZeroBalance();
     error NoPendingUpdate();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
@@ -28,6 +31,7 @@ interface ICaliber {
     error ZeroPositionId();
 
     event BaseTokenAdded(address indexed token);
+    event BaseTokenRemoved(address indexed token);
     event MailboxDeployed(address indexed mailbox);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
@@ -189,6 +193,10 @@ interface ICaliber {
     /// @notice Adds a new base token.
     /// @param token The address of the base token.
     function addBaseToken(address token) external;
+
+    /// @notice Removes a base token.
+    /// @param token The address of the base token.
+    function removeBaseToken(address token) external;
 
     /// @notice Accounts for a position.
     /// @dev If the position value goes to zero, it is closed.
