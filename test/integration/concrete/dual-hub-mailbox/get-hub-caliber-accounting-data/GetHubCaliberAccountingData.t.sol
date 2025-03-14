@@ -17,13 +17,12 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         // create a vault position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
-        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
-        vaultInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        vaultInstructions[1] =
+        ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        caliber.managePosition(vaultInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
 
@@ -40,14 +39,13 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
 
         // create supply position
         deal(address(baseToken), address(caliber), bInputAmount, true);
-        ICaliber.Instruction[] memory supplyModuleInstructions = new ICaliber.Instruction[](2);
-        supplyModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
-        supplyModuleInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
         vm.prank(mechanic);
-        caliber.managePosition(supplyModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check accounting token position is correctly accounted for in AUM
         IHubDualMailbox.HubCaliberAccountingData memory data = hubDualMailbox.getHubCaliberAccountingData();
@@ -60,7 +58,7 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
 
         skip(1 hours);
 
-        caliber.accountForPosition(supplyModuleInstructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         // check data is the same after a day
         data = hubDualMailbox.getHubCaliberAccountingData();

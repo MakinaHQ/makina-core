@@ -20,16 +20,15 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_RevertGiven_HubCaliberStale() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount);
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        instructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
 
         // create position in caliber
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
@@ -106,16 +105,15 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount2 = 1e18;
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
 
-        ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
-        borrowModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
-        borrowModuleInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
 
         // open debt position in caliber
         vm.prank(mechanic);
-        caliber.managePosition(borrowModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
@@ -127,20 +125,19 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
-        ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
-        borrowModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        borrowModuleInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
 
         // open debt position in caliber
         vm.prank(mechanic);
-        caliber.managePosition(borrowModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // increase caliber debt
         borrowModule.setRateBps(10_000 * 2);
-        caliber.accountForPosition(borrowModuleInstructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0, block.timestamp);
@@ -184,20 +181,19 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount2 = 1e18;
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
 
-        ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
-        borrowModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
-        borrowModuleInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
 
         // open debt position in caliber
         vm.prank(mechanic);
-        caliber.managePosition(borrowModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // increase caliber debt
         borrowModule.setRateBps(10_000 * 2);
-        caliber.accountForPosition(borrowModuleInstructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         // check that machine total aum remains the same
         vm.expectEmit(false, false, false, true, address(machine));
