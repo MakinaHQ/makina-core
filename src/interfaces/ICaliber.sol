@@ -161,12 +161,12 @@ interface ICaliber {
     /// @notice Max allowed value loss (in basis point) for base token swaps.
     function maxSwapLossBps() external view returns (uint256);
 
-    /// @notice Length of the position IDs array.
+    /// @notice Length of the position IDs list.
     function getPositionsLength() external view returns (uint256);
 
     /// @dev Position index => Position ID
-    /// @dev There are no guarantees on the ordering of values inside the Position ID array,
-    ///      and it may change when values are added or remove.
+    /// @dev There are no guarantees on the ordering of values inside the Position ID list,
+    ///      and it may change when values are added or removed.
     function getPositionId(uint256 idx) external view returns (uint256);
 
     /// @dev Position ID => Position data
@@ -174,6 +174,14 @@ interface ICaliber {
 
     /// @dev Token => Registered as base token in this caliber
     function isBaseToken(address token) external view returns (bool);
+
+    /// @notice Length of the base tokens list.
+    function getBaseTokensLength() external view returns (uint256);
+
+    /// @dev Base token index => Base token address
+    /// @dev There are no guarantees on the ordering of values inside the base tokens list,
+    ///      and it may change when values are added or removed.
+    function getBaseTokenAddress(uint256 idx) external view returns (address);
 
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);

@@ -188,6 +188,16 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
+    function getBaseTokensLength() public view override returns (uint256) {
+        return _getCaliberStorage()._baseTokens.length();
+    }
+
+    /// @inheritdoc ICaliber
+    function getBaseTokenAddress(uint256 idx) public view override returns (address) {
+        return _getCaliberStorage()._baseTokens.at(idx);
+    }
+
+    /// @inheritdoc ICaliber
     function addBaseToken(address token) public override restricted {
         _addBaseToken(token);
     }

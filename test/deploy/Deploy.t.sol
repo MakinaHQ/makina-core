@@ -181,5 +181,6 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(spokeCaliber.mechanic(), caliberInitParams.initialMechanic);
         assertEq(IAccessManaged(address(spokeCaliber)).authority(), caliberInitParams.initialAuthority);
         assertEq(spokeCaliber.getPositionsLength(), 0);
+        assertEq(spokeCaliber.getBaseTokensLength(), 1);
     }
 }

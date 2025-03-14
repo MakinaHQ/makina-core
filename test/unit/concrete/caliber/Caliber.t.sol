@@ -38,6 +38,8 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 1);
+        assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
     }
 
     function test_SetMechanic_RevertWhen_CallerWithoutRole() public {

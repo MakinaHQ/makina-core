@@ -41,5 +41,6 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(baseToken));
 
         assertEq(caliber.isBaseToken(address(baseToken)), true);
+        assertEq(caliber.getBaseTokensLength(), 2);
     }
 }

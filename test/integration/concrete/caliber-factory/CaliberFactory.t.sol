@@ -62,5 +62,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 1);
+        assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
     }
 }
