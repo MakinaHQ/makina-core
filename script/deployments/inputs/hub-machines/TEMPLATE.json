@@ -6,7 +6,6 @@
   "depositor": "0x0000000000000000000000000000000000000000",
   "initialCaliberStaleThreshold": 0,
   "initialShareLimit": 0,
-  "hubCaliberAccountingTokenPosID": 0,
   "hubCaliberPosStaleThreshold": 0,
   "hubCaliberAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
   "hubCaliberTimelockDuration": 0,

@@ -17,7 +17,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         Caliber_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        caliber.addBaseToken(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID);
+        caliber.addBaseToken(address(baseToken));
 
         inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
@@ -33,38 +33,18 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
     }
 
     function test_RevertWhen_ProvidedPositionNonExisting() public {
-        // 1st instruction is not an accounting instruction
+        // 1st instruction does not exist
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
         vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
-        // 2nd instruction is not an accounting instruction
+        // 2nd instruction does not exist
         accountingInstructions = new ICaliber.Instruction[](2);
         accountingInstructions[0] =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         accountingInstructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
         vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
-        caliber.accountForPositionBatch(accountingInstructions);
-    }
-
-    function test_RevertWhen_ProvidedPositionBaseToken() public {
-        // 1st instruction is for a base token position
-        ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
-        accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(
-            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
-        );
-        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
-        caliber.accountForPositionBatch(accountingInstructions);
-
-        // 2nd instruction is for a base token position
-        accountingInstructions = new ICaliber.Instruction[](2);
-        accountingInstructions[0] =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        accountingInstructions[1] = WeirollUtils._build4626AccountingInstruction(
-            address(caliber), HUB_CALIBER_BASE_TOKEN_1_POS_ID, address(vault)
-        );
-        vm.expectRevert(ICaliber.BaseTokenPosition.selector);
         caliber.accountForPositionBatch(accountingInstructions);
     }
 

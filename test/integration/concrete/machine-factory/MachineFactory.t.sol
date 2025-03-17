@@ -42,7 +42,6 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
                     depositor: machineDepositor,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberAccountingTokenPosID: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     hubCaliberAllowedInstrRoot: initialAllowedInstrRoot,
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

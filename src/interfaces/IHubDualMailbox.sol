@@ -9,7 +9,8 @@ interface IHubDualMailbox is IMachineMailbox, ICaliberMailbox {
 
     struct HubCaliberAccountingData {
         uint256 netAum;
-        bytes[] positions; // abi.encode(positionId, positionSize)
+        bytes[] positions; // abi.encode(positionId, value, isDebt)
+        bytes[] baseTokens; // abi.encode(token, value)
     }
 
     /// @notice Returns the accounting data of the associated caliber.

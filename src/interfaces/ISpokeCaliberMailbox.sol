@@ -6,9 +6,10 @@ import {ICaliberMailbox} from "./ICaliberMailbox.sol";
 interface ISpokeCaliberMailbox is ICaliberMailbox {
     struct SpokeCaliberAccountingData {
         uint256 netAum;
-        bytes[] positions; // abi.encode(positionId, positionSize)
-        bytes[] totalReceivedFromHM; // abi.encode(baseToken, nativeValue)
-        bytes[] totalSentToHM; // abi.encode(baseToken, nativeValue)
+        bytes[] positions; // abi.encode(positionId, value)
+        bytes[] baseTokens; // abi.encode(token, value)
+        bytes[] totalReceivedFromHM; // abi.encode(baseToken, amount)
+        bytes[] totalSentToHM; // abi.encode(baseToken, amount)
     }
 
     /// @notice Chain ID of the hub.

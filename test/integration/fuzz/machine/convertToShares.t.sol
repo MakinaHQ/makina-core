@@ -26,7 +26,7 @@ contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        (machine,,) = _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (machine,,) = _deployMachine(address(accountingToken), bytes32(0));
     }
 
     function testFuzz_ConvertToShares(uint256 atDecimals, uint256 assets) public {

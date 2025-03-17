@@ -36,7 +36,6 @@ interface IMachine {
     /// @param depositor The address of the optional depositor.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialShareLimit The share cap value.
-    /// @param hubCaliberAccountingTokenPosID The position ID of the hub caliber's accounting token.
     /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
     /// @param hubCaliberAllowedInstrRoot The root of the Merkle tree containing allowed caliber instructions.
     /// @param hubCaliberTimelockDuration The duration of the hub caliber's Merkle tree root update timelock.
@@ -54,7 +53,6 @@ interface IMachine {
         address depositor;
         uint256 initialCaliberStaleThreshold;
         uint256 initialShareLimit;
-        uint256 hubCaliberAccountingTokenPosID;
         uint256 hubCaliberPosStaleThreshold;
         bytes32 hubCaliberAllowedInstrRoot;
         uint256 hubCaliberTimelockDuration;

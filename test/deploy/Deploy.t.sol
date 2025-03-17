@@ -180,7 +180,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(spokeCaliber.maxSwapLossBps(), caliberInitParams.initialMaxSwapLossBps);
         assertEq(spokeCaliber.mechanic(), caliberInitParams.initialMechanic);
         assertEq(IAccessManaged(address(spokeCaliber)).authority(), caliberInitParams.initialAuthority);
-        assertEq(spokeCaliber.getPositionsLength(), 1);
-        assertEq(spokeCaliber.getPositionId(0), caliberInitParams.accountingTokenPosId);
+        assertEq(spokeCaliber.getPositionsLength(), 0);
+        assertEq(spokeCaliber.getBaseTokensLength(), 1);
     }
 }

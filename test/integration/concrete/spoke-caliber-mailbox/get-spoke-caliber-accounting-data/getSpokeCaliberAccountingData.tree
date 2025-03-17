@@ -1,5 +1,5 @@
 getSpokeCaliberAccountingData.t.sol
-├── given one of the caliber's non-base-token positions is stale
+├── given one of the caliber's positions is stale
 │  └── it should revert with PositionAccountingStale
-└── given none of the caliber's non-base-token positions is stale
+└── given none of the caliber's positions is stale
    └── it should return an up-to-date SpokeCaliberAccountingData object

@@ -56,7 +56,6 @@ contract Machine_Fork_Test is Fork_Test {
                     depositor: address(0),
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberAccountingTokenPosID: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     hubCaliberAllowedInstrRoot: bytes32(""),
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -85,7 +84,7 @@ contract Machine_Fork_Test is Fork_Test {
         vm.stopPrank();
 
         // check hub caliber aum
-        (uint256 hubCaliberAum,) = hubCaliber.getPositionsValues();
+        (uint256 hubCaliberAum,,) = hubCaliber.getDetailedAum();
         assertEq(hubCaliberAum, depositAmount / 5);
 
         // check machine aum
@@ -113,7 +112,6 @@ contract Machine_Fork_Test is Fork_Test {
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: baseMachineMailbox,
                     accountingToken: baseForkData.usdc,
-                    accountingTokenPosId: SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -133,7 +131,7 @@ contract Machine_Fork_Test is Fork_Test {
         deal({token: baseForkData.usdc, to: address(spokeCaliber), give: spokeCaliberFund});
 
         // check spoke caliber aum
-        (uint256 spokeCaliberAum,) = spokeCaliber.getPositionsValues();
+        (uint256 spokeCaliberAum,,) = spokeCaliber.getDetailedAum();
         assertEq(spokeCaliberAum, spokeCaliberFund);
 
         // read spoke caliber accounting data

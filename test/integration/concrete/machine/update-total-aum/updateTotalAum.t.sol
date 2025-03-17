@@ -17,10 +17,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
     }
 
-    function test_RevertGiven_HubCaliberStale()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_HubCaliberStale() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount);
         ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
@@ -39,10 +36,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
     }
 
-    function test_RevertGiven_SpokeCaliberStale()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_RevertGiven_SpokeCaliberStale() public withTokenAsBT(address(baseToken)) {
         // deploy and setup spoke machine mailbox
         vm.startPrank(dao);
         spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
@@ -104,10 +98,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_UpdateTotalAum_PositiveHubCaliberAumAndDebt()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_UpdateTotalAum_PositiveHubCaliberAumAndDebt() public withTokenAsBT(address(baseToken)) {
         // fund caliber with accountingToken
         uint256 inputAmount = 3e18;
         deal(address(accountingToken), address(caliber), inputAmount);
@@ -132,10 +123,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_UpdateTotalAum_NegativeHubCaliberValue()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_UpdateTotalAum_NegativeHubCaliberValue() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
@@ -181,10 +169,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), 2 * inputAmount);
     }
 
-    function test_UpdateTotalAum_NegativeHubCaliberValueAndIdleToken()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_UpdateTotalAum_NegativeHubCaliberValueAndIdleToken() public withTokenAsBT(address(baseToken)) {
         // fund machine with accountingToken
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount);
@@ -221,10 +206,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
-    function test_UpdateTotalAum_PositiveSpokeCaliberValue()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_UpdateTotalAum_PositiveSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
         // deploy and setup spoke machine mailbox
         vm.startPrank(dao);
         spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
@@ -250,10 +232,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), queriedData.netAum);
     }
 
-    function test_UpdateTotalAum_NegativeSpokeCaliberValue()
-        public
-        withTokenAsBT(address(baseToken), HUB_CALIBER_BASE_TOKEN_1_POS_ID)
-    {
+    function test_UpdateTotalAum_NegativeSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
         // deploy and setup spoke machine mailbox
         vm.startPrank(dao);
         spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);

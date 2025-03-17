@@ -15,11 +15,10 @@ contract Constants {
     uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
-    uint256 public constant HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1;
-    uint256 public constant HUB_CALIBER_BASE_TOKEN_1_POS_ID = 2;
-
-    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_POS_ID = 1001;
-    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_1_POS_ID = 1002;
+    uint256 internal constant VAULT_POS_ID = 3;
+    uint256 internal constant SUPPLY_POS_ID = 4;
+    uint256 internal constant BORROW_POS_ID = 5;
+    uint256 internal constant POOL_POS_ID = 6;
 
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 }

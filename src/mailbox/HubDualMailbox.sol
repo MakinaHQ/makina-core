@@ -51,6 +51,6 @@ contract HubDualMailbox is Initializable, IHubDualMailbox {
 
     /// @inheritdoc IHubDualMailbox
     function getHubCaliberAccountingData() external view override returns (HubCaliberAccountingData memory data) {
-        (data.netAum, data.positions) = ICaliber(caliber).getPositionsValues();
+        (data.netAum, data.positions, data.baseTokens) = ICaliber(caliber).getDetailedAum();
     }
 }

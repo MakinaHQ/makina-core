@@ -36,7 +36,6 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: _machineMailbox,
                     accountingToken: address(accountingToken),
-                    accountingTokenPosId: HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -62,7 +61,8 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.authority(), address(accessManager));
 
-        assertEq(caliber.getPositionsLength(), 1);
-        assertEq(caliber.getPositionId(0), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 1);
+        assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
     }
 }

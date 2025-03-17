@@ -25,11 +25,6 @@ abstract contract Integration_Concrete_Test is Base_Test {
     uint256 internal constant PRICE_B_E = 60000;
     uint256 internal constant PRICE_B_A = 400;
 
-    uint256 internal constant VAULT_POS_ID = 3;
-    uint256 internal constant SUPPLY_POS_ID = 4;
-    uint256 internal constant BORROW_POS_ID = 5;
-    uint256 internal constant POOL_POS_ID = 6;
-
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 
@@ -108,6 +103,15 @@ abstract contract Integration_Concrete_Test is Base_Test {
         assertEq(value, expectedValue);
         assertEq(isDebt, expectedIsDebt);
     }
+
+    function _checkEncodedCaliberBTValue(bytes memory encodedData, address expectedAddress, uint256 expectedValue)
+        internal
+        pure
+    {
+        (address token, uint256 value) = abi.decode(encodedData, (address, uint256));
+        assertEq(token, expectedAddress);
+        assertEq(value, expectedValue);
+    }
 }
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
@@ -122,8 +126,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (machine, caliber, hubDualMailbox) =
-            _deployMachine(address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0));
     }
 
     modifier whileInRecoveryMode() {
@@ -140,9 +143,9 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         _;
     }
 
-    modifier withTokenAsBT(address _token, uint256 _posId) {
+    modifier withTokenAsBT(address _token) {
         vm.prank(dao);
-        caliber.addBaseToken(_token, _posId);
+        caliber.addBaseToken(_token);
         _;
     }
 }
@@ -155,8 +158,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (caliber, spokeCaliberMailbox) =
-            _deployCaliber(address(0), address(accountingToken), HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID, bytes32(0));
+        (caliber, spokeCaliberMailbox) = _deployCaliber(address(0), address(accountingToken), bytes32(0));
     }
 
     modifier whileInRecoveryMode() {
@@ -165,9 +167,9 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         _;
     }
 
-    modifier withTokenAsBT(address _token, uint256 _posId) {
+    modifier withTokenAsBT(address _token) {
         vm.prank(dao);
-        caliber.addBaseToken(_token, _posId);
+        caliber.addBaseToken(_token);
         _;
     }
 }

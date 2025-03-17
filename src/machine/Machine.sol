@@ -443,7 +443,6 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
             hubMachineEndpoint: address(this),
             accountingToken: params.accountingToken,
-            accountingTokenPosId: params.hubCaliberAccountingTokenPosID,
             initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
             initialAllowedInstrRoot: params.hubCaliberAllowedInstrRoot,
             initialTimelockDuration: params.hubCaliberTimelockDuration,

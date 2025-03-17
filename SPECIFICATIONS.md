@@ -24,10 +24,10 @@ Calibers can manage and account for positions by executing authorized instructio
 #### Standard Operations:
 
 - Can add a base token with `addBaseToken()`.
-- Can account for a base token position with `accountForBaseToken()`.
-- Can account for a non-base-token position with `accountForPosition()`.
-- Can account for several non-base-token positions in a batch with `accountForPositionBatch()`.
-- Can compute total caliber accounting value with `updateAndReportCaliberAUM()`.
+- Can remove a base token with `removeBaseToken()`.
+- Can account for a position with `accountForPosition()`.
+- Can account for several positions in a batch with `accountForPositionBatch()`.
+- Can fetch net caliber aum and positions detail with `getDetailedAum()`.
 - Can open, manage and close a position with `managePosition()`.
 - Can swap a token into any base token with `swap()`.
 

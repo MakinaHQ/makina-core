@@ -19,7 +19,6 @@ contract DeploySpokeCaliber is Script {
 
     struct CaliberInitParamsSorted {
         address accountingToken;
-        uint256 accountingTokenPosId;
         bytes32 initialAllowedInstrRoot;
         address initialAuthority;
         uint256 initialMaxPositionDecreaseLossBps;
@@ -65,7 +64,6 @@ contract DeploySpokeCaliber is Script {
             ICaliber.CaliberInitParams(
                 initParams.spokeMachineMailbox,
                 initParams.accountingToken,
-                initParams.accountingTokenPosId,
                 initParams.initialPositionStaleThreshold,
                 initParams.initialAllowedInstrRoot,
                 initParams.initialTimelockDuration,

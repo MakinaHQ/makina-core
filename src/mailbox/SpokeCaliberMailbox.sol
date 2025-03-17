@@ -31,7 +31,7 @@ contract SpokeCaliberMailbox is Initializable, ISpokeCaliberMailbox {
 
     /// @inheritdoc ISpokeCaliberMailbox
     function getSpokeCaliberAccountingData() external view override returns (SpokeCaliberAccountingData memory data) {
-        (data.netAum, data.positions) = ICaliber(caliber).getPositionsValues();
+        (data.netAum, data.positions, data.baseTokens) = ICaliber(caliber).getDetailedAum();
         // @TODO include totalReceivedFromHM and totalSentToHM
     }
 

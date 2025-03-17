@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -10,56 +11,83 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         ICaliber.Position memory position = caliber.getPosition(0);
         assertEq(position.lastAccountingTime, 0);
         assertEq(position.value, 0);
-        assertEq(position.isBaseToken, false);
     }
 
-    function test_GetPosition_ReturnsOldValuesForUnaccountedPosition() public {
-        deal(address(accountingToken), address(caliber), 1e18, true);
+    function test_GetPosition_ReturnsOldValuesForUnaccountedPosition() public withTokenAsBT(address(baseToken)) {
+        uint256 amount1 = 1e18;
 
-        ICaliber.Position memory position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
-        assertEq(position.lastAccountingTime, 0);
-        assertEq(position.value, 0);
-        assertEq(position.isBaseToken, true);
+        // deposit in vault
+        deal(address(baseToken), address(caliber), amount1, true);
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
+
+        uint256 oldTimestamp = block.timestamp;
+
+        skip(1 hours);
+        deal(address(vault), address(caliber), amount1, true);
+
+        ICaliber.Position memory position = caliber.getPosition(VAULT_POS_ID);
+        assertEq(position.lastAccountingTime, oldTimestamp);
+        assertEq(position.value, PRICE_B_A * amount1);
     }
 
-    function test_GetPosition_ReturnsUpdatedValuesForAccountedPosition() public {
-        uint256 newValue = 1e18;
-        deal(address(accountingToken), address(caliber), newValue, true);
-        caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+    function test_GetPosition_ReturnsUpdatedValuesForAccountedPosition() public withTokenAsBT(address(baseToken)) {
+        uint256 amount1 = 1e18;
+        // deposit in vault
+        deal(address(baseToken), address(caliber), amount1, true);
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
+        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
 
-        ICaliber.Position memory position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        ICaliber.Position memory position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, block.timestamp);
-        assertEq(position.value, newValue);
-        assertEq(position.isBaseToken, true);
+        assertEq(position.value, PRICE_B_A * amount1);
 
         // increase position value
-        newValue += 1e18;
-        deal(address(accountingToken), address(caliber), newValue, true);
-        caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        uint256 amount2 = 3e18;
+        deal(address(baseToken), address(caliber), amount2, true);
+        instructions[0] =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount2);
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
 
-        position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, block.timestamp);
-        assertEq(position.value, newValue);
-        assertEq(position.isBaseToken, true);
+        assertEq(position.value, PRICE_B_A * (amount1 + amount2));
 
         // increase time
+        uint256 oldTimestamp = block.timestamp;
         uint256 newTimestamp = block.timestamp + 1;
         vm.warp(newTimestamp);
-        caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
 
-        position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        position = caliber.getPosition(VAULT_POS_ID);
+        assertEq(position.lastAccountingTime, oldTimestamp);
+        assertEq(position.value, PRICE_B_A * (amount1 + amount2));
+
+        // account for position
+        caliber.accountForPosition(instructions[1]);
+
+        position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, newTimestamp);
-        assertEq(position.value, newValue);
-        assertEq(position.isBaseToken, true);
+        assertEq(position.value, PRICE_B_A * (amount1 + amount2));
 
         // decrease position value
-        newValue -= 1e18;
-        deal(address(accountingToken), address(caliber), newValue, true);
-        caliber.accountForBaseToken(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 3;
+        uint256 amount3 = vault.previewRedeem(sharesToRedeem);
+        instructions[0] =
+            WeirollUtils._build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
+        vm.prank(mechanic);
+        caliber.managePosition(instructions);
 
-        position = caliber.getPosition(HUB_CALIBER_ACCOUNTING_TOKEN_POS_ID);
+        position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, newTimestamp);
-        assertEq(position.value, newValue);
-        assertEq(position.isBaseToken, true);
+        assertEq(position.value, PRICE_B_A * (amount1 + amount2 - amount3));
     }
 }
