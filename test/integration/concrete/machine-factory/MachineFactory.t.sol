@@ -17,7 +17,8 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
 
     function test_Getters() public view {
         assertEq(machineFactory.registry(), address(hubRegistry));
-        assertEq(machineFactory.isMachine(address(0)), false);
+        assertFalse(machineFactory.isMachine(address(0)));
+        assertFalse(machineFactory.isCaliber(address(0)));
     }
 
     function test_RevertWhen_CallerWithoutRole() public {
@@ -55,7 +56,14 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
                 })
             )
         );
-        assertEq(machineFactory.isMachine(address(machine)), true);
+        address dualMailbox = machine.hubCaliberMailbox();
+        address caliber = IHubDualMailbox(dualMailbox).caliber();
+
+        assertTrue(machineFactory.isMachine(address(machine)));
+        assertTrue(machineFactory.isCaliber(address(caliber)));
+
+        assertEq(IHubDualMailbox(dualMailbox).machine(), address(machine));
+        assertEq(ICaliber(caliber).mailbox(), dualMailbox);
 
         assertEq(machine.registry(), address(hubRegistry));
         assertEq(machine.mechanic(), mechanic);
@@ -70,10 +78,5 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         assertEq(shareToken.machine(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
-
-        address dualMailbox = machine.hubCaliberMailbox();
-        address caliber = IHubDualMailbox(dualMailbox).caliber();
-        assertEq(IHubDualMailbox(dualMailbox).machine(), address(machine));
-        assertEq(ICaliber(caliber).mailbox(), dualMailbox);
     }
 }

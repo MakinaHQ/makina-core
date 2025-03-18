@@ -12,6 +12,9 @@ interface IMachineFactory {
     /// @notice Machine => whether the machine was deployed by this factory
     function isMachine(address machine) external view returns (bool);
 
+    /// @notice Machine => whether the caliber was deployed by this factory
+    function isCaliber(address caliber) external view returns (bool);
+
     /// @notice Deploys a new Machine instance.
     /// @param params The initialization parameters.
     /// @return machine The address of the deployed Machine instance.

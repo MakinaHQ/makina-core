@@ -103,6 +103,7 @@ contract Deploy_Scripts_Test is Base_Test {
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         address authority = IAccessManaged(address(machine)).authority();
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
+        assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
         assertEq(machine.mechanic(), machineInitParams.initialMechanic);
         assertEq(machine.accountingToken(), machineInitParams.accountingToken);
         assertEq(machine.caliberStaleThreshold(), machineInitParams.initialCaliberStaleThreshold);
