@@ -11,13 +11,12 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // create a vault position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
-        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
-        vaultInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        vaultInstructions[1] =
+        ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        caliber.managePosition(vaultInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
 
@@ -71,15 +70,14 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
 
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        instructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
 
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount * PRICE_B_A);
@@ -94,16 +92,15 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        instructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
 
         // open debt position in caliber
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
@@ -116,7 +113,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // increase borrowModule rate
         borrowModule.setRateBps(10_000 * 2);
 
-        caliber.accountForPosition(instructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
@@ -140,24 +137,22 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         deal(address(baseToken), address(borrowModule), bInputAmount, true);
 
         // create debt position (should not modify net aum)
-        ICaliber.Instruction[] memory borrowModuleInstructions = new ICaliber.Instruction[](2);
-        borrowModuleInstructions[0] =
+        ICaliber.Instruction memory borrowMgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), bInputAmount);
-        borrowModuleInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
         vm.prank(mechanic);
-        caliber.managePosition(borrowModuleInstructions);
+        caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
 
         // create supply position (should not modify net aum)
-        ICaliber.Instruction[] memory supplyModuleInstructions = new ICaliber.Instruction[](2);
-        supplyModuleInstructions[0] =
+        ICaliber.Instruction memory supplyMgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
-        supplyModuleInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
         vm.prank(mechanic);
-        caliber.managePosition(supplyModuleInstructions);
+        caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
 
         // check that AUM reflects all positions
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
@@ -172,7 +167,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // double borrowModule rate
         borrowModule.setRateBps(2 * 10_000);
 
-        (, int256 change) = caliber.accountForPosition(borrowModuleInstructions[1]);
+        (, int256 change) = caliber.accountForPosition(borrowAcctInstruction);
         expectedNetAUM -= uint256(change);
 
         (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
@@ -187,7 +182,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // increase borrowModule rate
         borrowModule.setRateBps(1e2 * 10_000);
 
-        caliber.accountForPosition(borrowModuleInstructions[1]);
+        caliber.accountForPosition(borrowAcctInstruction);
         expectedNetAUM = 0;
 
         (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();

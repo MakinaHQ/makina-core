@@ -18,12 +18,12 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
 
         // deposit in vault
         deal(address(baseToken), address(caliber), amount1, true);
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
-        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         uint256 oldTimestamp = block.timestamp;
 
@@ -39,12 +39,12 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         uint256 amount1 = 1e18;
         // deposit in vault
         deal(address(baseToken), address(caliber), amount1, true);
-        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](2);
-        instructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
-        instructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         ICaliber.Position memory position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, block.timestamp);
@@ -53,10 +53,10 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // increase position value
         uint256 amount2 = 3e18;
         deal(address(baseToken), address(caliber), amount2, true);
-        instructions[0] =
+        mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount2);
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, block.timestamp);
@@ -72,7 +72,7 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         assertEq(position.value, PRICE_B_A * (amount1 + amount2));
 
         // account for position
-        caliber.accountForPosition(instructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, newTimestamp);
@@ -81,10 +81,10 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // decrease position value
         uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 3;
         uint256 amount3 = vault.previewRedeem(sharesToRedeem);
-        instructions[0] =
+        mgmtInstruction =
             WeirollUtils._build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
         vm.prank(mechanic);
-        caliber.managePosition(instructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         position = caliber.getPosition(VAULT_POS_ID);
         assertEq(position.lastAccountingTime, newTimestamp);

@@ -243,10 +243,13 @@ interface ICaliber {
     /// │ Yes               │ No            │ Increase             │ No check (favorable move) │
     /// │ Yes               │ Yes           │ Decrease             │ No check (favorable move) │
     /// └───────────────────┴───────────────┴──────────────────────┴───────────────────────────┘
-    /// @param instructions The array containing paired management and accounting instructions.
+    /// @param mgmtInstruction The management instruction.
+    /// @param acctInstruction The accounting instruction.
     /// @return value The new position value.
     /// @return change The signed position value delta.
-    function managePosition(Instruction[] calldata instructions) external returns (uint256 value, int256 change);
+    function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
+        external
+        returns (uint256 value, int256 change);
 
     /// @notice Harvests one or multiple positions.
     /// @param instruction The harvest instruction.

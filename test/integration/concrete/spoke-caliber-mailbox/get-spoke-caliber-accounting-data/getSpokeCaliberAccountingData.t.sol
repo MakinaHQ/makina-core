@@ -17,14 +17,13 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         // create a supply position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
-        ICaliber.Instruction[] memory supplyModuleInstructions = new ICaliber.Instruction[](2);
-        supplyModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        supplyModuleInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
         vm.prank(mechanic);
-        caliber.managePosition(supplyModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
 
@@ -41,14 +40,13 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
 
         // create supply position
         deal(address(baseToken), address(caliber), bInputAmount, true);
-        ICaliber.Instruction[] memory supplyModuleInstructions = new ICaliber.Instruction[](2);
-        supplyModuleInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
-        supplyModuleInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
         vm.prank(mechanic);
-        caliber.managePosition(supplyModuleInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check accounting token position is correctly accounted for in AUM
         ISpokeCaliberMailbox.SpokeCaliberAccountingData memory data =
@@ -64,7 +62,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
 
         skip(1 hours);
 
-        caliber.accountForPosition(supplyModuleInstructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         // check data is the same after a day
         data = spokeCaliberMailbox.getSpokeCaliberAccountingData();

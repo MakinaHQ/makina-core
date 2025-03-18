@@ -291,7 +291,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     }
 
     /// @inheritdoc ICaliber
-    function managePosition(Instruction[] calldata instructions)
+    function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
         public
         override
         onlyOperator
@@ -299,30 +299,24 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     {
         CaliberStorage storage $ = _getCaliberStorage();
 
-        if (instructions.length != 2) {
-            revert InvalidInstructionsLength();
-        }
-        Instruction calldata managingInstruction = instructions[0];
-        Instruction calldata accountingInstruction = instructions[1];
-
-        uint256 posId = managingInstruction.positionId;
+        uint256 posId = mgmtInstruction.positionId;
         if (posId == 0) {
             revert ZeroPositionId();
         }
-        if (posId != accountingInstruction.positionId || managingInstruction.isDebt != accountingInstruction.isDebt) {
+        if (posId != acctInstruction.positionId || mgmtInstruction.isDebt != acctInstruction.isDebt) {
             revert UnmatchingInstructions();
         }
-        if (managingInstruction.instructionType != InstructionType.MANAGEMENT) {
+        if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
 
-        _accountForPosition(accountingInstruction);
+        _accountForPosition(acctInstruction);
 
-        _checkInstructionIsAllowed(managingInstruction);
+        _checkInstructionIsAllowed(mgmtInstruction);
 
         uint256 affectedTokensValueBefore;
-        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-            address _affectedToken = managingInstruction.affectedTokens[i];
+        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+            address _affectedToken = mgmtInstruction.affectedTokens[i];
             if (!$._baseTokens.contains(_affectedToken)) {
                 revert InvalidAffectedToken();
             }
@@ -330,13 +324,13 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
                 _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
 
-        _execute(managingInstruction.commands, managingInstruction.state);
+        _execute(mgmtInstruction.commands, mgmtInstruction.state);
 
-        (uint256 value, int256 change) = _accountForPosition(accountingInstruction);
+        (uint256 value, int256 change) = _accountForPosition(acctInstruction);
 
         uint256 affectedTokensValueAfter;
-        for (uint256 i; i < managingInstruction.affectedTokens.length; i++) {
-            address _affectedToken = managingInstruction.affectedTokens[i];
+        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+            address _affectedToken = mgmtInstruction.affectedTokens[i];
             affectedTokensValueAfter +=
                 _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
@@ -351,11 +345,11 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         }
 
         if (isBaseTokenInflow) {
-            if (managingInstruction.isDebt == isPositionIncrease) {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
                 _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
             }
         } else {
-            if (managingInstruction.isDebt == isPositionIncrease) {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
                 revert InvalidPositionChangeDirection();
             }
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);

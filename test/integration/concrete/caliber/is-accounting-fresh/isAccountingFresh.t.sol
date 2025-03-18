@@ -13,13 +13,12 @@ contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Conc
         // open vault position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
-        ICaliber.Instruction[] memory vaultInstructions = new ICaliber.Instruction[](2);
-        vaultInstructions[0] =
+        ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        vaultInstructions[1] =
+        ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        caliber.managePosition(vaultInstructions);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
 
         assertTrue(caliber.isAccountingFresh());
 
@@ -29,7 +28,7 @@ contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Conc
         assertFalse(caliber.isAccountingFresh());
 
         // account for vault position
-        caliber.accountForPosition(vaultInstructions[1]);
+        caliber.accountForPosition(acctInstruction);
 
         assertTrue(caliber.isAccountingFresh());
     }
