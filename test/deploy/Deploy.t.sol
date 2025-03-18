@@ -178,6 +178,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(spokeCaliber.maxPositionIncreaseLossBps(), caliberInitParams.initialMaxPositionIncreaseLossBps);
         assertEq(spokeCaliber.maxPositionDecreaseLossBps(), caliberInitParams.initialMaxPositionDecreaseLossBps);
         assertEq(spokeCaliber.maxSwapLossBps(), caliberInitParams.initialMaxSwapLossBps);
+        assertEq(spokeCaliber.flashLoanModule(), caliberInitParams.initialFlashLoanModule);
         assertEq(spokeCaliber.mechanic(), caliberInitParams.initialMechanic);
         assertEq(IAccessManaged(address(spokeCaliber)).authority(), caliberInitParams.initialAuthority);
         assertEq(spokeCaliber.getPositionsLength(), 0);

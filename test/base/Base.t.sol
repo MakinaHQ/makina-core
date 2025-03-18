@@ -87,7 +87,7 @@ abstract contract Base_Hub_Test is Base_Test {
         wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
-    function _deployMachine(address _accountingToken, bytes32 allowedInstrMerkleRoot)
+    function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, address _flashLoanModule)
         public
         returns (Machine, Caliber, HubDualMailbox)
     {
@@ -103,11 +103,12 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    hubCaliberAllowedInstrRoot: allowedInstrMerkleRoot,
+                    hubCaliberAllowedInstrRoot: _allowedInstrMerkleRoot,
                     hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    hubCaliberInitialFlashLoanModule: _flashLoanModule,
                     depositorOnlyMode: false,
                     shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                     shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -143,10 +144,12 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupAccessManager(accessManager, dao);
     }
 
-    function _deployCaliber(address _spokeMachineMailbox, address _accountingToken, bytes32 allowedInstrMerkleRoot)
-        public
-        returns (Caliber, SpokeCaliberMailbox)
-    {
+    function _deployCaliber(
+        address _spokeMachineMailbox,
+        address _accountingToken,
+        bytes32 _allowedInstrMerkleRoot,
+        address _flashLoanModule
+    ) public returns (Caliber, SpokeCaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             caliberFactory.deployCaliber(
@@ -154,11 +157,12 @@ abstract contract Base_Spoke_Test is Base_Test {
                     hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    initialAllowedInstrRoot: allowedInstrMerkleRoot,
+                    initialAllowedInstrRoot: _allowedInstrMerkleRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialFlashLoanModule: _flashLoanModule,
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager)

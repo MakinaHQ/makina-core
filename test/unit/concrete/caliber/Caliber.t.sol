@@ -13,7 +13,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();
 
-        (caliber,) = _deployCaliber(address(0), address(accountingToken), bytes32(0));
+        (caliber,) = _deployCaliber(address(0), address(accountingToken), bytes32(0), address(0));
 
         defaultRoot = keccak256(abi.encodePacked("defaultRoot"));
 
@@ -27,6 +27,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.accountingToken(), address(accountingToken));
+        assertEq(caliber.flashLoanModule(), address(0));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.recoveryMode(), false);
         assertEq(caliber.allowedInstrRoot(), defaultRoot);
@@ -68,6 +69,20 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         vm.prank(dao);
         caliber.setSecurityCouncil(newSecurityCouncil);
         assertEq(caliber.securityCouncil(), newSecurityCouncil);
+    }
+
+    function test_SetFlashLoanModule_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        caliber.setFlashLoanModule(address(0x0));
+    }
+
+    function test_SetFlashLoanModule() public {
+        address newFlashLoanModule = makeAddr("NewFlashLoanModule");
+        vm.expectEmit(true, true, false, true, address(caliber));
+        emit ICaliber.FlashLoanModuleChanged(address(0), newFlashLoanModule);
+        vm.prank(dao);
+        caliber.setFlashLoanModule(newFlashLoanModule);
+        assertEq(caliber.flashLoanModule(), newFlashLoanModule);
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerWithoutRole() public {

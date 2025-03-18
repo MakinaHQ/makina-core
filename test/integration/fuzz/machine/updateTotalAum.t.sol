@@ -89,7 +89,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         );
         vm.stopPrank();
 
-        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0));
+        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0), address(0));
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
 

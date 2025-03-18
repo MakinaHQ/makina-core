@@ -23,6 +23,7 @@ contract DeployHubMachine is Script {
         address depositor;
         bool depositorOnlyMode;
         bytes32 hubCaliberAllowedInstrRoot;
+        address hubCaliberFlashLoanModule;
         uint256 hubCaliberMaxPositionDecreaseLossBps;
         uint256 hubCaliberMaxPositionIncreaseLossBps;
         uint256 hubCaliberMaxSwapLossBps;
@@ -81,6 +82,7 @@ contract DeployHubMachine is Script {
                 initParams.hubCaliberMaxPositionIncreaseLossBps,
                 initParams.hubCaliberMaxPositionDecreaseLossBps,
                 initParams.hubCaliberMaxSwapLossBps,
+                initParams.hubCaliberFlashLoanModule,
                 initParams.depositorOnlyMode,
                 initParams.shareTokenName,
                 initParams.shareTokenSymbol

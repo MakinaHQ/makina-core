@@ -20,9 +20,11 @@ library MerkleProofs {
         address _mockBorrowModule,
         uint256 _mockBorrowModulePosId,
         address _mockPool,
-        uint256 _mockPoolPosId
+        uint256 _mockPoolPosId,
+        address _mockFlashLoanModule,
+        uint256 _mockLoopPosId
     ) internal {
-        string[] memory command = new string[](13);
+        string[] memory command = new string[](15);
         command[0] = "yarn";
         command[1] = "genMerkleDataMock";
         command[2] = vm.toString(_caliber);
@@ -36,6 +38,8 @@ library MerkleProofs {
         command[10] = vm.toString(_mockBorrowModulePosId);
         command[11] = vm.toString(_mockPool);
         command[12] = vm.toString(_mockPoolPosId);
+        command[13] = vm.toString(_mockFlashLoanModule);
+        command[14] = vm.toString(_mockLoopPosId);
         vm.ffi(command);
     }
 
@@ -113,5 +117,17 @@ library MerkleProofs {
 
     function _getHarvestMockBaseTokenInstrProof() internal view returns (bytes32[] memory) {
         return _getMerkleData().readBytes32Array(".proofHarvestMockBaseToken");
+    }
+
+    function _getDummyLoopMockFlashLoanModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofDummyLoopMockFlashLoanModule");
+    }
+
+    function _getAccountingMockFlashLoanModuleInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofAccountingMockFlashLoanModule");
+    }
+
+    function _getManageFlashLoanDummyInstrProof() internal view returns (bytes32[] memory) {
+        return _getMerkleData().readBytes32Array(".proofDummyManageFlashLoan");
     }
 }

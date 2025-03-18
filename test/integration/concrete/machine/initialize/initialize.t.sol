@@ -81,6 +81,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
             hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
             hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+            hubCaliberInitialFlashLoanModule: address(0),
             depositorOnlyMode: false,
             shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
             shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL

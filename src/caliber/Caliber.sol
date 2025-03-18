@@ -37,6 +37,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
+        address _flashLoanModule;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
@@ -45,6 +46,8 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         uint256 _maxPositionIncreaseLossBps;
         uint256 _maxPositionDecreaseLossBps;
         uint256 _maxSwapLossBps;
+        uint256 _managedPositionId;
+        bool _isManagedPositionDebt;
         bool _recoveryMode;
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
@@ -79,6 +82,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._maxPositionIncreaseLossBps = params.initialMaxPositionIncreaseLossBps;
         $._maxPositionDecreaseLossBps = params.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
+        $._flashLoanModule = params.initialFlashLoanModule;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
         _addBaseToken(params.accountingToken);
@@ -111,6 +115,11 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
+    }
+
+    /// @inheritdoc ICaliber
+    function flashLoanModule() public view override returns (address) {
+        return _getCaliberStorage()._flashLoanModule;
     }
 
     /// @inheritdoc ICaliber
@@ -310,6 +319,9 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
             revert InvalidInstructionType();
         }
 
+        $._managedPositionId = posId;
+        $._isManagedPositionDebt = mgmtInstruction.isDebt;
+
         _accountForPosition(acctInstruction);
 
         _checkInstructionIsAllowed(mgmtInstruction);
@@ -355,7 +367,35 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
+        $._managedPositionId = 0;
+        $._isManagedPositionDebt = false;
+
         return (value, change);
+    }
+
+    /// @inheritdoc ICaliber
+    function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) public override {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if (msg.sender != $._flashLoanModule) {
+            revert NotFlashLoanModule();
+        }
+        if ($._managedPositionId == 0) {
+            revert DirectManageFlashLoanCall();
+        }
+        if (instruction.instructionType != InstructionType.FLASHLOAN_MANAGEMENT) {
+            revert InvalidInstructionType();
+        }
+        if ($._managedPositionId != instruction.positionId || $._isManagedPositionDebt != instruction.isDebt) {
+            revert UnmatchingInstructions();
+        }
+        if (instruction.isDebt) {
+            revert InvalidDebtFlag();
+        }
+
+        _checkInstructionIsAllowed(instruction);
+        _execute(instruction.commands, instruction.state);
+        IERC20Metadata(token).safeTransfer($._flashLoanModule, amount);
     }
 
     /// @inheritdoc ICaliber
@@ -422,6 +462,13 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
+    }
+
+    /// @inheritdoc ICaliber
+    function setFlashLoanModule(address newFlashLoanModule) public restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
+        $._flashLoanModule = newFlashLoanModule;
     }
 
     /// @inheritdoc ICaliber

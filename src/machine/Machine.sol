@@ -449,6 +449,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             initialMaxPositionIncreaseLossBps: params.hubCaliberMaxPositionIncreaseLossBps,
             initialMaxPositionDecreaseLossBps: params.hubCaliberMaxPositionDecreaseLossBps,
             initialMaxSwapLossBps: params.hubCaliberMaxSwapLossBps,
+            initialFlashLoanModule: params.hubCaliberInitialFlashLoanModule,
             initialMechanic: params.initialMechanic,
             initialSecurityCouncil: params.initialSecurityCouncil,
             initialAuthority: authority()

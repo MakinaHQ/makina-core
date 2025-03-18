@@ -21,6 +21,7 @@ contract DeploySpokeCaliber is Script {
         address accountingToken;
         bytes32 initialAllowedInstrRoot;
         address initialAuthority;
+        address initialFlashLoanModule;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxSwapLossBps;
@@ -70,6 +71,7 @@ contract DeploySpokeCaliber is Script {
                 initParams.initialMaxPositionIncreaseLossBps,
                 initParams.initialMaxPositionDecreaseLossBps,
                 initParams.initialMaxSwapLossBps,
+                initParams.initialFlashLoanModule,
                 initParams.initialMechanic,
                 initParams.initialSecurityCouncil,
                 initParams.initialAuthority
