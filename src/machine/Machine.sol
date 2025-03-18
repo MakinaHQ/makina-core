@@ -217,7 +217,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberAccountingData(uint256 chainId) external view override returns (SpokeCaliberData memory) {
+    function getSpokeCaliberData(uint256 chainId) external view override returns (SpokeCaliberData memory) {
         return _getMachineStorage()._foreignChainIdToSpokeCaliberData[chainId];
     }
 
@@ -344,6 +344,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
                 abi.decode(eqr.results[0].result, (ISpokeCaliberMailbox.SpokeCaliberAccountingData));
             caliberData.netAum = accountingData.netAum;
             caliberData.positions = accountingData.positions;
+            caliberData.baseTokens = accountingData.baseTokens;
             caliberData.totalReceivedFromHM = accountingData.totalReceivedFromHM;
             caliberData.totalSentToHM = accountingData.totalSentToHM;
             caliberData.timestamp = responseTimestamp;

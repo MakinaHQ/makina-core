@@ -131,7 +131,7 @@ contract Deploy_Scripts_Test is Base_Test {
         uint256[] memory spokeChainIds =
             abi.decode(vm.parseJson(deploySpokeMachineMailboxes.inputJson(), ".spokeChainIds"), (uint256[]));
         for (uint256 i; i < spokeChainIds.length; i++) {
-            address mailbox = machine.getSpokeCaliberAccountingData(spokeChainIds[i]).machineMailbox;
+            address mailbox = machine.getSpokeCaliberData(spokeChainIds[i]).machineMailbox;
             assertEq(mailbox, deploySpokeMachineMailboxes.deployedInstances(i));
         }
     }
