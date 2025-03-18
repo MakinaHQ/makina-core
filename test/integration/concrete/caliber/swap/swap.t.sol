@@ -4,10 +4,32 @@ pragma solidity 0.8.28;
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public {
+        _addLiquidityToMockPool(1, 1);
+        uint256 inputAmount = 1;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
+        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
+            aggregator: ISwapper.DexAggregator.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: inputAmount,
+            minOutputAmount: previewOutputAmount1
+        });
+
+        baseToken.scheduleReenter(MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.swap, (order)));
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.swap(order);
+    }
+
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ISwapper.SwapOrder memory order;
 

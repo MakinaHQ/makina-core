@@ -18,6 +18,7 @@ interface ICaliber {
     error InvalidInstructionProof();
     error InvalidInstructionType();
     error InvalidOutputToken();
+    error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
     error NonZeroBalance();

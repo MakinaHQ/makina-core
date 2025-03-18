@@ -1,93 +1,96 @@
 managePosition.t.sol
-├── given recovery mode is off
-│  ├── when sender is not the Mechanic
-│  │  └── it should revert with UnauthorizedOperator
-│  └── when sender is the Mechanic
-│     ├── when not 2 instructions are provided
-│     │  └── it should revert with InvalidInstructionsLength
-│     └── when 2 instructions are provided
-│        ├── when the 2 instructions position IDs or isDebt flags do not match
-│        │  └── it should revert with UnmatchingInstructions
-│        └── when the 2 instructions position IDs and isDebt flags match
-│           ├── when the first instruction is not of type management
-│           │  └── it should revert with InvalidInstructionType
-│           └── when the first instruction is of type management
-│              ├── when the first instruction's affected tokens list contains non-base tokens
-│              │  └── it should revert with InvalidAffectedToken
-│              └── when the first instruction's affected tokens list only contains base tokens
-│                 ├── given the first instruction proof is not valid against the merkle root set in the caliber
-│                 │  └── it should revert with InvalidInstructionProof
-│                 └── given the first instruction proof is valid against the merkle root set in the caliber
-│                    ├── given the first instruction execution fails
-│                    │  └── it should revert
-│                    └── given the first instruction execution succeeds
-│                       ├── when the second instruction is not of the accounting type
-│                       │  └── it should revert with InvalidInstructionType
-│                       └── when the second instruction is of the accounting type
-│                          ├── when the second instruction proof is not valid against the merkle root set in the caliber
-│                          │  └── it should revert with InvalidInstructionProof
-│                          └── when the second instruction proof is valid against the merkle root set in the caliber
-│                             ├── given the second instruction execution fails
-│                             │  └── it should revert
-│                             └── given the second instruction execution succeeds
-│                                ├── given the second instruction does not output a valid state
-│                                │  └── it should revert with InvalidAccounting
-│                                └── given the second instruction outputs a valid state
-│                                   ├── when the second instruction's affected tokens list contains non-base tokens
-│                                   │  └── it should revert with InvalidAffectedToken
-│                                   └── when the second instruction's affected tokens list only contains base tokens
-│                                      ├── given calibers globally spends base tokens and the position value moves in wrong direction
-│                                      │  └── it should revert with InvalidPositionChangeDirection
-│                                      └── given calibers either globally receives base tokens or the position moves in expected direction
-│                                         ├── given the position value did not decrease
-│                                         │  ├── given the new position value is zero
-│                                         │  │  └── it should not close or open the position
-│                                         │  │  └── it should return the new value and the value change both equal to zero
-│                                         │  └── given the new position value is positive
-│                                         │        ├── given the relative value loss in the caliber is greater than maxPositionIncreaseLossBps
-│                                         │        │  └── it should revert with MaxValueLossExceeded
-│                                         │        └── given the relative value loss in the caliber is not greater than maxPositionIncreaseLossBps
-│                                         │           ├── given the position was just created
-│                                         │           │  ├── it should register the position ID
-│                                         │           │  ├── it should emit a PositionCreated event
-│                                         │           │  ├── it should set position.lastAccountingTime to current block timestmap
-│                                         │           │  ├── it should set position.value to the computed position value converted to accounting token
-│                                         │           │  └── it should return the new value and the value change since last accounting
-│                                         │           └── given the position already existed
-│                                         │              ├── it should not add a new position
-│                                         │              ├── it should set position.lastAccountingTime to current block timestmap
-│                                         │              ├── it should set position.value to the computed position value converted to accounting token
-│                                         │              └── it should return the new value and the value change since last accounting
-│                                         └── given the position value decreased
-│                                            ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
-│                                            │  └── it should revert with MaxValueLossExceeded
-│                                            └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
-│                                               ├── given the new position value is positive
-│                                               │  ├── it should set position.lastAccountingTime to current block timestmap
-│                                               │  ├── it should set position.value to the computed position value converted to accounting token
-│                                               │  └── it should return the new value and the value change since last accounting
-│                                               └── given the new position value is zero
-│                                                  ├── it should unregister the position ID
-│                                                  ├── it should emit a PositionClosed event
-│                                                  └── it should return the new value and the value change since last accounting
-└── given recovery mode is on
-   ├── when sender is not the Security Council
-   │  └── it should revert with UnauthorizedOperator
-   └── when sender is the Security Council  
-      ├── given the position value did not decrease
-      │  └── it should revert with RecoveryMode
-      └── given the position value decreased
-         ├── given calibers globally spends base tokens and the position value moves in wrong direction
-	      │  └── it should revert with InvalidPositionChangeDirection
-         └── given calibers either globally receives base tokens or the position moves in expected direction
-            ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
-            │  └── it should revert with MaxValueLossExceeded
-            └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
-               ├── given the new position value is zero
-               │  ├── it should unregister the position ID
-               │  ├── it should emit a PositionClosed event
-               │  └── it should return the new value and the value change since last accounting
-               └── given the new position value is positive
-                  ├── it should set position.lastAccountingTime to current block timestmap
-                  ├── it should set position.value to the computed position value converted to accounting token
-                  └── it should return the new value and the value change since last accounting
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── given recovery mode is off
+   │  ├── when sender is not the Mechanic
+   │  │  └── it should revert with UnauthorizedOperator
+   │  └── when sender is the Mechanic
+   │     ├── when not 2 instructions are provided
+   │     │  └── it should revert with InvalidInstructionsLength
+   │     └── when 2 instructions are provided
+   │        ├── when the 2 instructions position IDs or isDebt flags do not match
+   │        │  └── it should revert with UnmatchingInstructions
+   │        └── when the 2 instructions position IDs and isDebt flags match
+   │           ├── when the first instruction is not of type management
+   │           │  └── it should revert with InvalidInstructionType
+   │           └── when the first instruction is of type management
+   │              ├── when the first instruction's affected tokens list contains non-base tokens
+   │              │  └── it should revert with InvalidAffectedToken
+   │              └── when the first instruction's affected tokens list only contains base tokens
+   │                 ├── given the first instruction proof is not valid against the merkle root set in the caliber
+   │                 │  └── it should revert with InvalidInstructionProof
+   │                 └── given the first instruction proof is valid against the merkle root set in the caliber
+   │                    ├── given the first instruction execution fails
+   │                    │  └── it should revert
+   │                    └── given the first instruction execution succeeds
+   │                       ├── when the second instruction is not of the accounting type
+   │                       │  └── it should revert with InvalidInstructionType
+   │                       └── when the second instruction is of the accounting type
+   │                          ├── when the second instruction proof is not valid against the merkle root set in the caliber
+   │                          │  └── it should revert with InvalidInstructionProof
+   │                          └── when the second instruction proof is valid against the merkle root set in the caliber
+   │                             ├── given the second instruction execution fails
+   │                             │  └── it should revert
+   │                             └── given the second instruction execution succeeds
+   │                                ├── given the second instruction does not output a valid state
+   │                                │  └── it should revert with InvalidAccounting
+   │                                └── given the second instruction outputs a valid state
+   │                                   ├── when the second instruction's affected tokens list contains non-base tokens
+   │                                   │  └── it should revert with InvalidAffectedToken
+   │                                   └── when the second instruction's affected tokens list only contains base tokens
+   │                                      ├── given calibers globally spends base tokens and the position value moves in wrong direction
+   │                                      │  └── it should revert with InvalidPositionChangeDirection
+   │                                      └── given calibers either globally receives base tokens or the position moves in expected direction
+   │                                         ├── given the position value did not decrease
+   │                                         │  ├── given the new position value is zero
+   │                                         │  │  └── it should not close or open the position
+   │                                         │  │  └── it should return the new value and the value change both equal to zero
+   │                                         │  └── given the new position value is positive
+   │                                         │        ├── given the relative value loss in the caliber is greater than maxPositionIncreaseLossBps
+   │                                         │        │  └── it should revert with MaxValueLossExceeded
+   │                                         │        └── given the relative value loss in the caliber is not greater than maxPositionIncreaseLossBps
+   │                                         │           ├── given the position was just created
+   │                                         │           │  ├── it should register the position ID
+   │                                         │           │  ├── it should emit a PositionCreated event
+   │                                         │           │  ├── it should set position.lastAccountingTime to current block timestmap
+   │                                         │           │  ├── it should set position.value to the computed position value converted to accounting token
+   │                                         │           │  └── it should return the new value and the value change since last accounting
+   │                                         │           └── given the position already existed
+   │                                         │              ├── it should not add a new position
+   │                                         │              ├── it should set position.lastAccountingTime to current block timestmap
+   │                                         │              ├── it should set position.value to the computed position value converted to accounting token
+   │                                         │              └── it should return the new value and the value change since last accounting
+   │                                         └── given the position value decreased
+   │                                            ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
+   │                                            │  └── it should revert with MaxValueLossExceeded
+   │                                            └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
+   │                                               ├── given the new position value is positive
+   │                                               │  ├── it should set position.lastAccountingTime to current block timestmap
+   │                                               │  ├── it should set position.value to the computed position value converted to accounting token
+   │                                               │  └── it should return the new value and the value change since last accounting
+   │                                               └── given the new position value is zero
+   │                                                  ├── it should unregister the position ID
+   │                                                  ├── it should emit a PositionClosed event
+   │                                                  └── it should return the new value and the value change since last accounting
+   └── given recovery mode is on
+      ├── when sender is not the Security Council
+      │  └── it should revert with UnauthorizedOperator
+      └── when sender is the Security Council  
+         ├── given the position value did not decrease
+         │  └── it should revert with RecoveryMode
+         └── given the position value decreased
+            ├── given calibers globally spends base tokens and the position value moves in wrong direction
+            │  └── it should revert with InvalidPositionChangeDirection
+            └── given calibers either globally receives base tokens or the position moves in expected direction
+               ├── given the relative value loss in the caliber is greater than maxPositionDecreaseLossBps
+               │  └── it should revert with MaxValueLossExceeded
+               └── given the relative value loss in the caliber is not greater than maxPositionDecreaseLossBps
+                  ├── given the new position value is zero
+                  │  ├── it should unregister the position ID
+                  │  ├── it should emit a PositionClosed event
+                  │  └── it should return the new value and the value change since last accounting
+                  └── given the new position value is positive
+                     ├── it should set position.lastAccountingTime to current block timestmap
+                     ├── it should set position.value to the computed position value converted to accounting token
+                     └── it should return the new value and the value change since last accounting

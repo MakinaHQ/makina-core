@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -10,6 +11,21 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public {
+        uint256 harvestAmount = 1e18;
+        ICaliber.Instruction memory instruction =
+            WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+        ISwapper.SwapOrder[] memory swapOrders;
+
+        baseToken.scheduleReenter(
+            MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.harvest, (instruction, swapOrders))
+        );
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.harvest(instruction, swapOrders);
+    }
+
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory instruction;
         ISwapper.SwapOrder[] memory swapOrders;

@@ -2,8 +2,10 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {VM} from "@enso-weiroll/VM.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -11,6 +13,27 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 3e18, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        baseToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(caliber),
+            abi.encodeCall(ICaliber.managePosition, (mgmtInstruction, acctInstruction))
+        );
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory dummyInstruction;
 

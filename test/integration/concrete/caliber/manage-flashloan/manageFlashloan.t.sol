@@ -9,6 +9,33 @@ import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public {
+        MockERC20 token = new MockERC20("Token", "TKN", 18);
+
+        uint256 flashLoanAmount = 1e18;
+        deal(address(token), address(flashLoanModule), 2 * flashLoanAmount, true);
+
+        ICaliber.Instruction memory flMgmtInstruction = WeirollUtils._buildManageFlashLoanDummyInstruction(LOOP_POS_ID);
+        ICaliber.Instruction memory mgmtInstruction = WeirollUtils._buildMockFlashLoanModuleDummyLoopInstruction(
+            LOOP_POS_ID, address(flashLoanModule), address(token), flashLoanAmount, flMgmtInstruction
+        );
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._buildMockFlashLoanModuleDummyAccountingInstruction(LOOP_POS_ID);
+
+        flashLoanModule.setReentrancyMode(true);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                VM.ExecutionFailed.selector,
+                0,
+                address(flashLoanModule),
+                string(abi.encodePacked(ICaliber.ManageFlashLoanReentrantCall.selector))
+            )
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
     function test_RevertWhen_CallerNotFlashLoanModule() public {
         ICaliber.Instruction memory dummyInstruction;
         vm.expectRevert(ICaliber.NotFlashLoanModule.selector);
