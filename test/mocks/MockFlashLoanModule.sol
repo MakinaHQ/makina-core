@@ -20,7 +20,7 @@ contract MockFlashLoanModule {
     function flashLoan(ICaliber.Instruction calldata instruction, address token, uint256 amount) external {
         uint256 balBefore = IERC20(token).balanceOf(address(this));
 
-        IERC20(token).safeTransfer(msg.sender, amount);
+        IERC20(token).forceApprove(msg.sender, amount);
 
         if (reentrancyMode) {
             MockERC20(token).scheduleReenter(

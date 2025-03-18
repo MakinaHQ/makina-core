@@ -400,6 +400,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             revert InvalidDebtFlag();
         }
         $._isManagingFlashloan = true;
+        IERC20Metadata(token).safeTransferFrom($._flashLoanModule, address(this), amount);
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
         IERC20Metadata(token).safeTransfer($._flashLoanModule, amount);
