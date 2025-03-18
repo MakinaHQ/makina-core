@@ -24,6 +24,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
 
     function test_DeployCaliber() public {
         address _machineMailbox = makeAddr("machineMailbox");
+        address _flashLoanModule = makeAddr("flashLoanModule");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false);
@@ -42,6 +43,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialFlashLoanModule: _flashLoanModule,
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager)
@@ -58,6 +60,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliber.maxPositionIncreaseLossBps(), DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
+        assertEq(caliber.flashLoanModule(), _flashLoanModule);
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.authority(), address(accessManager));
 

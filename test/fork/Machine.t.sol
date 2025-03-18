@@ -62,6 +62,7 @@ contract Machine_Fork_Test is Fork_Test {
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    hubCaliberInitialFlashLoanModule: address(0),
                     depositorOnlyMode: false,
                     shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                     shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -118,6 +119,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialFlashLoanModule: address(0),
                     initialMechanic: baseForkData.mechanic,
                     initialSecurityCouncil: baseForkData.securityCouncil,
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].accessManager)

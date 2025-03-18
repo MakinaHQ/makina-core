@@ -1,0 +1,25 @@
+manageFlashloan.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── when sender is not the flashLoan module
+   │  └── it should revert with NotFlashLoanModule
+   └── when sender is the flashLoan module
+      ├── when the function is not called from within a call to managePosition 
+      │  └── it should revert with DirectManageFlashLoanCall
+      └── when the instruction is called from within a call to managePosition 
+         ├── when the instruction is not of the FLASHLOAN_MANAGEMENT type
+         │  └── it should revert with InvalidInstructionType
+         └── when the instruction is of the FLASHLOAN_MANAGEMENT type
+            ├── when the outter MANAGEMENT instruction and the inner FLASHLOAN_MANAGEMENT position IDs or isDebt flags do not match
+            │  └── it should revert with UnmatchingInstructions
+            └── when the 2 instructions position IDs and isDebt flags match
+               ├── when the instruction is a debt position
+               │  └── it should revert with InvalidDebtFlag
+               └── when the instruction is not a debt position
+                  ├── when the instruction proof is not valid against the merkle root set in the caliber
+                  │  └── it should revert with InvalidInstructionProof
+                  └── when the instruction proof is valid against the merkle root set in the caliber
+                     ├── it should execute the instruction
+                     └── it should transfer the flashLoan funds back to the calling flashloanModule
+                    

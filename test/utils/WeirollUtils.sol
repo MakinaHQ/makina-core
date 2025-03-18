@@ -11,6 +11,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
+import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
 
 library WeirollUtils {
     bytes32 internal constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
@@ -614,6 +615,85 @@ library WeirollUtils {
 
         return ICaliber.Instruction(
             0, false, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
+        );
+    }
+
+    function _buildMockFlashLoanModuleDummyLoopInstruction(
+        uint256 _posId,
+        address _flashLoanModule,
+        address _token,
+        uint256 _amount,
+        ICaliber.Instruction memory _manageFlashloanInstruction
+    ) internal view returns (ICaliber.Instruction memory) {
+        bytes32[] memory commands = new bytes32[](1);
+        // "0x76ab19f141820001ffffffff" + _flashLoanModule
+        commands[0] = buildCommand(
+            MockFlashLoanModule.flashLoan.selector,
+            0x01, // call with extended flag
+            0x820001ffffff, // 3 inputs : variable-length at index 2, fixed at indices 0 and 1 of state
+            0xff, // ignore result
+            _flashLoanModule
+        );
+
+        bytes[] memory state = new bytes[](3);
+        state[0] = abi.encode(_token);
+        state[1] = abi.encode(_amount);
+        state[2] = abi.encode(
+            _manageFlashloanInstruction.positionId,
+            _manageFlashloanInstruction.isDebt,
+            _manageFlashloanInstruction.instructionType,
+            _manageFlashloanInstruction.affectedTokens,
+            _manageFlashloanInstruction.commands,
+            _manageFlashloanInstruction.state,
+            _manageFlashloanInstruction.stateBitmap,
+            _manageFlashloanInstruction.merkleProof
+        );
+
+        bytes32[] memory merkleProof = MerkleProofs._getDummyLoopMockFlashLoanModuleInstrProof();
+
+        return ICaliber.Instruction(
+            _posId, false, ICaliber.InstructionType.MANAGEMENT, new address[](0), commands, state, 0, merkleProof
+        );
+    }
+
+    function _buildMockFlashLoanModuleDummyAccountingInstruction(uint256 _posId)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        bytes[] memory state = new bytes[](1);
+        state[0] = abi.encode(ACCOUNTING_OUTPUT_STATE_END_OF_ARGS);
+
+        bytes32[] memory merkleProof = MerkleProofs._getAccountingMockFlashLoanModuleInstrProof();
+
+        return ICaliber.Instruction(
+            _posId,
+            false,
+            ICaliber.InstructionType.ACCOUNTING,
+            new address[](0),
+            new bytes32[](0),
+            state,
+            0,
+            merkleProof
+        );
+    }
+
+    function _buildManageFlashLoanDummyInstruction(uint256 _posId)
+        internal
+        view
+        returns (ICaliber.Instruction memory)
+    {
+        bytes32[] memory merkleProof = MerkleProofs._getManageFlashLoanDummyInstrProof();
+
+        return ICaliber.Instruction(
+            _posId,
+            false,
+            ICaliber.InstructionType.FLASHLOAN_MANAGEMENT,
+            new address[](0),
+            new bytes32[](0),
+            new bytes[](0),
+            0,
+            merkleProof
         );
     }
 }

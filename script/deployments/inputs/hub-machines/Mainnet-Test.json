@@ -12,6 +12,7 @@
   "hubCaliberMaxPositionIncreaseLossBps": 300,
   "hubCaliberMaxPositionDecreaseLossBps": 3000,
   "hubCaliberMaxSwapLossBps": 300,
+  "hubCaliberFlashLoanModule": "0x0000000000000000000000000000000000000000",
   "depositorOnlyMode": false,
   "shareTokenName": "Makina Share (test)",
   "shareTokenSymbol": "MS"

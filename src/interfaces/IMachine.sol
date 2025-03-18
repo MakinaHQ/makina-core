@@ -42,6 +42,7 @@ interface IMachine {
     /// @param hubCaliberMaxPositionIncreaseLossBps The max allowed value loss (in basis point) in the hub caliber when increasing a position.
     /// @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
+    /// @param hubCaliberInitialFlashLoanModule The address of the initial flashLoan module.
     /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
     /// @param shareTokenName The name of the share token.
     /// @param shareTokenSymbol The symbol of the share token.
@@ -59,6 +60,7 @@ interface IMachine {
         uint256 hubCaliberMaxPositionIncreaseLossBps;
         uint256 hubCaliberMaxPositionDecreaseLossBps;
         uint256 hubCaliberMaxSwapLossBps;
+        address hubCaliberInitialFlashLoanModule;
         bool depositorOnlyMode;
         string shareTokenName;
         string shareTokenSymbol;

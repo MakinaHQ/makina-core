@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -16,7 +17,7 @@ import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapper} from "../interfaces/ISwapper.sol";
 
-contract Caliber is AccessManagedUpgradeable, ICaliber {
+contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -37,6 +38,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
+        address _flashLoanModule;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
@@ -45,6 +47,9 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         uint256 _maxPositionIncreaseLossBps;
         uint256 _maxPositionDecreaseLossBps;
         uint256 _maxSwapLossBps;
+        uint256 _managedPositionId;
+        bool _isManagedPositionDebt;
+        bool _isManagingFlashloan;
         bool _recoveryMode;
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
@@ -79,9 +84,11 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         $._maxPositionIncreaseLossBps = params.initialMaxPositionIncreaseLossBps;
         $._maxPositionDecreaseLossBps = params.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = params.initialMaxSwapLossBps;
+        $._flashLoanModule = params.initialFlashLoanModule;
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
         _addBaseToken(params.accountingToken);
+        __ReentrancyGuard_init();
         __AccessManaged_init(params.initialAuthority);
     }
 
@@ -111,6 +118,11 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     /// @inheritdoc ICaliber
     function securityCouncil() public view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
+    }
+
+    /// @inheritdoc ICaliber
+    function flashLoanModule() public view override returns (address) {
+        return _getCaliberStorage()._flashLoanModule;
     }
 
     /// @inheritdoc ICaliber
@@ -294,6 +306,7 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
     function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
         public
         override
+        nonReentrant
         onlyOperator
         returns (uint256, int256)
     {
@@ -309,6 +322,9 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
+
+        $._managedPositionId = posId;
+        $._isManagedPositionDebt = mgmtInstruction.isDebt;
 
         _accountForPosition(acctInstruction);
 
@@ -355,13 +371,47 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
+        $._managedPositionId = 0;
+        $._isManagedPositionDebt = false;
+
         return (value, change);
+    }
+
+    /// @inheritdoc ICaliber
+    function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) public override {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if ($._isManagingFlashloan) {
+            revert ManageFlashLoanReentrantCall();
+        }
+        if (msg.sender != $._flashLoanModule) {
+            revert NotFlashLoanModule();
+        }
+        if ($._managedPositionId == 0) {
+            revert DirectManageFlashLoanCall();
+        }
+        if (instruction.instructionType != InstructionType.FLASHLOAN_MANAGEMENT) {
+            revert InvalidInstructionType();
+        }
+        if ($._managedPositionId != instruction.positionId || $._isManagedPositionDebt != instruction.isDebt) {
+            revert UnmatchingInstructions();
+        }
+        if (instruction.isDebt) {
+            revert InvalidDebtFlag();
+        }
+        $._isManagingFlashloan = true;
+        IERC20Metadata(token).safeTransferFrom($._flashLoanModule, address(this), amount);
+        _checkInstructionIsAllowed(instruction);
+        _execute(instruction.commands, instruction.state);
+        IERC20Metadata(token).safeTransfer($._flashLoanModule, amount);
+        $._isManagingFlashloan = false;
     }
 
     /// @inheritdoc ICaliber
     function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders)
         public
         override
+        nonReentrant
         onlyOperator
     {
         if (instruction.instructionType != InstructionType.HARVEST) {
@@ -370,36 +420,13 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
         for (uint256 i; i < swapOrders.length; i++) {
-            swap(swapOrders[i]);
+            _swap(swapOrders[i]);
         }
     }
 
     /// @inheritdoc ICaliber
-    function swap(ISwapper.SwapOrder calldata order) public override onlyOperator {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if ($._recoveryMode && order.outputToken != $._accountingToken) {
-            revert RecoveryMode();
-        } else if (!$._baseTokens.contains(order.outputToken)) {
-            revert InvalidOutputToken();
-        }
-
-        uint256 valBefore;
-        bool isInputBaseToken = $._baseTokens.contains(order.inputToken);
-        if (isInputBaseToken) {
-            valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
-        }
-
-        address _swapper = IBaseMakinaRegistry(registry).swapper();
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, order.inputAmount);
-        uint256 amountOut = ISwapper(_swapper).swap(order);
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, 0);
-
-        if (isInputBaseToken) {
-            uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
-            if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
-                revert MaxValueLossExceeded();
-            }
-        }
+    function swap(ISwapper.SwapOrder calldata order) public override nonReentrant onlyOperator {
+        _swap(order);
     }
 
     /// @inheritdoc ICaliber
@@ -422,6 +449,13 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
         CaliberStorage storage $ = _getCaliberStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
+    }
+
+    /// @inheritdoc ICaliber
+    function setFlashLoanModule(address newFlashLoanModule) public restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
+        $._flashLoanModule = newFlashLoanModule;
     }
 
     /// @inheritdoc ICaliber
@@ -713,6 +747,33 @@ contract Caliber is AccessManagedUpgradeable, ICaliber {
             delete $._pendingTimelockExpiry;
         }
         return $._allowedInstrRoot;
+    }
+
+    function _swap(ISwapper.SwapOrder calldata order) internal {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if ($._recoveryMode && order.outputToken != $._accountingToken) {
+            revert RecoveryMode();
+        } else if (!$._baseTokens.contains(order.outputToken)) {
+            revert InvalidOutputToken();
+        }
+
+        uint256 valBefore;
+        bool isInputBaseToken = $._baseTokens.contains(order.inputToken);
+        if (isInputBaseToken) {
+            valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
+        }
+
+        address _swapper = IBaseMakinaRegistry(registry).swapper();
+        IERC20Metadata(order.inputToken).forceApprove(_swapper, order.inputAmount);
+        uint256 amountOut = ISwapper(_swapper).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(_swapper, 0);
+
+        if (isInputBaseToken) {
+            uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
+            if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
+                revert MaxValueLossExceeded();
+            }
+        }
     }
 
     /// @dev Executes a set of commands on the Weiroll VM, via a delegatecall.

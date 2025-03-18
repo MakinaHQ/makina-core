@@ -8,18 +8,22 @@ interface ICaliber {
     error ActiveUpdatePending();
     error BaseTokenAlreadyExists();
     error BaseTokenDoesNotExist();
+    error DirectManageFlashLoanCall();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidDebtFlag();
     error InvalidPositionChangeDirection();
     error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
     error InvalidInstructionType();
     error InvalidOutputToken();
+    error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
     error NegativeTokenPrice();
     error NonZeroBalance();
     error NoPendingUpdate();
+    error NotFlashLoanModule();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
@@ -32,6 +36,7 @@ interface ICaliber {
 
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
+    event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
     event MailboxDeployed(address indexed mailbox);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
@@ -54,7 +59,8 @@ interface ICaliber {
     enum InstructionType {
         MANAGEMENT,
         ACCOUNTING,
-        HARVEST
+        HARVEST,
+        FLASHLOAN_MANAGEMENT
     }
 
     /// @notice Initialization parameters.
@@ -66,6 +72,7 @@ interface ICaliber {
     /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis point) for position increases.
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
+    /// @param initialFlashLoanModule The address of the initial flashLoan module.
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
@@ -78,6 +85,7 @@ interface ICaliber {
         uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
+        address initialFlashLoanModule;
         address initialMechanic;
         address initialSecurityCouncil;
         address initialAuthority;
@@ -134,6 +142,9 @@ interface ICaliber {
 
     /// @notice Address of the security council.
     function securityCouncil() external view returns (address);
+
+    /// @notice Address of the flashLoan module.
+    function flashLoanModule() external view returns (address);
 
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
@@ -251,6 +262,12 @@ interface ICaliber {
         external
         returns (uint256 value, int256 change);
 
+    /// @notice Manages flashLoan funds.
+    /// @param instruction The flashLoan management instruction.
+    /// @param token The loan token.
+    /// @param amount The loan amount.
+    function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) external;
+
     /// @notice Harvests one or multiple positions.
     /// @param instruction The harvest instruction.
     /// @param swapOrders The array of swap orders to be executed after the harvest.
@@ -272,6 +289,10 @@ interface ICaliber {
     /// @notice Sets a new security council.
     /// @param newSecurityCouncil The address of the new security council.
     function setSecurityCouncil(address newSecurityCouncil) external;
+
+    /// @notice Sets a new flashLoan module.
+    /// @param newFlashLoanModule The address of the new flashLoan module.
+    function setFlashLoanModule(address newFlashLoanModule) external;
 
     /// @notice Sets the position accounting staleness threshold.
     /// @param newPositionStaleThreshold The new threshold in seconds.

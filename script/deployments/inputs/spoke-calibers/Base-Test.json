@@ -7,6 +7,7 @@
   "initialMaxPositionIncreaseLossBps": 300,
   "initialMaxPositionDecreaseLossBps": 3000,
   "initialMaxSwapLossBps": 300,
+  "initialFlashLoanModule": "0x0000000000000000000000000000000000000000",
   "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
   "initialAuthority": "0x0000000000000000000000000000000000000000",
   "initialSecurityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f"

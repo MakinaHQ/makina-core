@@ -19,6 +19,7 @@ contract Constants {
     uint256 internal constant SUPPLY_POS_ID = 4;
     uint256 internal constant BORROW_POS_ID = 5;
     uint256 internal constant POOL_POS_ID = 6;
+    uint256 internal constant LOOP_POS_ID = 7;
 
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 }

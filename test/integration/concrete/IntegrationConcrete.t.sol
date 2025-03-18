@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
@@ -28,6 +29,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
     MockERC20 public accountingToken;
     MockERC20 public baseToken;
 
+    MockFlashLoanModule internal flashLoanModule;
+
     MockERC4626 internal vault;
     MockSupplyModule internal supplyModule;
     MockBorrowModule internal borrowModule;
@@ -39,6 +42,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
     function setUp() public virtual override {
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
         baseToken = new MockERC20("baseToken", "BT", 18);
+
+        flashLoanModule = new MockFlashLoanModule();
 
         vault = new MockERC4626("vault", "VLT", IERC20(baseToken), 0);
         supplyModule = new MockSupplyModule(IERC20(baseToken));
@@ -76,7 +81,9 @@ abstract contract Integration_Concrete_Test is Base_Test {
             address(borrowModule),
             BORROW_POS_ID,
             address(pool),
-            POOL_POS_ID
+            POOL_POS_ID,
+            address(flashLoanModule),
+            LOOP_POS_ID
         );
 
         vm.prank(dao);
@@ -126,7 +133,8 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0));
+        (machine, caliber, hubDualMailbox) =
+            _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 
     modifier whileInRecoveryMode() {
@@ -158,7 +166,8 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (caliber, spokeCaliberMailbox) = _deployCaliber(address(0), address(accountingToken), bytes32(0));
+        (caliber, spokeCaliberMailbox) =
+            _deployCaliber(address(0), address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 
     modifier whileInRecoveryMode() {
