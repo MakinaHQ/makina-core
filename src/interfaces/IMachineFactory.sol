@@ -5,6 +5,7 @@ import {IMachine} from "./IMachine.sol";
 
 interface IMachineFactory {
     event MachineDeployed(address indexed machine);
+    event ShareTokenDeployed(address indexed shareToken);
 
     /// @notice Address of the registry.
     function registry() external view returns (address);
@@ -17,6 +18,12 @@ interface IMachineFactory {
 
     /// @notice Deploys a new Machine instance.
     /// @param params The initialization parameters.
+    /// @param tokenName The name of the share token.
+    /// @param tokenSymbol The symbol of the share token.
     /// @return machine The address of the deployed Machine instance.
-    function deployMachine(IMachine.MachineInitParams calldata params) external returns (address machine);
+    function deployMachine(
+        IMachine.MachineInitParams calldata params,
+        string memory tokenName,
+        string memory tokenSymbol
+    ) external returns (address machine);
 }

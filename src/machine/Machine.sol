@@ -13,7 +13,6 @@ import {EthCallQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
-import {MachineShare} from "./MachineShare.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
@@ -22,6 +21,7 @@ import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ISpokeCaliberMailbox} from "../interfaces/ISpokeCaliberMailbox.sol";
 import {ISpokeMachineMailbox} from "../interfaces/ISpokeMachineMailbox.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -75,12 +75,14 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function initialize(MachineInitParams calldata params) external override initializer {
+    function initialize(MachineInitParams calldata params, address _shareToken) external override initializer {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
+        uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
+                || stDecimals < atDecimals
         ) {
             revert InvalidDecimals();
         }
@@ -89,8 +91,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         $._accountingToken = params.accountingToken;
         $._idleTokens.add(params.accountingToken);
 
-        $._shareToken = _deployShareToken(params);
-        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
+        IOwnable2Step(_shareToken).acceptOwnership();
+        $._shareToken = _shareToken;
+        $._shareTokenDecimalsOffset = stDecimals - atDecimals;
 
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
@@ -427,14 +430,6 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
         }
-    }
-
-    /// @dev Deploys the share token.
-    function _deployShareToken(MachineInitParams calldata params) internal onlyInitializing returns (address) {
-        address _shareToken =
-            address(new MachineShare(params.shareTokenName, params.shareTokenSymbol, Constants.SHARE_TOKEN_DECIMALS));
-        emit ShareTokenDeployed(_shareToken);
-        return _shareToken;
     }
 
     /// @dev Deploys the hub caliber and associated dual mailbox.

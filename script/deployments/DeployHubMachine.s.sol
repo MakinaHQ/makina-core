@@ -34,8 +34,6 @@ contract DeployHubMachine is Script {
         address initialMechanic;
         address initialSecurityCouncil;
         uint256 initialShareLimit;
-        string shareTokenName;
-        string shareTokenSymbol;
     }
 
     constructor() {
@@ -60,7 +58,10 @@ contract DeployHubMachine is Script {
     }
 
     function run() public {
-        MachineInitParamsSorted memory initParams = abi.decode(vm.parseJson(inputJson), (MachineInitParamsSorted));
+        MachineInitParamsSorted memory initParams =
+            abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (MachineInitParamsSorted));
+        string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
+        string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
 
         IMachineFactory machineFactory =
             IMachineFactory(abi.decode(vm.parseJson(coreOutputJson, ".MachineFactory"), (address)));
@@ -83,10 +84,10 @@ contract DeployHubMachine is Script {
                 initParams.hubCaliberMaxPositionDecreaseLossBps,
                 initParams.hubCaliberMaxSwapLossBps,
                 initParams.hubCaliberFlashLoanModule,
-                initParams.depositorOnlyMode,
-                initParams.shareTokenName,
-                initParams.shareTokenSymbol
-            )
+                initParams.depositorOnlyMode
+            ),
+            shareTokenName,
+            shareTokenSymbol
         );
         vm.stopBroadcast();
 

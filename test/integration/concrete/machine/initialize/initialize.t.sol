@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {Machine} from "src/machine/Machine.sol";
+import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
@@ -13,25 +14,55 @@ import {Constants} from "src/libraries/Constants.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    function test_RevertWhen_ProvidedAccountingTokenDecimalsTooLow() public {
+    MachineShare public shareToken;
+
+    function setUp() public override {
+        Machine_Integration_Concrete_Test.setUp();
+        shareToken = new MachineShare(
+            DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+            DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+            Constants.SHARE_TOKEN_DECIMALS,
+            address(this)
+        );
+    }
+
+    function test_RevertWhen_ProvidedATDecimalsTooLow() public {
         MockERC20 accountingToken2 =
             new MockERC20("Accounting Token 2", "AT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
 
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2))))
+            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
         );
     }
 
-    function test_RevertWhen_ProvidedAccountingTokenDecimalsTooHigh() public {
+    function test_RevertWhen_ProvidedATDecimalsTooHigh() public {
         MockERC20 accountingToken2 =
             new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
 
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2))))
+            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
+        );
+    }
+
+    function test_RevertWhen_ProvidedATDecimalsLowerThanSTDecimals() public {
+        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS);
+        MachineShare shareToken2 = new MachineShare(
+            DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+            DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+            Constants.MAX_ACCOUNTING_TOKEN_DECIMALS - 1,
+            address(this)
+        );
+
+        vm.expectRevert(IMachine.InvalidDecimals.selector);
+        new BeaconProxy(
+            address(machineBeacon),
+            abi.encodeCall(
+                IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken2))
+            )
         );
     }
 
@@ -40,19 +71,15 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2))))
+            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
         );
     }
 
     function test_Initialize() public {
-        machine = Machine(
-            address(
-                new BeaconProxy(
-                    address(machineBeacon),
-                    abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken))))
-                )
-            )
-        );
+        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
+        shareToken.transferOwnership(address(machine));
+        IMachine(machine).initialize(_getMachineInitParams(address(accountingToken)), address(shareToken));
+
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
@@ -82,9 +109,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
             hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
             hubCaliberInitialFlashLoanModule: address(0),
-            depositorOnlyMode: false,
-            shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-            shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+            depositorOnlyMode: false
         });
     }
 }

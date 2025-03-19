@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IMachineShare} from "src/interfaces/IMachineShare.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {MachineShare_Unit_Concrete_Test} from "../MachineShare.t.sol";
 
 contract Burn_Unit_Concrete_Test is MachineShare_Unit_Concrete_Test {
-    function test_RevertWhen_CallerNotMachine() public {
+    function test_RevertWhen_CallerNotMinter() public {
         uint256 amount = 100;
         deal(address(shareToken), address(this), amount, true);
 
-        vm.expectRevert(IMachineShare.NotMachine.selector);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this)));
         shareToken.burn(address(this), amount);
     }
 
