@@ -83,6 +83,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
         assertEq(machine.depositor(), machineDepositor);
+        assertEq(machine.redeemer(), machineRedeemer);
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
@@ -101,6 +102,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialMechanic: mechanic,
             initialSecurityCouncil: securityCouncil,
             initialDepositor: machineDepositor,
+            initialRedeemer: machineRedeemer,
             initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,

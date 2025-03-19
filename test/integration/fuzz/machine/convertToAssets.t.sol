@@ -8,7 +8,7 @@ import {Constants} from "src/libraries/Constants.sol";
 
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
-contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
+contract ConvertToAssets_Integration_Fuzz_Test is Base_Hub_Test {
     MockERC20 public accountingToken;
     Machine public machine;
 
@@ -32,7 +32,7 @@ contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
         (machine,,) = _deployMachine(address(accountingToken), bytes32(0), address(0));
     }
 
-    function testFuzz_ConvertToShares(uint256 atDecimals, uint256 assets) public {
+    function testFuzz_ConvertToAssets(uint256 atDecimals, uint256 assets) public {
         _fuzzTestSetupAfter(atDecimals);
         assets = bound(assets, 0, 1e40);
 
@@ -43,6 +43,6 @@ contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
         machine.deposit(assets, machineRedeemer);
 
         // should hold right after first deposit
-        assertEq(machine.convertToShares(accountingTokenUnit), shareTokenUnit);
+        assertEq(machine.convertToAssets(shareTokenUnit), accountingTokenUnit);
     }
 }

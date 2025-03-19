@@ -6,22 +6,26 @@ interface IMachine {
     error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);
+    error ExceededMaxWithdraw(uint256 assets, uint256 max);
     error NotMailbox();
     error RecoveryMode();
     error SpokeMailboxAlreadyExists();
     error SpokeMailboxDoesNotExist();
     error StaleData();
     error UnauthorizedDepositor();
+    error UnauthorizedRedeemer();
     error UnauthorizedOperator();
     error UnexpectedResultLength();
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
-    event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 amount);
+    event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
+    event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event HubCaliberDeployed(address indexed caliber, address indexed mailbox);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
+    event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event SpokeMailboxDeployed(address spokeMailbox, uint256 indexed spokeChainId);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
@@ -33,6 +37,7 @@ interface IMachine {
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
     /// @param initialDepositor The address of the initial depositor.
+    /// @param initialRedeemer The address of the initial redeemer.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialShareLimit The share cap value.
     /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
@@ -48,6 +53,7 @@ interface IMachine {
         address initialSecurityCouncil;
         address initialAuthority;
         address initialDepositor;
+        address initialRedeemer;
         uint256 initialCaliberStaleThreshold;
         uint256 initialShareLimit;
         uint256 hubCaliberPosStaleThreshold;
@@ -89,6 +95,9 @@ interface IMachine {
     /// @notice Address of the depositor.
     function depositor() external view returns (address);
 
+    /// @notice Address of the redeemer.
+    function redeemer() external view returns (address);
+
     /// @notice Address of the share token.
     function shareToken() external view returns (address);
 
@@ -106,6 +115,9 @@ interface IMachine {
 
     /// @notice Maximum amount of shares that can currently be minted through asset deposits.
     function maxMint() external view returns (uint256);
+
+    /// @notice Maximum amount of assets that can currently be withdrawn through share redemptions.
+    function maxWithdraw() external view returns (uint256);
 
     /// @notice Whether the machine is in recovery mode.
     function recoveryMode() external view returns (bool);
@@ -133,6 +145,11 @@ interface IMachine {
     /// @param assets The amount of assets.
     /// @return shares The amount of shares.
     function convertToShares(uint256 assets) external view returns (uint256);
+
+    /// @notice Returns the amount of assets that the Machine would exchange for the amount of shares provided.
+    /// @param shares The amount of shares.
+    /// @return assets The amount of assets.
+    function convertToAssets(uint256 shares) external view returns (uint256);
 
     /// @notice Notifies the machine of an incoming token transfer.
     /// @param token The address of the token.
@@ -174,6 +191,10 @@ interface IMachine {
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.
     function setDepositor(address newDepositor) external;
+
+    /// @notice Sets the redeemer address.
+    /// @param newRedeemer The address of the new redeemer.
+    function setRedeemer(address newRedeemer) external;
 
     /// @notice Sets the caliber accounting staleness threshold.
     /// @param newCaliberStaleThreshold The new threshold in seconds.

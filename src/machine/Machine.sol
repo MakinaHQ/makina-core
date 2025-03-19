@@ -44,6 +44,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         address _mechanic;
         address _securityCouncil;
         address _depositor;
+        address _redeemer;
         uint256 _caliberStaleThreshold;
         uint256 _lastTotalAum;
         uint256 _lastGlobalAccountingTime;
@@ -97,6 +98,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         $._mechanic = params.initialMechanic;
         $._securityCouncil = params.initialSecurityCouncil;
         $._depositor = params.initialDepositor;
+        $._redeemer = params.initialRedeemer;
         $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
         $._shareLimit = params.initialShareLimit;
         __AccessManaged_init(params.initialAuthority);
@@ -131,6 +133,14 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         _;
     }
 
+    modifier onlyRedeemer() {
+        MachineStorage storage $ = _getMachineStorage();
+        if (msg.sender != $._redeemer) {
+            revert UnauthorizedRedeemer();
+        }
+        _;
+    }
+
     modifier notRecoveryMode() {
         MachineStorage storage $ = _getMachineStorage();
         if ($._recoveryMode) {
@@ -152,6 +162,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function depositor() public view override returns (address) {
         return _getMachineStorage()._depositor;
+    }
+
+    /// @inheritdoc IMachine
+    function redeemer() public view override returns (address) {
+        return _getMachineStorage()._redeemer;
     }
 
     /// @inheritdoc IMachine
@@ -187,6 +202,12 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         }
         uint256 totalSupply = IERC20Metadata($._shareToken).totalSupply();
         return totalSupply < $._shareLimit ? $._shareLimit - totalSupply : 0;
+    }
+
+    /// @inheritdoc IMachine
+    function maxWithdraw() public view override returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        return IERC20Metadata($._accountingToken).balanceOf(address(this));
     }
 
     /// @inheritdoc IMachine
@@ -227,6 +248,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function convertToShares(uint256 assets) external view override returns (uint256) {
         return _convertToShares(assets, Math.Rounding.Floor);
+    }
+
+    /// @inheritdoc IMachine
+    function convertToAssets(uint256 shares) external view override returns (uint256) {
+        return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
     /// @inheritdoc IMachine
@@ -288,6 +314,23 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         emit Deposit(msg.sender, receiver, assets, shares);
 
         return shares;
+    }
+
+    function redeem(uint256 shares, address receiver) external notRecoveryMode onlyRedeemer returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        uint256 assets = _convertToAssets(shares, Math.Rounding.Floor);
+
+        uint256 _maxWithdraw = maxWithdraw();
+        if (assets > _maxWithdraw) {
+            revert ExceededMaxWithdraw(assets, _maxWithdraw);
+        }
+
+        IERC20Metadata($._accountingToken).safeTransfer(receiver, assets);
+        IMachineShare($._shareToken).burn(msg.sender, shares);
+        $._lastTotalAum -= assets;
+        emit Redeem(msg.sender, receiver, assets, shares);
+
+        return assets;
     }
 
     function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
@@ -402,6 +445,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function setRedeemer(address newRedeemer) public override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit RedeemerChanged($._redeemer, newRedeemer);
+        $._redeemer = newRedeemer;
+    }
+
+    /// @inheritdoc IMachine
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) public override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
@@ -504,6 +554,16 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         return assets.mulDiv(
             IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset,
             $._lastTotalAum + 1,
+            rounding
+        );
+    }
+
+    /// @dev Converts share amount to accounting token amount, with support for rounding direction.
+    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        return shares.mulDiv(
+            $._lastTotalAum + 1,
+            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset,
             rounding
         );
     }

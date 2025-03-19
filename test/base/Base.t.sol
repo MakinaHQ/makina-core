@@ -61,6 +61,7 @@ abstract contract Base_Hub_Test is Base_Test {
     IWormhole public wormhole;
 
     address public machineDepositor = makeAddr("MachineDepositor");
+    address public machineRedeemer = makeAddr("MachineRedeemer");
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -100,6 +101,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager),
                     initialDepositor: machineDepositor,
+                    initialRedeemer: machineRedeemer,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,

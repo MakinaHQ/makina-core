@@ -17,7 +17,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         vm.expectRevert(IMachine.RecoveryMode.selector);
         machine.deposit(1e18, address(this));
     }
-    
+
     function test_RevertGiven_MaxMintExceeded() public {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = machine.convertToShares(inputAmount);

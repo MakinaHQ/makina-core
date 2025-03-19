@@ -11,6 +11,8 @@ import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
         assertEq(machine.accountingToken(), address(accountingToken));
+        assertEq(machine.depositor(), machineDepositor);
+        assertEq(machine.redeemer(), machineRedeemer);
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
         assertEq(machine.lastGlobalAccountingTime(), 0);
@@ -64,6 +66,20 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(dao);
         machine.setDepositor(newDepositor);
         assertEq(machine.depositor(), newDepositor);
+    }
+
+    function test_SetRedeemer_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setRedeemer(address(0));
+    }
+
+    function test_SetRedeemer() public {
+        address newRedeemer = makeAddr("NewRedeemer");
+        vm.expectEmit(true, true, false, true, address(machine));
+        emit IMachine.RedeemerChanged(machineRedeemer, newRedeemer);
+        vm.prank(dao);
+        machine.setRedeemer(newRedeemer);
+        assertEq(machine.redeemer(), newRedeemer);
     }
 
     function test_SetCaliberStaleThreshold_RevertWhen_CallerWithoutRole() public {

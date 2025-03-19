@@ -31,6 +31,7 @@ contract DeployHubMachine is Script {
         uint256 initialCaliberStaleThreshold;
         address initialDepositor;
         address initialMechanic;
+        address initialRedeemer;
         address initialSecurityCouncil;
         uint256 initialShareLimit;
     }
@@ -74,6 +75,7 @@ contract DeployHubMachine is Script {
                 initParams.initialSecurityCouncil,
                 initParams.initialAuthority,
                 initParams.initialDepositor,
+                initParams.initialRedeemer,
                 initParams.initialCaliberStaleThreshold,
                 initParams.initialShareLimit,
                 initParams.hubCaliberPosStaleThreshold,
