@@ -26,7 +26,7 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
     function test_SetMechanic_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setMechanic(address(0x0));
+        machine.setMechanic(address(0));
     }
 
     function test_SetMechanic() public {
@@ -40,7 +40,7 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
     function test_SetSecurityCouncil_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setSecurityCouncil(address(0x0));
+        machine.setSecurityCouncil(address(0));
     }
 
     function test_SetSecurityCouncil() public {
@@ -50,6 +50,20 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(dao);
         machine.setSecurityCouncil(newSecurityCouncil);
         assertEq(machine.securityCouncil(), newSecurityCouncil);
+    }
+
+    function test_SetDepositor_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setDepositor(address(0));
+    }
+
+    function test_SetDepositor() public {
+        address newDepositor = makeAddr("NewDepositor");
+        vm.expectEmit(true, true, false, true, address(machine));
+        emit IMachine.DepositorChanged(machineDepositor, newDepositor);
+        vm.prank(dao);
+        machine.setDepositor(newDepositor);
+        assertEq(machine.depositor(), newDepositor);
     }
 
     function test_SetCaliberStaleThreshold_RevertWhen_CallerWithoutRole() public {
@@ -78,19 +92,6 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(dao);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.shareLimit(), newShareLimit);
-    }
-
-    function test_SetDepositorOnlyMode_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setDepositorOnlyMode(true);
-    }
-
-    function test_SetDepositorOnlyMode() public {
-        vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.DepositorOnlyModeChanged(true);
-        vm.prank(dao);
-        machine.setDepositorOnlyMode(true);
-        assertTrue(machine.depositorOnlyMode());
     }
 
     function test_SetRecoveryMode_RevertWhen_CallerWithoutRole() public {

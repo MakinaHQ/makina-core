@@ -81,6 +81,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         IMachine(machine).initialize(_getMachineInitParams(address(accountingToken)), address(shareToken));
 
         assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.depositor(), machineDepositor);
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
@@ -98,7 +100,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             accountingToken: accountingToken,
             initialMechanic: mechanic,
             initialSecurityCouncil: securityCouncil,
-            depositor: machineDepositor,
+            initialDepositor: machineDepositor,
             initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
@@ -108,8 +110,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
             hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
             hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-            hubCaliberInitialFlashLoanModule: address(0),
-            depositorOnlyMode: false
+            hubCaliberInitialFlashLoanModule: address(0)
         });
     }
 }

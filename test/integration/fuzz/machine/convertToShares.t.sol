@@ -34,7 +34,8 @@ contract ConvertToShares_Integration_Fuzz_Test is Base_Hub_Test {
         assets = bound(assets, 0, 1e40);
 
         // deposit assets into the machine
-        accountingToken.mint(address(this), assets);
+        deal(address(accountingToken), machineDepositor, assets, true);
+        vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), assets);
         machine.deposit(assets, address(this));
 

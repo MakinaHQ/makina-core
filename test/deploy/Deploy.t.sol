@@ -110,6 +110,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
         assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
         assertEq(machine.mechanic(), machineInitParams.initialMechanic);
+        assertEq(machine.securityCouncil(), machineInitParams.initialSecurityCouncil);
+        assertEq(machine.depositor(), machineInitParams.initialDepositor);
         assertEq(machine.accountingToken(), machineInitParams.accountingToken);
         assertEq(machine.caliberStaleThreshold(), machineInitParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), machineInitParams.initialShareLimit);

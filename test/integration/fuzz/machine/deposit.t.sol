@@ -39,13 +39,15 @@ contract Deposit_Integration_Fuzz_Test is Base_Hub_Test {
 
         IERC20 shareToken = IERC20(machine.shareToken());
 
-        deal(address(accountingToken), address(this), assets1, true);
+        deal(address(accountingToken), machineDepositor, assets1, true);
+
+        vm.startPrank(machineDepositor);
 
         // 1st deposit
         uint256 expectedShares1 = machine.convertToShares(assets1);
         accountingToken.approve(address(machine), assets1);
         vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.Deposit(address(this), address(this), assets1, expectedShares1);
+        emit IMachine.Deposit(machineDepositor, address(this), assets1, expectedShares1);
         machine.deposit(assets1, address(this));
 
         assertEq(accountingToken.balanceOf(address(this)), 0);
@@ -65,12 +67,12 @@ contract Deposit_Integration_Fuzz_Test is Base_Hub_Test {
             accountingToken.burn(address(machine), yield);
         }
 
-        deal(address(accountingToken), address(this), assets2, true);
+        deal(address(accountingToken), machineDepositor, assets2, true);
 
         // 2nd deposit
         accountingToken.approve(address(machine), assets2);
         vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.Deposit(address(this), address(this), assets2, expectedShares2);
+        emit IMachine.Deposit(machineDepositor, address(this), assets2, expectedShares2);
         machine.deposit(assets2, address(this));
 
         uint256 expectedTotalAssets = yieldDirection ? assets1 + assets2 + yield : assets1 + assets2 - yield;

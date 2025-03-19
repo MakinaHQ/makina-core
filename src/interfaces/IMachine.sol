@@ -17,7 +17,7 @@ interface IMachine {
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 amount);
-    event DepositorOnlyModeChanged(bool indexed restricted);
+    event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event HubCaliberDeployed(address indexed caliber, address indexed mailbox);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
@@ -32,7 +32,7 @@ interface IMachine {
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
-    /// @param depositor The address of the optional depositor.
+    /// @param initialDepositor The address of the initial depositor.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialShareLimit The share cap value.
     /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
@@ -42,13 +42,12 @@ interface IMachine {
     /// @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
     /// @param hubCaliberInitialFlashLoanModule The address of the initial flashLoan module.
-    /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
     struct MachineInitParams {
         address accountingToken;
         address initialMechanic;
         address initialSecurityCouncil;
         address initialAuthority;
-        address depositor;
+        address initialDepositor;
         uint256 initialCaliberStaleThreshold;
         uint256 initialShareLimit;
         uint256 hubCaliberPosStaleThreshold;
@@ -58,7 +57,6 @@ interface IMachine {
         uint256 hubCaliberMaxPositionDecreaseLossBps;
         uint256 hubCaliberMaxSwapLossBps;
         address hubCaliberInitialFlashLoanModule;
-        bool depositorOnlyMode;
     }
 
     struct SpokeCaliberData {
@@ -88,6 +86,9 @@ interface IMachine {
     /// @notice Address of the security council.
     function securityCouncil() external view returns (address);
 
+    /// @notice Address of the depositor.
+    function depositor() external view returns (address);
+
     /// @notice Address of the share token.
     function shareToken() external view returns (address);
 
@@ -105,9 +106,6 @@ interface IMachine {
 
     /// @notice Maximum amount of shares that can currently be minted through asset deposits.
     function maxMint() external view returns (uint256);
-
-    /// @notice Wether deposits are restricted to the depositor.
-    function depositorOnlyMode() external view returns (bool);
 
     /// @notice Whether the machine is in recovery mode.
     function recoveryMode() external view returns (bool);
@@ -173,6 +171,10 @@ interface IMachine {
     /// @param newSecurityCouncil The address of the new security council.
     function setSecurityCouncil(address newSecurityCouncil) external;
 
+    /// @notice Sets the depositor address.
+    /// @param newDepositor The address of the new depositor.
+    function setDepositor(address newDepositor) external;
+
     /// @notice Sets the caliber accounting staleness threshold.
     /// @param newCaliberStaleThreshold The new threshold in seconds.
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external;
@@ -180,10 +182,6 @@ interface IMachine {
     /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
     /// @param newShareLimit The new share limit
     function setShareLimit(uint256 newShareLimit) external;
-
-    /// @notice Sets the deposit restriction status.
-    /// @param isRestricted True to restrict deposits to the depositor, false to allow deposits from any address.
-    function setDepositorOnlyMode(bool isRestricted) external;
 
     /// @notice Sets the recovery mode status.
     /// @param enabled True to enable recovery mode, false to disable.

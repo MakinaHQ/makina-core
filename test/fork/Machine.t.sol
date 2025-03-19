@@ -24,10 +24,10 @@ contract Machine_Fork_Test is Fork_Test {
     Caliber public hubCaliber;
     Caliber public spokeCaliber;
 
-    address user;
+    address public machineDepositor;
 
     function setUp() public {
-        user = makeAddr("user");
+        machineDepositor = makeAddr("MachineDepositor");
     }
 
     function test_fork_Hub_USDC() public {
@@ -53,7 +53,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMechanic: ethForkData.mechanic,
                     initialSecurityCouncil: ethForkData.securityCouncil,
                     initialAuthority: address(hubCore.accessManager),
-                    depositor: address(0),
+                    initialDepositor: machineDepositor,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -62,8 +62,7 @@ contract Machine_Fork_Test is Fork_Test {
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: address(0),
-                    depositorOnlyMode: false
+                    hubCaliberInitialFlashLoanModule: address(0)
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -71,12 +70,12 @@ contract Machine_Fork_Test is Fork_Test {
         );
         hubCaliber = Caliber(ICaliberMailbox(machine.hubCaliberMailbox()).caliber());
 
-        // user deposits 10000 usdc
+        // machineDepositor deposits 10000 usdc
         uint256 depositAmount = 10000e6;
-        deal({token: ethForkData.usdc, to: user, give: depositAmount});
-        vm.startPrank(user);
+        deal({token: ethForkData.usdc, to: machineDepositor, give: depositAmount});
+        vm.startPrank(machineDepositor);
         IERC20(ethForkData.usdc).approve(address(machine), depositAmount);
-        machine.deposit(depositAmount, user);
+        machine.deposit(depositAmount, machineDepositor);
         vm.stopPrank();
 
         // mechanic transfers 2000 usdc to caliber

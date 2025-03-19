@@ -40,7 +40,7 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager),
-                    depositor: machineDepositor,
+                    initialDepositor: machineDepositor,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -49,8 +49,7 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: address(0),
-                    depositorOnlyMode: false
+                    hubCaliberInitialFlashLoanModule: address(0)
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -67,6 +66,8 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
 
         assertEq(machine.registry(), address(hubRegistry));
         assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.depositor(), machineDepositor);
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
