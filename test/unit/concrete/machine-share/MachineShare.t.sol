@@ -16,7 +16,7 @@ contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     }
 
     function test_Getters() public view {
-        assertEq(shareToken.machine(), address(machine));
+        assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
         assertEq(shareToken.decimals(), Constants.SHARE_TOKEN_DECIMALS);

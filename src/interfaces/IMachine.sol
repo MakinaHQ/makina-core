@@ -23,7 +23,6 @@ interface IMachine {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
-    event ShareTokenDeployed(address indexed shareToken);
     event SpokeMailboxDeployed(address spokeMailbox, uint256 indexed spokeChainId);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
@@ -44,8 +43,6 @@ interface IMachine {
     /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
     /// @param hubCaliberInitialFlashLoanModule The address of the initial flashLoan module.
     /// @param depositorOnlyMode Whether deposits are restricted to the depositor.
-    /// @param shareTokenName The name of the share token.
-    /// @param shareTokenSymbol The symbol of the share token.
     struct MachineInitParams {
         address accountingToken;
         address initialMechanic;
@@ -62,8 +59,6 @@ interface IMachine {
         uint256 hubCaliberMaxSwapLossBps;
         address hubCaliberInitialFlashLoanModule;
         bool depositorOnlyMode;
-        string shareTokenName;
-        string shareTokenSymbol;
     }
 
     struct SpokeCaliberData {
@@ -77,7 +72,8 @@ interface IMachine {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
-    function initialize(MachineInitParams calldata params) external;
+    /// @param _shareToken The address of the share token.
+    function initialize(MachineInitParams calldata params, address _shareToken) external;
 
     /// @notice Address of the registry.
     function registry() external view returns (address);

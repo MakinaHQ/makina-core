@@ -63,10 +63,10 @@ contract Machine_Fork_Test is Fork_Test {
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                     hubCaliberInitialFlashLoanModule: address(0),
-                    depositorOnlyMode: false,
-                    shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                    shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-                })
+                    depositorOnlyMode: false
+                }),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
         );
         hubCaliber = Caliber(ICaliberMailbox(machine.hubCaliberMailbox()).caliber());

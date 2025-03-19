@@ -109,10 +109,10 @@ abstract contract Base_Hub_Test is Base_Test {
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
                     hubCaliberInitialFlashLoanModule: _flashLoanModule,
-                    depositorOnlyMode: false,
-                    shareTokenName: DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                    shareTokenSymbol: DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-                })
+                    depositorOnlyMode: false
+                }),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
         );
         Caliber _caliber = Caliber(ICaliberMailbox(_machine.hubCaliberMailbox()).caliber());

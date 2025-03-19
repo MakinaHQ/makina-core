@@ -3,9 +3,13 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
+import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
+import {MachineShare} from "../machine/MachineShare.sol";
+import {Constants} from "../libraries/Constants.sol";
 
 contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
     /// @inheritdoc IMachineFactory
@@ -13,6 +17,8 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
 
     /// @inheritdoc IMachineFactory
     mapping(address machine => bool isMachine) public isMachine;
+    /// @inheritdoc IMachineFactory
+    mapping(address machine => bool isCaliber) public isCaliber;
 
     constructor(address _registry) {
         registry = _registry;
@@ -24,12 +30,34 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
     }
 
     /// @inheritdoc IMachineFactory
-    function deployMachine(IMachine.MachineInitParams calldata params) external override restricted returns (address) {
-        address machine = address(
-            new BeaconProxy(IHubRegistry(registry).machineBeacon(), abi.encodeCall(IMachine.initialize, (params)))
-        );
+    function deployMachine(
+        IMachine.MachineInitParams calldata params,
+        string memory tokenName,
+        string memory tokenSymbol
+    ) external override restricted returns (address) {
+        address token = _deployShareToken(tokenName, tokenSymbol, address(this));
+        address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
+
+        IOwnable2Step(token).transferOwnership(machine);
+        IMachine(machine).initialize(params, token);
+
+        address caliber = IHubDualMailbox(IMachine(machine).hubCaliberMailbox()).caliber();
+
         isMachine[machine] = true;
+        isCaliber[caliber] = true;
+
         emit MachineDeployed(machine);
+
         return machine;
+    }
+
+    /// @dev Deploys a machine share token.
+    function _deployShareToken(string memory name, string memory symbol, address initialOwner)
+        internal
+        returns (address)
+    {
+        address _shareToken = address(new MachineShare(name, symbol, Constants.SHARE_TOKEN_DECIMALS, initialOwner));
+        emit ShareTokenDeployed(_shareToken);
+        return _shareToken;
     }
 }

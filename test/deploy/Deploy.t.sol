@@ -95,14 +95,20 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubMachine.run();
 
         // Check that Hub Machine is correctly set up
-        DeployHubMachine.MachineInitParamsSorted memory machineInitParams =
-            abi.decode(vm.parseJson(deployHubMachine.inputJson()), (DeployHubMachine.MachineInitParamsSorted));
+        DeployHubMachine.MachineInitParamsSorted memory machineInitParams = abi.decode(
+            vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (DeployHubMachine.MachineInitParamsSorted)
+        );
+        string memory shareTokenName =
+            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenName"), (string));
+        string memory shareTokenSymbol =
+            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenSymbol"), (string));
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         IHubDualMailbox dualMailbox = IHubDualMailbox(machine.hubCaliberMailbox());
         ICaliber hubCaliber = ICaliber(dualMailbox.caliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         address authority = IAccessManaged(address(machine)).authority();
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
+        assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
         assertEq(machine.mechanic(), machineInitParams.initialMechanic);
         assertEq(machine.accountingToken(), machineInitParams.accountingToken);
         assertEq(machine.caliberStaleThreshold(), machineInitParams.initialCaliberStaleThreshold);
@@ -111,8 +117,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(dualMailbox.machine(), address(machine));
         assertEq(hubCaliber.mailbox(), address(dualMailbox));
-        assertEq(shareToken.name(), machineInitParams.shareTokenName);
-        assertEq(shareToken.symbol(), machineInitParams.shareTokenSymbol);
+        assertEq(shareToken.name(), shareTokenName);
+        assertEq(shareToken.symbol(), shareTokenSymbol);
 
         // set machine authority to core access manager for convenience
         vm.prank(authority);
