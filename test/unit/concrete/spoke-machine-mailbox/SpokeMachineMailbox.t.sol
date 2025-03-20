@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
+import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 

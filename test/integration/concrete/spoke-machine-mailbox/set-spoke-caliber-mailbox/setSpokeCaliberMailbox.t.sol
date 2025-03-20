@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IMachineMailbox} from "src/interfaces/IMachineMailbox.sol";
 import {ISpokeMachineMailbox} from "src/interfaces/ISpokeMachineMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
+import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 
 import {Integration_Concrete_Hub_Test} from "../../IntegrationConcrete.t.sol";
 

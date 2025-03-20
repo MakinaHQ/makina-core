@@ -7,7 +7,7 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";

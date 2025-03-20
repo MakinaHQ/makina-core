@@ -13,7 +13,7 @@ import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -22,7 +22,7 @@ import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 

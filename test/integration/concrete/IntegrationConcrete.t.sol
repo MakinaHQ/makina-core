@@ -13,8 +13,8 @@ import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";

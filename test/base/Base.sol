@@ -11,14 +11,14 @@ import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
+import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 
