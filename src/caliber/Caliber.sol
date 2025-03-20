@@ -76,7 +76,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     /// @inheritdoc ICaliber
     function initialize(CaliberInitParams calldata params, address mailboxBeacon) public override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._mailbox = _deployMailbox(mailboxBeacon, params.hubMachineEndpoint);
+        $._mailbox = _createMailbox(mailboxBeacon, params.hubMachineEndpoint);
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
@@ -526,7 +526,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @dev Deploys the caliber mailbox.
-    function _deployMailbox(address mailboxBeacon, address hubMachineEndpoint)
+    function _createMailbox(address mailboxBeacon, address hubMachineEndpoint)
         internal
         onlyInitializing
         returns (address)

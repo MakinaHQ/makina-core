@@ -17,5 +17,5 @@ interface ICaliberFactory {
     /// @notice Deploys a new Caliber instance.
     /// @param params The deployment parameters.
     /// @return caliber The address of the deployed Caliber instance.
-    function deployCaliber(ICaliber.CaliberInitParams calldata params) external returns (address caliber);
+    function createCaliber(ICaliber.CaliberInitParams calldata params) external returns (address caliber);
 }

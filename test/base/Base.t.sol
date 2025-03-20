@@ -94,7 +94,7 @@ abstract contract Base_Hub_Test is Base_Test {
     {
         vm.prank(dao);
         Machine _machine = Machine(
-            machineFactory.deployMachine(
+            machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: _accountingToken,
                     initialMechanic: mechanic,
@@ -153,7 +153,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     ) public returns (Caliber, SpokeCaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
-            caliberFactory.deployCaliber(
+            caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,

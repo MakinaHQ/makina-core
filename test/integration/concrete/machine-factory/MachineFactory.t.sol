@@ -24,7 +24,7 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
     function test_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.deployMachine(params, "", "");
+        machineFactory.createMachine(params, "", "");
     }
 
     function test_DeployMachine() public {
@@ -34,7 +34,7 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         emit IMachineFactory.MachineDeployed(address(0));
         vm.prank(dao);
         machine = Machine(
-            machineFactory.deployMachine(
+            machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: address(accountingToken),
                     initialMechanic: mechanic,

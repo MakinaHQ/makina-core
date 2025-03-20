@@ -104,7 +104,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         __AccessManaged_init(params.initialAuthority);
 
         $._hubChainId = block.chainid;
-        address mailbox = _deployHubCaliber(params);
+        address mailbox = _createHubCaliber(params);
         $._hubCaliberMailbox = mailbox;
         $._isMachineMailbox[mailbox] = true;
     }
@@ -481,7 +481,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @dev Deploys the hub caliber and associated dual mailbox.
     /// @return mailbox The address of the mailbox.
-    function _deployHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
+    function _createHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
         ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
             hubMachineEndpoint: address(this),
             accountingToken: params.accountingToken,

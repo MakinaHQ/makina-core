@@ -24,7 +24,7 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     }
 
     /// @inheritdoc ICaliberFactory
-    function deployCaliber(ICaliber.CaliberInitParams calldata params) external override restricted returns (address) {
+    function createCaliber(ICaliber.CaliberInitParams calldata params) external override restricted returns (address) {
         address caliber = address(
             new BeaconProxy(
                 ISpokeRegistry(registry).caliberBeacon(),

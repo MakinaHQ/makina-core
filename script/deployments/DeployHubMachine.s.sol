@@ -68,7 +68,7 @@ contract DeployHubMachine is Script {
 
         // Deploy caliber
         vm.startBroadcast();
-        deployedInstance = machineFactory.deployMachine(
+        deployedInstance = machineFactory.createMachine(
             IMachine.MachineInitParams(
                 initParams.accountingToken,
                 initParams.initialMechanic,
