@@ -21,12 +21,29 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
+    function isFeedRouteRegistered(address token) external view override returns (bool) {
+        return _feedRoutes[token].feed1 != address(0);
+    }
+
+    /// @inheritdoc IOracleRegistry
+    function getFeedRoute(address token) external view override returns (address, address) {
+        FeedRoute memory route = _feedRoutes[token];
+        if (route.feed1 == address(0)) {
+            revert PriceFeedRouteNotRegistered(token);
+        }
+        return (route.feed1, route.feed2);
+    }
+
+    /// @inheritdoc IOracleRegistry
     function getPrice(address baseToken, address quoteToken) external view override returns (uint256) {
         FeedRoute memory baseFD = _feedRoutes[baseToken];
         FeedRoute memory quoteFD = _feedRoutes[quoteToken];
 
-        if (baseFD.feed1 == address(0) || quoteFD.feed1 == address(0)) {
-            revert FeedRouteNotRegistered();
+        if (baseFD.feed1 == address(0)) {
+            revert PriceFeedRouteNotRegistered(baseToken);
+        }
+        if (quoteFD.feed1 == address(0)) {
+            revert PriceFeedRouteNotRegistered(quoteToken);
         }
 
         uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
@@ -48,15 +65,6 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
             _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
             _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
         );
-    }
-
-    /// @inheritdoc IOracleRegistry
-    function getFeedRoute(address token) external view override returns (address, address) {
-        FeedRoute memory route = _feedRoutes[token];
-        if (route.feed1 == address(0)) {
-            revert FeedRouteNotRegistered();
-        }
-        return (route.feed1, route.feed2);
     }
 
     /// @inheritdoc IOracleRegistry

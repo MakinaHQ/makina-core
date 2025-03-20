@@ -7,7 +7,7 @@ transferToCaliber.t.sol
 │     │  └── it should revert with ERC20InsufficientBalance
 │     └── given caliber's token balance is sufficient
 │        ├── given token is not a registered base token in the caliber
-│        │  └── it should revert with FeedRouteNotRegistered
+│        │  └── it should revert with PriceFeedRouteNotRegistered
 │        └── given token is a registered base token in the caliber
 │           ├── it should decrease the machine's token balance by amount
 │           ├── it should increase the caliber's token balance by amount

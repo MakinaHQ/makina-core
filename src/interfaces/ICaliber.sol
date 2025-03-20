@@ -20,7 +20,6 @@ interface ICaliber {
     error InvalidOutputToken();
     error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
-    error NegativeTokenPrice();
     error NonZeroBalance();
     error NoPendingUpdate();
     error NotFlashLoanModule();

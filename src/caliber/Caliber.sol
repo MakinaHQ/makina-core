@@ -553,8 +553,9 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
         emit BaseTokenAdded(token);
 
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getFeedRoute(token);
+        if (!IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
+        }
     }
 
     /// @dev Computes the accounting value of a position. Depending on last and current value, the

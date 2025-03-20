@@ -12,7 +12,7 @@ pragma solidity 0.8.28;
 /// - Finally, the price Token A -> Token B is calculated using both tokens individual prices in the reference currency.
 ///
 interface IOracleRegistry {
-    error FeedRouteNotRegistered();
+    error PriceFeedRouteNotRegistered(address token);
     error InvalidFeedRoute();
     error NegativeTokenPrice(address priceFeed);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
@@ -28,17 +28,20 @@ interface IOracleRegistry {
     /// @notice Feed => Staleness threshold in seconds
     function feedStaleThreshold(address feed) external view returns (uint256);
 
-    /// @notice Returns the price of one unit of baseToken in terms of quoteToken.
-    /// @param baseToken The address of the token for which the price is requested.
-    /// @param quoteToken The address of the token in which the price is quoted.
-    /// @return price The price of baseToken denominated in quoteToken (expressed in quoteToken decimals).
-    function getPrice(address baseToken, address quoteToken) external view returns (uint256);
+    /// @notice Token => Is feed route registered for the token
+    function isFeedRouteRegistered(address token) external view returns (bool);
 
     /// @notice Gets the price feed route for a given token.
     /// @param token The address of the token for which the price feed route is requested.
     /// @return feed1 The address of the first price feed.
     /// @return feed2 The address of the optional second price feed.
     function getFeedRoute(address token) external view returns (address, address);
+
+    /// @notice Returns the price of one unit of baseToken in terms of quoteToken.
+    /// @param baseToken The address of the token for which the price is requested.
+    /// @param quoteToken The address of the token in which the price is quoted.
+    /// @return price The price of baseToken denominated in quoteToken (expressed in quoteToken decimals).
+    function getPrice(address baseToken, address quoteToken) external view returns (uint256);
 
     /// @notice Sets the price feed route for a given token.
     /// @dev Both feeds, if set, must be Chainlink-interface-compliant.

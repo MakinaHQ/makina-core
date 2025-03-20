@@ -31,25 +31,12 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quoteToken = new MockERC20("Quote Token", "QT", 8);
     }
 
-    function test_RevertGiven_QuoteTokenFeedRouteNotRegistered() public {
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
-
-        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
-        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-
-        vm.prank(dao);
-        oracleRegistry.setFeedRoute(
-            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-
-        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
-        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-    }
-
     function test_RevertGiven_BaseTokenFeedRouteNotRegistered() public {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
+        );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
 
         vm.prank(dao);
@@ -57,7 +44,23 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
+        );
+        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
+    }
+
+    function test_RevertGiven_QuoteTokenFeedRouteNotRegistered() public {
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+
+        vm.prank(dao);
+        oracleRegistry.setFeedRoute(
+            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(quoteToken))
+        );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 

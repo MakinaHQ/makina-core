@@ -1,6 +1,6 @@
 getPrice.t.sol
 ├── given base or quote token data is not initialized
-│  └── it should revert with FeedRouteNotRegistered
+│  └── it should revert with PriceFeedRouteNotRegistered
 └── given base or quote token data is initialized
    ├── given one of the feed prices is negative
    │  └── it should revert with NegativeTokenPrice

@@ -3,7 +3,7 @@ initialize.t.sol
 │  └── it should revert with InvalidDecimals
 └── given the accounting token decimals are within allowed range
    ├── given the accounting token does not have associated feed route in the oracle registry
-   │  └── it should revert with FeedRouteNotRegistered
+   │  └── it should revert with PriceFeedRouteNotRegistered
    └── given the accounting token has associated feed route in the oracle registry
       ├── it should mark the token as an idle token in the machine
       ├── it should should initialize the machine with provided params

@@ -35,6 +35,7 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         vm.prank(dao);
         oracleRegistry.setFeedRoute(address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
 
+        assertTrue(oracleRegistry.isFeedRouteRegistered(address(baseToken)));
         (address tfdFeed1, address tfdFeed2) = oracleRegistry.getFeedRoute(address(baseToken));
         assertEq(tfdFeed1, address(priceFeed1));
         assertEq(tfdFeed2, address(0));
@@ -55,6 +56,7 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
             DEFAULT_PF_STALE_THRSHLD
         );
 
+        assertTrue(oracleRegistry.isFeedRouteRegistered(address(baseToken)));
         (address tfdFeed1, address tfdFeed2) = oracleRegistry.getFeedRoute(address(baseToken));
         assertEq(tfdFeed1, address(priceFeed1));
         assertEq(tfdFeed2, address(priceFeed2));
