@@ -21,7 +21,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
-import {OracleRegistry} from "src/OracleRegistry.sol";
+import {OracleRegistry} from "src/registries/OracleRegistry.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {Swapper} from "src/swap/Swapper.sol";

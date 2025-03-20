@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IOracleRegistry} from "./interfaces/IOracleRegistry.sol";
-import {AggregatorV2V3Interface} from "./interfaces/AggregatorV2V3Interface.sol";
+import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {AggregatorV2V3Interface} from "../interfaces/AggregatorV2V3Interface.sol";
 
 contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
