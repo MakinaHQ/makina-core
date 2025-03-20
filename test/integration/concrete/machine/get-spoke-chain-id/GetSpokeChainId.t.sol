@@ -15,7 +15,8 @@ contract GetSpokeChainId_Integration_Concrete_Test is Machine_Integration_Concre
 
         assertEq(machine.getSpokeChainId(0), SPOKE_CHAIN_ID);
 
-        vm.prank(dao);
+        vm.startPrank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID + 1, WORMHOLE_SPOKE_CHAIN_ID + 1);
         spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID + 1);
 
         assertEq(machine.getSpokeChainId(0), SPOKE_CHAIN_ID);

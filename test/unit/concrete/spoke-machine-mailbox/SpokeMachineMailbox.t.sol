@@ -10,7 +10,9 @@ contract SpokeMachineMailbox_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
     function setUp() public override {
         super.setUp();
-        vm.prank(dao);
+        vm.startPrank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
         spokeMachineMailbox = SpokeMachineMailbox(machine.createSpokeMailbox(SPOKE_CHAIN_ID));
+        vm.stopPrank();
     }
 }

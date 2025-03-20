@@ -394,9 +394,14 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     /// @inheritdoc IMachine
     function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
         MachineStorage storage $ = _getMachineStorage();
+
+        // Reverts if chainId is not registered.
+        IChainRegistry(IHubRegistry(registry).chainRegistry()).evmToWhChainId(chainId);
+
         if ($._foreignChainIdToSpokeCaliberData[chainId].machineMailbox != address(0)) {
             revert SpokeMailboxAlreadyExists();
         }
+
         address mailbox = address(
             new BeaconProxy(
                 IHubRegistry(registry).spokeMachineMailboxBeacon(),

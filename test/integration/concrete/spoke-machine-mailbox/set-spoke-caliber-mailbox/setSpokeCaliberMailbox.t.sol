@@ -12,8 +12,10 @@ contract SetSpokeCaliberMailbox_Integration_Concrete_Test is Integration_Concret
 
     function setUp() public override {
         super.setUp();
-        vm.prank(dao);
+        vm.startPrank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
         spokeMachineMailbox = SpokeMachineMailbox(machine.createSpokeMailbox(SPOKE_CHAIN_ID));
+        vm.stopPrank();
     }
 
     function test_RevertWhen_CallerNotMachine() public {
