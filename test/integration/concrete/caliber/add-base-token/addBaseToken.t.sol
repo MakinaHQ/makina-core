@@ -27,9 +27,9 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(0));
     }
 
-    function test_RevertGiven_FeedDataNotRegistered() public {
+    function test_RevertGiven_FeedRouteNotRegistered() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
         vm.prank(dao);
         caliber.addBaseToken(address(baseToken2));
     }

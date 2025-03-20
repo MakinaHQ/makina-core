@@ -54,10 +54,10 @@ abstract contract Integration_Concrete_Test is Base_Test {
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));

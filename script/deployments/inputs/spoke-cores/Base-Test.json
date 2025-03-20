@@ -3,7 +3,7 @@
   "governor": "0xad60446470333ad23bececceda26071bb245ef6f",
   "securityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
   "hubChainId": 1,
-  "priceFeedData": [
+  "priceFeedRoutes": [
     {
       "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
       "feed1": "0x7e860098F58bBFC8648a4311b374B1D669a2bc6B",

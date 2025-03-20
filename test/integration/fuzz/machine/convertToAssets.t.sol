@@ -25,7 +25,7 @@ contract ConvertToAssets_Integration_Fuzz_Test is Base_Hub_Test {
         MockPriceFeed aPriceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
 
         vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 

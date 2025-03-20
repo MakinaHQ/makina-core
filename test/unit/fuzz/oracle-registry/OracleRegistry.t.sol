@@ -74,14 +74,14 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
             new MockPriceFeed(data.qf2Decimals, int256(data.price_y_e * (10 ** data.qf2Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
@@ -106,14 +106,14 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
             new MockPriceFeed(data.qf1Decimals, int256(price_q_e * (10 ** data.qf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -134,10 +134,10 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
             new MockPriceFeed(data.qf2Decimals, int256(data.price_y_e * (10 ** data.qf2Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
@@ -160,10 +160,10 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
             new MockPriceFeed(data.qf1Decimals, int256(price_q_e * (10 ** data.qf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();

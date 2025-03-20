@@ -75,8 +75,9 @@ abstract contract Fork_Test is Base, Test, Constants {
         }
 
         // setup oracle registry
-        PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(inputJson, ".priceFeedData"), (PriceFeedData[]));
-        setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedData);
+        PriceFeedRoute[] memory priceFeedRoutes =
+            abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
+        setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedRoutes);
 
         // setup swapModule
         SwapperData[] memory swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));

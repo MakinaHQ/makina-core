@@ -36,7 +36,7 @@ contract DeployHubCore is DeployCore {
         _deployment = deployHubCore(deployer, dao, wormhole);
 
         setupHubRegistry(_deployment);
-        setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
+        setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
         setupSwapModule(_deployment.swapModule, swappersData);
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
 

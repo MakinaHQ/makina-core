@@ -1,8 +1,8 @@
-setTokenFeedData.t.sol
+setFeedRoute.t.sol
 ├── given sender does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── given sender has the relevant role
    ├── given first price feed is null
-   │  └── it should revert with InvalidFeedData
+   │  └── it should revert with InvalidFeedRoute
    └── given first price feed is non null
-      └── it should associate the provided feed data to provided token in oracle registry storage
+      └── it should associate the provided feed route to provided token in oracle registry storage

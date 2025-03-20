@@ -24,9 +24,7 @@ contract SetFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concret
         assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 0);
 
         vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
+        oracleRegistry.setFeedRoute(address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
 
         assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), DEFAULT_PF_STALE_THRSHLD);
 

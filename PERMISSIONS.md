@@ -19,7 +19,7 @@ This is a list of role permissions in Makina Core contracts. These roles must be
 #### OracleRegistry
 
 - `ADMIN_ROLE` (roleId `0`)
-  - Can set token price feed data.
+  - Can set token price feed route.
   - Can set feeds staleness threshold.
 
 #### CaliberFactory

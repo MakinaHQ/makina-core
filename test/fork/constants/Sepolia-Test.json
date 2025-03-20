@@ -6,7 +6,7 @@
   "weth": "0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c",
   "wormhole": "0x4a8bc80Ed5a4067f1CCf107057b8270E0cC11A78",
   "supportedChains": [11155111, 84532],
-  "priceFeedData": [
+  "priceFeedRoutes": [
     {
       "token": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
       "feed1": "0xA2F78ab2355fe2f984D808B5CeE7FD0A93D5270E",

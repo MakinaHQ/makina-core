@@ -25,7 +25,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         deal(address(baseToken2), address(caliber), inputAmount, true);
 
         vm.prank(mechanic);
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
         caliber.transferToHubMachine(address(baseToken2), inputAmount);
     }
 
@@ -68,7 +68,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         deal(address(baseToken2), address(caliber), inputAmount, true);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
         caliber.transferToHubMachine(address(baseToken2), inputAmount);
     }
 

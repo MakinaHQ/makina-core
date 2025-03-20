@@ -87,7 +87,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             revert InvalidDecimals();
         }
         // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(params.accountingToken);
+        IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getFeedRoute(params.accountingToken);
         $._accountingToken = params.accountingToken;
         $._idleTokens.add(params.accountingToken);
 
@@ -262,7 +262,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             bool newlyAdded = $._idleTokens.add(token);
             if (newlyAdded) {
                 // Reverts if no price feed is registered for token in the oracle registry.
-                IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+                IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getFeedRoute(token);
             }
         }
     }

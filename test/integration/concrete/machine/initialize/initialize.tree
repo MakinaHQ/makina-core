@@ -2,9 +2,9 @@ initialize.t.sol
 ├── given the accounting token decimals are below minimum or above maximum
 │  └── it should revert with InvalidDecimals
 └── given the accounting token decimals are within allowed range
-   ├── given the accounting token does not have associated feed data in the oracle registry
-   │  └── it should revert with FeedDataNotRegistered
-   └── given the accounting token has associated feed data in the oracle registry
+   ├── given the accounting token does not have associated feed route in the oracle registry
+   │  └── it should revert with FeedRouteNotRegistered
+   └── given the accounting token has associated feed route in the oracle registry
       ├── it should mark the token as an idle token in the machine
       ├── it should should initialize the machine with provided params
       └── it should deploy a caliber and associated hubDualMailbox with provided params

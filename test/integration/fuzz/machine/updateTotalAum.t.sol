@@ -81,12 +81,10 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
             new MockPriceFeed(data.bf1Decimals, int256(data.price_b_e * (10 ** data.bf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
+        oracleRegistry.setFeedRoute(address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
         vm.stopPrank();
 
         (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0), address(0));

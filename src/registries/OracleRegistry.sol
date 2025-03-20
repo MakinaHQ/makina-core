@@ -11,7 +11,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
 
     /// @dev Token => Feed or pair of feeds used to price the token
-    mapping(address token => TokenFeedData feedData) private _tokenFeedData;
+    mapping(address token => FeedRoute feedRoute) private _feedRoutes;
 
     /// @inheritdoc IOracleRegistry
     mapping(address feed => uint256 stalenessThreshold) public feedStaleThreshold;
@@ -22,11 +22,11 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     function getPrice(address baseToken, address quoteToken) external view override returns (uint256) {
-        TokenFeedData memory baseFD = _tokenFeedData[baseToken];
-        TokenFeedData memory quoteFD = _tokenFeedData[quoteToken];
+        FeedRoute memory baseFD = _feedRoutes[baseToken];
+        FeedRoute memory quoteFD = _feedRoutes[quoteToken];
 
         if (baseFD.feed1 == address(0) || quoteFD.feed1 == address(0)) {
-            revert FeedDataNotRegistered();
+            revert FeedRouteNotRegistered();
         }
 
         uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
@@ -51,16 +51,16 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
-    function getTokenFeedData(address token) external view override returns (address, address) {
-        TokenFeedData memory data = _tokenFeedData[token];
-        if (data.feed1 == address(0)) {
-            revert FeedDataNotRegistered();
+    function getFeedRoute(address token) external view override returns (address, address) {
+        FeedRoute memory route = _feedRoutes[token];
+        if (route.feed1 == address(0)) {
+            revert FeedRouteNotRegistered();
         }
-        return (data.feed1, data.feed2);
+        return (route.feed1, route.feed2);
     }
 
     /// @inheritdoc IOracleRegistry
-    function setTokenFeedData(
+    function setFeedRoute(
         address token,
         address feed1,
         uint256 stalenessThreshold1,
@@ -68,16 +68,16 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         uint256 stalenessThreshold2
     ) external override restricted {
         if (feed1 == address(0)) {
-            revert InvalidFeedData();
+            revert InvalidFeedRoute();
         }
-        _tokenFeedData[token] = TokenFeedData({feed1: feed1, feed2: feed2});
+        _feedRoutes[token] = FeedRoute({feed1: feed1, feed2: feed2});
 
         feedStaleThreshold[feed1] = stalenessThreshold1;
         if (feed2 != address(0)) {
             feedStaleThreshold[feed2] = stalenessThreshold2;
         }
 
-        emit TokenFeedDataRegistered(token, feed1, feed2);
+        emit FeedRouteRegistered(token, feed1, feed2);
     }
 
     /// @inheritdoc IOracleRegistry

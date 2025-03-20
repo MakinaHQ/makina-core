@@ -68,7 +68,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(IOracleRegistry.FeedRouteNotRegistered.selector);
         new BeaconProxy(
             address(machineBeacon),
             abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))

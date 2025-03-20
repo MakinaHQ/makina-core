@@ -46,7 +46,7 @@ abstract contract Base is StdCheats {
         UpgradeableBeacon spokeCaliberMailboxBeacon;
     }
 
-    struct PriceFeedData {
+    struct PriceFeedRoute {
         address feed1;
         address feed2;
         uint256 stalenessThreshold1;
@@ -217,14 +217,14 @@ abstract contract Base is StdCheats {
         deployment.spokeRegistry.setSpokeCaliberMailboxBeacon(address(deployment.spokeCaliberMailboxBeacon));
     }
 
-    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedData[] memory priceFeedData) public {
-        for (uint256 i; i < priceFeedData.length; i++) {
-            oracleRegistry.setTokenFeedData(
-                priceFeedData[i].token,
-                priceFeedData[i].feed1,
-                priceFeedData[i].stalenessThreshold1,
-                priceFeedData[i].feed2,
-                priceFeedData[i].stalenessThreshold2
+    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) public {
+        for (uint256 i; i < priceFeedRoutes.length; i++) {
+            oracleRegistry.setFeedRoute(
+                priceFeedRoutes[i].token,
+                priceFeedRoutes[i].feed1,
+                priceFeedRoutes[i].stalenessThreshold1,
+                priceFeedRoutes[i].feed2,
+                priceFeedRoutes[i].stalenessThreshold2
             );
         }
     }
