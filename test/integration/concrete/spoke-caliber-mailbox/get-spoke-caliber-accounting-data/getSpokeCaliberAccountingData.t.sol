@@ -25,7 +25,11 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
+
+        spokeCaliberMailbox.getSpokeCaliberAccountingData();
+
+        skip(1);
 
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
         spokeCaliberMailbox.getSpokeCaliberAccountingData();

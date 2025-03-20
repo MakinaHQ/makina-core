@@ -30,7 +30,12 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
+
+        machine.updateTotalAum();
+
+        skip(1);
+
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
         machine.updateTotalAum();
     }
@@ -41,6 +46,27 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
         machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
         vm.stopPrank();
+
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+
+        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingData(false, true);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        skip(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD - 1);
+
+        machine.updateTotalAum();
+
+        skip(1);
 
         vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
         machine.updateTotalAum();

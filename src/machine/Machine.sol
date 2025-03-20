@@ -517,7 +517,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             SpokeCaliberData memory spokeCaliberData = $._foreignChainIdToSpokeCaliberData[chainId];
             if (
                 currentTimestamp > spokeCaliberData.timestamp
-                    && currentTimestamp - spokeCaliberData.timestamp > $._caliberStaleThreshold
+                    && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold
             ) {
                 revert CaliberAccountingStale(chainId);
             }

@@ -277,7 +277,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
             Position memory pos = $._positionById[posId];
-            if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+            if (currentTimestamp - $._positionById[posId].lastAccountingTime >= $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
             } else if (pos.isDebt) {
                 debt += pos.value;

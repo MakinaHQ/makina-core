@@ -24,7 +24,11 @@ contract GetHubCaliberAccountingData_Integration_Concrete_Test is Integration_Co
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
+
+        hubDualMailbox.getHubCaliberAccountingData();
+
+        skip(1);
 
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
         hubDualMailbox.getHubCaliberAccountingData();
