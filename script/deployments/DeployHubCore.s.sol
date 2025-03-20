@@ -37,7 +37,7 @@ contract DeployHubCore is DeployCore {
 
         setupHubRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
-        setupSwapper(_deployment.swapper, dexAggregatorsData);
+        setupSwapModule(_deployment.swapModule, dexAggregatorsData);
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
 
         // @TODO setup access manager
@@ -59,6 +59,6 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "ChainRegistry", address(_deployment.chainRegistry));
         vm.serializeAddress(key, "HubRegistry", address(_deployment.hubRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
-        vm.writeJson(vm.serializeAddress(key, "Swapper", address(_deployment.swapper)), outputPath);
+        vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);
     }
 }

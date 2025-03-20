@@ -2,9 +2,9 @@ swap.t.sol
 ├── given approval or execution target is not set for given DEX aggregator
 │  └── it should revert with DexAggregatorNotSet
 └── given both targets are set for given DEX aggregator
-   ├── given the swapper has insufficient input token allowance from sender
+   ├── given the swapModule has insufficient input token allowance from sender
    │  └── it should revert with ERC20InsufficientAllowance
-   └── given the swapper has sufficient input token allowance from sender
+   └── given the swapModule has sufficient input token allowance from sender
       ├── given the sender has insufficient input token balance
       │  └── it should revert with ERC20InsufficientBalance
       └── given the sender has sufficient input token balance

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ISwapper} from "../interfaces/ISwapper.sol";
+import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
 interface ICaliber {
     error AccountingToken();
@@ -269,11 +269,11 @@ interface ICaliber {
     /// @notice Harvests one or multiple positions.
     /// @param instruction The harvest instruction.
     /// @param swapOrders The array of swap orders to be executed after the harvest.
-    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders) external;
+    function harvest(Instruction calldata instruction, ISwapModule.SwapOrder[] calldata swapOrders) external;
 
-    /// @notice Performs a swap via the swapper module.
+    /// @notice Performs a swap via the swapModule module.
     /// @param order The swap order parameters.
-    function swap(ISwapper.SwapOrder calldata order) external;
+    function swap(ISwapModule.SwapOrder calldata order) external;
 
     /// @notice Initiates a token transfer to the hub machine.
     /// @param token The address of the token to transfer.

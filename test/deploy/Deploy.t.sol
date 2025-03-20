@@ -71,12 +71,12 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_priceFeedData[i].feed2, feed2);
         }
 
-        // Check that Swapper is correctly set up
+        // Check that SwapModule is correctly set up
         DexAggregatorData[] memory _dexAggregatorsData =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
         for (uint256 i; i < _dexAggregatorsData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                hubCoreDeployment.swapper.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
+                hubCoreDeployment.swapModule.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
             assertEq(_dexAggregatorsData[i].approvalTarget, approvalTarget);
             assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
         }
@@ -164,12 +164,12 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_priceFeedData[i].feed2, feed2);
         }
 
-        // Check that Swapper is correctly set up
+        // Check that SwapModule is correctly set up
         DexAggregatorData[] memory _dexAggregatorsData =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
         for (uint256 i; i < _dexAggregatorsData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                spokeCoreDeployment.swapper.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
+                spokeCoreDeployment.swapModule.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
             assertEq(_dexAggregatorsData[i].approvalTarget, approvalTarget);
             assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
         }

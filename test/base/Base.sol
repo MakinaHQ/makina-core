@@ -13,20 +13,20 @@ import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
 import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
-import {Swapper} from "src/swap/Swapper.sol";
+import {SwapModule} from "src/swap/SwapModule.sol";
 
 abstract contract Base is StdCheats {
     struct HubCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
-        Swapper swapper;
+        SwapModule swapModule;
         HubRegistry hubRegistry;
         ChainRegistry chainRegistry;
         UpgradeableBeacon hubCaliberBeacon;
@@ -39,7 +39,7 @@ abstract contract Base is StdCheats {
     struct SpokeCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
-        Swapper swapper;
+        SwapModule swapModule;
         UpgradeableBeacon spokeCaliberBeacon;
         CaliberFactory caliberFactory;
         SpokeRegistry spokeRegistry;
@@ -55,7 +55,7 @@ abstract contract Base is StdCheats {
     }
 
     struct DexAggregatorData {
-        ISwapper.DexAggregator aggregatorId;
+        ISwapModule.DexAggregator aggregatorId;
         address approvalTarget;
         address executionTarget;
     }
@@ -70,7 +70,7 @@ abstract contract Base is StdCheats {
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
-        returns (AccessManager accessManager, OracleRegistry oracleRegistry, Swapper swapper)
+        returns (AccessManager accessManager, OracleRegistry oracleRegistry, SwapModule swapModule)
     {
         accessManager = new AccessManager(initialAMAdmin);
 
@@ -83,11 +83,11 @@ abstract contract Base is StdCheats {
             )
         );
 
-        address swapperImplemAddr = address(new Swapper());
-        swapper = Swapper(
+        address swapModuleImplemAddr = address(new SwapModule());
+        swapModule = SwapModule(
             address(
                 new TransparentUpgradeableProxy(
-                    swapperImplemAddr, dao, abi.encodeCall(Swapper.initialize, (address(accessManager)))
+                    swapModuleImplemAddr, dao, abi.encodeCall(SwapModule.initialize, (address(accessManager)))
                 )
             )
         );
@@ -97,7 +97,7 @@ abstract contract Base is StdCheats {
         internal
         returns (HubCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapper) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
         address hubRegistryImplemAddr = address(new HubRegistry());
@@ -110,7 +110,7 @@ abstract contract Base is StdCheats {
                         HubRegistry.initialize,
                         (
                             address(deployment.oracleRegistry),
-                            address(deployment.swapper),
+                            address(deployment.swapModule),
                             address(deployment.accessManager)
                         )
                     )
@@ -158,7 +158,7 @@ abstract contract Base is StdCheats {
         internal
         returns (SpokeCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapper) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
         address spokeRegistryImplemAddr = address(new SpokeRegistry());
@@ -171,7 +171,7 @@ abstract contract Base is StdCheats {
                         SpokeRegistry.initialize,
                         (
                             address(deployment.oracleRegistry),
-                            address(deployment.swapper),
+                            address(deployment.swapModule),
                             address(deployment.accessManager)
                         )
                     )
@@ -237,12 +237,12 @@ abstract contract Base is StdCheats {
     }
 
     ///
-    /// SWAPPER SETUP
+    /// SWAPMODULE SETUP
     ///
 
-    function setupSwapper(Swapper swapper, DexAggregatorData[] memory dexAggregatorsData) public {
+    function setupSwapModule(SwapModule swapModule, DexAggregatorData[] memory dexAggregatorsData) public {
         for (uint256 i; i < dexAggregatorsData.length; i++) {
-            swapper.setDexAggregatorTargets(
+            swapModule.setDexAggregatorTargets(
                 dexAggregatorsData[i].aggregatorId,
                 dexAggregatorsData[i].approvalTarget,
                 dexAggregatorsData[i].executionTarget

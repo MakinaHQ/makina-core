@@ -31,9 +31,9 @@ Calibers can manage and account for positions by executing authorized instructio
 - Can open, manage and close a position with `managePosition()`.
 - Can swap a token into any base token with `swap()`.
 
-### Swapper
+### SwapModule
 
-The `Swapper` contract serves as an external module, enabling calibers and machines to securely interact with DEX aggregators using unverified calldata. The swapper pulls funds from caller before execution and sends back output funds upon completion.
+The `SwapModule` contract serves as an external module, enabling calibers and machines to securely interact with DEX aggregators using unverified calldata. The swapModule pulls funds from caller before execution and sends back output funds upon completion.
 
 ### Oracle Registry
 

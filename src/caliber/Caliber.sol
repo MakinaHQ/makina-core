@@ -15,7 +15,7 @@ import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
-import {ISwapper} from "../interfaces/ISwapper.sol";
+import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
 contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
     using Math for uint256;
@@ -408,7 +408,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders)
+    function harvest(Instruction calldata instruction, ISwapModule.SwapOrder[] calldata swapOrders)
         public
         override
         nonReentrant
@@ -425,7 +425,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function swap(ISwapper.SwapOrder calldata order) public override nonReentrant onlyOperator {
+    function swap(ISwapModule.SwapOrder calldata order) public override nonReentrant onlyOperator {
         _swap(order);
     }
 
@@ -749,7 +749,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         return $._allowedInstrRoot;
     }
 
-    function _swap(ISwapper.SwapOrder calldata order) internal {
+    function _swap(ISwapModule.SwapOrder calldata order) internal {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
@@ -763,10 +763,10 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        address _swapper = IBaseMakinaRegistry(registry).swapper();
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, order.inputAmount);
-        uint256 amountOut = ISwapper(_swapper).swap(order);
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, 0);
+        address _swapModule = IBaseMakinaRegistry(registry).swapModule();
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, order.inputAmount);
+        uint256 amountOut = ISwapModule(_swapModule).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, 0);
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);

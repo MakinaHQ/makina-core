@@ -11,7 +11,7 @@ import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_Getters() public view {
         assertEq(spokeRegistry.oracleRegistry(), address(oracleRegistry));
-        assertEq(spokeRegistry.swapper(), address(swapper));
+        assertEq(spokeRegistry.swapModule(), address(swapModule));
         assertEq(spokeRegistry.caliberBeacon(), address(spokeCaliberBeacon));
         assertEq(spokeRegistry.caliberFactory(), address(caliberFactory));
         assertEq(spokeRegistry.spokeCaliberMailboxBeacon(), address(spokeCaliberMailboxBeacon));
@@ -32,18 +32,18 @@ contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
         assertEq(spokeRegistry.oracleRegistry(), newOracleRegistry);
     }
 
-    function test_SetSwapper_RevertWhen_CallerWithoutRole() public {
+    function test_SetSwapModule_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeRegistry.setSwapper(address(0));
+        spokeRegistry.setSwapModule(address(0));
     }
 
-    function test_SetSwapper() public {
-        address newSwapper = makeAddr("newSwapper");
+    function test_SetSwapModule() public {
+        address newSwapModule = makeAddr("newSwapModule");
         vm.expectEmit(true, true, true, true, address(spokeRegistry));
-        emit IBaseMakinaRegistry.SwapperChange(address(swapper), newSwapper);
+        emit IBaseMakinaRegistry.SwapModuleChange(address(swapModule), newSwapModule);
         vm.prank(dao);
-        spokeRegistry.setSwapper(newSwapper);
-        assertEq(spokeRegistry.swapper(), newSwapper);
+        spokeRegistry.setSwapModule(newSwapModule);
+        assertEq(spokeRegistry.swapModule(), newSwapModule);
     }
 
     function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {

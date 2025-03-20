@@ -12,7 +12,7 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
         assertEq(hubRegistry.chainRegistry(), address(chainRegistry));
         assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
-        assertEq(hubRegistry.swapper(), address(swapper));
+        assertEq(hubRegistry.swapModule(), address(swapModule));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
         assertEq(hubRegistry.machineFactory(), address(machineFactory));
         assertEq(hubRegistry.caliberBeacon(), address(hubCaliberBeacon));
@@ -48,18 +48,18 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(hubRegistry.oracleRegistry(), newOracleRegistry);
     }
 
-    function test_SetSwapper_RevertWhen_CallerWithoutRole() public {
+    function test_SetSwapModule_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setSwapper(address(0));
+        hubRegistry.setSwapModule(address(0));
     }
 
-    function test_SetSwapper() public {
-        address newSwapper = makeAddr("newSwapper");
+    function test_SetSwapModule() public {
+        address newSwapModule = makeAddr("newSwapModule");
         vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IBaseMakinaRegistry.SwapperChange(address(swapper), newSwapper);
+        emit IBaseMakinaRegistry.SwapModuleChange(address(swapModule), newSwapModule);
         vm.prank(dao);
-        hubRegistry.setSwapper(newSwapper);
-        assertEq(hubRegistry.swapper(), newSwapper);
+        hubRegistry.setSwapModule(newSwapModule);
+        assertEq(hubRegistry.swapModule(), newSwapModule);
     }
 
     function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {

@@ -15,7 +15,7 @@ import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
 import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
@@ -60,7 +60,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         oracleRegistry.setTokenFeedData(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+        swapModule.setDexAggregatorTargets(ISwapModule.DexAggregator.ZEROX, address(pool), address(pool));
         vm.stopPrank();
     }
 

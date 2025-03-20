@@ -25,8 +25,8 @@ contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
         _disableInitializers();
     }
 
-    function initialize(address oracleRegistry, address swapper, address initialAuthority) external initializer {
-        __BaseMakinaRegistry_init(oracleRegistry, swapper, initialAuthority);
+    function initialize(address oracleRegistry, address swapModule, address initialAuthority) external initializer {
+        __BaseMakinaRegistry_init(oracleRegistry, swapModule, initialAuthority);
     }
 
     /// @inheritdoc ISpokeRegistry
