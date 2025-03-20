@@ -167,11 +167,12 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        IMachine.SpokeCaliberData memory caliberData = machine.getSpokeCaliberAccountingData(SPOKE_CHAIN_ID);
+        IMachine.SpokeCaliberData memory caliberData = machine.getSpokeCaliberData(SPOKE_CHAIN_ID);
         assertEq(caliberData.timestamp, blockTime);
         assertEq(caliberData.machineMailbox, spokeMachineMailboxAddr);
         assertEq(caliberData.netAum, queriedData.netAum);
         assertEq(caliberData.positions.length, queriedData.positions.length);
+        assertEq(caliberData.baseTokens.length, queriedData.baseTokens.length);
         assertEq(caliberData.totalReceivedFromHM.length, queriedData.totalReceivedFromHM.length);
         assertEq(caliberData.totalSentToHM.length, queriedData.totalSentToHM.length);
     }

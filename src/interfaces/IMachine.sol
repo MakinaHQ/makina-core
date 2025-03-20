@@ -65,7 +65,8 @@ interface IMachine {
         address machineMailbox;
         uint256 timestamp;
         uint256 netAum;
-        bytes[] positions; // abi.encode(positionId, positionSize)
+        bytes[] positions; // abi.encode(positionId, value)
+        bytes[] baseTokens; // abi.encode(token, value)
         bytes[] totalReceivedFromHM; // abi.encode(baseToken, nativeValue)
         bytes[] totalSentToHM; // abi.encode(baseToken, nativeValue)
     }
@@ -128,7 +129,7 @@ interface IMachine {
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
     /// @notice Spoke Chain ID => Spoke Caliber Data.
-    function getSpokeCaliberAccountingData(uint256 chainId) external view returns (SpokeCaliberData memory);
+    function getSpokeCaliberData(uint256 chainId) external view returns (SpokeCaliberData memory);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
