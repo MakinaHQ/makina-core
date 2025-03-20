@@ -114,12 +114,10 @@ interface ICaliber {
     /// @notice Position data.
     /// @param lastAccountingTime The last block timestamp when the position was accounted for.
     /// @param value The value of the position expressed in accounting token.
-    /// @param isBaseToken Is the position a base token.
     /// @param isDebt Whether the position is a debt.
     struct Position {
         uint256 lastAccountingTime;
         uint256 value;
-        bool isBaseToken;
         bool isDebt;
     }
 
