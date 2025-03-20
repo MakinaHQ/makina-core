@@ -36,7 +36,7 @@ contract DeploySpokeCore is DeployCore {
 
         setupSpokeRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
-        setupSwapModule(_deployment.swapModule, dexAggregatorsData);
+        setupSwapModule(_deployment.swapModule, swappersData);
 
         // @TODO setup access manager
     }

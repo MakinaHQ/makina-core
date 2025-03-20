@@ -13,7 +13,7 @@ abstract contract DeployCore is Base, Script {
     string public outputPath;
 
     PriceFeedData[] public priceFeedData;
-    DexAggregatorData[] public dexAggregatorsData;
+    SwapperData[] public swappersData;
 
     address public dao;
     address public deployer;
@@ -32,10 +32,9 @@ abstract contract DeployCore is Base, Script {
             priceFeedData.push(_priceFeedData[i]);
         }
 
-        DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        for (uint256 i; i < _dexAggregatorsData.length; i++) {
-            dexAggregatorsData.push(_dexAggregatorsData[i]);
+        SwapperData[] memory _swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
+        for (uint256 i; i < _swappersData.length; i++) {
+            swappersData.push(_swappersData[i]);
         }
 
         dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));

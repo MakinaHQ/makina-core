@@ -72,13 +72,13 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that SwapModule is correctly set up
-        DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        for (uint256 i; i < _dexAggregatorsData.length; i++) {
+        SwapperData[] memory _swappersData =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".swappersTargets"), (SwapperData[]));
+        for (uint256 i; i < _swappersData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                hubCoreDeployment.swapModule.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
-            assertEq(_dexAggregatorsData[i].approvalTarget, approvalTarget);
-            assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
+                hubCoreDeployment.swapModule.swapperTargets(_swappersData[i].swapperId);
+            assertEq(_swappersData[i].approvalTarget, approvalTarget);
+            assertEq(_swappersData[i].executionTarget, executionTarget);
         }
 
         // Check that ChainRegistry is correctly set up
@@ -165,13 +165,13 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that SwapModule is correctly set up
-        DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        for (uint256 i; i < _dexAggregatorsData.length; i++) {
+        SwapperData[] memory _swappersData =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".swappersTargets"), (SwapperData[]));
+        for (uint256 i; i < _swappersData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                spokeCoreDeployment.swapModule.dexAggregatorTargets(_dexAggregatorsData[i].aggregatorId);
-            assertEq(_dexAggregatorsData[i].approvalTarget, approvalTarget);
-            assertEq(_dexAggregatorsData[i].executionTarget, executionTarget);
+                spokeCoreDeployment.swapModule.swapperTargets(_swappersData[i].swapperId);
+            assertEq(_swappersData[i].approvalTarget, approvalTarget);
+            assertEq(_swappersData[i].executionTarget, executionTarget);
         }
 
         // Check that Spoke Caliber is correctly set up

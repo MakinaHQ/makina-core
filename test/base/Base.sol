@@ -54,10 +54,10 @@ abstract contract Base is StdCheats {
         address token;
     }
 
-    struct DexAggregatorData {
-        ISwapModule.DexAggregator aggregatorId;
+    struct SwapperData {
         address approvalTarget;
         address executionTarget;
+        ISwapModule.Swapper swapperId;
     }
 
     ///
@@ -240,12 +240,10 @@ abstract contract Base is StdCheats {
     /// SWAPMODULE SETUP
     ///
 
-    function setupSwapModule(SwapModule swapModule, DexAggregatorData[] memory dexAggregatorsData) public {
-        for (uint256 i; i < dexAggregatorsData.length; i++) {
-            swapModule.setDexAggregatorTargets(
-                dexAggregatorsData[i].aggregatorId,
-                dexAggregatorsData[i].approvalTarget,
-                dexAggregatorsData[i].executionTarget
+    function setupSwapModule(SwapModule swapModule, SwapperData[] memory swappersData) public {
+        for (uint256 i; i < swappersData.length; i++) {
+            swapModule.setSwapperTargets(
+                swappersData[i].swapperId, swappersData[i].approvalTarget, swappersData[i].executionTarget
             );
         }
     }

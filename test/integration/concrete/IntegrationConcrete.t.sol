@@ -60,7 +60,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         oracleRegistry.setTokenFeedData(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        swapModule.setDexAggregatorTargets(ISwapModule.DexAggregator.ZEROX, address(pool), address(pool));
+        swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));
         vm.stopPrank();
     }
 

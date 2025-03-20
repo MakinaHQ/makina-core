@@ -20,5 +20,5 @@
       "stalenessThreshold2": 0
     }
   ],
-  "dexAggregatorsTargets": []
+  "swappersTargets": []
 }

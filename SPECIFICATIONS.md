@@ -33,7 +33,7 @@ Calibers can manage and account for positions by executing authorized instructio
 
 ### SwapModule
 
-The `SwapModule` contract serves as an external module, enabling calibers and machines to securely interact with DEX aggregators using unverified calldata. The swapModule pulls funds from caller before execution and sends back output funds upon completion.
+The `SwapModule` contract serves as an external module, enabling calibers and machines to securely interact with external swap protocols using unverified calldata. The swapModule pulls funds from caller before execution and sends back output funds upon completion.
 
 ### Oracle Registry
 

@@ -37,7 +37,7 @@ contract DeployHubCore is DeployCore {
 
         setupHubRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
-        setupSwapModule(_deployment.swapModule, dexAggregatorsData);
+        setupSwapModule(_deployment.swapModule, swappersData);
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
 
         // @TODO setup access manager

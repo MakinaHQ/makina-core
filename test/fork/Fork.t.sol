@@ -79,9 +79,8 @@ abstract contract Fork_Test is Base, Test, Constants {
         setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedData);
 
         // setup swapModule
-        DexAggregatorData[] memory dexAggregatorsData =
-            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        setupSwapModule(isHub ? hubCore.swapModule : spokeCores[chainId].swapModule, dexAggregatorsData);
+        SwapperData[] memory swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
+        setupSwapModule(isHub ? hubCore.swapModule : spokeCores[chainId].swapModule, swappersData);
 
         // setup access manager
         setupAccessManager(isHub ? hubCore.accessManager : spokeCores[chainId].accessManager, forkData.dao);

@@ -42,4 +42,4 @@ This is a list of role permissions in Makina Core contracts. These roles must be
 #### SwapModule
 
 - `ADMIN_ROLE` (roleId `0`)
-  - Can set a DEX aggregator approval and execution targets.
+  - Can set a swapper approval and execution targets.

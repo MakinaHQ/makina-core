@@ -20,9 +20,9 @@
       "stalenessThreshold2": 0
     }
   ],
-  "dexAggregatorsTargets": [
+  "swappersTargets": [
     {
-      "aggregatorId": 1,
+      "swapperId": 1,
       "approvalTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1",
       "executionTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1"
     }

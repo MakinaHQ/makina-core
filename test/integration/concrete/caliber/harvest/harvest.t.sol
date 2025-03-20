@@ -113,7 +113,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         // try to make a swap into baseToken
         swapOrders[0] = ISwapModule.SwapOrder({
-            aggregator: ISwapModule.DexAggregator.ZEROX,
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(accountingToken), harvestAmount)),
             inputToken: address(accountingToken),
             outputToken: address(baseToken),
@@ -262,7 +262,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
         uint256 previewOutputAmount = pool.previewSwap(address(baseToken), harvestAmount);
         swapOrders[0] = ISwapModule.SwapOrder({
-            aggregator: ISwapModule.DexAggregator.ZEROX,
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
@@ -287,7 +287,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
         swapOrders[0] = ISwapModule.SwapOrder({
-            aggregator: ISwapModule.DexAggregator.ZEROX,
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
