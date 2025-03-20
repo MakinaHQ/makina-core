@@ -3,7 +3,7 @@ setSpokeCaliberMailbox.t.sol
 │  └── it should revert with AccessManagedUnauthorized
 └── given sender has the relevant role
    ├── when machine mailbox does not exist for provided chain id
-   │  └── it should revert with SpokeMailboxDoesNotExist
+   │  └── it should revert with MachineMailboxDoesNotExist
    └── when machine mailbox exists for provided chain id
       ├── given a caliber mailbox address is already set in the relevant machine mailbox
       │  └── it should revert with SpokeCaliberMailboxAlreadySet

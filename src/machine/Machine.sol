@@ -423,7 +423,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
         if (data.machineMailbox == address(0)) {
-            revert SpokeMailboxDoesNotExist();
+            revert MachineMailboxDoesNotExist();
         }
         ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
     }

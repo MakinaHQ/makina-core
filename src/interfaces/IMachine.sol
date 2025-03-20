@@ -10,7 +10,7 @@ interface IMachine {
     error NotMailbox();
     error RecoveryMode();
     error SpokeMailboxAlreadyExists();
-    error SpokeMailboxDoesNotExist();
+    error MachineMailboxDoesNotExist();
     error StaleData();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
