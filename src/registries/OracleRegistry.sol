@@ -36,34 +36,34 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     function getPrice(address baseToken, address quoteToken) external view override returns (uint256) {
-        FeedRoute memory baseFD = _feedRoutes[baseToken];
-        FeedRoute memory quoteFD = _feedRoutes[quoteToken];
+        FeedRoute memory baseFR = _feedRoutes[baseToken];
+        FeedRoute memory quoteFR = _feedRoutes[quoteToken];
 
-        if (baseFD.feed1 == address(0)) {
+        if (baseFR.feed1 == address(0)) {
             revert PriceFeedRouteNotRegistered(baseToken);
         }
-        if (quoteFD.feed1 == address(0)) {
+        if (quoteFR.feed1 == address(0)) {
             revert PriceFeedRouteNotRegistered(quoteToken);
         }
 
-        uint8 baseFDDecimalsSum = _getFeedDecimals(baseFD.feed1) + _getFeedDecimals(baseFD.feed2);
-        uint8 quoteFDDecimalsSum = _getFeedDecimals(quoteFD.feed1) + _getFeedDecimals(quoteFD.feed2);
+        uint8 baseFRDecimalsSum = _getFeedDecimals(baseFR.feed1) + _getFeedDecimals(baseFR.feed2);
+        uint8 quoteFRDecimalsSum = _getFeedDecimals(quoteFR.feed1) + _getFeedDecimals(quoteFR.feed2);
         uint8 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
 
         // price = 10^(quoteTokenDecimals + quoteFeedsDecimalsSum - baseFeedsDecimalsSum) *
         //  (baseFeedPrice1 * baseFeedPrice2) / (quoteFeedPrice1 * quoteFeedPrice2)
 
-        if (quoteTokenDecimals + quoteFDDecimalsSum < baseFDDecimalsSum) {
-            return _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2)
+        if (quoteTokenDecimals + quoteFRDecimalsSum < baseFRDecimalsSum) {
+            return _getFeedPrice(baseFR.feed1) * _getFeedPrice(baseFR.feed2)
                 / (
-                    (10 ** (baseFDDecimalsSum - quoteTokenDecimals - quoteFDDecimalsSum)) * _getFeedPrice(quoteFD.feed1)
-                        * _getFeedPrice(quoteFD.feed2)
+                    (10 ** (baseFRDecimalsSum - quoteTokenDecimals - quoteFRDecimalsSum)) * _getFeedPrice(quoteFR.feed1)
+                        * _getFeedPrice(quoteFR.feed2)
                 );
         }
 
-        return (10 ** (quoteTokenDecimals + quoteFDDecimalsSum - baseFDDecimalsSum)).mulDiv(
-            _getFeedPrice(baseFD.feed1) * _getFeedPrice(baseFD.feed2),
-            _getFeedPrice(quoteFD.feed1) * _getFeedPrice(quoteFD.feed2)
+        return (10 ** (quoteTokenDecimals + quoteFRDecimalsSum - baseFRDecimalsSum)).mulDiv(
+            _getFeedPrice(baseFR.feed1) * _getFeedPrice(baseFR.feed2),
+            _getFeedPrice(quoteFR.feed1) * _getFeedPrice(quoteFR.feed2)
         );
     }
 

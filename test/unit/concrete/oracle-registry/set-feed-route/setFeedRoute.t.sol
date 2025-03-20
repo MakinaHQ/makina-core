@@ -36,9 +36,9 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         oracleRegistry.setFeedRoute(address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
 
         assertTrue(oracleRegistry.isFeedRouteRegistered(address(baseToken)));
-        (address tfdFeed1, address tfdFeed2) = oracleRegistry.getFeedRoute(address(baseToken));
-        assertEq(tfdFeed1, address(priceFeed1));
-        assertEq(tfdFeed2, address(0));
+        (address rf1, address rf2) = oracleRegistry.getFeedRoute(address(baseToken));
+        assertEq(rf1, address(priceFeed1));
+        assertEq(rf2, address(0));
     }
 
     function test_SetFeedRoute_With2Feeds() public {
@@ -57,8 +57,8 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
 
         assertTrue(oracleRegistry.isFeedRouteRegistered(address(baseToken)));
-        (address tfdFeed1, address tfdFeed2) = oracleRegistry.getFeedRoute(address(baseToken));
-        assertEq(tfdFeed1, address(priceFeed1));
-        assertEq(tfdFeed2, address(priceFeed2));
+        (address rf1, address rf2) = oracleRegistry.getFeedRoute(address(baseToken));
+        assertEq(rf1, address(priceFeed1));
+        assertEq(rf2, address(priceFeed2));
     }
 }
