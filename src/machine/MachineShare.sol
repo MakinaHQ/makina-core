@@ -20,15 +20,15 @@ contract MachineShare is ERC20, Ownable2Step, IMachineShare {
         return decimals_;
     }
 
-    function minter() public view override returns (address) {
+    function minter() external view override returns (address) {
         return owner();
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
+    function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
 
-    function burn(address from, uint256 amount) public onlyOwner {
+    function burn(address from, uint256 amount) external onlyOwner {
         _burn(from, amount);
     }
 }

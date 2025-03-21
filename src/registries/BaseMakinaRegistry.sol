@@ -38,17 +38,17 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function oracleRegistry() public view override returns (address) {
+    function oracleRegistry() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._oracleRegistry;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function swapModule() public view override returns (address) {
+    function swapModule() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._swapModule;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function caliberBeacon() public view override returns (address) {
+    function caliberBeacon() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._caliberBeacon;
     }
 

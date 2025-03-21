@@ -33,27 +33,27 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
-    function chainRegistry() public view override returns (address) {
+    function chainRegistry() external view override returns (address) {
         return _getHubRegistryStorage()._chainRegistry;
     }
 
     /// @inheritdoc IHubRegistry
-    function machineFactory() public view override returns (address) {
+    function machineFactory() external view override returns (address) {
         return _getHubRegistryStorage()._machineFactory;
     }
 
     /// @inheritdoc IHubRegistry
-    function machineBeacon() public view override returns (address) {
+    function machineBeacon() external view override returns (address) {
         return _getHubRegistryStorage()._machineBeacon;
     }
 
     /// @inheritdoc IHubRegistry
-    function hubDualMailboxBeacon() public view override returns (address) {
+    function hubDualMailboxBeacon() external view override returns (address) {
         return _getHubRegistryStorage()._hubDualMailboxBeacon;
     }
 
     /// @inheritdoc IHubRegistry
-    function spokeMachineMailboxBeacon() public view override returns (address) {
+    function spokeMachineMailboxBeacon() external view override returns (address) {
         return _getHubRegistryStorage()._spokeMachineMailboxBeacon;
     }
 

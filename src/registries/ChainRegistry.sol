@@ -8,7 +8,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     mapping(uint256 evmChainId => uint16 whChainId) private _evmToWhChainId;
     mapping(uint16 whChainId => uint256 evmChainId) private _whToEvmChainId;
 
-    function initialize(address _accessManager) public initializer {
+    function initialize(address _accessManager) external initializer {
         __AccessManaged_init(_accessManager);
     }
 

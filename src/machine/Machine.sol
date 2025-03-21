@@ -156,17 +156,17 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function securityCouncil() public view override returns (address) {
+    function securityCouncil() external view override returns (address) {
         return _getMachineStorage()._securityCouncil;
     }
 
     /// @inheritdoc IMachine
-    function depositor() public view override returns (address) {
+    function depositor() external view override returns (address) {
         return _getMachineStorage()._depositor;
     }
 
     /// @inheritdoc IMachine
-    function redeemer() public view override returns (address) {
+    function redeemer() external view override returns (address) {
         return _getMachineStorage()._redeemer;
     }
 
@@ -212,7 +212,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function recoveryMode() public view override returns (bool) {
+    function recoveryMode() external view override returns (bool) {
         return _getMachineStorage()._recoveryMode;
     }
 
@@ -429,49 +429,49 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function setMechanic(address newMechanic) public override restricted {
+    function setMechanic(address newMechanic) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit MechanicChanged($._mechanic, newMechanic);
         $._mechanic = newMechanic;
     }
 
     /// @inheritdoc IMachine
-    function setSecurityCouncil(address newSecurityCouncil) public override restricted {
+    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
     }
 
     /// @inheritdoc IMachine
-    function setDepositor(address newDepositor) public override restricted {
+    function setDepositor(address newDepositor) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit DepositorChanged($._depositor, newDepositor);
         $._depositor = newDepositor;
     }
 
     /// @inheritdoc IMachine
-    function setRedeemer(address newRedeemer) public override restricted {
+    function setRedeemer(address newRedeemer) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit RedeemerChanged($._redeemer, newRedeemer);
         $._redeemer = newRedeemer;
     }
 
     /// @inheritdoc IMachine
-    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) public override restricted {
+    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
         $._caliberStaleThreshold = newCaliberStaleThreshold;
     }
 
     /// @inheritdoc IMachine
-    function setShareLimit(uint256 newShareLimit) public override restricted {
+    function setShareLimit(uint256 newShareLimit) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
     }
 
     /// @inheritdoc IMachine
-    function setRecoveryMode(bool enabled) public override restricted {
+    function setRecoveryMode(bool enabled) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
