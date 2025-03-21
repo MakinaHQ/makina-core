@@ -40,7 +40,9 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Machine_Integration
         uint256 inputAmount = 1;
         deal(address(baseToken2), address(machine), inputAmount, true);
         vm.prank(machine.hubCaliberMailbox());
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
+        );
         machine.notifyIncomingTransfer(address(baseToken2));
     }
 

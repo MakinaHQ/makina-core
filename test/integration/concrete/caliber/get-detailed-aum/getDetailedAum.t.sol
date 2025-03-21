@@ -18,7 +18,11 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
+
+        caliber.getDetailedAum();
+
+        skip(1);
 
         vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
         caliber.getDetailedAum();

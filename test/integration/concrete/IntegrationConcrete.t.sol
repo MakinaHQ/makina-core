@@ -13,9 +13,9 @@ import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
@@ -54,13 +54,13 @@ abstract contract Integration_Concrete_Test is Base_Test {
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        swapper.setDexAggregatorTargets(ISwapper.DexAggregator.ZEROX, address(pool), address(pool));
+        swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));
         vm.stopPrank();
     }
 

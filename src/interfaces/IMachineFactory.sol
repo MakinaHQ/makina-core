@@ -21,7 +21,7 @@ interface IMachineFactory {
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
     /// @return machine The address of the deployed Machine instance.
-    function deployMachine(
+    function createMachine(
         IMachine.MachineInitParams calldata params,
         string memory tokenName,
         string memory tokenSymbol

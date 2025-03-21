@@ -1,6 +1,6 @@
 getPrice.t.sol
 ├── given base or quote token data is not initialized
-│  └── it should revert with FeedDataNotRegistered
+│  └── it should revert with PriceFeedRouteNotRegistered
 └── given base or quote token data is initialized
    ├── given one of the feed prices is negative
    │  └── it should revert with NegativeTokenPrice
@@ -8,5 +8,5 @@ getPrice.t.sol
       ├── given one of the feed price ages exceeds the staleness threshold 
       │  └── it should revert with PriceFeedStale
       └── given none of the feed price ages exceed the staleness threshold
-         └── it should return the price of base token expressed in base token, according to aggregated price feed data
+         └── it should return the price of base token expressed in base token, according to aggregated price feed route
          

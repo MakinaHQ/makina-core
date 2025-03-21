@@ -6,7 +6,6 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
@@ -49,7 +48,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy machine
         vm.prank(ethForkData.dao);
         machine = Machine(
-            hubCore.machineFactory.deployMachine(
+            hubCore.machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: ethForkData.usdc,
                     initialMechanic: ethForkData.mechanic,
@@ -112,7 +111,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy spoke caliber
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
-            spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.deployCaliber(
+            spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: baseMachineMailbox,
                     accountingToken: baseForkData.usdc,

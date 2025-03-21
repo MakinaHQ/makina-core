@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
@@ -14,8 +14,8 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         uint256 inputAmount = 1;
         deal(address(baseToken), address(caliber), inputAmount, true);
         uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
-        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
@@ -31,7 +31,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        ISwapper.SwapOrder memory order;
+        ISwapModule.SwapOrder memory order;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.swap(order);
@@ -42,7 +42,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     }
 
     function test_RevertWhen_OutputTokenNonBaseToken() public {
-        ISwapper.SwapOrder memory order;
+        ISwapModule.SwapOrder memory order;
         vm.expectRevert(ICaliber.InvalidOutputToken.selector);
         vm.prank(mechanic);
         caliber.swap(order);
@@ -62,8 +62,8 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
-        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
@@ -82,8 +82,8 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
 
         // swap accountingToken to baseToken
         uint256 previewOutputAmount2 = pool.previewSwap(address(accountingToken), previewOutputAmount1);
-        order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(accountingToken), previewOutputAmount1)),
             inputToken: address(accountingToken),
             outputToken: address(baseToken),
@@ -98,7 +98,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        ISwapper.SwapOrder memory order;
+        ISwapModule.SwapOrder memory order;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.swap(order);
@@ -113,15 +113,15 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         withTokenAsBT(address(baseToken))
         whileInRecoveryMode
     {
-        ISwapper.SwapOrder memory order;
+        ISwapModule.SwapOrder memory order;
         vm.expectRevert(ICaliber.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.swap(order);
 
         // try to make a swap into baseToken
         uint256 inputAmount = 3e18;
-        order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(accountingToken), inputAmount)),
             inputToken: address(accountingToken),
             outputToken: address(baseToken),
@@ -152,8 +152,8 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
-        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
@@ -186,8 +186,8 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         uint256 previewOutputAmount = pool.previewSwap(address(baseToken), inputAmount);
-        ISwapper.SwapOrder memory order = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),

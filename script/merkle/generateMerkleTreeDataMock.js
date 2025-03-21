@@ -271,7 +271,7 @@ const harvestMockBaseTokenInstruction = [
 
 const dummyLoopMockFlashLoanModuleInstruction = [
   keccak256EncodePacked([
-    ethers.concat(["0x76ab19f101820001ffffffff", mockFlashLoanModule])
+    ethers.concat(["0x76ab19f101820001ffffffff", mockFlashLoanModule]),
   ]),
   getStateHash([]),
   "0x00000000000000000000000000000000",
@@ -299,7 +299,7 @@ const dummyManageFlashLoanInstruction = [
   false,
   keccak256EncodePacked([]),
   "3",
-];  
+];
 
 const values = [
   depositMock4626Instruction,

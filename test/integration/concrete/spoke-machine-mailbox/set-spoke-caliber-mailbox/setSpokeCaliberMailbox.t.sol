@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IMachineMailbox} from "src/interfaces/IMachineMailbox.sol";
 import {ISpokeMachineMailbox} from "src/interfaces/ISpokeMachineMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
+import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 
 import {Integration_Concrete_Hub_Test} from "../../IntegrationConcrete.t.sol";
 
@@ -12,8 +12,10 @@ contract SetSpokeCaliberMailbox_Integration_Concrete_Test is Integration_Concret
 
     function setUp() public override {
         super.setUp();
-        vm.prank(dao);
+        vm.startPrank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
         spokeMachineMailbox = SpokeMachineMailbox(machine.createSpokeMailbox(SPOKE_CHAIN_ID));
+        vm.stopPrank();
     }
 
     function test_RevertWhen_CallerNotMachine() public {

@@ -8,7 +8,7 @@ This is a list of role permissions in Makina Core contracts. These roles must be
 
 - `ADMIN_ROLE` (roleId `0`)
   - Can set address of OracleRegistry.
-  - Can set address of Swapper.
+  - Can set address of SwapModule.
   - Can set address of OracleRegistry.
   - Can set address of MachineFactory.
   - Can set address of MachineBeacon.
@@ -19,7 +19,7 @@ This is a list of role permissions in Makina Core contracts. These roles must be
 #### OracleRegistry
 
 - `ADMIN_ROLE` (roleId `0`)
-  - Can set token price feed data.
+  - Can set token price feed route.
   - Can set feeds staleness threshold.
 
 #### CaliberFactory
@@ -39,7 +39,7 @@ This is a list of role permissions in Makina Core contracts. These roles must be
   - Can schedule an allowed instruction merkle root update.
   - Can set the max allowed loss for base token swaps.
 
-#### Swapper
+#### SwapModule
 
 - `ADMIN_ROLE` (roleId `0`)
-  - Can set a DEX aggregator approval and execution targets.
+  - Can set a swapper approval and execution targets.

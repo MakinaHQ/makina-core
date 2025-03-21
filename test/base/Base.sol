@@ -11,22 +11,22 @@ import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
-import {OracleRegistry} from "src/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailbox/SpokeMachineMailbox.sol";
+import {OracleRegistry} from "src/registries/OracleRegistry.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
+import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
-import {Swapper} from "src/swap/Swapper.sol";
+import {SwapModule} from "src/swap/SwapModule.sol";
 
 abstract contract Base is StdCheats {
     struct HubCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
-        Swapper swapper;
+        SwapModule swapModule;
         HubRegistry hubRegistry;
         ChainRegistry chainRegistry;
         UpgradeableBeacon hubCaliberBeacon;
@@ -39,14 +39,14 @@ abstract contract Base is StdCheats {
     struct SpokeCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
-        Swapper swapper;
+        SwapModule swapModule;
         UpgradeableBeacon spokeCaliberBeacon;
         CaliberFactory caliberFactory;
         SpokeRegistry spokeRegistry;
         UpgradeableBeacon spokeCaliberMailboxBeacon;
     }
 
-    struct PriceFeedData {
+    struct PriceFeedRoute {
         address feed1;
         address feed2;
         uint256 stalenessThreshold1;
@@ -54,10 +54,10 @@ abstract contract Base is StdCheats {
         address token;
     }
 
-    struct DexAggregatorData {
-        ISwapper.DexAggregator aggregatorId;
+    struct SwapperData {
         address approvalTarget;
         address executionTarget;
+        ISwapModule.Swapper swapperId;
     }
 
     ///
@@ -70,7 +70,7 @@ abstract contract Base is StdCheats {
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
-        returns (AccessManager accessManager, OracleRegistry oracleRegistry, Swapper swapper)
+        returns (AccessManager accessManager, OracleRegistry oracleRegistry, SwapModule swapModule)
     {
         accessManager = new AccessManager(initialAMAdmin);
 
@@ -83,11 +83,11 @@ abstract contract Base is StdCheats {
             )
         );
 
-        address swapperImplemAddr = address(new Swapper());
-        swapper = Swapper(
+        address swapModuleImplemAddr = address(new SwapModule());
+        swapModule = SwapModule(
             address(
                 new TransparentUpgradeableProxy(
-                    swapperImplemAddr, dao, abi.encodeCall(Swapper.initialize, (address(accessManager)))
+                    swapModuleImplemAddr, dao, abi.encodeCall(SwapModule.initialize, (address(accessManager)))
                 )
             )
         );
@@ -97,7 +97,7 @@ abstract contract Base is StdCheats {
         internal
         returns (HubCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapper) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
         address hubRegistryImplemAddr = address(new HubRegistry());
@@ -110,7 +110,7 @@ abstract contract Base is StdCheats {
                         HubRegistry.initialize,
                         (
                             address(deployment.oracleRegistry),
-                            address(deployment.swapper),
+                            address(deployment.swapModule),
                             address(deployment.accessManager)
                         )
                     )
@@ -158,7 +158,7 @@ abstract contract Base is StdCheats {
         internal
         returns (SpokeCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapper) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
         address spokeRegistryImplemAddr = address(new SpokeRegistry());
@@ -171,7 +171,7 @@ abstract contract Base is StdCheats {
                         SpokeRegistry.initialize,
                         (
                             address(deployment.oracleRegistry),
-                            address(deployment.swapper),
+                            address(deployment.swapModule),
                             address(deployment.accessManager)
                         )
                     )
@@ -217,14 +217,14 @@ abstract contract Base is StdCheats {
         deployment.spokeRegistry.setSpokeCaliberMailboxBeacon(address(deployment.spokeCaliberMailboxBeacon));
     }
 
-    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedData[] memory priceFeedData) public {
-        for (uint256 i; i < priceFeedData.length; i++) {
-            oracleRegistry.setTokenFeedData(
-                priceFeedData[i].token,
-                priceFeedData[i].feed1,
-                priceFeedData[i].stalenessThreshold1,
-                priceFeedData[i].feed2,
-                priceFeedData[i].stalenessThreshold2
+    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) public {
+        for (uint256 i; i < priceFeedRoutes.length; i++) {
+            oracleRegistry.setFeedRoute(
+                priceFeedRoutes[i].token,
+                priceFeedRoutes[i].feed1,
+                priceFeedRoutes[i].stalenessThreshold1,
+                priceFeedRoutes[i].feed2,
+                priceFeedRoutes[i].stalenessThreshold2
             );
         }
     }
@@ -237,15 +237,13 @@ abstract contract Base is StdCheats {
     }
 
     ///
-    /// SWAPPER SETUP
+    /// SWAPMODULE SETUP
     ///
 
-    function setupSwapper(Swapper swapper, DexAggregatorData[] memory dexAggregatorsData) public {
-        for (uint256 i; i < dexAggregatorsData.length; i++) {
-            swapper.setDexAggregatorTargets(
-                dexAggregatorsData[i].aggregatorId,
-                dexAggregatorsData[i].approvalTarget,
-                dexAggregatorsData[i].executionTarget
+    function setupSwapModule(SwapModule swapModule, SwapperData[] memory swappersData) public {
+        for (uint256 i; i < swappersData.length; i++) {
+            swapModule.setSwapperTargets(
+                swappersData[i].swapperId, swappersData[i].approvalTarget, swappersData[i].executionTarget
             );
         }
     }

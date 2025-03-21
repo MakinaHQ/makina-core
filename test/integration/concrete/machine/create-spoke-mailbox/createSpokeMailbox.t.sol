@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ISpokeMachineMailbox} from "src/interfaces/ISpokeMachineMailbox.sol";
 
@@ -12,6 +13,12 @@ contract CreatSpokeMailbox_Integration_Concrete_Test is Machine_Integration_Conc
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         machine.createSpokeMailbox(SPOKE_CHAIN_ID);
+    }
+
+    function test_RevertGiven_EvmChainIdNotRegistered() public {
+        vm.prank(dao);
+        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.EvmChainIdNotRegistered.selector, SPOKE_CHAIN_ID + 1));
+        machine.createSpokeMailbox(SPOKE_CHAIN_ID + 1);
     }
 
     function test_RevertGiven_MailboxAlreadyExists() public {

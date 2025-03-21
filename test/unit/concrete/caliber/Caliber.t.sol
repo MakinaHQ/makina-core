@@ -8,7 +8,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
 contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
-    bytes32 defaultRoot;
+    bytes32 public defaultRoot;
 
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();

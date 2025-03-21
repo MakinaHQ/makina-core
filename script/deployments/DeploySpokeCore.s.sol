@@ -35,8 +35,8 @@ contract DeploySpokeCore is DeployCore {
         _deployment = deploySpokeCore(deployer, dao, hubChainId);
 
         setupSpokeRegistry(_deployment);
-        setupOracleRegistry(_deployment.oracleRegistry, priceFeedData);
-        setupSwapper(_deployment.swapper, dexAggregatorsData);
+        setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
+        setupSwapModule(_deployment.swapModule, swappersData);
 
         // @TODO setup access manager
     }
@@ -54,6 +54,6 @@ contract DeploySpokeCore is DeployCore {
         vm.serializeAddress(key, "SpokeCaliberMailboxBeacon", address(_deployment.spokeCaliberMailboxBeacon));
         vm.serializeAddress(key, "SpokeRegistry", address(_deployment.spokeRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
-        vm.writeJson(vm.serializeAddress(key, "Swapper", address(_deployment.swapper)), outputPath);
+        vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);
     }
 }

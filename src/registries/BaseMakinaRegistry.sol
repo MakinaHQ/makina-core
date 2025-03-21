@@ -8,7 +8,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
     struct BaseMakinaRegistryStorage {
         address _oracleRegistry;
-        address _swapper;
+        address _swapModule;
         address _caliberFactory;
         address _caliberBeacon;
     }
@@ -27,28 +27,28 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         _disableInitializers();
     }
 
-    function __BaseMakinaRegistry_init(address _oracleRegistry, address _swapper, address _initialAuthority)
+    function __BaseMakinaRegistry_init(address _oracleRegistry, address _swapModule, address _initialAuthority)
         internal
         onlyInitializing
     {
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         $._oracleRegistry = _oracleRegistry;
-        $._swapper = _swapper;
+        $._swapModule = _swapModule;
         __AccessManaged_init(_initialAuthority);
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function oracleRegistry() public view override returns (address) {
+    function oracleRegistry() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._oracleRegistry;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function swapper() public view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._swapper;
+    function swapModule() external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._swapModule;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function caliberBeacon() public view override returns (address) {
+    function caliberBeacon() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._caliberBeacon;
     }
 
@@ -60,10 +60,10 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function setSwapper(address _swapper) external override restricted {
+    function setSwapModule(address _swapModule) external override restricted {
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
-        emit SwapperChange($._swapper, _swapper);
-        $._swapper = _swapper;
+        emit SwapModuleChange($._swapModule, _swapModule);
+        $._swapModule = _swapModule;
     }
 
     /// @inheritdoc IBaseMakinaRegistry

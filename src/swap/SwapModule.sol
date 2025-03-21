@@ -4,23 +4,23 @@ pragma solidity 0.8.28;
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ISwapper} from "../interfaces/ISwapper.sol";
+import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
-contract Swapper is AccessManagedUpgradeable, ISwapper {
+contract SwapModule is AccessManagedUpgradeable, ISwapModule {
     using SafeERC20 for IERC20;
 
-    /// @inheritdoc ISwapper
-    mapping(DexAggregator aggregator => DexAggregatorTargets targets) public dexAggregatorTargets;
+    /// @inheritdoc ISwapModule
+    mapping(Swapper swapper => SwapperTargets targets) public swapperTargets;
 
     function initialize(address _initialAuthority) external initializer {
         __AccessManaged_init(_initialAuthority);
     }
 
-    /// @inheritdoc ISwapper
+    /// @inheritdoc ISwapModule
     function swap(SwapOrder calldata order) external override returns (uint256) {
-        DexAggregatorTargets storage targets = dexAggregatorTargets[order.aggregator];
+        SwapperTargets storage targets = swapperTargets[order.swapper];
         if (targets.approvalTarget == address(0) || targets.executionTarget == address(0)) {
-            revert DexAggregatorNotSet();
+            revert SwapperNotSet();
         }
 
         address caller = msg.sender;
@@ -43,18 +43,18 @@ contract Swapper is AccessManagedUpgradeable, ISwapper {
         }
         IERC20(order.outputToken).safeTransfer(caller, outputAmount);
 
-        emit Swapped(caller, order.aggregator, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
+        emit Swapped(caller, order.swapper, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
 
         return outputAmount;
     }
 
-    /// @inheritdoc ISwapper
-    function setDexAggregatorTargets(DexAggregator aggregator, address approvalTarget, address executionTarget)
+    /// @inheritdoc ISwapModule
+    function setSwapperTargets(Swapper swapper, address approvalTarget, address executionTarget)
         external
         override
         restricted
     {
-        dexAggregatorTargets[aggregator] = DexAggregatorTargets(approvalTarget, executionTarget);
-        emit DexAggregatorTargetsSet(aggregator, approvalTarget, executionTarget);
+        swapperTargets[swapper] = SwapperTargets(approvalTarget, executionTarget);
+        emit SwapperTargetsSet(swapper, approvalTarget, executionTarget);
     }
 }

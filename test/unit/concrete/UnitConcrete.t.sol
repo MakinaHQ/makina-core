@@ -5,8 +5,8 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
@@ -25,7 +25,7 @@ abstract contract Unit_Concrete_Test is Base_Test {
         aPriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -34,6 +34,7 @@ abstract contract Unit_Concrete_Test is Base_Test {
 
 abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test, Base_Hub_Test {
     uint256 public constant SPOKE_CHAIN_ID = 1000;
+    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
     Machine public machine;
     Caliber public caliber;

@@ -86,8 +86,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         ) {
             revert InvalidDecimals();
         }
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(params.accountingToken);
+        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(params.accountingToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(params.accountingToken);
+        }
         $._accountingToken = params.accountingToken;
         $._idleTokens.add(params.accountingToken);
 
@@ -104,7 +105,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         __AccessManaged_init(params.initialAuthority);
 
         $._hubChainId = block.chainid;
-        address mailbox = _deployHubCaliber(params);
+        address mailbox = _createHubCaliber(params);
         $._hubCaliberMailbox = mailbox;
         $._isMachineMailbox[mailbox] = true;
     }
@@ -155,17 +156,17 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function securityCouncil() public view override returns (address) {
+    function securityCouncil() external view override returns (address) {
         return _getMachineStorage()._securityCouncil;
     }
 
     /// @inheritdoc IMachine
-    function depositor() public view override returns (address) {
+    function depositor() external view override returns (address) {
         return _getMachineStorage()._depositor;
     }
 
     /// @inheritdoc IMachine
-    function redeemer() public view override returns (address) {
+    function redeemer() external view override returns (address) {
         return _getMachineStorage()._redeemer;
     }
 
@@ -211,7 +212,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function recoveryMode() public view override returns (bool) {
+    function recoveryMode() external view override returns (bool) {
         return _getMachineStorage()._recoveryMode;
     }
 
@@ -260,9 +261,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             MachineStorage storage $ = _getMachineStorage();
             bool newlyAdded = $._idleTokens.add(token);
-            if (newlyAdded) {
-                // Reverts if no price feed is registered for token in the oracle registry.
-                IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+            if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+                revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
             }
         }
     }
@@ -392,11 +392,16 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
+    function createSpokeMailbox(uint256 evmChainId) external restricted returns (address) {
         MachineStorage storage $ = _getMachineStorage();
-        if ($._foreignChainIdToSpokeCaliberData[chainId].machineMailbox != address(0)) {
+
+        if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(evmChainId)) {
+            revert IChainRegistry.EvmChainIdNotRegistered(evmChainId);
+        }
+        if ($._foreignChainIdToSpokeCaliberData[evmChainId].machineMailbox != address(0)) {
             revert SpokeMailboxAlreadyExists();
         }
+
         address mailbox = address(
             new BeaconProxy(
                 IHubRegistry(registry).spokeMachineMailboxBeacon(),
@@ -405,68 +410,68 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         );
 
         $._isMachineMailbox[mailbox] = true;
-        $._foreignChainIds.push(chainId);
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        $._foreignChainIds.push(evmChainId);
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
         data.machineMailbox = mailbox;
-        emit SpokeMailboxDeployed(mailbox, chainId);
+        emit SpokeMailboxDeployed(mailbox, evmChainId);
 
         return mailbox;
     }
 
     /// @inheritdoc IMachine
-    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external restricted {
+    function setSpokeCaliberMailbox(uint256 evmChainId, address spokeCaliberMailbox) external restricted {
         MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
         if (data.machineMailbox == address(0)) {
-            revert SpokeMailboxDoesNotExist();
+            revert MachineMailboxDoesNotExist();
         }
         ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
     }
 
     /// @inheritdoc IMachine
-    function setMechanic(address newMechanic) public override restricted {
+    function setMechanic(address newMechanic) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit MechanicChanged($._mechanic, newMechanic);
         $._mechanic = newMechanic;
     }
 
     /// @inheritdoc IMachine
-    function setSecurityCouncil(address newSecurityCouncil) public override restricted {
+    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
     }
 
     /// @inheritdoc IMachine
-    function setDepositor(address newDepositor) public override restricted {
+    function setDepositor(address newDepositor) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit DepositorChanged($._depositor, newDepositor);
         $._depositor = newDepositor;
     }
 
     /// @inheritdoc IMachine
-    function setRedeemer(address newRedeemer) public override restricted {
+    function setRedeemer(address newRedeemer) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit RedeemerChanged($._redeemer, newRedeemer);
         $._redeemer = newRedeemer;
     }
 
     /// @inheritdoc IMachine
-    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) public override restricted {
+    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
         $._caliberStaleThreshold = newCaliberStaleThreshold;
     }
 
     /// @inheritdoc IMachine
-    function setShareLimit(uint256 newShareLimit) public override restricted {
+    function setShareLimit(uint256 newShareLimit) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
     }
 
     /// @inheritdoc IMachine
-    function setRecoveryMode(bool enabled) public override restricted {
+    function setRecoveryMode(bool enabled) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
@@ -476,7 +481,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
 
     /// @dev Deploys the hub caliber and associated dual mailbox.
     /// @return mailbox The address of the mailbox.
-    function _deployHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
+    function _createHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
         ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
             hubMachineEndpoint: address(this),
             accountingToken: params.accountingToken,
@@ -517,7 +522,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             SpokeCaliberData memory spokeCaliberData = $._foreignChainIdToSpokeCaliberData[chainId];
             if (
                 currentTimestamp > spokeCaliberData.timestamp
-                    && currentTimestamp - spokeCaliberData.timestamp > $._caliberStaleThreshold
+                    && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold
             ) {
                 revert CaliberAccountingStale(chainId);
             }

@@ -12,7 +12,7 @@ abstract contract Fork_Test is Base, Test, Constants {
     uint256 public hubChainId;
     uint256[] public spokeChainIds;
 
-    HubCore hubCore;
+    HubCore public hubCore;
     mapping(uint256 spokeChainId => SpokeCore spokeCore) public spokeCores;
 
     mapping(uint256 chainId => ForkData forkData) public forksData;
@@ -75,13 +75,13 @@ abstract contract Fork_Test is Base, Test, Constants {
         }
 
         // setup oracle registry
-        PriceFeedData[] memory priceFeedData = abi.decode(vm.parseJson(inputJson, ".priceFeedData"), (PriceFeedData[]));
-        setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedData);
+        PriceFeedRoute[] memory priceFeedRoutes =
+            abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
+        setupOracleRegistry(isHub ? hubCore.oracleRegistry : spokeCores[chainId].oracleRegistry, priceFeedRoutes);
 
-        // setup swapper
-        DexAggregatorData[] memory dexAggregatorsData =
-            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        setupSwapper(isHub ? hubCore.swapper : spokeCores[chainId].swapper, dexAggregatorsData);
+        // setup swapModule
+        SwapperData[] memory swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
+        setupSwapModule(isHub ? hubCore.swapModule : spokeCores[chainId].swapModule, swappersData);
 
         // setup access manager
         setupAccessManager(isHub ? hubCore.accessManager : spokeCores[chainId].accessManager, forkData.dao);

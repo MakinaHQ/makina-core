@@ -25,17 +25,17 @@ contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
         _disableInitializers();
     }
 
-    function initialize(address oracleRegistry, address swapper, address initialAuthority) external initializer {
-        __BaseMakinaRegistry_init(oracleRegistry, swapper, initialAuthority);
+    function initialize(address oracleRegistry, address swapModule, address initialAuthority) external initializer {
+        __BaseMakinaRegistry_init(oracleRegistry, swapModule, initialAuthority);
     }
 
     /// @inheritdoc ISpokeRegistry
-    function caliberFactory() public view override returns (address) {
+    function caliberFactory() external view override returns (address) {
         return _getSpokeRegistryStorage()._caliberFactory;
     }
 
     /// @inheritdoc ISpokeRegistry
-    function spokeCaliberMailboxBeacon() public view override returns (address) {
+    function spokeCaliberMailboxBeacon() external view override returns (address) {
         return _getSpokeRegistryStorage()._spokeCaliberMailboxBeacon;
     }
 

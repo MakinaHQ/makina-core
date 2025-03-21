@@ -30,12 +30,12 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
     }
 
     /// @inheritdoc IMachineFactory
-    function deployMachine(
+    function createMachine(
         IMachine.MachineInitParams calldata params,
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
-        address token = _deployShareToken(tokenName, tokenSymbol, address(this));
+        address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
 
         IOwnable2Step(token).transferOwnership(machine);
@@ -52,7 +52,7 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
     }
 
     /// @dev Deploys a machine share token.
-    function _deployShareToken(string memory name, string memory symbol, address initialOwner)
+    function _createShareToken(string memory name, string memory symbol, address initialOwner)
         internal
         returns (address)
     {

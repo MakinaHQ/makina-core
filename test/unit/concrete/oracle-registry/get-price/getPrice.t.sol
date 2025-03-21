@@ -31,33 +31,36 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quoteToken = new MockERC20("Quote Token", "QT", 8);
     }
 
-    function test_RevertGiven_QuoteTokenFeedDataUnitialized() public {
-        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
-
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
-        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-
-        vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
-
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
-        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
-    }
-
-    function test_RevertGiven_BaseTokenFeedDataUnitialized() public {
+    function test_RevertGiven_BaseTokenFeedRouteNotRegistered() public {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
+        );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
 
         vm.prank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        vm.expectRevert(IOracleRegistry.FeedDataNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
+        );
+        oracleRegistry.getPrice(address(baseToken), address(quoteToken));
+    }
+
+    function test_RevertGiven_QuoteTokenFeedRouteNotRegistered() public {
+        basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+
+        vm.prank(dao);
+        oracleRegistry.setFeedRoute(
+            address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(quoteToken))
+        );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -66,10 +69,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -83,10 +86,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, -1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -101,14 +104,14 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -123,10 +126,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed2 = new MockPriceFeed(18, -1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
@@ -148,10 +151,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -171,10 +174,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         basePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -195,14 +198,14 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         vm.stopPrank();
@@ -223,10 +226,10 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
@@ -248,14 +251,14 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed2 = new MockPriceFeed(18, int256(PRICE_D_E * (10 ** 18)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
@@ -278,14 +281,14 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         quotePriceFeed2 = new MockPriceFeed(18, int256(PRICE_C_E * (10 ** 18)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(baseToken),
             address(basePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,
             address(basePriceFeed2),
             DEFAULT_PF_STALE_THRSHLD
         );
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(quoteToken),
             address(quotePriceFeed1),
             DEFAULT_PF_STALE_THRSHLD,

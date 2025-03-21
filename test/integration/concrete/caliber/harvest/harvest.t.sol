@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ISwapper} from "src/interfaces/ISwapper.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -15,7 +15,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders;
+        ISwapModule.SwapOrder[] memory swapOrders;
 
         baseToken.scheduleReenter(
             MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.harvest, (instruction, swapOrders))
@@ -28,7 +28,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory instruction;
-        ISwapper.SwapOrder[] memory swapOrders;
+        ISwapModule.SwapOrder[] memory swapOrders;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.harvest(instruction, swapOrders);
@@ -58,7 +58,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
         vm.expectRevert(ICaliber.InvalidOutputToken.selector);
         vm.prank(mechanic);
@@ -75,7 +75,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction memory instruction;
-        ISwapper.SwapOrder[] memory swapOrders;
+        ISwapModule.SwapOrder[] memory swapOrders;
 
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliber.harvest(instruction, swapOrders);
@@ -105,15 +105,15 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
         vm.expectRevert(ICaliber.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.harvest(instruction, swapOrders);
 
         // try to make a swap into baseToken
-        swapOrders[0] = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        swapOrders[0] = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(accountingToken), harvestAmount)),
             inputToken: address(accountingToken),
             outputToken: address(baseToken),
@@ -141,7 +141,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function _test_RevertWhen_InstructionNonHarvestingType(address sender) internal {
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
         vm.prank(sender);
         vm.expectRevert(ICaliber.InvalidInstructionType.selector);
         caliber.harvest(instruction, swapOrders);
@@ -152,7 +152,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction;
-        ISwapper.SwapOrder[] memory swapOrders;
+        ISwapModule.SwapOrder[] memory swapOrders;
 
         // use wrong reward contract
         instruction = WeirollUtils._buildMockRewardTokenHarvestInstruction(
@@ -192,7 +192,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
 
         vm.prank(sender);
         caliber.harvest(instruction, swapOrders);
@@ -234,7 +234,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](0);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
 
         vm.prank(sender);
         caliber.harvest(instruction, swapOrders);
@@ -259,10 +259,10 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
         uint256 previewOutputAmount = pool.previewSwap(address(baseToken), harvestAmount);
-        swapOrders[0] = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        swapOrders[0] = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),
@@ -285,9 +285,9 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         ICaliber.Instruction memory instruction =
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
-        ISwapper.SwapOrder[] memory swapOrders = new ISwapper.SwapOrder[](1);
-        swapOrders[0] = ISwapper.SwapOrder({
-            aggregator: ISwapper.DexAggregator.ZEROX,
+        ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
+        swapOrders[0] = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
             data: abi.encodeCall(MockPool.swap, (address(baseToken), harvestAmount)),
             inputToken: address(baseToken),
             outputToken: address(accountingToken),

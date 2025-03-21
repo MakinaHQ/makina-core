@@ -8,15 +8,25 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     mapping(uint256 evmChainId => uint16 whChainId) private _evmToWhChainId;
     mapping(uint16 whChainId => uint256 evmChainId) private _whToEvmChainId;
 
-    function initialize(address _accessManager) public initializer {
+    function initialize(address _accessManager) external initializer {
         __AccessManaged_init(_accessManager);
+    }
+
+    /// @inheritdoc IChainRegistry
+    function isEvmChainIdRegistered(uint256 _evmChainId) external view override returns (bool) {
+        return _evmToWhChainId[_evmChainId] != 0;
+    }
+
+    /// @inheritdoc IChainRegistry
+    function isWhChainIdRegistered(uint16 _whChainId) external view override returns (bool) {
+        return _whToEvmChainId[_whChainId] != 0;
     }
 
     /// @inheritdoc IChainRegistry
     function evmToWhChainId(uint256 _evmChainId) external view override returns (uint16) {
         uint16 whChainId = _evmToWhChainId[_evmChainId];
         if (whChainId == 0) {
-            revert ChainIdNotRegistered();
+            revert EvmChainIdNotRegistered(_evmChainId);
         }
         return whChainId;
     }
@@ -25,7 +35,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     function whToEvmChainId(uint16 _whChainId) external view override returns (uint256) {
         uint256 evmChainId = _whToEvmChainId[_whChainId];
         if (evmChainId == 0) {
-            revert ChainIdNotRegistered();
+            revert WhChainIdNotRegistered(_whChainId);
         }
         return evmChainId;
     }
@@ -37,5 +47,6 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
         }
         _evmToWhChainId[_evmChainId] = _whChainId;
         _whToEvmChainId[_whChainId] = _evmChainId;
+        emit ChainIdsRegistered(_evmChainId, _whChainId);
     }
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ISwapper} from "../interfaces/ISwapper.sol";
+import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
 interface ICaliber {
     error AccountingToken();
@@ -20,7 +20,6 @@ interface ICaliber {
     error InvalidOutputToken();
     error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
-    error NegativeTokenPrice();
     error NonZeroBalance();
     error NoPendingUpdate();
     error NotFlashLoanModule();
@@ -114,12 +113,10 @@ interface ICaliber {
     /// @notice Position data.
     /// @param lastAccountingTime The last block timestamp when the position was accounted for.
     /// @param value The value of the position expressed in accounting token.
-    /// @param isBaseToken Is the position a base token.
     /// @param isDebt Whether the position is a debt.
     struct Position {
         uint256 lastAccountingTime;
         uint256 value;
-        bool isBaseToken;
         bool isDebt;
     }
 
@@ -271,11 +268,11 @@ interface ICaliber {
     /// @notice Harvests one or multiple positions.
     /// @param instruction The harvest instruction.
     /// @param swapOrders The array of swap orders to be executed after the harvest.
-    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders) external;
+    function harvest(Instruction calldata instruction, ISwapModule.SwapOrder[] calldata swapOrders) external;
 
-    /// @notice Performs a swap via the swapper module.
+    /// @notice Performs a swap via the swapModule module.
     /// @param order The swap order parameters.
-    function swap(ISwapper.SwapOrder calldata order) external;
+    function swap(ISwapModule.SwapOrder calldata order) external;
 
     /// @notice Initiates a token transfer to the hub machine.
     /// @param token The address of the token to transfer.

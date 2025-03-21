@@ -10,7 +10,7 @@ interface IMachine {
     error NotMailbox();
     error RecoveryMode();
     error SpokeMailboxAlreadyExists();
-    error SpokeMailboxDoesNotExist();
+    error MachineMailboxDoesNotExist();
     error StaleData();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
@@ -172,13 +172,13 @@ interface IMachine {
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Deploys a new machine mailbox for a spoke caliber.
-    /// @param chainId The foreign chain ID of the spoke caliber.
-    function createSpokeMailbox(uint256 chainId) external returns (address);
+    /// @param evmChainId The EVM chain ID of the spoke caliber.
+    function createSpokeMailbox(uint256 evmChainId) external returns (address);
 
     /// @notice Sets the spoke caliber mailbox in the machine mailbox associated to given spoke chain ID.
-    /// @param chainId The foreign chain ID of the spoke caliber.
+    /// @param evmChainId The EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
-    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external;
+    function setSpokeCaliberMailbox(uint256 evmChainId, address spokeCaliberMailbox) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

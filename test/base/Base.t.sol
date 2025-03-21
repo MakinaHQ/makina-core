@@ -13,7 +13,7 @@ import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -21,10 +21,10 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
-import {OracleRegistry} from "src/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailbox/SpokeCaliberMailbox.sol";
+import {OracleRegistry} from "src/registries/OracleRegistry.sol";
+import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
-import {Swapper} from "src/swap/Swapper.sol";
+import {SwapModule} from "src/swap/SwapModule.sol";
 
 import {Base} from "./Base.sol";
 
@@ -39,7 +39,7 @@ abstract contract Base_Test is Base, Constants, Test {
 
     AccessManager public accessManager;
     OracleRegistry public oracleRegistry;
-    Swapper public swapper;
+    SwapModule public swapModule;
 
     function setUp() public virtual {
         deployer = address(this);
@@ -71,7 +71,7 @@ abstract contract Base_Hub_Test is Base_Test {
         HubCore memory deployment = deployHubCore(deployer, dao, address(wormhole));
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
-        swapper = deployment.swapper;
+        swapModule = deployment.swapModule;
         hubRegistry = deployment.hubRegistry;
         chainRegistry = deployment.chainRegistry;
         machineFactory = deployment.machineFactory;
@@ -94,7 +94,7 @@ abstract contract Base_Hub_Test is Base_Test {
     {
         vm.prank(dao);
         Machine _machine = Machine(
-            machineFactory.deployMachine(
+            machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: _accountingToken,
                     initialMechanic: mechanic,
@@ -135,7 +135,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         SpokeCore memory deployment = deploySpokeCore(deployer, dao, hubChainId);
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
-        swapper = deployment.swapper;
+        swapModule = deployment.swapModule;
         spokeRegistry = deployment.spokeRegistry;
         caliberFactory = deployment.caliberFactory;
         spokeCaliberBeacon = deployment.spokeCaliberBeacon;
@@ -153,7 +153,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     ) public returns (Caliber, SpokeCaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
-            caliberFactory.deployCaliber(
+            caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,

@@ -57,7 +57,9 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
-        vm.expectRevert(IChainRegistry.ChainIdNotRegistered.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(IChainRegistry.WhChainIdNotRegistered.selector, WORMHOLE_SPOKE_CHAIN_ID + 1)
+        );
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 

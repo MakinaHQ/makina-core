@@ -6,7 +6,7 @@ addBaseToken.t.sol
    │  └── it should revert with BaseTokenAlreadyExists
    └── given the base token is not already registered in the Caliber
       ├── given the base token does not have corresponding registered feeds in oracle registry
-      │  └── it should revert with FeedDataNotRegistered
+      │  └── it should revert with PriceFeedRouteNotRegistered
       └── given the base token has corresponding registered feeds in oracle registry
          ├── it should register the position ID in the Caliber
          └── it should emit a BaseTokenAdded event

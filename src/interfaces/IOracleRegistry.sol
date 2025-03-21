@@ -12,15 +12,15 @@ pragma solidity 0.8.28;
 /// - Finally, the price Token A -> Token B is calculated using both tokens individual prices in the reference currency.
 ///
 interface IOracleRegistry {
-    error FeedDataNotRegistered();
-    error InvalidFeedData();
+    error PriceFeedRouteNotRegistered(address token);
+    error InvalidFeedRoute();
     error NegativeTokenPrice(address priceFeed);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
 
     event FeedStaleThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
-    event TokenFeedDataRegistered(address indexed token, address indexed feed1, address indexed feed2);
+    event FeedRouteRegistered(address indexed token, address indexed feed1, address indexed feed2);
 
-    struct TokenFeedData {
+    struct FeedRoute {
         address feed1;
         address feed2;
     }
@@ -28,28 +28,31 @@ interface IOracleRegistry {
     /// @notice Feed => Staleness threshold in seconds
     function feedStaleThreshold(address feed) external view returns (uint256);
 
+    /// @notice Token => Is feed route registered for the token
+    function isFeedRouteRegistered(address token) external view returns (bool);
+
+    /// @notice Gets the price feed route for a given token.
+    /// @param token The address of the token for which the price feed route is requested.
+    /// @return feed1 The address of the first price feed.
+    /// @return feed2 The address of the optional second price feed.
+    function getFeedRoute(address token) external view returns (address, address);
+
     /// @notice Returns the price of one unit of baseToken in terms of quoteToken.
     /// @param baseToken The address of the token for which the price is requested.
     /// @param quoteToken The address of the token in which the price is quoted.
     /// @return price The price of baseToken denominated in quoteToken (expressed in quoteToken decimals).
     function getPrice(address baseToken, address quoteToken) external view returns (uint256);
 
-    /// @notice Gets the price feed data for a given token.
-    /// @param token The address of the token for which the price feed data is requested.
-    /// @return feed1 The address of the first price feed.
-    /// @return feed2 The address of the second price feed.
-    function getTokenFeedData(address token) external view returns (address, address);
-
-    /// @notice Sets the price feed data for a given token.
+    /// @notice Sets the price feed route for a given token.
     /// @dev Both feeds, if set, must be Chainlink-interface-compliant.
     /// The combination of feed1 and feed2 must be able to price the token in the reference currency.
     /// If feed2 is set to address(0), the token price in the reference currency is assumed to be returned by feed1.
-    /// @param token The address of the token for which the price feed data is set.
+    /// @param token The address of the token for which the price feed route is set.
     /// @param feed1 The address of the first price feed.
     /// @param stalenessThreshold1 The staleness threshold for the first price feed.
     /// @param feed2 The address of the second price feed. Can be set to address(0).
     /// @param stalenessThreshold2 The staleness threshold for the second price feed. Ignored if feed2 is address(0).
-    function setTokenFeedData(
+    function setFeedRoute(
         address token,
         address feed1,
         uint256 stalenessThreshold1,

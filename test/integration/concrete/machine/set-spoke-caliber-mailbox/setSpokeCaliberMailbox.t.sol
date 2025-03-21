@@ -14,9 +14,9 @@ contract SetSpokeCaliberMailbox_Integration_Concrete_Test is Machine_Integration
         machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, address(0));
     }
 
-    function test_RevertGiven_MailboxDoesNotExist() public {
+    function test_RevertGiven_MachineMailboxDoesNotExist() public {
         vm.startPrank(dao);
-        vm.expectRevert(IMachine.SpokeMailboxDoesNotExist.selector);
+        vm.expectRevert(IMachine.MachineMailboxDoesNotExist.selector);
         machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, address(0));
     }
 

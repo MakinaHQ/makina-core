@@ -15,7 +15,7 @@ import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
-import {ISwapper} from "../interfaces/ISwapper.sol";
+import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
 contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
     using Math for uint256;
@@ -74,9 +74,9 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function initialize(CaliberInitParams calldata params, address mailboxBeacon) public override initializer {
+    function initialize(CaliberInitParams calldata params, address mailboxBeacon) external override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._mailbox = _deployMailbox(mailboxBeacon, params.hubMachineEndpoint);
+        $._mailbox = _createMailbox(mailboxBeacon, params.hubMachineEndpoint);
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
@@ -101,32 +101,32 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function mailbox() public view override returns (address) {
+    function mailbox() external view override returns (address) {
         return _getCaliberStorage()._mailbox;
     }
 
     /// @inheritdoc ICaliber
-    function accountingToken() public view override returns (address) {
+    function accountingToken() external view override returns (address) {
         return _getCaliberStorage()._accountingToken;
     }
 
     /// @inheritdoc ICaliber
-    function mechanic() public view override returns (address) {
+    function mechanic() external view override returns (address) {
         return _getCaliberStorage()._mechanic;
     }
 
     /// @inheritdoc ICaliber
-    function securityCouncil() public view override returns (address) {
+    function securityCouncil() external view override returns (address) {
         return _getCaliberStorage()._securityCouncil;
     }
 
     /// @inheritdoc ICaliber
-    function flashLoanModule() public view override returns (address) {
+    function flashLoanModule() external view override returns (address) {
         return _getCaliberStorage()._flashLoanModule;
     }
 
     /// @inheritdoc ICaliber
-    function positionStaleThreshold() public view override returns (uint256) {
+    function positionStaleThreshold() external view override returns (uint256) {
         return _getCaliberStorage()._positionStaleThreshold;
     }
 
@@ -139,7 +139,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function timelockDuration() public view override returns (uint256) {
+    function timelockDuration() external view override returns (uint256) {
         return _getCaliberStorage()._timelockDuration;
     }
 
@@ -160,62 +160,62 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function maxPositionIncreaseLossBps() public view override returns (uint256) {
+    function maxPositionIncreaseLossBps() external view override returns (uint256) {
         return _getCaliberStorage()._maxPositionIncreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
-    function maxPositionDecreaseLossBps() public view override returns (uint256) {
+    function maxPositionDecreaseLossBps() external view override returns (uint256) {
         return _getCaliberStorage()._maxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
-    function maxSwapLossBps() public view override returns (uint256) {
+    function maxSwapLossBps() external view override returns (uint256) {
         return _getCaliberStorage()._maxSwapLossBps;
     }
 
     /// @inheritdoc ICaliber
-    function recoveryMode() public view override returns (bool) {
+    function recoveryMode() external view override returns (bool) {
         return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
-    function getPositionsLength() public view override returns (uint256) {
+    function getPositionsLength() external view override returns (uint256) {
         return _getCaliberStorage()._positionIds.length();
     }
 
     /// @inheritdoc ICaliber
-    function getPositionId(uint256 idx) public view override returns (uint256) {
+    function getPositionId(uint256 idx) external view override returns (uint256) {
         return _getCaliberStorage()._positionIds.at(idx);
     }
 
     /// @inheritdoc ICaliber
-    function getPosition(uint256 posId) public view override returns (Position memory) {
+    function getPosition(uint256 posId) external view override returns (Position memory) {
         return _getCaliberStorage()._positionById[posId];
     }
 
     /// @inheritdoc ICaliber
-    function isBaseToken(address token) public view override returns (bool) {
+    function isBaseToken(address token) external view override returns (bool) {
         return _getCaliberStorage()._baseTokens.contains(token);
     }
 
     /// @inheritdoc ICaliber
-    function getBaseTokensLength() public view override returns (uint256) {
+    function getBaseTokensLength() external view override returns (uint256) {
         return _getCaliberStorage()._baseTokens.length();
     }
 
     /// @inheritdoc ICaliber
-    function getBaseTokenAddress(uint256 idx) public view override returns (address) {
+    function getBaseTokenAddress(uint256 idx) external view override returns (address) {
         return _getCaliberStorage()._baseTokens.at(idx);
     }
 
     /// @inheritdoc ICaliber
-    function addBaseToken(address token) public override restricted {
+    function addBaseToken(address token) external override restricted {
         _addBaseToken(token);
     }
 
     /// @inheritdoc ICaliber
-    function removeBaseToken(address token) public override restricted {
+    function removeBaseToken(address token) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (token == $._accountingToken) {
@@ -232,7 +232,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
+    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
@@ -241,10 +241,14 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function accountForPositionBatch(Instruction[] calldata instructions) public override {
+    function accountForPositionBatch(Instruction[] calldata instructions) external override {
+        CaliberStorage storage $ = _getCaliberStorage();
         uint256 len = instructions.length;
         for (uint256 i; i < len; i++) {
-            accountForPosition(instructions[i]);
+            if (!$._positionIds.contains(instructions[i].positionId)) {
+                revert PositionDoesNotExist();
+            }
+            _accountForPosition(instructions[i]);
         }
     }
 
@@ -277,7 +281,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         for (uint256 i; i < len; i++) {
             uint256 posId = $._positionIds.at(i);
             Position memory pos = $._positionById[posId];
-            if (currentTimestamp - $._positionById[posId].lastAccountingTime > $._positionStaleThreshold) {
+            if (currentTimestamp - $._positionById[posId].lastAccountingTime >= $._positionStaleThreshold) {
                 revert PositionAccountingStale(posId);
             } else if (pos.isDebt) {
                 debt += pos.value;
@@ -304,7 +308,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
     /// @inheritdoc ICaliber
     function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
-        public
+        external
         override
         nonReentrant
         onlyOperator
@@ -378,7 +382,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) public override {
+    function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) external override {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if ($._isManagingFlashloan) {
@@ -408,8 +412,8 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function harvest(Instruction calldata instruction, ISwapper.SwapOrder[] calldata swapOrders)
-        public
+    function harvest(Instruction calldata instruction, ISwapModule.SwapOrder[] calldata swapOrders)
+        external
         override
         nonReentrant
         onlyOperator
@@ -425,12 +429,12 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function swap(ISwapper.SwapOrder calldata order) public override nonReentrant onlyOperator {
+    function swap(ISwapModule.SwapOrder calldata order) external override nonReentrant onlyOperator {
         _swap(order);
     }
 
     /// @inheritdoc ICaliber
-    function transferToHubMachine(address token, uint256 amount) public override onlyOperator {
+    function transferToHubMachine(address token, uint256 amount) external override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
         emit TransferToHubMachine(token, amount);
         IERC20Metadata(token).forceApprove($._mailbox, amount);
@@ -438,28 +442,28 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function setMechanic(address newMechanic) public override restricted {
+    function setMechanic(address newMechanic) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MechanicChanged($._mechanic, newMechanic);
         $._mechanic = newMechanic;
     }
 
     /// @inheritdoc ICaliber
-    function setSecurityCouncil(address newSecurityCouncil) public override restricted {
+    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
         $._securityCouncil = newSecurityCouncil;
     }
 
     /// @inheritdoc ICaliber
-    function setFlashLoanModule(address newFlashLoanModule) public restricted {
+    function setFlashLoanModule(address newFlashLoanModule) external restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
         $._flashLoanModule = newFlashLoanModule;
     }
 
     /// @inheritdoc ICaliber
-    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) public override restricted {
+    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit PositionStaleThresholdChanged($._positionStaleThreshold, newPositionStaleThreshold);
         $._positionStaleThreshold = newPositionStaleThreshold;
@@ -517,7 +521,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function setRecoveryMode(bool enabled) public override restricted {
+    function setRecoveryMode(bool enabled) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
@@ -526,7 +530,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @dev Deploys the caliber mailbox.
-    function _deployMailbox(address mailboxBeacon, address hubMachineEndpoint)
+    function _createMailbox(address mailboxBeacon, address hubMachineEndpoint)
         internal
         onlyInitializing
         returns (address)
@@ -553,8 +557,9 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
         emit BaseTokenAdded(token);
 
-        // Reverts if no price feed is registered for token in the oracle registry.
-        IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getTokenFeedData(token);
+        if (!IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
+        }
     }
 
     /// @dev Computes the accounting value of a position. Depending on last and current value, the
@@ -587,8 +592,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             if (!$._baseTokens.contains(token)) {
                 revert InvalidAffectedToken();
             }
-            uint256 assetValue = _accountingValueOf(token, amounts[i]);
-            currentValue += assetValue;
+            currentValue += _accountingValueOf(token, amounts[i]);
         }
 
         if (lastValue > 0 && currentValue == 0) {
@@ -749,7 +753,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         return $._allowedInstrRoot;
     }
 
-    function _swap(ISwapper.SwapOrder calldata order) internal {
+    function _swap(ISwapModule.SwapOrder calldata order) internal {
         CaliberStorage storage $ = _getCaliberStorage();
         if ($._recoveryMode && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
@@ -763,10 +767,10 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        address _swapper = IBaseMakinaRegistry(registry).swapper();
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, order.inputAmount);
-        uint256 amountOut = ISwapper(_swapper).swap(order);
-        IERC20Metadata(order.inputToken).forceApprove(_swapper, 0);
+        address _swapModule = IBaseMakinaRegistry(registry).swapModule();
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, order.inputAmount);
+        uint256 amountOut = ISwapModule(_swapModule).swap(order);
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, 0);
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);

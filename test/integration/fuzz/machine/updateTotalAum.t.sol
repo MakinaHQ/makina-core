@@ -7,7 +7,7 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailbox/HubDualMailbox.sol";
+import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -81,12 +81,10 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
             new MockPriceFeed(data.bf1Decimals, int256(data.price_b_e * (10 ** data.bf1Decimals)), block.timestamp);
 
         vm.startPrank(dao);
-        oracleRegistry.setTokenFeedData(
+        oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        oracleRegistry.setTokenFeedData(
-            address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
-        );
+        oracleRegistry.setFeedRoute(address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
         vm.stopPrank();
 
         (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0), address(0));

@@ -12,8 +12,8 @@ abstract contract DeployCore is Base, Script {
     string public inputJson;
     string public outputPath;
 
-    PriceFeedData[] public priceFeedData;
-    DexAggregatorData[] public dexAggregatorsData;
+    PriceFeedRoute[] public priceFeedRoutes;
+    SwapperData[] public swappersData;
 
     address public dao;
     address public deployer;
@@ -27,15 +27,15 @@ abstract contract DeployCore is Base, Script {
     function _coreSetup() public virtual {}
 
     function _deploySetupBefore() public {
-        PriceFeedData[] memory _priceFeedData = abi.decode(vm.parseJson(inputJson, ".priceFeedData"), (PriceFeedData[]));
-        for (uint256 i; i < _priceFeedData.length; i++) {
-            priceFeedData.push(_priceFeedData[i]);
+        PriceFeedRoute[] memory _priceFeedRoutes =
+            abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
+        for (uint256 i; i < _priceFeedRoutes.length; i++) {
+            priceFeedRoutes.push(_priceFeedRoutes[i]);
         }
 
-        DexAggregatorData[] memory _dexAggregatorsData =
-            abi.decode(vm.parseJson(inputJson, ".dexAggregatorsTargets"), (DexAggregatorData[]));
-        for (uint256 i; i < _dexAggregatorsData.length; i++) {
-            dexAggregatorsData.push(_dexAggregatorsData[i]);
+        SwapperData[] memory _swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
+        for (uint256 i; i < _swappersData.length; i++) {
+            swappersData.push(_swappersData[i]);
         }
 
         dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));

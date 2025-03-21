@@ -3,7 +3,7 @@
   "governor": "0x0000000000000000000000000000000000000000",
   "securityCouncil": "0x0000000000000000000000000000000000000000",
   "hubChainId": 0,
-  "priceFeedData": [
+  "priceFeedRoutes": [
     {
       "token": "0x0000000000000000000000000000000000000000",
       "feed1": "0x0000000000000000000000000000000000000000",
@@ -12,9 +12,9 @@
       "stalenessThreshold2": 0
     }
   ],
-  "dexAggregatorsTargets": [
+  "swappersTargets": [
     {
-      "aggregatorId": 0,
+      "swapperId": 0,
       "approvalTarget": "0x0000000000000000000000000000000000000000",
       "executionTarget": "0x0000000000000000000000000000000000000000"
     }

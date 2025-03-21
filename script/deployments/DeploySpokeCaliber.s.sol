@@ -61,7 +61,7 @@ contract DeploySpokeCaliber is Script {
 
         // Deploy caliber
         vm.startBroadcast();
-        deployedInstance = caliberFactory.deployCaliber(
+        deployedInstance = caliberFactory.createCaliber(
             ICaliber.CaliberInitParams(
                 initParams.spokeMachineMailbox,
                 initParams.accountingToken,

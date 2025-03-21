@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {VM} from "@enso-weiroll/VM.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
