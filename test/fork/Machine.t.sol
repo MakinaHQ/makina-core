@@ -24,10 +24,12 @@ contract Machine_Fork_Test is Fork_Test {
     Caliber public hubCaliber;
     Caliber public spokeCaliber;
 
-    address user;
+    address public machineDepositor;
+    address public machineRedeemer;
 
     function setUp() public {
-        user = makeAddr("user");
+        machineDepositor = makeAddr("MachineDepositor");
+        machineRedeemer = makeAddr("MachineRedeemer");
     }
 
     function test_fork_Hub_USDC() public {
@@ -53,7 +55,8 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMechanic: ethForkData.mechanic,
                     initialSecurityCouncil: ethForkData.securityCouncil,
                     initialAuthority: address(hubCore.accessManager),
-                    depositor: address(0),
+                    initialDepositor: machineDepositor,
+                    initialRedeemer: machineRedeemer,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -62,8 +65,7 @@ contract Machine_Fork_Test is Fork_Test {
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: address(0),
-                    depositorOnlyMode: false
+                    hubCaliberInitialFlashLoanModule: address(0)
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -71,12 +73,12 @@ contract Machine_Fork_Test is Fork_Test {
         );
         hubCaliber = Caliber(ICaliberMailbox(machine.hubCaliberMailbox()).caliber());
 
-        // user deposits 10000 usdc
+        // machineDepositor deposits 10000 usdc
         uint256 depositAmount = 10000e6;
-        deal({token: ethForkData.usdc, to: user, give: depositAmount});
-        vm.startPrank(user);
+        deal({token: ethForkData.usdc, to: machineDepositor, give: depositAmount});
+        vm.startPrank(machineDepositor);
         IERC20(ethForkData.usdc).approve(address(machine), depositAmount);
-        machine.deposit(depositAmount, user);
+        uint256 receivedShares = machine.deposit(depositAmount, machineDepositor);
         vm.stopPrank();
 
         // mechanic transfers 2000 usdc to caliber
@@ -85,12 +87,13 @@ contract Machine_Fork_Test is Fork_Test {
         vm.stopPrank();
 
         // check hub caliber aum
-        (uint256 hubCaliberAum,,) = hubCaliber.getDetailedAum();
-        assertEq(hubCaliberAum, depositAmount / 5);
+        {
+            (uint256 hubCaliberAum,,) = hubCaliber.getDetailedAum();
+            assertEq(hubCaliberAum, depositAmount / 5);
+        }
 
         // check machine aum
-        uint256 machineAum = machine.updateTotalAum();
-        assertEq(machineAum, depositAmount);
+        assertEq(machine.updateTotalAum(), depositAmount);
 
         // deploy mailbox for spoke caliber
         vm.prank(ethForkData.dao);
@@ -142,7 +145,7 @@ contract Machine_Fork_Test is Fork_Test {
             uint64(block.number),
             uint64(block.timestamp),
             spokeCaliber.mailbox(),
-            abi.encode(ISpokeCaliberMailbox(spokeCaliber.mailbox()).getSpokeCaliberAccountingData())
+            abi.encode(ISpokeCaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData())
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
@@ -162,7 +165,21 @@ contract Machine_Fork_Test is Fork_Test {
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // check machine aum
-        machineAum = machine.updateTotalAum();
-        assertEq(machineAum, depositAmount + spokeCaliberAum);
+        assertEq(machine.updateTotalAum(), depositAmount + spokeCaliberAum);
+
+        // machineDepositor transfers some shares to machineRedeemer
+        uint256 sharesToRedeem = receivedShares / 2;
+        uint256 expectedAssets = machine.convertToAssets(sharesToRedeem);
+        vm.startPrank(machineDepositor);
+        IERC20(machine.shareToken()).transfer(machineRedeemer, sharesToRedeem);
+        vm.stopPrank();
+
+        // machineRedeemer redeems shares
+        vm.prank(machineRedeemer);
+        machine.redeem(sharesToRedeem, machineRedeemer);
+        vm.stopPrank();
+
+        assertEq(IERC20(ethForkData.usdc).balanceOf(machineRedeemer), expectedAssets);
+        assertEq(machine.lastTotalAum(), depositAmount + spokeCaliberAum - expectedAssets);
     }
 }

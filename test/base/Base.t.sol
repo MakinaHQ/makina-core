@@ -61,6 +61,7 @@ abstract contract Base_Hub_Test is Base_Test {
     IWormhole public wormhole;
 
     address public machineDepositor = makeAddr("MachineDepositor");
+    address public machineRedeemer = makeAddr("MachineRedeemer");
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -99,7 +100,8 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager),
-                    depositor: machineDepositor,
+                    initialDepositor: machineDepositor,
+                    initialRedeemer: machineRedeemer,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -108,8 +110,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: _flashLoanModule,
-                    depositorOnlyMode: false
+                    hubCaliberInitialFlashLoanModule: _flashLoanModule
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL

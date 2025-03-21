@@ -20,8 +20,6 @@ contract DeployHubMachine is Script {
 
     struct MachineInitParamsSorted {
         address accountingToken;
-        address depositor;
-        bool depositorOnlyMode;
         bytes32 hubCaliberAllowedInstrRoot;
         address hubCaliberFlashLoanModule;
         uint256 hubCaliberMaxPositionDecreaseLossBps;
@@ -31,7 +29,9 @@ contract DeployHubMachine is Script {
         uint256 hubCaliberTimelockDuration;
         address initialAuthority;
         uint256 initialCaliberStaleThreshold;
+        address initialDepositor;
         address initialMechanic;
+        address initialRedeemer;
         address initialSecurityCouncil;
         uint256 initialShareLimit;
     }
@@ -74,7 +74,8 @@ contract DeployHubMachine is Script {
                 initParams.initialMechanic,
                 initParams.initialSecurityCouncil,
                 initParams.initialAuthority,
-                initParams.depositor,
+                initParams.initialDepositor,
+                initParams.initialRedeemer,
                 initParams.initialCaliberStaleThreshold,
                 initParams.initialShareLimit,
                 initParams.hubCaliberPosStaleThreshold,
@@ -83,8 +84,7 @@ contract DeployHubMachine is Script {
                 initParams.hubCaliberMaxPositionIncreaseLossBps,
                 initParams.hubCaliberMaxPositionDecreaseLossBps,
                 initParams.hubCaliberMaxSwapLossBps,
-                initParams.hubCaliberFlashLoanModule,
-                initParams.depositorOnlyMode
+                initParams.hubCaliberFlashLoanModule
             ),
             shareTokenName,
             shareTokenSymbol

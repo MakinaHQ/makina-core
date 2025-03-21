@@ -145,12 +145,6 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         _;
     }
 
-    modifier whileInDepositorOnlyMode() {
-        vm.prank(dao);
-        machine.setDepositorOnlyMode(true);
-        _;
-    }
-
     modifier withTokenAsBT(address _token) {
         vm.prank(dao);
         caliber.addBaseToken(_token);
