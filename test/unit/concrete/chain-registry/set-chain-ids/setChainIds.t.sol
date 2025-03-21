@@ -26,7 +26,14 @@ contract SetChainIds_Unit_Concrete_Test is ChainRegistry_Unit_Concrete_Test {
     function test_SetChainIds_DifferentIds() public {
         vm.startPrank(dao);
 
+        vm.expectEmit(true, true, false, false, address(chainRegistry));
+        emit IChainRegistry.ChainIdsRegistered(1, 2);
         chainRegistry.setChainIds(1, 2);
+
+        assertTrue(chainRegistry.isEvmChainIdRegistered(1));
+        assertFalse(chainRegistry.isWhChainIdRegistered(1));
+        assertTrue(chainRegistry.isWhChainIdRegistered(2));
+        assertFalse(chainRegistry.isEvmChainIdRegistered(2));
         assertEq(chainRegistry.evmToWhChainId(1), 2);
         assertEq(chainRegistry.whToEvmChainId(2), 1);
     }
@@ -34,7 +41,12 @@ contract SetChainIds_Unit_Concrete_Test is ChainRegistry_Unit_Concrete_Test {
     function test_SetChainIds_SameIds() public {
         vm.startPrank(dao);
 
+        vm.expectEmit(true, true, false, false, address(chainRegistry));
+        emit IChainRegistry.ChainIdsRegistered(2, 2);
         chainRegistry.setChainIds(2, 2);
+
+        assertTrue(chainRegistry.isEvmChainIdRegistered(2));
+        assertTrue(chainRegistry.isWhChainIdRegistered(2));
         assertEq(chainRegistry.evmToWhChainId(2), 2);
         assertEq(chainRegistry.whToEvmChainId(2), 2);
     }

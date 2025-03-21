@@ -8,11 +8,11 @@ import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {ChainRegistry_Unit_Concrete_Test} from "../ChainRegistry.t.sol";
 
 contract EvmToWhChainId_Unit_Concrete_Test is ChainRegistry_Unit_Concrete_Test {
-    function test_RevertWhen_ChainIdNotRegistered() public {
-        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.ChainIdNotRegistered.selector));
+    function test_RevertWhen_EvmChainIdNotRegistered() public {
+        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.EvmChainIdNotRegistered.selector, 0));
         chainRegistry.evmToWhChainId(0);
 
-        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.ChainIdNotRegistered.selector));
+        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.EvmChainIdNotRegistered.selector, 1));
         chainRegistry.evmToWhChainId(1);
     }
 

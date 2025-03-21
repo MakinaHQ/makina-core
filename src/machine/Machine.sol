@@ -392,13 +392,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function createSpokeMailbox(uint256 chainId) external restricted returns (address) {
+    function createSpokeMailbox(uint256 evmChainId) external restricted returns (address) {
         MachineStorage storage $ = _getMachineStorage();
 
-        // Reverts if chainId is not registered.
-        IChainRegistry(IHubRegistry(registry).chainRegistry()).evmToWhChainId(chainId);
-
-        if ($._foreignChainIdToSpokeCaliberData[chainId].machineMailbox != address(0)) {
+        if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(evmChainId)) {
+            revert IChainRegistry.EvmChainIdNotRegistered(evmChainId);
+        }
+        if ($._foreignChainIdToSpokeCaliberData[evmChainId].machineMailbox != address(0)) {
             revert SpokeMailboxAlreadyExists();
         }
 
@@ -410,18 +410,18 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         );
 
         $._isMachineMailbox[mailbox] = true;
-        $._foreignChainIds.push(chainId);
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        $._foreignChainIds.push(evmChainId);
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
         data.machineMailbox = mailbox;
-        emit SpokeMailboxDeployed(mailbox, chainId);
+        emit SpokeMailboxDeployed(mailbox, evmChainId);
 
         return mailbox;
     }
 
     /// @inheritdoc IMachine
-    function setSpokeCaliberMailbox(uint256 chainId, address spokeCaliberMailbox) external restricted {
+    function setSpokeCaliberMailbox(uint256 evmChainId, address spokeCaliberMailbox) external restricted {
         MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[chainId];
+        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
         if (data.machineMailbox == address(0)) {
             revert MachineMailboxDoesNotExist();
         }
