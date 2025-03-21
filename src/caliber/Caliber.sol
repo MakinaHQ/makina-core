@@ -232,7 +232,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) public override returns (uint256, int256) {
+    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
@@ -242,9 +242,13 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
     /// @inheritdoc ICaliber
     function accountForPositionBatch(Instruction[] calldata instructions) external override {
+        CaliberStorage storage $ = _getCaliberStorage();
         uint256 len = instructions.length;
         for (uint256 i; i < len; i++) {
-            accountForPosition(instructions[i]);
+            if (!$._positionIds.contains(instructions[i].positionId)) {
+                revert PositionDoesNotExist();
+            }
+            _accountForPosition(instructions[i]);
         }
     }
 
