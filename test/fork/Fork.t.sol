@@ -12,7 +12,7 @@ abstract contract Fork_Test is Base, Test, Constants {
     uint256 public hubChainId;
     uint256[] public spokeChainIds;
 
-    HubCore hubCore;
+    HubCore public hubCore;
     mapping(uint256 spokeChainId => SpokeCore spokeCore) public spokeCores;
 
     mapping(uint256 chainId => ForkData forkData) public forksData;

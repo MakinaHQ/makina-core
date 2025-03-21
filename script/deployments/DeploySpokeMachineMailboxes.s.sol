@@ -4,14 +4,12 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 
 contract DeploySpokeMachineMailboxes is Script {
     using stdJson for string;
 
-    string machineOutputJson;
+    string public machineOutputJson;
 
     string public inputJson;
     string public outputPath;

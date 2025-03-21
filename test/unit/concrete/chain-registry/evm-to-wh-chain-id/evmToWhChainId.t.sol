@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 
 import {ChainRegistry_Unit_Concrete_Test} from "../ChainRegistry.t.sol";

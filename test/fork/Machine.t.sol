@@ -6,7 +6,6 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
