@@ -588,8 +588,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             if (!$._baseTokens.contains(token)) {
                 revert InvalidAffectedToken();
             }
-            uint256 assetValue = _accountingValueOf(token, amounts[i]);
-            currentValue += assetValue;
+            currentValue += _accountingValueOf(token, amounts[i]);
         }
 
         if (lastValue > 0 && currentValue == 0) {
