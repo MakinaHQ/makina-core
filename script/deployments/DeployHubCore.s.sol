@@ -37,8 +37,9 @@ contract DeployHubCore is DeployCore {
 
         setupHubRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
-        setupSwapModule(_deployment.swapModule, swappersData);
+        setupTokenRegistry(_deployment.tokenRegistry, tokensToRegister);
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
+        setupSwapModule(_deployment.swapModule, swappersData);
 
         // @TODO setup access manager
     }
@@ -51,7 +52,7 @@ contract DeployHubCore is DeployCore {
 
         // write to file;
         vm.serializeAddress(key, "AccessManager", address(_deployment.accessManager));
-        vm.serializeAddress(key, "CaliberBeacon", address(_deployment.hubCaliberBeacon));
+        vm.serializeAddress(key, "CaliberBeacon", address(_deployment.caliberBeacon));
         vm.serializeAddress(key, "MachineBeacon", address(_deployment.machineBeacon));
         vm.serializeAddress(key, "MachineFactory", address(_deployment.machineFactory));
         vm.serializeAddress(key, "HubDualMailboxBeacon", address(_deployment.hubDualMailboxBeacon));
@@ -59,6 +60,7 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "ChainRegistry", address(_deployment.chainRegistry));
         vm.serializeAddress(key, "HubRegistry", address(_deployment.hubRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
+        vm.serializeAddress(key, "TokenRegistry", address(_deployment.tokenRegistry));
         vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);
     }
 }

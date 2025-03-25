@@ -13,6 +13,7 @@ abstract contract DeployCore is Base, Script {
     string public outputPath;
 
     PriceFeedRoute[] public priceFeedRoutes;
+    TokenToRegister[] public tokensToRegister;
     SwapperData[] public swappersData;
 
     address public dao;
@@ -31,6 +32,12 @@ abstract contract DeployCore is Base, Script {
             abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
         for (uint256 i; i < _priceFeedRoutes.length; i++) {
             priceFeedRoutes.push(_priceFeedRoutes[i]);
+        }
+
+        TokenToRegister[] memory _tokensToRegister =
+            abi.decode(vm.parseJson(inputJson, ".foreignTokens"), (TokenToRegister[]));
+        for (uint256 i; i < _tokensToRegister.length; i++) {
+            tokensToRegister.push(_tokensToRegister[i]);
         }
 
         SwapperData[] memory _swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));

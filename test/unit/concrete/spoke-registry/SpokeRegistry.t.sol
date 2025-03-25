@@ -6,44 +6,20 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {ISpokeRegistry} from "src/interfaces/ISpokeRegistry.sol";
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 
+import {BaseMakinaRegistry_Util_Concrete_Test} from "../base-makina-registry/BaseMakinaRegistry.t.sol";
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
-contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
-    function test_Getters() public view {
-        assertEq(spokeRegistry.oracleRegistry(), address(oracleRegistry));
-        assertEq(spokeRegistry.swapModule(), address(swapModule));
-        assertEq(spokeRegistry.caliberBeacon(), address(spokeCaliberBeacon));
+contract SpokeRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test {
+    function setUp() public override(BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test) {
+        Unit_Concrete_Spoke_Test.setUp();
+        registry = spokeRegistry;
+    }
+
+    function test_SpokeRegistryGetters() public view {
+        assertEq(spokeRegistry.caliberBeacon(), address(caliberBeacon));
         assertEq(spokeRegistry.caliberFactory(), address(caliberFactory));
         assertEq(spokeRegistry.spokeCaliberMailboxBeacon(), address(spokeCaliberMailboxBeacon));
         assertEq(spokeRegistry.authority(), address(accessManager));
-    }
-
-    function test_SetOracleRegistry_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeRegistry.setOracleRegistry(address(0));
-    }
-
-    function test_SetOracleRegistry() public {
-        address newOracleRegistry = makeAddr("newOracleRegistry");
-        vm.expectEmit(true, true, true, true, address(spokeRegistry));
-        emit IBaseMakinaRegistry.OracleRegistryChange(address(oracleRegistry), newOracleRegistry);
-        vm.prank(dao);
-        spokeRegistry.setOracleRegistry(newOracleRegistry);
-        assertEq(spokeRegistry.oracleRegistry(), newOracleRegistry);
-    }
-
-    function test_SetSwapModule_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeRegistry.setSwapModule(address(0));
-    }
-
-    function test_SetSwapModule() public {
-        address newSwapModule = makeAddr("newSwapModule");
-        vm.expectEmit(true, true, true, true, address(spokeRegistry));
-        emit IBaseMakinaRegistry.SwapModuleChange(address(swapModule), newSwapModule);
-        vm.prank(dao);
-        spokeRegistry.setSwapModule(newSwapModule);
-        assertEq(spokeRegistry.swapModule(), newSwapModule);
     }
 
     function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {
@@ -54,7 +30,7 @@ contract SpokeRegistry_Util_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(false, false, false, false, address(spokeRegistry));
-        emit IBaseMakinaRegistry.CaliberBeaconChange(address(spokeCaliberBeacon), newCaliberBeacon);
+        emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         spokeRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(spokeRegistry.caliberBeacon(), newCaliberBeacon);

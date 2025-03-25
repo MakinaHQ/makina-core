@@ -25,6 +25,7 @@ import {OracleRegistry} from "src/registries/OracleRegistry.sol";
 import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
+import {TokenRegistry} from "src/registries/TokenRegistry.sol";
 
 import {Base} from "./Base.sol";
 
@@ -39,6 +40,7 @@ abstract contract Base_Test is Base, Constants, Test {
 
     AccessManager public accessManager;
     OracleRegistry public oracleRegistry;
+    TokenRegistry public tokenRegistry;
     SwapModule public swapModule;
 
     function setUp() public virtual {
@@ -54,7 +56,7 @@ abstract contract Base_Hub_Test is Base_Test {
     ChainRegistry public chainRegistry;
     MachineFactory public machineFactory;
     UpgradeableBeacon public machineBeacon;
-    UpgradeableBeacon public hubCaliberBeacon;
+    UpgradeableBeacon public caliberBeacon;
     UpgradeableBeacon public hubDualMailboxBeacon;
     UpgradeableBeacon public spokeMachineMailboxBeacon;
 
@@ -73,11 +75,12 @@ abstract contract Base_Hub_Test is Base_Test {
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
         hubRegistry = deployment.hubRegistry;
+        tokenRegistry = deployment.tokenRegistry;
         chainRegistry = deployment.chainRegistry;
         machineFactory = deployment.machineFactory;
         machineBeacon = deployment.machineBeacon;
         hubDualMailboxBeacon = deployment.hubDualMailboxBeacon;
-        hubCaliberBeacon = deployment.hubCaliberBeacon;
+        caliberBeacon = deployment.caliberBeacon;
         spokeMachineMailboxBeacon = deployment.spokeMachineMailboxBeacon;
 
         setupHubRegistry(deployment);
@@ -125,7 +128,7 @@ abstract contract Base_Hub_Test is Base_Test {
 abstract contract Base_Spoke_Test is Base_Test {
     SpokeRegistry public spokeRegistry;
     CaliberFactory public caliberFactory;
-    UpgradeableBeacon public spokeCaliberBeacon;
+    UpgradeableBeacon public caliberBeacon;
     UpgradeableBeacon public spokeCaliberMailboxBeacon;
 
     function setUp() public virtual override {
@@ -135,10 +138,11 @@ abstract contract Base_Spoke_Test is Base_Test {
         SpokeCore memory deployment = deploySpokeCore(deployer, dao, hubChainId);
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
+        tokenRegistry = deployment.tokenRegistry;
         swapModule = deployment.swapModule;
         spokeRegistry = deployment.spokeRegistry;
         caliberFactory = deployment.caliberFactory;
-        spokeCaliberBeacon = deployment.spokeCaliberBeacon;
+        caliberBeacon = deployment.caliberBeacon;
         spokeCaliberMailboxBeacon = deployment.spokeCaliberMailboxBeacon;
 
         setupSpokeRegistry(deployment);

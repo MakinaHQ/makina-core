@@ -71,6 +71,24 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_priceFeedRoutes[i].feed2, feed2);
         }
 
+        // Check that TokenRegistry is correctly set up
+        TokenToRegister[] memory tokensToRegister =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
+        for (uint256 i; i < tokensToRegister.length; i++) {
+            assertEq(
+                hubCoreDeployment.tokenRegistry.getForeignToken(
+                    tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId
+                ),
+                tokensToRegister[i].foreignToken
+            );
+            assertEq(
+                hubCoreDeployment.tokenRegistry.getLocalToken(
+                    tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId
+                ),
+                tokensToRegister[i].localToken
+            );
+        }
+
         // Check that SwapModule is correctly set up
         SwapperData[] memory _swappersData =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".swappersTargets"), (SwapperData[]));
@@ -161,6 +179,24 @@ contract Deploy_Scripts_Test is Base_Test {
             (address feed1, address feed2) = spokeCoreDeployment.oracleRegistry.getFeedRoute(_priceFeedRoutes[i].token);
             assertEq(_priceFeedRoutes[i].feed1, feed1);
             assertEq(_priceFeedRoutes[i].feed2, feed2);
+        }
+
+        // Check that TokenRegistry is correctly set up
+        TokenToRegister[] memory tokensToRegister =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
+        for (uint256 i; i < tokensToRegister.length; i++) {
+            assertEq(
+                spokeCoreDeployment.tokenRegistry.getForeignToken(
+                    tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId
+                ),
+                tokensToRegister[i].foreignToken
+            );
+            assertEq(
+                spokeCoreDeployment.tokenRegistry.getLocalToken(
+                    tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId
+                ),
+                tokensToRegister[i].localToken
+            );
         }
 
         // Check that SwapModule is correctly set up

@@ -41,6 +41,13 @@
       "stalenessThreshold2": 0
     }
   ],
+  "foreignTokens": [
+    {
+      "localToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "foreignEvmChainId": 8453,
+      "foreignToken": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+    }
+  ],
   "swappersTargets": [
     {
       "swapperId": 1,
