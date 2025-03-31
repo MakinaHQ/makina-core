@@ -7,7 +7,6 @@ interface ICaliber {
     error AccountingToken();
     error ActiveUpdatePending();
     error BaseTokenAlreadyExists();
-    error BaseTokenDoesNotExist();
     error DirectManageFlashLoanCall();
     error InvalidAccounting();
     error InvalidAffectedToken();
@@ -22,6 +21,7 @@ interface ICaliber {
     error MaxValueLossExceeded();
     error NonZeroBalance();
     error NoPendingUpdate();
+    error NotBaseToken();
     error NotFlashLoanModule();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
@@ -36,7 +36,6 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
-    event MailboxDeployed(address indexed mailbox);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
     );
@@ -63,7 +62,6 @@ interface ICaliber {
     }
 
     /// @notice Initialization parameters.
-    /// @param hubMachineEndpoint The address of the hub machine endpoints.
     /// @param accountingToken The address of the accounting token.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
@@ -76,7 +74,6 @@ interface ICaliber {
     /// @param initialSecurityCouncil The address of the initial security council.
     /// @param initialAuthority The address of the initial authority.
     struct CaliberInitParams {
-        address hubMachineEndpoint;
         address accountingToken;
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
@@ -122,8 +119,8 @@ interface ICaliber {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
-    /// @param mailboxBeacon The address of the mailbox beacon.
-    function initialize(CaliberInitParams calldata params, address mailboxBeacon) external;
+    /// @param hubMachineEndpoint The address of the hub machine endpoints.
+    function initialize(CaliberInitParams calldata params, address hubMachineEndpoint) external;
 
     /// @notice Address of the Makina registry.
     function registry() external view returns (address);
@@ -131,8 +128,8 @@ interface ICaliber {
     /// @notice Address of the Weiroll VM.
     function weirollVm() external view returns (address);
 
-    /// @notice Address of the mailbox.
-    function mailbox() external view returns (address);
+    /// @notice Address of the hub machine endpoint.
+    function hubMachineEndpoint() external view returns (address);
 
     /// @notice Address of the mechanic.
     function mechanic() external view returns (address);
@@ -276,8 +273,9 @@ interface ICaliber {
 
     /// @notice Initiates a token transfer to the hub machine.
     /// @param token The address of the token to transfer.
-    /// @param amount The amount of token to transfer.
-    function transferToHubMachine(address token, uint256 amount) external;
+    /// @param amount The amount of tokens to transfer.
+    /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
+    function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

@@ -31,7 +31,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
 
         // move assets to caliber
         vm.prank(mechanic);
-        machine.transferToCaliber(address(accountingToken), 1, block.chainid);
+        machine.transferToHubCaliber(address(accountingToken), 1);
 
         // redeem shares
         uint256 expectedAssets = machine.convertToAssets(shares);

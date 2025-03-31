@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-interface IMachine {
+import {IMachineEndpoint} from "./IMachineEndpoint.sol";
+
+interface IMachine is IMachineEndpoint {
     error CaliberAccountingStale(uint256 caliberChainId);
     error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
+    error MachineMailboxDoesNotExist();
     error NotMailbox();
     error RecoveryMode();
-    error SpokeMailboxAlreadyExists();
-    error MachineMailboxDoesNotExist();
+    error SpokeCaliberAlreadyExists();
     error StaleData();
+    error UnauthorizedSender();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
     error UnauthorizedOperator();
@@ -21,13 +24,13 @@ interface IMachine {
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
-    event HubCaliberDeployed(address indexed caliber, address indexed mailbox);
+    event HubCaliberDeployed(address indexed caliber);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
-    event SpokeMailboxDeployed(address spokeMailbox, uint256 indexed spokeChainId);
+    event SpokeCaliberAdded(uint256 indexed spokeChainId);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
 
@@ -66,7 +69,7 @@ interface IMachine {
     }
 
     struct SpokeCaliberData {
-        address machineMailbox;
+        address caliberMailbox;
         uint256 timestamp;
         uint256 netAum;
         bytes[] positions; // abi.encode(positionId, value)
@@ -104,8 +107,8 @@ interface IMachine {
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
 
-    /// @notice Address of the mailbox connecting the machine and the hub caliber.
-    function hubCaliberMailbox() external view returns (address);
+    /// @notice Address of the hub caliber.
+    function hubCaliber() external view returns (address);
 
     /// @notice Maximum duration a caliber can remain unaccounted for before it is considered stale.
     function caliberStaleThreshold() external view returns (uint256);
@@ -151,15 +154,10 @@ interface IMachine {
     /// @return assets The amount of assets.
     function convertToAssets(uint256 shares) external view returns (uint256);
 
-    /// @notice Notifies the machine of an incoming token transfer.
-    /// @param token The address of the token.
-    function notifyIncomingTransfer(address token) external;
-
-    /// @notice Initiates a token transfers to a caliber.
+    /// @notice Initiates a token transfers to the hub caliber.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of token to transfer.
-    /// @param chainId The chain ID of the caliber.
-    function transferToCaliber(address token, uint256 amount, uint256 chainId) external;
+    function transferToHubCaliber(address token, uint256 amount) external;
 
     /// @notice Updates the total AUM of the machine.
     /// @return totalAum The updated total AUM.
@@ -171,14 +169,10 @@ interface IMachine {
     /// @return shares The amount of shares minted
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
-    /// @notice Deploys a new machine mailbox for a spoke caliber.
-    /// @param evmChainId The EVM chain ID of the spoke caliber.
-    function createSpokeMailbox(uint256 evmChainId) external returns (address);
-
-    /// @notice Sets the spoke caliber mailbox in the machine mailbox associated to given spoke chain ID.
+    /// @notice Register a spoke caliber.
     /// @param evmChainId The EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
-    function setSpokeCaliberMailbox(uint256 evmChainId, address spokeCaliberMailbox) external;
+    function addSpokeCaliber(uint256 evmChainId, address spokeCaliberMailbox) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

@@ -19,7 +19,7 @@ contract MaxWithdraw_Integration_Concrete_Test is Machine_Integration_Concrete_T
         uint256 inputAmount2 = 1e18;
         deal(address(accountingToken), address(machine), inputAmount1);
         vm.prank(mechanic);
-        machine.transferToCaliber(address(accountingToken), inputAmount2, block.chainid);
+        machine.transferToHubCaliber(address(accountingToken), inputAmount2);
         assertEq(machine.maxWithdraw(), inputAmount1 - inputAmount2);
     }
 }

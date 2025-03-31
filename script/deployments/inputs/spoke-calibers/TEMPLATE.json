@@ -1,13 +1,16 @@
 {
-  "spokeMachineMailbox": "0x0000000000000000000000000000000000000000",
-  "accountingToken": "0x0000000000000000000000000000000000000000",
-  "initialPositionStaleThreshold": 0,
-  "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-  "initialTimelockDuration": 0,
-  "initialMaxPositionIncreaseLossBps": 0,
-  "initialMaxPositionDecreaseLossBps": 0,
-  "initialMaxSwapLossBps": 0,
-  "initialMechanic": "0x0000000000000000000000000000000000000000",
-  "initialAuthority": "0x0000000000000000000000000000000000000000",
-  "initialSecurityCouncil": "0x0000000000000000000000000000000000000000"
+  "caliberInitParams": {
+    "accountingToken": "0x0000000000000000000000000000000000000000",
+    "initialPositionStaleThreshold": 0,
+    "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "initialTimelockDuration": 0,
+    "initialMaxPositionIncreaseLossBps": 0,
+    "initialMaxPositionDecreaseLossBps": 0,
+    "initialMaxSwapLossBps": 0,
+    "initialFlashLoanModule": "0x0000000000000000000000000000000000000000",
+    "initialMechanic": "0x0000000000000000000000000000000000000000",
+    "initialAuthority": "0x0000000000000000000000000000000000000000",
+    "initialSecurityCouncil": "0x0000000000000000000000000000000000000000"
+  },
+  "hubMachine": "0x0000000000000000000000000000000000000000"
 }

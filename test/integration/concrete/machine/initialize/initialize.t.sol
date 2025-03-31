@@ -5,8 +5,6 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {Machine} from "src/machine/Machine.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {Constants} from "src/libraries/Constants.sol";
@@ -91,11 +89,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
-
-        address dualMailbox = machine.hubCaliberMailbox();
-        address caliber = IHubDualMailbox(dualMailbox).caliber();
-        assertEq(IHubDualMailbox(dualMailbox).machine(), address(machine));
-        assertEq(ICaliber(caliber).mailbox(), dualMailbox);
     }
 
     function _getMachineInitParams(address accountingToken) internal view returns (IMachine.MachineInitParams memory) {

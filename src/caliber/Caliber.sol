@@ -13,7 +13,7 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
@@ -34,7 +34,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
-        address _mailbox;
+        address _hubMachineEndpoint;
         address _accountingToken;
         address _mechanic;
         address _securityCouncil;
@@ -74,9 +74,9 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function initialize(CaliberInitParams calldata params, address mailboxBeacon) external override initializer {
+    function initialize(CaliberInitParams calldata params, address _hubMachineEndpoint) external override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
-        $._mailbox = _createMailbox(mailboxBeacon, params.hubMachineEndpoint);
+        $._hubMachineEndpoint = _hubMachineEndpoint;
         $._accountingToken = params.accountingToken;
         $._positionStaleThreshold = params.initialPositionStaleThreshold;
         $._allowedInstrRoot = params.initialAllowedInstrRoot;
@@ -101,8 +101,8 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function mailbox() external view override returns (address) {
-        return _getCaliberStorage()._mailbox;
+    function hubMachineEndpoint() external view override returns (address) {
+        return _getCaliberStorage()._hubMachineEndpoint;
     }
 
     /// @inheritdoc ICaliber
@@ -222,7 +222,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             revert AccountingToken();
         }
         if (!$._baseTokens.remove(token)) {
-            revert BaseTokenDoesNotExist();
+            revert NotBaseToken();
         }
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             revert NonZeroBalance();
@@ -434,11 +434,11 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function transferToHubMachine(address token, uint256 amount) external override onlyOperator {
+    function transferToHubMachine(address token, uint256 amount, bytes calldata data) external override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
         emit TransferToHubMachine(token, amount);
-        IERC20Metadata(token).forceApprove($._mailbox, amount);
-        ICaliberMailbox($._mailbox).manageTransferFromCaliberToMachine(token, amount);
+        IERC20Metadata(token).forceApprove($._hubMachineEndpoint, amount);
+        IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
     }
 
     /// @inheritdoc ICaliber
@@ -527,21 +527,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
         }
-    }
-
-    /// @dev Deploys the caliber mailbox.
-    function _createMailbox(address mailboxBeacon, address hubMachineEndpoint)
-        internal
-        onlyInitializing
-        returns (address)
-    {
-        address _mailbox = address(
-            new BeaconProxy(
-                mailboxBeacon, abi.encodeCall(ICaliberMailbox.initialize, (hubMachineEndpoint, address(this)))
-            )
-        );
-        emit MailboxDeployed(_mailbox);
-        return _mailbox;
     }
 
     /// @dev Adds a new base token to storage.

@@ -8,7 +8,6 @@ import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
@@ -70,7 +69,7 @@ contract Machine_Fork_Test is Fork_Test {
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
         );
-        hubCaliber = Caliber(ICaliberMailbox(machine.hubCaliberMailbox()).caliber());
+        hubCaliber = Caliber(machine.hubCaliber());
 
         // machineDepositor deposits 10000 usdc
         uint256 depositAmount = 10000e6;
@@ -82,7 +81,7 @@ contract Machine_Fork_Test is Fork_Test {
 
         // mechanic transfers 2000 usdc to caliber
         vm.startPrank(ethForkData.mechanic);
-        machine.transferToCaliber(ethForkData.usdc, depositAmount / 5, 0);
+        machine.transferToHubCaliber(ethForkData.usdc, depositAmount / 5);
         vm.stopPrank();
 
         // check hub caliber aum
@@ -93,10 +92,6 @@ contract Machine_Fork_Test is Fork_Test {
 
         // check machine aum
         assertEq(machine.updateTotalAum(), depositAmount);
-
-        // deploy mailbox for spoke caliber
-        vm.prank(ethForkData.dao);
-        address baseMachineMailbox = machine.createSpokeMailbox(ChainsInfo.CHAIN_ID_BASE_SEPOLIA);
 
         // upgrade wormhole core with devnet guardian
         address wormhole = machine.wormhole();
@@ -113,7 +108,6 @@ contract Machine_Fork_Test is Fork_Test {
         spokeCaliber = Caliber(
             spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    hubMachineEndpoint: baseMachineMailbox,
                     accountingToken: baseForkData.usdc,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),
@@ -125,10 +119,11 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMechanic: baseForkData.mechanic,
                     initialSecurityCouncil: baseForkData.securityCouncil,
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].accessManager)
-                })
+                }),
+                address(machine)
             )
         );
-        address spokeCaliberMailbox = spokeCaliber.mailbox();
+        address spokeCaliberMailbox = spokeCaliber.hubMachineEndpoint();
 
         // fund spoke caliber
         uint256 spokeCaliberFund = 5_000e6;
@@ -143,11 +138,11 @@ contract Machine_Fork_Test is Fork_Test {
             WormholeChains.CHAIN_ID_BASE_SEPOLIA,
             uint64(block.number),
             uint64(block.timestamp),
-            spokeCaliber.mailbox(),
-            abi.encode(ISpokeCaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData())
+            spokeCaliberMailbox,
+            abi.encode(ICaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData())
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
         ///
@@ -156,9 +151,9 @@ contract Machine_Fork_Test is Fork_Test {
 
         vm.selectFork(ethForkData.forkId);
 
-        // set spoke caliber mailbox in machine mailbox
+        // register spoke caliber mailbox in machine
         vm.prank(ethForkData.dao);
-        machine.setSpokeCaliberMailbox(ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox);
+        machine.addSpokeCaliber(ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox);
 
         // write spoke caliber accounting data in machine
         machine.updateSpokeCaliberAccountingData(response, signatures);

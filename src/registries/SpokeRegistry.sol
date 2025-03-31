@@ -8,7 +8,7 @@ contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
     /// @custom:storage-location erc7201:makina.storage.SpokeRegistry
     struct SpokeRegistryStorage {
         address _caliberFactory;
-        address _spokeCaliberMailboxBeacon;
+        address _caliberMailboxBeacon;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.SpokeRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -38,15 +38,15 @@ contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
     }
 
     /// @inheritdoc ISpokeRegistry
-    function spokeCaliberMailboxBeacon() external view override returns (address) {
-        return _getSpokeRegistryStorage()._spokeCaliberMailboxBeacon;
+    function caliberMailboxBeacon() external view override returns (address) {
+        return _getSpokeRegistryStorage()._caliberMailboxBeacon;
     }
 
     /// @inheritdoc ISpokeRegistry
-    function setSpokeCaliberMailboxBeacon(address _spokeCaliberMailboxBeacon) external override restricted {
+    function setCaliberMailboxBeacon(address _caliberMailboxBeacon) external override restricted {
         SpokeRegistryStorage storage $ = _getSpokeRegistryStorage();
-        emit SpokeCaliberMailboxBeaconChange($._spokeCaliberMailboxBeacon, _spokeCaliberMailboxBeacon);
-        $._spokeCaliberMailboxBeacon = _spokeCaliberMailboxBeacon;
+        emit CaliberMailboxBeaconChange($._caliberMailboxBeacon, _caliberMailboxBeacon);
+        $._caliberMailboxBeacon = _caliberMailboxBeacon;
     }
 
     /// @inheritdoc ISpokeRegistry

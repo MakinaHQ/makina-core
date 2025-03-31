@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -41,10 +40,8 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
         IOwnable2Step(token).transferOwnership(machine);
         IMachine(machine).initialize(params, token);
 
-        address caliber = IHubDualMailbox(IMachine(machine).hubCaliberMailbox()).caliber();
-
         isMachine[machine] = true;
-        isCaliber[caliber] = true;
+        isCaliber[IMachine(machine).hubCaliber()] = true;
 
         emit MachineDeployed(machine);
 

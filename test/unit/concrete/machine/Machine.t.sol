@@ -16,7 +16,7 @@ contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
         assertEq(machine.lastGlobalAccountingTime(), 0);
-        assertNotEq(machine.hubCaliberMailbox(), address(0));
+        assertEq(machine.hubCaliber(), address(caliber));
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
     }

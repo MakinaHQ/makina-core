@@ -1,4 +1,4 @@
-GetSpokeChainId.t.sol
+getSpokeChainId.t.sol
 ├── when the provided index is greater or equal than the foreignChainIds size
 │  └── it should revert
 └── when the provided index is smaller than the foreignChainIds size

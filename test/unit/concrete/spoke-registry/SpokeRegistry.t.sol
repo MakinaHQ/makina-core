@@ -18,7 +18,7 @@ contract SpokeRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Te
     function test_SpokeRegistryGetters() public view {
         assertEq(spokeRegistry.caliberBeacon(), address(caliberBeacon));
         assertEq(spokeRegistry.caliberFactory(), address(caliberFactory));
-        assertEq(spokeRegistry.spokeCaliberMailboxBeacon(), address(spokeCaliberMailboxBeacon));
+        assertEq(spokeRegistry.caliberMailboxBeacon(), address(caliberMailboxBeacon));
         assertEq(spokeRegistry.authority(), address(accessManager));
     }
 
@@ -50,19 +50,17 @@ contract SpokeRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Te
         assertEq(spokeRegistry.caliberFactory(), newCaliberFactory);
     }
 
-    function test_SetSpokeCaliberMailboxBeacon_RevertWhen_CallerWithoutRole() public {
+    function test_SetCaliberMailboxBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeRegistry.setSpokeCaliberMailboxBeacon(address(0));
+        spokeRegistry.setCaliberMailboxBeacon(address(0));
     }
 
-    function test_SetSpokeCaliberMailboxBeacon() public {
-        address newSpokeCaliberMailboxBeacon = makeAddr("newSpokeCaliberMailboxBeacon");
+    function test_SetCaliberMailboxBeacon() public {
+        address newCaliberMailboxBeacon = makeAddr("newCaliberMailboxBeacon");
         vm.expectEmit(false, false, false, false, address(spokeRegistry));
-        emit ISpokeRegistry.SpokeCaliberMailboxBeaconChange(
-            address(spokeCaliberMailboxBeacon), newSpokeCaliberMailboxBeacon
-        );
+        emit ISpokeRegistry.CaliberMailboxBeaconChange(address(caliberMailboxBeacon), newCaliberMailboxBeacon);
         vm.prank(dao);
-        spokeRegistry.setSpokeCaliberMailboxBeacon(newSpokeCaliberMailboxBeacon);
-        assertEq(spokeRegistry.spokeCaliberMailboxBeacon(), newSpokeCaliberMailboxBeacon);
+        spokeRegistry.setCaliberMailboxBeacon(newCaliberMailboxBeacon);
+        assertEq(spokeRegistry.caliberMailboxBeacon(), newCaliberMailboxBeacon);
     }
 }

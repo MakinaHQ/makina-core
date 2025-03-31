@@ -1,9 +1,0 @@
-setSpokeCaliberMailbox.t.sol
-├── given sender is not the associated Machine contract
-│  └── it should revert with NotMachine
-└── given sender is the associated Machine contract
-   ├── given a caliber mailbox address is already set
-   │  └── it should revert with SpokeCaliberMailboxAlreadySet
-   └── given no caliber mailbox address is set
-      ├── it should set the provided spoke caliber mailbox address in storage
-      └── it should emit a SpokeCaliberMailboxSet event

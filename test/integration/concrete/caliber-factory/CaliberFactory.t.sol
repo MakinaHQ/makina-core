@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
@@ -19,23 +19,20 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliber.CaliberInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.createCaliber(params);
+        caliberFactory.createCaliber(params, address(0));
     }
 
     function test_DeployCaliber() public {
-        address _machineMailbox = makeAddr("machineMailbox");
+        address _hubMachine = makeAddr("hubMachine");
         address _flashLoanModule = makeAddr("flashLoanModule");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
-        vm.expectEmit(false, false, false, false);
-        emit ICaliber.MailboxDeployed(address(0));
-        vm.expectEmit(false, false, false, false, address(caliberFactory));
-        emit ICaliberFactory.CaliberDeployed(address(0));
+        vm.expectEmit(true, false, false, false, address(caliberFactory));
+        emit ICaliberFactory.SpokeCaliberCreated(_hubMachine, address(0), address(0));
         vm.prank(dao);
         caliber = Caliber(
             caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    hubMachineEndpoint: _machineMailbox,
                     accountingToken: address(accountingToken),
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
@@ -47,12 +44,13 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager)
-                })
+                }),
+                _hubMachine
             )
         );
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
-        assertEq(ISpokeCaliberMailbox(caliber.mailbox()).caliber(), address(caliber));
+        assertEq(ICaliberMailbox(caliber.hubMachineEndpoint()).caliber(), address(caliber));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);

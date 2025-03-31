@@ -10,15 +10,13 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
-import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
-import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 import {TokenRegistry} from "src/registries/TokenRegistry.sol";
@@ -34,8 +32,6 @@ abstract contract Base is StdCheats {
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
         MachineFactory machineFactory;
-        UpgradeableBeacon hubDualMailboxBeacon;
-        UpgradeableBeacon spokeMachineMailboxBeacon;
     }
 
     struct SpokeCore {
@@ -46,7 +42,7 @@ abstract contract Base is StdCheats {
         UpgradeableBeacon caliberBeacon;
         CaliberFactory caliberFactory;
         SpokeRegistry spokeRegistry;
-        UpgradeableBeacon spokeCaliberMailboxBeacon;
+        UpgradeableBeacon caliberMailboxBeacon;
     }
 
     struct PriceFeedRoute {
@@ -171,12 +167,6 @@ abstract contract Base is StdCheats {
                 )
             )
         );
-
-        address HubDualMailboxImplemAddr = address(new HubDualMailbox());
-        deployment.hubDualMailboxBeacon = new UpgradeableBeacon(HubDualMailboxImplemAddr, dao);
-
-        address spokeMachineMailboxImplemAddr = address(new SpokeMachineMailbox());
-        deployment.spokeMachineMailboxBeacon = new UpgradeableBeacon(spokeMachineMailboxImplemAddr, dao);
     }
 
     function deploySpokeCore(address initialAMAdmin, address dao, uint256 hubChainId)
@@ -220,8 +210,8 @@ abstract contract Base is StdCheats {
             )
         );
 
-        address spokeCaliberMailboxImplemAddr = address(new SpokeCaliberMailbox(hubChainId));
-        deployment.spokeCaliberMailboxBeacon = new UpgradeableBeacon(spokeCaliberMailboxImplemAddr, dao);
+        address caliberMailboxImplemAddr = address(new CaliberMailbox(address(deployment.spokeRegistry), hubChainId));
+        deployment.caliberMailboxBeacon = new UpgradeableBeacon(caliberMailboxImplemAddr, dao);
     }
 
     ///
@@ -232,14 +222,12 @@ abstract contract Base is StdCheats {
         deployment.hubRegistry.setMachineFactory(address(deployment.machineFactory));
         deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
         deployment.hubRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
-        deployment.hubRegistry.setHubDualMailboxBeacon(address(deployment.hubDualMailboxBeacon));
-        deployment.hubRegistry.setSpokeMachineMailboxBeacon(address(deployment.spokeMachineMailboxBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {
         deployment.spokeRegistry.setCaliberFactory(address(deployment.caliberFactory));
         deployment.spokeRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
-        deployment.spokeRegistry.setSpokeCaliberMailboxBeacon(address(deployment.spokeCaliberMailboxBeacon));
+        deployment.spokeRegistry.setCaliberMailboxBeacon(address(deployment.caliberMailboxBeacon));
     }
 
     function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) public {
