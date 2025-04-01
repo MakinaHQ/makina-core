@@ -21,6 +21,7 @@ import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {SpokeMachineMailbox} from "src/mailboxes/SpokeMachineMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
+import {TokenRegistry} from "src/registries/TokenRegistry.sol";
 
 abstract contract Base is StdCheats {
     struct HubCore {
@@ -29,7 +30,8 @@ abstract contract Base is StdCheats {
         SwapModule swapModule;
         HubRegistry hubRegistry;
         ChainRegistry chainRegistry;
-        UpgradeableBeacon hubCaliberBeacon;
+        TokenRegistry tokenRegistry;
+        UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
         MachineFactory machineFactory;
         UpgradeableBeacon hubDualMailboxBeacon;
@@ -39,8 +41,9 @@ abstract contract Base is StdCheats {
     struct SpokeCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
+        TokenRegistry tokenRegistry;
         SwapModule swapModule;
-        UpgradeableBeacon spokeCaliberBeacon;
+        UpgradeableBeacon caliberBeacon;
         CaliberFactory caliberFactory;
         SpokeRegistry spokeRegistry;
         UpgradeableBeacon spokeCaliberMailboxBeacon;
@@ -52,6 +55,12 @@ abstract contract Base is StdCheats {
         uint256 stalenessThreshold1;
         uint256 stalenessThreshold2;
         address token;
+    }
+
+    struct TokenToRegister {
+        uint256 foreignEvmChainId;
+        address foreignToken;
+        address localToken;
     }
 
     struct SwapperData {
@@ -70,7 +79,12 @@ abstract contract Base is StdCheats {
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
-        returns (AccessManager accessManager, OracleRegistry oracleRegistry, SwapModule swapModule)
+        returns (
+            AccessManager accessManager,
+            OracleRegistry oracleRegistry,
+            TokenRegistry tokenRegistry,
+            SwapModule swapModule
+        )
     {
         accessManager = new AccessManager(initialAMAdmin);
 
@@ -79,6 +93,15 @@ abstract contract Base is StdCheats {
             address(
                 new TransparentUpgradeableProxy(
                     oracleRegistryImplemAddr, dao, abi.encodeCall(OracleRegistry.initialize, (address(accessManager)))
+                )
+            )
+        );
+
+        address tokenRegistryImplemAddr = address(new TokenRegistry());
+        tokenRegistry = TokenRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    tokenRegistryImplemAddr, dao, abi.encodeCall(TokenRegistry.initialize, (address(accessManager)))
                 )
             )
         );
@@ -97,26 +120,8 @@ abstract contract Base is StdCheats {
         internal
         returns (HubCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.tokenRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
-
-        address hubRegistryImplemAddr = address(new HubRegistry());
-        deployment.hubRegistry = HubRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    hubRegistryImplemAddr,
-                    dao,
-                    abi.encodeCall(
-                        HubRegistry.initialize,
-                        (
-                            address(deployment.oracleRegistry),
-                            address(deployment.swapModule),
-                            address(deployment.accessManager)
-                        )
-                    )
-                )
-            )
-        );
 
         address chainRegistryImplemAddr = address(new ChainRegistry());
         deployment.chainRegistry = ChainRegistry(
@@ -129,9 +134,29 @@ abstract contract Base is StdCheats {
             )
         );
 
+        address hubRegistryImplemAddr = address(new HubRegistry());
+        deployment.hubRegistry = HubRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    hubRegistryImplemAddr,
+                    dao,
+                    abi.encodeCall(
+                        HubRegistry.initialize,
+                        (
+                            address(deployment.oracleRegistry),
+                            address(deployment.tokenRegistry),
+                            address(deployment.chainRegistry),
+                            address(deployment.swapModule),
+                            address(deployment.accessManager)
+                        )
+                    )
+                )
+            )
+        );
+
         address weirollVMImplemAddr = deployWeirollVMViaIR();
         address caliberImplemAddr = address(new Caliber(address(deployment.hubRegistry), weirollVMImplemAddr));
-        deployment.hubCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
+        deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
         address machineImplemAddr = address(new Machine(address(deployment.hubRegistry), wormhole));
         deployment.machineBeacon = new UpgradeableBeacon(machineImplemAddr, dao);
@@ -158,7 +183,7 @@ abstract contract Base is StdCheats {
         internal
         returns (SpokeCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.swapModule) =
+        (deployment.accessManager, deployment.oracleRegistry, deployment.tokenRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
         address spokeRegistryImplemAddr = address(new SpokeRegistry());
@@ -171,6 +196,7 @@ abstract contract Base is StdCheats {
                         SpokeRegistry.initialize,
                         (
                             address(deployment.oracleRegistry),
+                            address(deployment.tokenRegistry),
                             address(deployment.swapModule),
                             address(deployment.accessManager)
                         )
@@ -181,7 +207,7 @@ abstract contract Base is StdCheats {
 
         address weirollVMImplemAddr = deployWeirollVMViaIR();
         address caliberImplemAddr = address(new Caliber(address(deployment.spokeRegistry), weirollVMImplemAddr));
-        deployment.spokeCaliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
+        deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
         address caliberFactoryImplemAddr = address(new CaliberFactory(address(deployment.spokeRegistry)));
         deployment.caliberFactory = CaliberFactory(
@@ -203,17 +229,16 @@ abstract contract Base is StdCheats {
     ///
 
     function setupHubRegistry(HubCore memory deployment) public {
-        deployment.hubRegistry.setChainRegistry(address(deployment.chainRegistry));
         deployment.hubRegistry.setMachineFactory(address(deployment.machineFactory));
         deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
-        deployment.hubRegistry.setCaliberBeacon(address(deployment.hubCaliberBeacon));
+        deployment.hubRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.hubRegistry.setHubDualMailboxBeacon(address(deployment.hubDualMailboxBeacon));
         deployment.hubRegistry.setSpokeMachineMailboxBeacon(address(deployment.spokeMachineMailboxBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {
         deployment.spokeRegistry.setCaliberFactory(address(deployment.caliberFactory));
-        deployment.spokeRegistry.setCaliberBeacon(address(deployment.spokeCaliberBeacon));
+        deployment.spokeRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.spokeRegistry.setSpokeCaliberMailboxBeacon(address(deployment.spokeCaliberMailboxBeacon));
     }
 
@@ -233,6 +258,14 @@ abstract contract Base is StdCheats {
         for (uint256 i; i < evmChainIds.length; i++) {
             uint256 evmChainId = evmChainIds[i];
             chainRegistry.setChainIds(evmChainId, ChainsInfo.getChainInfo(evmChainId).wormholeChainId);
+        }
+    }
+
+    function setupTokenRegistry(TokenRegistry tokenRegistry, TokenToRegister[] memory tokensToRegister) public {
+        for (uint256 i; i < tokensToRegister.length; i++) {
+            tokenRegistry.setToken(
+                tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId, tokensToRegister[i].foreignToken
+            );
         }
     }
 

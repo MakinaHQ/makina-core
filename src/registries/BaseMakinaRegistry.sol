@@ -8,6 +8,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
     struct BaseMakinaRegistryStorage {
         address _oracleRegistry;
+        address _tokenRegistry;
         address _swapModule;
         address _caliberFactory;
         address _caliberBeacon;
@@ -27,12 +28,15 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         _disableInitializers();
     }
 
-    function __BaseMakinaRegistry_init(address _oracleRegistry, address _swapModule, address _initialAuthority)
-        internal
-        onlyInitializing
-    {
+    function __BaseMakinaRegistry_init(
+        address _oracleRegistry,
+        address _tokenRegistry,
+        address _swapModule,
+        address _initialAuthority
+    ) internal onlyInitializing {
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         $._oracleRegistry = _oracleRegistry;
+        $._tokenRegistry = _tokenRegistry;
         $._swapModule = _swapModule;
         __AccessManaged_init(_initialAuthority);
     }
@@ -40,6 +44,11 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     /// @inheritdoc IBaseMakinaRegistry
     function oracleRegistry() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._oracleRegistry;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function tokenRegistry() external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._tokenRegistry;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
@@ -57,6 +66,13 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit OracleRegistryChange($._oracleRegistry, _oracleRegistry);
         $._oracleRegistry = _oracleRegistry;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function setTokenRegistry(address _tokenRegistry) external override restricted {
+        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        emit TokenRegistryChange($._tokenRegistry, _tokenRegistry);
+        $._tokenRegistry = _tokenRegistry;
     }
 
     /// @inheritdoc IBaseMakinaRegistry

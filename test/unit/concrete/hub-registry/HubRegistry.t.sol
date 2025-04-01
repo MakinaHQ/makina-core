@@ -6,18 +6,37 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 
+import {BaseMakinaRegistry_Util_Concrete_Test} from "../base-makina-registry/BaseMakinaRegistry.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
-contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
-    function test_Getters() public view {
+contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test {
+    function setUp() public override(BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test) {
+        Unit_Concrete_Hub_Test.setUp();
+        registry = hubRegistry;
+    }
+
+    function test_HubRegistryGetters() public view {
+        assertEq(hubRegistry.caliberBeacon(), address(caliberBeacon));
         assertEq(hubRegistry.chainRegistry(), address(chainRegistry));
-        assertEq(hubRegistry.oracleRegistry(), address(oracleRegistry));
-        assertEq(hubRegistry.swapModule(), address(swapModule));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
         assertEq(hubRegistry.machineFactory(), address(machineFactory));
-        assertEq(hubRegistry.caliberBeacon(), address(hubCaliberBeacon));
         assertEq(hubRegistry.hubDualMailboxBeacon(), address(hubDualMailboxBeacon));
+        assertEq(hubRegistry.spokeMachineMailboxBeacon(), address(spokeMachineMailboxBeacon));
         assertEq(hubRegistry.authority(), address(accessManager));
+    }
+
+    function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        hubRegistry.setCaliberBeacon(address(0));
+    }
+
+    function test_SetCaliberBeacon() public {
+        address newCaliberBeacon = makeAddr("newCaliberBeacon");
+        vm.expectEmit(false, false, false, false, address(hubRegistry));
+        emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
+        vm.prank(dao);
+        hubRegistry.setCaliberBeacon(newCaliberBeacon);
+        assertEq(hubRegistry.caliberBeacon(), newCaliberBeacon);
     }
 
     function test_SetChainRegistry_RevertWhen_CallerWithoutRole() public {
@@ -32,48 +51,6 @@ contract HubRegistry_Util_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(dao);
         hubRegistry.setChainRegistry(newChainRegistry);
         assertEq(hubRegistry.chainRegistry(), newChainRegistry);
-    }
-
-    function test_SetOracleRegistry_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setOracleRegistry(address(0));
-    }
-
-    function test_SetOracleRegistry() public {
-        address newOracleRegistry = makeAddr("newOracleRegistry");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IBaseMakinaRegistry.OracleRegistryChange(address(oracleRegistry), newOracleRegistry);
-        vm.prank(dao);
-        hubRegistry.setOracleRegistry(newOracleRegistry);
-        assertEq(hubRegistry.oracleRegistry(), newOracleRegistry);
-    }
-
-    function test_SetSwapModule_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setSwapModule(address(0));
-    }
-
-    function test_SetSwapModule() public {
-        address newSwapModule = makeAddr("newSwapModule");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IBaseMakinaRegistry.SwapModuleChange(address(swapModule), newSwapModule);
-        vm.prank(dao);
-        hubRegistry.setSwapModule(newSwapModule);
-        assertEq(hubRegistry.swapModule(), newSwapModule);
-    }
-
-    function test_SetCaliberBeacon_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setCaliberBeacon(address(0));
-    }
-
-    function test_SetCaliberBeacon() public {
-        address newCaliberBeacon = makeAddr("newCaliberBeacon");
-        vm.expectEmit(false, false, false, false, address(hubRegistry));
-        emit IBaseMakinaRegistry.CaliberBeaconChange(address(hubCaliberBeacon), newCaliberBeacon);
-        vm.prank(dao);
-        hubRegistry.setCaliberBeacon(newCaliberBeacon);
-        assertEq(hubRegistry.caliberBeacon(), newCaliberBeacon);
     }
 
     function test_SetMachineBeacon_RevertWhen_CallerWithoutRole() public {

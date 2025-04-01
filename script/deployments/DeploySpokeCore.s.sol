@@ -36,6 +36,7 @@ contract DeploySpokeCore is DeployCore {
 
         setupSpokeRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
+        setupTokenRegistry(_deployment.tokenRegistry, tokensToRegister);
         setupSwapModule(_deployment.swapModule, swappersData);
 
         // @TODO setup access manager
@@ -49,11 +50,12 @@ contract DeploySpokeCore is DeployCore {
 
         // write to file;
         vm.serializeAddress(key, "AccessManager", address(_deployment.accessManager));
-        vm.serializeAddress(key, "CaliberBeacon", address(_deployment.spokeCaliberBeacon));
+        vm.serializeAddress(key, "CaliberBeacon", address(_deployment.caliberBeacon));
         vm.serializeAddress(key, "CaliberFactory", address(_deployment.caliberFactory));
         vm.serializeAddress(key, "SpokeCaliberMailboxBeacon", address(_deployment.spokeCaliberMailboxBeacon));
         vm.serializeAddress(key, "SpokeRegistry", address(_deployment.spokeRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
+        vm.serializeAddress(key, "TokenRegistry", address(_deployment.tokenRegistry));
         vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);
     }
 }

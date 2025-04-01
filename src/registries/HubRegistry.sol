@@ -28,8 +28,15 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         _disableInitializers();
     }
 
-    function initialize(address oracleRegistry, address swapModule, address initialAuthority) external initializer {
-        __BaseMakinaRegistry_init(oracleRegistry, swapModule, initialAuthority);
+    function initialize(
+        address _oracleRegistry,
+        address _tokenRegistry,
+        address _chainRegistry,
+        address _swapModule,
+        address _initialAuthority
+    ) external initializer {
+        _getHubRegistryStorage()._chainRegistry = _chainRegistry;
+        __BaseMakinaRegistry_init(_oracleRegistry, _tokenRegistry, _swapModule, _initialAuthority);
     }
 
     /// @inheritdoc IHubRegistry

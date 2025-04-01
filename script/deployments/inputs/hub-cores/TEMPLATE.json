@@ -13,6 +13,13 @@
       "stalenessThreshold2": 0
     }
   ],
+  "foreignTokens": [
+    {
+      "localToken": "0x0000000000000000000000000000000000000000",
+      "foreignEvmChainId": 0,
+      "foreignToken": "0x0000000000000000000000000000000000000000"
+    }
+  ],
   "swappersTargets": [
     {
       "swapperId": 0,
