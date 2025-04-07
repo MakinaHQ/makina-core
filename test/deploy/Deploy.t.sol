@@ -11,10 +11,8 @@ import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
 import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
 import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
-import {DeploySpokeMachineMailboxes} from "script/deployments/DeploySpokeMachineMailboxes.s.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 
@@ -27,7 +25,6 @@ contract Deploy_Scripts_Test is Base_Test {
     // Scripts to test
     DeployHubCore public deployHubCore;
     DeployHubMachine public deployHubMachine;
-    DeploySpokeMachineMailboxes public deploySpokeMachineMailboxes;
     DeploySpokeCore public deploySpokeCore;
     DeploySpokeCaliber public deploySpokeCaliber;
 
@@ -121,8 +118,7 @@ contract Deploy_Scripts_Test is Base_Test {
         string memory shareTokenSymbol =
             abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenSymbol"), (string));
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
-        IHubDualMailbox dualMailbox = IHubDualMailbox(machine.hubCaliberMailbox());
-        ICaliber hubCaliber = ICaliber(dualMailbox.caliber());
+        ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         address authority = IAccessManaged(address(machine)).authority();
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
@@ -136,25 +132,13 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.shareLimit(), machineInitParams.initialShareLimit);
         assertEq(authority, machineInitParams.initialAuthority);
         assertEq(machine.getSpokeCalibersLength(), 0);
-        assertEq(dualMailbox.machine(), address(machine));
-        assertEq(hubCaliber.mailbox(), address(dualMailbox));
+        assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
 
         // set machine authority to core access manager for convenience
         vm.prank(authority);
         IAccessManaged(address(machine)).setAuthority(address(hubCoreDeployment.accessManager));
-
-        deploySpokeMachineMailboxes = new DeploySpokeMachineMailboxes();
-        deploySpokeMachineMailboxes.run();
-
-        // Check that Spoke Machine Mailboxes are correctly set up
-        uint256[] memory spokeChainIds =
-            abi.decode(vm.parseJson(deploySpokeMachineMailboxes.inputJson(), ".spokeChainIds"), (uint256[]));
-        for (uint256 i; i < spokeChainIds.length; i++) {
-            address mailbox = machine.getSpokeCaliberData(spokeChainIds[i]).machineMailbox;
-            assertEq(mailbox, deploySpokeMachineMailboxes.deployedInstances(i));
-        }
     }
 
     function testDeployScriptSpoke() public {
@@ -210,11 +194,14 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that Spoke Caliber is correctly set up
-        DeploySpokeCaliber.CaliberInitParamsSorted memory caliberInitParams =
-            abi.decode(vm.parseJson(deploySpokeCaliber.inputJson()), (DeploySpokeCaliber.CaliberInitParamsSorted));
+        DeploySpokeCaliber.CaliberInitParamsSorted memory caliberInitParams = abi.decode(
+            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"),
+            (DeploySpokeCaliber.CaliberInitParamsSorted)
+        );
+
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
-        assertEq(ICaliberMailbox(spokeCaliber.mailbox()).caliber(), address(spokeCaliber));
+        assertEq(ICaliberMailbox(spokeCaliber.hubMachineEndpoint()).caliber(), address(spokeCaliber));
         assertEq(spokeCaliber.accountingToken(), caliberInitParams.accountingToken);
         assertEq(spokeCaliber.positionStaleThreshold(), caliberInitParams.initialPositionStaleThreshold);
         assertEq(spokeCaliber.allowedInstrRoot(), caliberInitParams.initialAllowedInstrRoot);

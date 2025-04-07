@@ -10,19 +10,17 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
-import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 import {TokenRegistry} from "src/registries/TokenRegistry.sol";
@@ -57,8 +55,6 @@ abstract contract Base_Hub_Test is Base_Test {
     MachineFactory public machineFactory;
     UpgradeableBeacon public machineBeacon;
     UpgradeableBeacon public caliberBeacon;
-    UpgradeableBeacon public hubDualMailboxBeacon;
-    UpgradeableBeacon public spokeMachineMailboxBeacon;
 
     IWormhole public wormhole;
 
@@ -79,9 +75,7 @@ abstract contract Base_Hub_Test is Base_Test {
         chainRegistry = deployment.chainRegistry;
         machineFactory = deployment.machineFactory;
         machineBeacon = deployment.machineBeacon;
-        hubDualMailboxBeacon = deployment.hubDualMailboxBeacon;
         caliberBeacon = deployment.caliberBeacon;
-        spokeMachineMailboxBeacon = deployment.spokeMachineMailboxBeacon;
 
         setupHubRegistry(deployment);
         setupAccessManager(accessManager, dao);
@@ -93,7 +87,7 @@ abstract contract Base_Hub_Test is Base_Test {
 
     function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, address _flashLoanModule)
         public
-        returns (Machine, Caliber, HubDualMailbox)
+        returns (Machine, Caliber)
     {
         vm.prank(dao);
         Machine _machine = Machine(
@@ -119,9 +113,8 @@ abstract contract Base_Hub_Test is Base_Test {
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
         );
-        Caliber _caliber = Caliber(ICaliberMailbox(_machine.hubCaliberMailbox()).caliber());
-        HubDualMailbox _mailbox = HubDualMailbox(_machine.hubCaliberMailbox());
-        return (_machine, _caliber, _mailbox);
+        Caliber _caliber = Caliber(_machine.hubCaliber());
+        return (_machine, _caliber);
     }
 }
 
@@ -129,7 +122,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     SpokeRegistry public spokeRegistry;
     CaliberFactory public caliberFactory;
     UpgradeableBeacon public caliberBeacon;
-    UpgradeableBeacon public spokeCaliberMailboxBeacon;
+    UpgradeableBeacon public caliberMailboxBeacon;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -143,23 +136,22 @@ abstract contract Base_Spoke_Test is Base_Test {
         spokeRegistry = deployment.spokeRegistry;
         caliberFactory = deployment.caliberFactory;
         caliberBeacon = deployment.caliberBeacon;
-        spokeCaliberMailboxBeacon = deployment.spokeCaliberMailboxBeacon;
+        caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
         setupSpokeRegistry(deployment);
         setupAccessManager(accessManager, dao);
     }
 
     function _deployCaliber(
-        address _spokeMachineMailbox,
+        address _hubMachine,
         address _accountingToken,
         bytes32 _allowedInstrMerkleRoot,
         address _flashLoanModule
-    ) public returns (Caliber, SpokeCaliberMailbox) {
+    ) public returns (Caliber, CaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    hubMachineEndpoint: _spokeMachineMailbox,
                     accountingToken: _accountingToken,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: _allowedInstrMerkleRoot,
@@ -171,10 +163,11 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
                     initialAuthority: address(accessManager)
-                })
+                }),
+                _hubMachine
             )
         );
-        SpokeCaliberMailbox _mailbox = SpokeCaliberMailbox(_caliber.mailbox());
+        CaliberMailbox _mailbox = CaliberMailbox(_caliber.hubMachineEndpoint());
         return (_caliber, _mailbox);
     }
 }

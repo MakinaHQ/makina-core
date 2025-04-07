@@ -13,8 +13,6 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();
 
-        (caliber,) = _deployCaliber(address(0), address(accountingToken), bytes32(0), address(0));
-
         defaultRoot = keccak256(abi.encodePacked("defaultRoot"));
 
         vm.prank(dao);
@@ -23,7 +21,7 @@ contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     }
 
     function test_Getters() public view {
-        assertNotEq(caliber.mailbox(), address(0));
+        assertEq(caliber.hubMachineEndpoint(), address(caliberMailbox));
         assertEq(caliber.mechanic(), mechanic);
         assertEq(caliber.securityCouncil(), securityCouncil);
         assertEq(caliber.accountingToken(), address(accountingToken));

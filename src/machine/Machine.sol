@@ -15,15 +15,12 @@ import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
-import {IHubDualMailbox} from "../interfaces/IHubDualMailbox.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
-import {IMachine} from "../interfaces/IMachine.sol";
+import {IMachine, IMachineEndpoint} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
-import {IMachineMailbox} from "../interfaces/IMachineMailbox.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
-import {ISpokeCaliberMailbox} from "../interfaces/ISpokeCaliberMailbox.sol";
-import {ISpokeMachineMailbox} from "../interfaces/ISpokeMachineMailbox.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {Constants} from "../libraries/Constants.sol";
 
 contract Machine is AccessManagedUpgradeable, IMachine {
@@ -52,10 +49,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         uint256 _shareLimit;
         bool _recoveryMode;
         uint256 _hubChainId;
-        address _hubCaliberMailbox;
+        address _hubCaliber;
         uint256[] _foreignChainIds;
         mapping(uint256 foreignChainId => SpokeCaliberData) _foreignChainIdToSpokeCaliberData;
-        mapping(address addr => bool isMailbox) _isMachineMailbox;
         EnumerableSet.AddressSet _idleTokens;
     }
 
@@ -105,23 +101,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         __AccessManaged_init(params.initialAuthority);
 
         $._hubChainId = block.chainid;
-        address mailbox = _createHubCaliber(params);
-        $._hubCaliberMailbox = mailbox;
-        $._isMachineMailbox[mailbox] = true;
+        $._hubCaliber = _createHubCaliber(params);
     }
 
-    modifier onlyOperator() {
+    modifier onlyMechanic() {
         MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
+        if (msg.sender != $._mechanic) {
             revert UnauthorizedOperator();
-        }
-        _;
-    }
-
-    modifier onlyMailbox() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (!$._isMachineMailbox[msg.sender]) {
-            revert NotMailbox();
         }
         _;
     }
@@ -181,8 +167,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function hubCaliberMailbox() external view returns (address) {
-        return _getMachineStorage()._hubCaliberMailbox;
+    function hubCaliber() external view returns (address) {
+        return _getMachineStorage()._hubCaliber;
     }
 
     /// @inheritdoc IMachine
@@ -256,10 +242,15 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
-    /// @inheritdoc IMachine
-    function notifyIncomingTransfer(address token) external override onlyMailbox {
+    /// @inheritdoc IMachineEndpoint
+    function manageTransfer(address token, uint256 amount, bytes calldata) external override {
+        MachineStorage storage $ = _getMachineStorage();
+        if (msg.sender == $._hubCaliber) {
+            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+        } else {
+            revert UnauthorizedSender();
+        }
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
-            MachineStorage storage $ = _getMachineStorage();
             bool newlyAdded = $._idleTokens.add(token);
             if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
                 revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
@@ -268,21 +259,15 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function transferToCaliber(address token, uint256 amount, uint256 /*chainId*/ )
-        external
-        override
-        notRecoveryMode
-        onlyOperator
-    {
+    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
 
-        address mailbox = $._hubCaliberMailbox;
-
-        // @TODO implement fund bridging to spoke calibers
-
-        IERC20Metadata(token).forceApprove(mailbox, amount);
+        if (!ICaliber($._hubCaliber).isBaseToken(token)) {
+            revert ICaliber.NotBaseToken();
+        }
+        IERC20Metadata(token).safeTransfer($._hubCaliber, amount);
         emit TransferToCaliber($._hubChainId, token, amount);
-        IMachineMailbox(mailbox).manageTransferFromMachineToCaliber(token, amount);
+
         if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
         }
@@ -345,7 +330,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             uint16 _wmChainId = r.responses[i].chainId;
             uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
             SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[_evmChainId];
-            if (caliberData.machineMailbox == address(0)) {
+            if (caliberData.caliberMailbox == address(0)) {
                 revert InvalidChainId();
             }
 
@@ -371,13 +356,13 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             // Validate addresses and function signatures.
             address[] memory validAddresses = new address[](1);
             bytes4[] memory validFunctionSignatures = new bytes4[](1);
-            validAddresses[0] = ISpokeMachineMailbox(caliberData.machineMailbox).spokeCaliberMailbox();
-            validFunctionSignatures[0] = ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector;
+            validAddresses[0] = caliberData.caliberMailbox;
+            validFunctionSignatures[0] = ICaliberMailbox.getSpokeCaliberAccountingData.selector;
             QueryResponseLib.validateEthCallRecord(eqr.results[0], validAddresses, validFunctionSignatures);
 
             // Decode and update accounting data.
-            ISpokeCaliberMailbox.SpokeCaliberAccountingData memory accountingData =
-                abi.decode(eqr.results[0].result, (ISpokeCaliberMailbox.SpokeCaliberAccountingData));
+            ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+                abi.decode(eqr.results[0].result, (ICaliberMailbox.SpokeCaliberAccountingData));
             caliberData.netAum = accountingData.netAum;
             caliberData.positions = accountingData.positions;
             caliberData.baseTokens = accountingData.baseTokens;
@@ -392,40 +377,20 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function createSpokeMailbox(uint256 evmChainId) external restricted returns (address) {
+    function addSpokeCaliber(uint256 foreignChainId, address foreignMailbox) external restricted {
+        if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
+            revert IChainRegistry.EvmChainIdNotRegistered(foreignChainId);
+        }
+
         MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[foreignChainId];
 
-        if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(evmChainId)) {
-            revert IChainRegistry.EvmChainIdNotRegistered(evmChainId);
+        if (caliberData.caliberMailbox != address(0)) {
+            revert SpokeCaliberAlreadyExists();
         }
-        if ($._foreignChainIdToSpokeCaliberData[evmChainId].machineMailbox != address(0)) {
-            revert SpokeMailboxAlreadyExists();
-        }
-
-        address mailbox = address(
-            new BeaconProxy(
-                IHubRegistry(registry).spokeMachineMailboxBeacon(),
-                abi.encodeCall(ISpokeMachineMailbox.initialize, (address(this), $._hubChainId))
-            )
-        );
-
-        $._isMachineMailbox[mailbox] = true;
-        $._foreignChainIds.push(evmChainId);
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
-        data.machineMailbox = mailbox;
-        emit SpokeMailboxDeployed(mailbox, evmChainId);
-
-        return mailbox;
-    }
-
-    /// @inheritdoc IMachine
-    function setSpokeCaliberMailbox(uint256 evmChainId, address spokeCaliberMailbox) external restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage data = $._foreignChainIdToSpokeCaliberData[evmChainId];
-        if (data.machineMailbox == address(0)) {
-            revert MachineMailboxDoesNotExist();
-        }
-        ISpokeMachineMailbox(data.machineMailbox).setSpokeCaliberMailbox(spokeCaliberMailbox);
+        $._foreignChainIds.push(foreignChainId);
+        caliberData.caliberMailbox = foreignMailbox;
+        emit SpokeCaliberAdded(foreignChainId);
     }
 
     /// @inheritdoc IMachine
@@ -479,11 +444,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         }
     }
 
-    /// @dev Deploys the hub caliber and associated dual mailbox.
-    /// @return mailbox The address of the mailbox.
+    /// @dev Deploys the hub caliber.
     function _createHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
         ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
-            hubMachineEndpoint: address(this),
             accountingToken: params.accountingToken,
             initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
             initialAllowedInstrRoot: params.hubCaliberAllowedInstrRoot,
@@ -498,13 +461,11 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         });
         address caliber = address(
             new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (initParams, IHubRegistry(registry).hubDualMailboxBeacon()))
+                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams, address(this)))
             )
         );
-        address mailbox = ICaliber(caliber).mailbox();
-        emit HubCaliberDeployed(caliber, mailbox);
-        return mailbox;
+        emit HubCaliberDeployed(caliber);
+        return caliber;
     }
 
     /// @dev Computes the total AUM of the machine.
@@ -512,8 +473,9 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         uint256 totalAum;
 
-        // local caliber net AUM
-        totalAum += IHubDualMailbox($._hubCaliberMailbox).getHubCaliberAccountingData().netAum;
+        // hub caliber net AUM
+        (uint256 hcAum,,) = ICaliber($._hubCaliber).getDetailedAum();
+        totalAum += hcAum;
 
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._foreignChainIds.length;

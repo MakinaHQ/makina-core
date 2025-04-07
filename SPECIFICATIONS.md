@@ -8,14 +8,11 @@ The `Machine` contract is the central and user-facing component of the protocol.
 
 ### Caliber
 
-The `Caliber` contract is the execution engine from which assets are deployed to external protocols.
+The `Caliber` contract serves as the execution engine, responsible for deploying assets to external protocols. On the hub chain, the Machine communicates directly with its associated hub Caliber. Additional Caliber instances can be deployed on spoke chains to expand the protocol across networks.
 
-### Mailboxes
+#### Mailbox
 
-Data passing and fund transfers between calibers and machines is managed by mailboxes.
-
-- For hub calibers, a single `HubDualMailbox` is used to handle communication between a machine and a caliber.
-- For spoke calibers, a `SpokeMachineMailbox` (deployed on the hub chain) communicates with an associated `SpokeCaliberMailbox` (deployed on the same spoke chain as their associated caliber) via bridging of message and funds.
+Cross-chain communication between the hub Machine and spoke Calibers is facilitated through `CaliberMailbox` contracts. Each spoke Caliber is deployed alongside a `CaliberMailbox` on its respective spoke chain. These mailbox contracts enable spoke Calibers to communicate asynchronously with the hub Machine, coordinating and tracking cross-chain fund transfers initiated or received by the Caliber.
 
 #### Instructions
 
@@ -38,6 +35,14 @@ The `SwapModule` contract serves as an external module, enabling calibers and ma
 ### Oracle Registry
 
 The `OracleRegistry` contract acts as an aggregator of Chainlink price feeds, and prices tokens in a reference currency (e.g. USD) using either one feed or a two feeds path.
+
+### Chain Registry
+
+The protocol uses Wormhole cross-chain queries to relay accounting data from spoke Calibers to the hub Machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
+
+### Token Registry
+
+The `TokenRegistry` contract maintains the association between token addresses on the hub and spoke chains. It enables consistent identification and pricing of bridged assets across networks, ensuring accurate cross-chain accounting.
 
 ### Access Control
 

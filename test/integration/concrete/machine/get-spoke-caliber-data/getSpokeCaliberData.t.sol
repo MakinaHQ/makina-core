@@ -9,19 +9,19 @@ contract GetSpokeCaliberData_Integration_Concrete_Test is Machine_Integration_Co
     function test_EmptyStructWithHubChainId() public view {
         // hub caliber data not accessible here
         IMachine.SpokeCaliberData memory data = machine.getSpokeCaliberData(block.chainid);
-        assertEq(data.machineMailbox, address(0));
+        assertEq(data.caliberMailbox, address(0));
     }
 
     function test_EmptyStructWithInvalidSpokeChainId() public view {
         // invalid spoke chain data
         IMachine.SpokeCaliberData memory data = machine.getSpokeCaliberData(SPOKE_CHAIN_ID);
-        assertEq(data.machineMailbox, address(0));
+        assertEq(data.caliberMailbox, address(0));
     }
 
     function test_GetSpokeCaliberData() public {
         vm.prank(dao);
-        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
+        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
         IMachine.SpokeCaliberData memory data = machine.getSpokeCaliberData(SPOKE_CHAIN_ID);
-        assertEq(data.machineMailbox, spokeMachineMailboxAddr);
+        assertEq(data.caliberMailbox, spokeCaliberMailboxAddr);
     }
 }

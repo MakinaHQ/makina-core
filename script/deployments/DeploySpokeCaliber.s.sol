@@ -29,7 +29,6 @@ contract DeploySpokeCaliber is Script {
         uint256 initialPositionStaleThreshold;
         address initialSecurityCouncil;
         uint256 initialTimelockDuration;
-        address spokeMachineMailbox;
     }
 
     constructor() {
@@ -54,7 +53,9 @@ contract DeploySpokeCaliber is Script {
     }
 
     function run() public {
-        CaliberInitParamsSorted memory initParams = abi.decode(vm.parseJson(inputJson), (CaliberInitParamsSorted));
+        CaliberInitParamsSorted memory initParams =
+            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
+        address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
 
         ICaliberFactory caliberFactory =
             ICaliberFactory(abi.decode(vm.parseJson(coreOutputJson, ".CaliberFactory"), (address)));
@@ -63,7 +64,6 @@ contract DeploySpokeCaliber is Script {
         vm.startBroadcast();
         deployedInstance = caliberFactory.createCaliber(
             ICaliber.CaliberInitParams(
-                initParams.spokeMachineMailbox,
                 initParams.accountingToken,
                 initParams.initialPositionStaleThreshold,
                 initParams.initialAllowedInstrRoot,
@@ -75,13 +75,16 @@ contract DeploySpokeCaliber is Script {
                 initParams.initialMechanic,
                 initParams.initialSecurityCouncil,
                 initParams.initialAuthority
-            )
+            ),
+            hubMachine
         );
         vm.stopBroadcast();
 
         // Write to file
         string memory key = "key-deploy-spoke-caliber-output-file";
         vm.serializeAddress(key, "caliber", deployedInstance);
-        vm.writeJson(vm.serializeAddress(key, "caliberMailbox", ICaliber(deployedInstance).mailbox()), outputPath);
+        vm.writeJson(
+            vm.serializeAddress(key, "caliberMailbox", ICaliber(deployedInstance).hubMachineEndpoint()), outputPath
+        );
     }
 }

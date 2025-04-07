@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -41,23 +41,20 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertGiven_SpokeCaliberStale() public withTokenAsBT(address(baseToken)) {
-        // deploy and setup spoke machine mailbox
-        vm.startPrank(dao);
-        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
-        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
-        vm.stopPrank();
+        // add a spoke caliber
+        vm.prank(dao);
+        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
         machine.updateSpokeCaliberAccountingData(response, signatures);
@@ -102,10 +99,12 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_IdleBaseToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(machine), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount);
 
-        vm.prank(machine.hubCaliberMailbox());
-        machine.notifyIncomingTransfer(address(baseToken));
+        vm.startPrank(address(caliber));
+        baseToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(baseToken), inputAmount, "");
+        vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount * PRICE_B_A, block.timestamp);
@@ -172,11 +171,10 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_PositiveHubCaliberAumAndIdleToken() public {
-        // fund machine with accountingToken
         uint256 inputAmount = 1e18;
+
+        // fund machine with accountingToken
         deal(address(accountingToken), address(machine), inputAmount);
-        vm.prank(machine.hubCaliberMailbox());
-        machine.notifyIncomingTransfer(address(accountingToken));
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
@@ -195,9 +193,12 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_NegativeHubCaliberValueAndIdleToken() public withTokenAsBT(address(baseToken)) {
         // fund machine with accountingToken
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(machine), inputAmount);
-        vm.prank(machine.hubCaliberMailbox());
-        machine.notifyIncomingTransfer(address(accountingToken));
+        deal(address(accountingToken), address(machineDepositor), inputAmount);
+
+        vm.startPrank(address(machineDepositor));
+        accountingToken.approve(address(machine), inputAmount);
+        machine.deposit(inputAmount, address(this));
+        vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
@@ -229,22 +230,19 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_PositiveSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
-        // deploy and setup spoke machine mailbox
-        vm.startPrank(dao);
-        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
-        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
-        vm.stopPrank();
+        // add a spoke caliber
+        vm.prank(dao);
+        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
 
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            _buildSpokeCaliberAccountingData(false, false);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
@@ -255,22 +253,19 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_UpdateTotalAum_NegativeSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
-        // deploy and setup spoke machine mailbox
-        vm.startPrank(dao);
-        spokeMachineMailboxAddr = machine.createSpokeMailbox(SPOKE_CHAIN_ID);
-        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
-        vm.stopPrank();
+        // add a spoke caliber
+        vm.prank(dao);
+        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
 
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            _buildSpokeCaliberAccountingData(true, false);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(true, false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
 

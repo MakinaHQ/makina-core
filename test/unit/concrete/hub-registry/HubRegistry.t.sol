@@ -20,8 +20,6 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
         assertEq(hubRegistry.chainRegistry(), address(chainRegistry));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
         assertEq(hubRegistry.machineFactory(), address(machineFactory));
-        assertEq(hubRegistry.hubDualMailboxBeacon(), address(hubDualMailboxBeacon));
-        assertEq(hubRegistry.spokeMachineMailboxBeacon(), address(spokeMachineMailboxBeacon));
         assertEq(hubRegistry.authority(), address(accessManager));
     }
 
@@ -79,35 +77,5 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
         vm.prank(dao);
         hubRegistry.setMachineFactory(newMachineFactory);
         assertEq(hubRegistry.machineFactory(), newMachineFactory);
-    }
-
-    function test_SetHubDualMailboxBeacon_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setHubDualMailboxBeacon(address(0));
-    }
-
-    function test_SetHubDualMailboxBeacon() public {
-        address newHubDualMailboxBeacon = makeAddr("newHubDualMailboxBeacon");
-        vm.expectEmit(false, false, false, false, address(hubRegistry));
-        emit IHubRegistry.HubDualMailboxBeaconChange(address(hubDualMailboxBeacon), newHubDualMailboxBeacon);
-        vm.prank(dao);
-        hubRegistry.setHubDualMailboxBeacon(newHubDualMailboxBeacon);
-        assertEq(hubRegistry.hubDualMailboxBeacon(), newHubDualMailboxBeacon);
-    }
-
-    function test_SetSpokeMachineMailboxBeacon_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setSpokeMachineMailboxBeacon(address(0));
-    }
-
-    function test_SetSpokeMachineMailboxBeacon() public {
-        address newSpokeMachineMailboxBeacon = makeAddr("newSpokeMachineMailboxBeacon");
-        vm.expectEmit(false, false, false, false, address(hubRegistry));
-        emit IHubRegistry.SpokeMachineMailboxBeaconChange(
-            address(spokeMachineMailboxBeacon), newSpokeMachineMailboxBeacon
-        );
-        vm.prank(dao);
-        hubRegistry.setSpokeMachineMailboxBeacon(newSpokeMachineMailboxBeacon);
-        assertEq(hubRegistry.spokeMachineMailboxBeacon(), newSpokeMachineMailboxBeacon);
     }
 }

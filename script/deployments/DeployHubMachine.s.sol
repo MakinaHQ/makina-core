@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 
@@ -94,12 +93,6 @@ contract DeployHubMachine is Script {
         // Write to file
         string memory key = "key-deploy-hub-machine-output-file";
         vm.serializeAddress(key, "machine", deployedInstance);
-        vm.serializeAddress(key, "hubCaliberMailbox", IMachine(deployedInstance).hubCaliberMailbox());
-        vm.writeJson(
-            vm.serializeAddress(
-                key, "hubCaliber", ICaliberMailbox(IMachine(deployedInstance).hubCaliberMailbox()).caliber()
-            ),
-            outputPath
-        );
+        vm.writeJson(vm.serializeAddress(key, "hubCaliber", IMachine(deployedInstance).hubCaliber()), outputPath);
     }
 }

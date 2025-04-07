@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IHubDualMailbox} from "src/interfaces/IHubDualMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
@@ -56,14 +55,12 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
         );
-        address dualMailbox = machine.hubCaliberMailbox();
-        address caliber = IHubDualMailbox(dualMailbox).caliber();
+        address caliber = machine.hubCaliber();
 
         assertTrue(machineFactory.isMachine(address(machine)));
         assertTrue(machineFactory.isCaliber(address(caliber)));
 
-        assertEq(IHubDualMailbox(dualMailbox).machine(), address(machine));
-        assertEq(ICaliber(caliber).mailbox(), dualMailbox);
+        assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 
         assertEq(machine.registry(), address(hubRegistry));
         assertEq(machine.mechanic(), mechanic);

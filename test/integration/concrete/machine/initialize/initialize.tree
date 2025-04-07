@@ -7,5 +7,5 @@ initialize.t.sol
    └── given the accounting token has associated feed route in the oracle registry
       ├── it should mark the token as an idle token in the machine
       ├── it should should initialize the machine with provided params
-      └── it should deploy a caliber and associated hubDualMailbox with provided params
+      └── it should deploy a caliber with provided params
       

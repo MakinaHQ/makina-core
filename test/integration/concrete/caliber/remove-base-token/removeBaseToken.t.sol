@@ -20,7 +20,7 @@ contract RemoveBaseToken_Integration_Concrete_Test is Caliber_Integration_Concre
     }
 
     function test_RevertWhen_NonExistingBaseToken() public {
-        vm.expectRevert(ICaliber.BaseTokenDoesNotExist.selector);
+        vm.expectRevert(ICaliber.NotBaseToken.selector);
         vm.prank(dao);
         caliber.removeBaseToken(address(baseToken));
     }

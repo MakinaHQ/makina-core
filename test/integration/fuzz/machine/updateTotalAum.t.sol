@@ -4,10 +4,9 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -29,7 +28,6 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
 
     Machine public machine;
     Caliber public caliber;
-    HubDualMailbox public hubDualMailbox;
 
     address public spokeCaliberMailboxAddr;
 
@@ -87,14 +85,12 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         oracleRegistry.setFeedRoute(address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
         vm.stopPrank();
 
-        (machine, caliber, hubDualMailbox) = _deployMachine(address(accountingToken), bytes32(0), address(0));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), address(0));
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
 
-        vm.startPrank(dao);
-        machine.createSpokeMailbox(SPOKE_CHAIN_ID);
-        machine.setSpokeCaliberMailbox(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
-        vm.stopPrank();
+        vm.prank(dao);
+        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
 
         skip(caliber.timelockDuration() + 1);
     }
@@ -108,9 +104,10 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
 
         uint256 machineIdleBaseTokensValue;
         if (data.machineIdleBaseTokens > 0) {
-            deal(address(baseToken), address(machine), data.machineIdleBaseTokens, true);
-            vm.prank(address(hubDualMailbox));
-            machine.notifyIncomingTransfer(address(baseToken));
+            deal(address(baseToken), address(caliber), data.machineIdleBaseTokens, true);
+            vm.startPrank(address(caliber));
+            baseToken.approve(address(machine), data.machineIdleBaseTokens);
+            machine.manageTransfer(address(baseToken), data.machineIdleBaseTokens, "");
             machineIdleBaseTokensValue = data.machineIdleBaseTokens
                 * ((10 ** data.aDecimals) * data.price_b_e / data.price_a_e) / (10 ** data.bDecimals);
         }
@@ -122,13 +119,13 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory queriedData;
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData;
         queriedData.netAum = data.spokeCaliberNetAum;
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ISpokeCaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
 

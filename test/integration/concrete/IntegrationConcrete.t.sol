@@ -13,8 +13,7 @@ import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {HubDualMailbox} from "src/mailboxes/HubDualMailbox.sol";
-import {SpokeCaliberMailbox} from "src/mailboxes/SpokeCaliberMailbox.sol";
+import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
@@ -127,14 +126,12 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
     Machine public machine;
     Caliber public caliber;
-    HubDualMailbox public hubDualMailbox;
 
     function setUp() public virtual override(Integration_Concrete_Test, Base_Hub_Test) {
         Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (machine, caliber, hubDualMailbox) =
-            _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 
     modifier whileInRecoveryMode() {
@@ -154,13 +151,13 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
     Caliber public caliber;
-    SpokeCaliberMailbox public spokeCaliberMailbox;
+    CaliberMailbox public caliberMailbox;
 
     function setUp() public virtual override(Integration_Concrete_Test, Base_Spoke_Test) {
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
-        (caliber, spokeCaliberMailbox) =
+        (caliber, caliberMailbox) =
             _deployCaliber(address(0), address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 

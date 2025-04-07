@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ISpokeCaliberMailbox} from "src/interfaces/ISpokeCaliberMailbox.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
@@ -16,13 +16,14 @@ contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     uint256 public constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
 
     address public spokeCaliberMailboxAddr;
-    address public spokeMachineMailboxAddr;
 
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
         _setUpCaliberMerkleRoot(caliber);
         vm.prank(dao);
         chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
+
+        spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
     }
 
     ///
@@ -32,9 +33,9 @@ contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     function _buildSpokeCaliberAccountingData_Null()
         internal
         pure
-        returns (ISpokeCaliberMailbox.SpokeCaliberAccountingData memory)
+        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
     {
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory data;
+        ICaliberMailbox.SpokeCaliberAccountingData memory data;
 
         return data;
     }
@@ -42,9 +43,9 @@ contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
     function _buildSpokeCaliberAccountingData(bool negativeValue, bool withTransfers)
         internal
         view
-        returns (ISpokeCaliberMailbox.SpokeCaliberAccountingData memory)
+        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
     {
-        ISpokeCaliberMailbox.SpokeCaliberAccountingData memory data;
+        ICaliberMailbox.SpokeCaliberAccountingData memory data;
 
         data.netAum = negativeValue
             ? 0

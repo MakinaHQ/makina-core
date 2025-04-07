@@ -6,6 +6,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 
 contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     /// @inheritdoc ICaliberFactory
@@ -24,15 +25,26 @@ contract CaliberFactory is AccessManagedUpgradeable, ICaliberFactory {
     }
 
     /// @inheritdoc ICaliberFactory
-    function createCaliber(ICaliber.CaliberInitParams calldata params) external override restricted returns (address) {
-        address caliber = address(
+    function createCaliber(ICaliber.CaliberInitParams calldata params, address hubMachine)
+        external
+        override
+        restricted
+        returns (address)
+    {
+        address mailbox = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (params, ISpokeRegistry(registry).spokeCaliberMailboxBeacon()))
+                ISpokeRegistry(registry).caliberMailboxBeacon(),
+                abi.encodeCall(ICaliberMailbox.initialize, (hubMachine))
             )
         );
+        address caliber = address(
+            new BeaconProxy(
+                ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (params, mailbox))
+            )
+        );
+        ICaliberMailbox(mailbox).setCaliber(caliber);
         isCaliber[caliber] = true;
-        emit CaliberDeployed(caliber);
+        emit SpokeCaliberCreated(hubMachine, caliber, mailbox);
         return caliber;
     }
 }
