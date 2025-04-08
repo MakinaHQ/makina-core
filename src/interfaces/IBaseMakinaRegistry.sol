@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {IBridgeAdapter} from "./IBridgeAdapter.sol";
+
 interface IBaseMakinaRegistry {
+    event BridgeAdapterBeaconChange(
+        uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
+    );
     event CaliberBeaconChange(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
     event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
     event SwapModuleChange(address indexed oldSwapModule, address indexed newSwapModule);
@@ -19,6 +24,9 @@ interface IBaseMakinaRegistry {
     /// @notice Address of the caliber beacon contract.
     function caliberBeacon() external view returns (address);
 
+    /// @notice Bridge ID => Address of the bridge adapter beacon contract.
+    function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+
     /// @notice Sets the oracle registry address.
     /// @param _oracleRegistry The oracle registry address.
     function setOracleRegistry(address _oracleRegistry) external;
@@ -34,4 +42,9 @@ interface IBaseMakinaRegistry {
     /// @notice Sets the caliber beacon address.
     /// @param _caliberBeacon The caliber beacon address.
     function setCaliberBeacon(address _caliberBeacon) external;
+
+    /// @notice Sets the bridge adapter beacon address.
+    /// @param bridgeId The bridge ID.
+    /// @param _bridgeAdapter The bridge adapter beacon address.
+    function setBridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId, address _bridgeAdapter) external;
 }

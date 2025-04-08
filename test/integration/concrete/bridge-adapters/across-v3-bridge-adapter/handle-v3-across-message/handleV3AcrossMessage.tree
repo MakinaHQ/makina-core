@@ -1,0 +1,18 @@
+handleV3AcrossMessage.t.sol
+├── given sender is not the authorized receive source
+│  └── it should revert with UnauthorizedSource
+└── given sender is the authorized receive source
+   ├── given the hash of the received message was not registered beforehand
+   │  └── it should revert with UnexpectedMessage
+   └── given the hash of the received message was registered beforehand
+      ├── given the message contains an invalid recipient chain ID
+      │  └── it should revert with InvalidRecipientChainId
+      └── given the message contains a valid recipient chain ID
+         ├── given the message contains an invalid output token address
+         │  └── it should revert with InvalidOutputToken
+         └── given the message contains a valid output token address
+            ├── given the adapter received some amount of output token smaller than expected
+            │  └── it should revert with InsufficientOutputAmount
+            └── given the message received an amount of output token not smaller than expected
+               ├── it should emit a ReceiveInBridgeTransfer event
+               └── it should increase the nextInTransferId in the receiving adapter

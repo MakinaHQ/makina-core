@@ -1,0 +1,252 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.28;
+
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
+import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
+import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
+
+abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
+    using Math for uint256;
+    using EnumerableSet for EnumerableSet.UintSet;
+    using SafeERC20 for IERC20Metadata;
+
+    /// @dev Full scale value in basis points
+    uint256 private constant MAX_BPS = 10_000;
+
+    /// @inheritdoc IBridgeAdapter
+    address public immutable override approvalTarget;
+
+    /// @inheritdoc IBridgeAdapter
+    address public immutable override executionTarget;
+
+    /// @inheritdoc IBridgeAdapter
+    address public immutable override receiveSource;
+
+    /// @custom:storage-location erc7201:makina.storage.BridgeAdapter
+    struct BridgeAdapterStorage {
+        address _parent;
+        Bridge _bridge;
+        uint256 _nextOutTransferId;
+        uint256 _nextInTransferId;
+        mapping(uint256 outTransferId => OutBridgeTransfer transfer) _outgoingTransfers;
+        mapping(uint256 inTransferId => InBridgeTransfer transfer) _incomingTransfers;
+        mapping(bytes32 messageHash => bool isExpected) _expectedInMessages;
+        mapping(address token => uint256 amount) _reservedBalances;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.BridgeAdapter")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant BridgeAdapterStorageLocation =
+        0xe24ea70efbf545f0256b406d064fa196624401f48d56c665b3e8bc995282c700;
+
+    function _getBridgeAdapterStorage() internal pure returns (BridgeAdapterStorage storage $) {
+        assembly {
+            $.slot := BridgeAdapterStorageLocation
+        }
+    }
+
+    constructor(address _approvalTarget, address _executionTarget, address _receiveSource) {
+        approvalTarget = _approvalTarget;
+        executionTarget = _executionTarget;
+        receiveSource = _receiveSource;
+        _disableInitializers();
+    }
+
+    function __BridgeAdapter_init(address _parent) internal onlyInitializing {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+        $._parent = _parent;
+        $._nextOutTransferId = 1;
+        $._nextInTransferId = 1;
+        __ReentrancyGuard_init();
+    }
+
+    modifier onlyParent() {
+        if (msg.sender != _getBridgeAdapterStorage()._parent) {
+            revert NotParent();
+        }
+        _;
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function parent() external view override returns (address) {
+        return _getBridgeAdapterStorage()._parent;
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function bridgeId() external view override returns (uint256) {
+        return uint256(_getBridgeAdapterStorage()._bridge);
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function nextOutTransferId() external view override returns (uint256) {
+        return _getBridgeAdapterStorage()._nextOutTransferId;
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function nextInTransferId() external view override returns (uint256) {
+        return _getBridgeAdapterStorage()._nextInTransferId;
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function scheduleOutBridgeTransfer(
+        uint256 destinationChainId,
+        address recipient,
+        address inputToken,
+        uint256 inputAmount,
+        address outputToken,
+        uint256 minOutputAmount
+    ) external override nonReentrant onlyParent returns (bytes32) {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        IERC20Metadata(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
+
+        uint256 id = $._nextOutTransferId++;
+        bytes memory encodedMessage = abi.encode(
+            BridgeMessage(
+                id,
+                address(this),
+                recipient,
+                block.chainid,
+                destinationChainId,
+                inputToken,
+                inputAmount,
+                outputToken,
+                minOutputAmount
+            )
+        );
+        $._outgoingTransfers[id] = OutBridgeTransfer(
+            recipient,
+            destinationChainId,
+            inputToken,
+            inputAmount,
+            outputToken,
+            minOutputAmount,
+            encodedMessage,
+            OutTransferStatus.SCHEDULED
+        );
+        $._reservedBalances[inputToken] += inputAmount;
+
+        bytes32 messageHash = keccak256(encodedMessage);
+
+        emit ScheduleOutBridgeTransfer(id, messageHash);
+
+        return messageHash;
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function authorizeInBridgeTransfer(bytes32 messageHash) external override onlyParent {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        if ($._expectedInMessages[messageHash]) {
+            revert MessageAlreadyAuthorized();
+        }
+        $._expectedInMessages[messageHash] = true;
+
+        emit AuthorizeInBridgeTransfer(messageHash);
+    }
+
+    /// @inheritdoc IBridgeAdapter
+    function claimInBridgeTransfer(uint256 id) external override nonReentrant onlyParent {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        InBridgeTransfer storage receipt = $._incomingTransfers[id];
+
+        if (receipt.status != InTransferStatus.RECEIVED) {
+            revert InvalidTransferStatus();
+        }
+
+        IERC20Metadata(receipt.outputToken).forceApprove($._parent, receipt.outputAmount);
+        IMachineEndpoint($._parent).manageTransfer(
+            receipt.outputToken, receipt.outputAmount, abi.encode($._bridge, receipt.inputAmount)
+        );
+
+        delete $._incomingTransfers[id];
+        $._reservedBalances[receipt.outputToken] -= receipt.outputAmount;
+
+        emit ClaimInBridgeTransfer(id);
+    }
+
+    /// @dev Updates contract state before sending out a bridge transfer.
+    function _beforeSendOutBridgeTransfer(uint256 id) internal {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+        OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
+        if (receipt.status != OutTransferStatus.SCHEDULED) {
+            revert InvalidTransferStatus();
+        }
+        receipt.status = OutTransferStatus.SENT;
+        $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
+
+        emit SendOutBridgeTransfer(id);
+    }
+
+    /// @dev Cancels an outgoing bridge transfer that is either scheduled or refunded.
+    function _cancelOutBridgeTransfer(uint256 id) internal {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
+
+        if (receipt.status == OutTransferStatus.SENT) {
+            if (
+                IERC20Metadata(receipt.inputToken).balanceOf(address(this))
+                    < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
+            ) {
+                revert InsufficientBalance();
+            }
+        } else if (receipt.status == OutTransferStatus.SCHEDULED) {
+            $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
+        } else {
+            revert InvalidTransferStatus();
+        }
+
+        IERC20Metadata(receipt.inputToken).forceApprove($._parent, receipt.inputAmount);
+        IMachineEndpoint($._parent).manageTransfer(
+            receipt.inputToken, receipt.inputAmount, abi.encode($._bridge, receipt.inputAmount)
+        );
+
+        delete $._outgoingTransfers[id];
+
+        emit CancelOutBridgeTransfer(id);
+    }
+
+    /// @dev Updates contract state when receiving an incoming bridge transfer.
+    function _receiveInBridgeTransfer(bytes memory encodedMessage, address receivedToken, uint256 receivedAmount)
+        internal
+    {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        bytes32 messageHash = keccak256(encodedMessage);
+        if (!$._expectedInMessages[messageHash]) {
+            revert UnexpectedMessage();
+        }
+        delete $._expectedInMessages[messageHash];
+
+        BridgeMessage memory message = abi.decode(encodedMessage, (BridgeMessage));
+
+        if (message.destinationChainId != block.chainid) {
+            revert InvalidRecipientChainId();
+        }
+        if (receivedToken != message.outputToken) {
+            revert InvalidOutputToken();
+        }
+        if (receivedAmount < message.minOutputAmount) {
+            revert InsufficientOutputAmount();
+        }
+
+        uint256 id = $._nextInTransferId++;
+        $._incomingTransfers[id] = InBridgeTransfer(
+            message.sender,
+            message.originChainId,
+            message.inputToken,
+            message.inputAmount,
+            receivedToken,
+            receivedAmount,
+            InTransferStatus.RECEIVED
+        );
+        $._reservedBalances[receivedToken] += receivedAmount;
+        emit ReceiveInBridgeTransfer(id);
+    }
+}

@@ -1,0 +1,12 @@
+claimInBridgeTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── given sender is not the parent contract
+   │  └── it should revert with NotParent
+   └── given sender is the parent contract
+      ├── given the provided transfer ID does not corresponds to an incoming transfer in adapter's storage
+      │  └── it should revert with InvalidTransferStatus
+      └── given the provided transfer ID corresponds to an incoming transfer in adapter's storage
+         ├── it should decrease the adapter's token balance by amount
+         └── it should emit a ClaimInBridgeTransfer event

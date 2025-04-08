@@ -1,0 +1,10 @@
+scheduleOutgoingBridgeTransfer.t.sol
+├── given sender is not the parent contract
+│  └── it should revert with NotParent
+└── given sender is the parent contract
+   ├── given the sender has insufficient token allowance or balance
+   │  └── it should revert
+   └── given the sender has sufficient token allowance and balance
+      ├── it should increase the adapter's token balance by amount
+      ├── it should decrease the sender's token balance by amount
+      └── it should emit a ScheduleOutBridgeTransfer event

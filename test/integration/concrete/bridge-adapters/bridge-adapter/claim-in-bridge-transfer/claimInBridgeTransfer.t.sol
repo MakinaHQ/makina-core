@@ -1,0 +1,113 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity 0.8.28;
+
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
+import {MockMachineEndpoint} from "test/mocks/MockMachineEndpoint.sol";
+
+import {BridgeAdapter_Integration_Concrete_Test} from "../BridgeAdapter.t.sol";
+
+abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapter_Integration_Concrete_Test {
+    function setUp() public virtual override {}
+
+    function test_RevertWhen_ReentrantCall() public {
+        uint256 inputAmount = 1e18;
+        uint256 minOutputAmount = 999e15;
+
+        uint256 nextInTransferId = bridgeAdapter1.nextInTransferId();
+
+        _receiveInBridgeTransfer(
+            address(bridgeAdapter1),
+            abi.encode(
+                IBridgeAdapter.BridgeMessage(
+                    nextInTransferId,
+                    address(bridgeAdapter2),
+                    address(bridgeAdapter1),
+                    block.chainid,
+                    chainId1,
+                    address(token2),
+                    inputAmount,
+                    address(token1),
+                    minOutputAmount
+                )
+            ),
+            address(token1),
+            minOutputAmount
+        );
+
+        token1.scheduleReenter(
+            MockERC20.Type.Before, address(bridgeAdapter1), abi.encodeCall(bridgeAdapter1.claimInBridgeTransfer, (0))
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.prank(address(parent1));
+        bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
+    }
+
+    function test_RevertWhen_CallerNotParent() public {
+        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+        bridgeAdapter1.claimInBridgeTransfer(0);
+    }
+
+    function test_RevertGiven_InvalidTransferStatus() public {
+        uint256 nextInTransferId = bridgeAdapter1.nextInTransferId();
+
+        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.prank(address(parent1));
+        bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
+    }
+
+    function test_ClaimInBridgeTransfer() public {
+        uint256 inputAmount = 1e18;
+        uint256 outputAmount = 999e15;
+
+        uint256 nextInTransferId = bridgeAdapter1.nextInTransferId();
+
+        _receiveInBridgeTransfer(
+            address(bridgeAdapter1),
+            abi.encode(
+                IBridgeAdapter.BridgeMessage(
+                    nextInTransferId,
+                    address(bridgeAdapter2),
+                    address(bridgeAdapter1),
+                    block.chainid,
+                    chainId1,
+                    address(token2),
+                    inputAmount,
+                    address(token1),
+                    outputAmount
+                )
+            ),
+            address(token1),
+            outputAmount
+        );
+
+        vm.expectEmit(true, true, false, false, address(parent1));
+        emit MockMachineEndpoint.ManageTransfer(address(token1), outputAmount, abi.encode(bridgeId, inputAmount));
+
+        vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
+        emit IBridgeAdapter.ClaimInBridgeTransfer(nextInTransferId);
+
+        vm.prank(address(parent1));
+        bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
+
+        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), outputAmount);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
+        assertEq(bridgeAdapter1.nextInTransferId(), nextInTransferId + 1);
+    }
+
+    ///
+    /// UTILS
+    ///
+
+    /// @dev Simulates incoming bridge transfer reception. To be overridden for each bridge adapter.
+    function _receiveInBridgeTransfer(
+        address, /*bridgeAdapter*/
+        bytes memory, /* encodedMessage*/
+        address, /*receivedToken*/
+        uint256 /*receivedAmount*/
+    ) internal virtual {}
+}
