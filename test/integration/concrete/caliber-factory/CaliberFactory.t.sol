@@ -51,6 +51,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliberFactory.isCaliber(address(caliber)), true);
 
         assertEq(ICaliberMailbox(caliber.hubMachineEndpoint()).caliber(), address(caliber));
+        assertEq(IAccessManaged(caliber.hubMachineEndpoint()).authority(), address(accessManager));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);

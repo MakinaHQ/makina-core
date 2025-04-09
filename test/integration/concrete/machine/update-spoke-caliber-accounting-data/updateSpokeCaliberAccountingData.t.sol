@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {VerificationFailed} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -17,7 +18,9 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         Machine_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        machine.setSpokeCaliber(
+            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
     }
 
     function test_RevertWhen_InvalidSignature() public {
@@ -159,13 +162,35 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        IMachine.SpokeCaliberData memory caliberData = machine.getSpokeCaliberData(SPOKE_CHAIN_ID);
-        assertEq(caliberData.timestamp, blockTime);
-        assertEq(caliberData.caliberMailbox, spokeCaliberMailboxAddr);
+        (ICaliberMailbox.SpokeCaliberAccountingData memory caliberData, uint256 timestamp) =
+            machine.getSpokeCaliberAccountingData(SPOKE_CHAIN_ID);
+        assertEq(timestamp, blockTime);
         assertEq(caliberData.netAum, queriedData.netAum);
         assertEq(caliberData.positions.length, queriedData.positions.length);
         assertEq(caliberData.baseTokens.length, queriedData.baseTokens.length);
-        assertEq(caliberData.totalReceivedFromHM.length, queriedData.totalReceivedFromHM.length);
-        assertEq(caliberData.totalSentToHM.length, queriedData.totalSentToHM.length);
+        assertEq(caliberData.bridgesOut.length, queriedData.bridgesOut.length);
+        assertEq(caliberData.bridgesIn.length, queriedData.bridgesIn.length);
+
+        skip(1 days);
+
+        (caliberData, timestamp) = machine.getSpokeCaliberAccountingData(SPOKE_CHAIN_ID);
+        assertEq(timestamp, blockTime);
+        assertEq(caliberData.netAum, queriedData.netAum);
+        assertEq(caliberData.positions.length, queriedData.positions.length);
+        for (uint256 i = 0; i < queriedData.positions.length; i++) {
+            assertEq(caliberData.positions[i], queriedData.positions[i]);
+        }
+        assertEq(caliberData.baseTokens.length, queriedData.baseTokens.length);
+        for (uint256 i = 0; i < queriedData.baseTokens.length; i++) {
+            assertEq(caliberData.baseTokens[i], queriedData.baseTokens[i]);
+        }
+        assertEq(caliberData.bridgesOut.length, queriedData.bridgesOut.length);
+        for (uint256 i = 0; i < queriedData.bridgesOut.length; i++) {
+            assertEq(caliberData.bridgesOut[i], queriedData.bridgesOut[i]);
+        }
+        assertEq(caliberData.bridgesIn.length, queriedData.bridgesIn.length);
+        for (uint256 i = 0; i < queriedData.bridgesIn.length; i++) {
+            assertEq(caliberData.bridgesIn[i], queriedData.bridgesIn[i]);
+        }
     }
 }

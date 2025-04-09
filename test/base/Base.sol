@@ -5,7 +5,7 @@ import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManage
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge-adapters/AcrossV3BridgeAdapter.sol";
+import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
@@ -270,7 +270,7 @@ abstract contract Base is DeployViaIr {
         for (uint256 i; i < bridgesData.length; i++) {
             IBridgeAdapter.Bridge bridgeId = bridgesData[i].bridgeId;
             address baBeacon;
-            if (bridgeId == IBridgeAdapter.Bridge.ACCROSS_V3) {
+            if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
                 baBeacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
             } else {
                 revert("Bridge not supported");

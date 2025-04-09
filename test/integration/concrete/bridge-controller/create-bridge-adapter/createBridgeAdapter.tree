@@ -1,0 +1,9 @@
+createBridgeAdapter.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given an adapter already exists for the provided bridge ID
+   │  └── it should revert with BridgeAdapterAlreadyExists
+   └── given an adapter does not already exists for the provided bridge ID
+      ├── it should deploy a BridgeAdapter instance for the provided bridge ID
+      └── it should emit a BridgeAdapterCreated event

@@ -15,7 +15,9 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
         caliberMailbox2 = CaliberMailbox(
             address(
-                new BeaconProxy(address(caliberMailboxBeacon), abi.encodeCall(ICaliberMailbox.initialize, (address(0))))
+                new BeaconProxy(
+                    address(caliberMailboxBeacon), abi.encodeCall(ICaliberMailbox.initialize, (address(0), address(0)))
+                )
             )
         );
     }
@@ -41,6 +43,8 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_SetCaliber() public {
         assertEq(caliberMailbox2.caliber(), address(0));
 
+        vm.expectEmit(true, false, false, false, address(caliberMailbox2));
+        emit ICaliberMailbox.CaliberSet(address(1));
         vm.prank(address(caliberFactory));
         caliberMailbox2.setCaliber(address(1));
 

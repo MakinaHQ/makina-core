@@ -13,6 +13,7 @@ import {EthCallQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
+import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
@@ -21,15 +22,14 @@ import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
+import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract Machine is AccessManagedUpgradeable, IMachine {
+contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
-
-    /// @inheritdoc IMachine
-    address public immutable registry;
 
     /// @inheritdoc IMachine
     address public immutable wormhole;
@@ -51,7 +51,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         uint256 _hubChainId;
         address _hubCaliber;
         uint256[] _foreignChainIds;
-        mapping(uint256 foreignChainId => SpokeCaliberData) _foreignChainIdToSpokeCaliberData;
+        mapping(uint256 foreignChainId => SpokeCaliberData data) _spokeCalibersData;
+        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
         EnumerableSet.AddressSet _idleTokens;
     }
 
@@ -64,8 +65,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         }
     }
 
-    constructor(address _registry, address _wormhole) {
-        registry = _registry;
+    constructor(address _registry, address _wormhole) MakinaContext(_registry) {
         wormhole = _wormhole;
         _disableInitializers();
     }
@@ -223,8 +223,47 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberData(uint256 chainId) external view override returns (SpokeCaliberData memory) {
-        return _getMachineStorage()._foreignChainIdToSpokeCaliberData[chainId];
+    function getSpokeCaliberAccountingData(uint256 chainId)
+        external
+        view
+        override
+        returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256 timestamp)
+    {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        if (scData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+        return (
+            ICaliberMailbox.SpokeCaliberAccountingData(
+                scData.netAum, scData.positions, scData.baseTokens, scData.caliberBridgesIn, scData.caliberBridgesOut
+            ),
+            scData.timestamp
+        );
+    }
+
+    /// @inheritdoc IMachine
+    function getSpokeCaliberMailbox(uint256 chainId) external view returns (address) {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        if (scData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+        return scData.mailbox;
+    }
+
+    /// @inheritdoc IMachine
+    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address) {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        if (scData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+        address adapter = scData.bridgeAdapters[bridgeId];
+        if (adapter == address(0)) {
+            revert SpokeBridgeAdapterNotSet();
+        }
+        return adapter;
     }
 
     /// @inheritdoc IMachine
@@ -329,8 +368,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         for (uint256 i; i < numResponses;) {
             uint16 _wmChainId = r.responses[i].chainId;
             uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
-            SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[_evmChainId];
-            if (caliberData.caliberMailbox == address(0)) {
+            SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
+            if (caliberData.mailbox == address(0)) {
                 revert InvalidChainId();
             }
 
@@ -356,7 +395,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             // Validate addresses and function signatures.
             address[] memory validAddresses = new address[](1);
             bytes4[] memory validFunctionSignatures = new bytes4[](1);
-            validAddresses[0] = caliberData.caliberMailbox;
+            validAddresses[0] = caliberData.mailbox;
             validFunctionSignatures[0] = ICaliberMailbox.getSpokeCaliberAccountingData.selector;
             QueryResponseLib.validateEthCallRecord(eqr.results[0], validAddresses, validFunctionSignatures);
 
@@ -366,8 +405,8 @@ contract Machine is AccessManagedUpgradeable, IMachine {
             caliberData.netAum = accountingData.netAum;
             caliberData.positions = accountingData.positions;
             caliberData.baseTokens = accountingData.baseTokens;
-            caliberData.totalReceivedFromHM = accountingData.totalReceivedFromHM;
-            caliberData.totalSentToHM = accountingData.totalSentToHM;
+            caliberData.caliberBridgesIn = accountingData.bridgesIn;
+            caliberData.caliberBridgesOut = accountingData.bridgesOut;
             caliberData.timestamp = responseTimestamp;
 
             unchecked {
@@ -377,20 +416,68 @@ contract Machine is AccessManagedUpgradeable, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function addSpokeCaliber(uint256 foreignChainId, address foreignMailbox) external restricted {
+    function setSpokeCaliber(
+        uint256 foreignChainId,
+        address spokeCaliberMailbox,
+        IBridgeAdapter.Bridge[] calldata bridges,
+        address[] calldata adapters
+    ) external restricted {
         if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
             revert IChainRegistry.EvmChainIdNotRegistered(foreignChainId);
         }
 
         MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage caliberData = $._foreignChainIdToSpokeCaliberData[foreignChainId];
+        SpokeCaliberData storage caliberData = $._spokeCalibersData[foreignChainId];
 
-        if (caliberData.caliberMailbox != address(0)) {
-            revert SpokeCaliberAlreadyExists();
+        if (caliberData.mailbox != address(0)) {
+            revert SpokeCaliberAlreadySet();
         }
         $._foreignChainIds.push(foreignChainId);
-        caliberData.caliberMailbox = foreignMailbox;
-        emit SpokeCaliberAdded(foreignChainId);
+        caliberData.mailbox = spokeCaliberMailbox;
+
+        emit SpokeCaliberMailboxSet(foreignChainId, spokeCaliberMailbox);
+
+        if (bridges.length != adapters.length) {
+            revert MismatchedLength();
+        }
+        for (uint256 i; i < bridges.length;) {
+            if (caliberData.bridgeAdapters[bridges[i]] != address(0)) {
+                revert SpokeBridgeAdapterAlreadySet();
+            }
+            if (adapters[i] == address(0)) {
+                revert ZeroBridgeAdapterAddress();
+            }
+            caliberData.bridgeAdapters[bridges[i]] = adapters[i];
+
+            emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridges[i]), adapters[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
+    /// @inheritdoc IMachine
+    function setSpokeBridgeAdapter(uint256 foreignChainId, IBridgeAdapter.Bridge bridgeId, address adapter)
+        external
+        override
+        restricted
+    {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage caliberData = $._spokeCalibersData[foreignChainId];
+
+        if (caliberData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+        if (caliberData.bridgeAdapters[bridgeId] != address(0)) {
+            revert SpokeBridgeAdapterAlreadySet();
+        }
+        if (adapter == address(0)) {
+            revert ZeroBridgeAdapterAddress();
+        }
+        caliberData.bridgeAdapters[bridgeId] = adapter;
+
+        emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
     }
 
     /// @inheritdoc IMachine
@@ -481,7 +568,7 @@ contract Machine is AccessManagedUpgradeable, IMachine {
         uint256 len = $._foreignChainIds.length;
         for (uint256 i; i < len;) {
             uint256 chainId = $._foreignChainIds[i];
-            SpokeCaliberData memory spokeCaliberData = $._foreignChainIdToSpokeCaliberData[chainId];
+            SpokeCaliberData storage spokeCaliberData = $._spokeCalibersData[chainId];
             if (
                 currentTimestamp > spokeCaliberData.timestamp
                     && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold

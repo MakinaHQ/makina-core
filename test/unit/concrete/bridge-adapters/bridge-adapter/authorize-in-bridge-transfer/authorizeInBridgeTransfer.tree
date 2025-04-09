@@ -1,0 +1,10 @@
+authorizeInBridgeTransfer.t.sol
+├── given sender is not the parent contract
+│  └── it should revert with NotParent
+└── given sender is the parent contract
+   ├── given the provided messageHash is already authorized
+   │  └── it should revert with MessageAlreadyAuthorized
+   └── given the provided messageHash is not already authorized
+      ├── it should mark the messageHash as authorized in adapter storage
+      └── it should emit a AuthorizeInBridgeTransfer event
+    

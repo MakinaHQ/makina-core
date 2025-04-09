@@ -35,18 +35,18 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
 
     function test_SetBridgeAdapterBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        registry.setBridgeAdapterBeacon(IBridgeAdapter.Bridge.ACCROSS_V3, address(0));
+        registry.setBridgeAdapterBeacon(IBridgeAdapter.Bridge.ACROSS_V3, address(0));
     }
 
     function test_SetBridgeAdapterBeacon() public {
         address newBridgeAdapterBeacon = makeAddr("newBridgeAdapterBeacon");
         vm.expectEmit(false, true, false, false, address(registry));
         emit IBaseMakinaRegistry.BridgeAdapterBeaconChange(
-            uint256(IBridgeAdapter.Bridge.ACCROSS_V3), address(0), newBridgeAdapterBeacon
+            uint256(IBridgeAdapter.Bridge.ACROSS_V3), address(0), newBridgeAdapterBeacon
         );
         vm.prank(dao);
-        registry.setBridgeAdapterBeacon(IBridgeAdapter.Bridge.ACCROSS_V3, newBridgeAdapterBeacon);
-        assertEq(registry.bridgeAdapterBeacon(IBridgeAdapter.Bridge.ACCROSS_V3), newBridgeAdapterBeacon);
+        registry.setBridgeAdapterBeacon(IBridgeAdapter.Bridge.ACROSS_V3, newBridgeAdapterBeacon);
+        assertEq(registry.bridgeAdapterBeacon(IBridgeAdapter.Bridge.ACROSS_V3), newBridgeAdapterBeacon);
     }
 
     function test_SetOracleRegistry_RevertWhen_CallerWithoutRole() public {

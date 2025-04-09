@@ -7,8 +7,8 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
-import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
+import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
+import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
 
 abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     using Math for uint256;

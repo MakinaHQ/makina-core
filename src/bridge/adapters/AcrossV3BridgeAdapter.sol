@@ -5,9 +5,9 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IAcrossV3MessageHandler} from "../interfaces/IAcrossV3MessageHandler.sol";
-import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
-import {IAcrossV3SpokePool} from "../interfaces/IAcrossV3SpokePool.sol";
+import {IAcrossV3MessageHandler} from "../../interfaces/IAcrossV3MessageHandler.sol";
+import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
+import {IAcrossV3SpokePool} from "../../interfaces/IAcrossV3SpokePool.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
 
 contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {

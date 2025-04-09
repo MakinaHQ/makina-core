@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
@@ -35,6 +36,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
     MockBorrowModule internal borrowModule;
     MockPool internal pool;
 
+    IMockAcrossV3SpokePool internal acrossV3SpokePool;
+
     MockPriceFeed internal aPriceFeed1;
     MockPriceFeed internal bPriceFeed1;
 
@@ -48,6 +51,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
         supplyModule = new MockSupplyModule(IERC20(baseToken));
         borrowModule = new MockBorrowModule(IERC20(baseToken));
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
+
+        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
 
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);

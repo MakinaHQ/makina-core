@@ -1,0 +1,15 @@
+setSpokeBridgeAdapter.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given no spoke caliber was registered in this contract for the provided chain ID
+   │  └── it should revert with InvalidChainID
+   └── given a spoke caliber was registered in this contract for the provided chain ID
+      ├── given an adapter address is already set for the provided chain ID and bridge ID in caliber mailbox
+      │  └── it should revert with SpokeBridgeAdapterAlreadySet
+      └── given no adapter address is already set for the provided chain ID and bridge ID in caliber mailbox
+         ├── when the provided adapter address is zero
+         │  └── it should revert with ZeroBridgeAdapterAddress
+         └── when the provided adapter address is non-zero
+            ├── it should set the adapter address in machine storage
+            └── it should emit a SpokeBridgeAdapterSet event

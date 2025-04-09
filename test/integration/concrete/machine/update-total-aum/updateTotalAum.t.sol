@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -43,7 +44,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_RevertGiven_SpokeCaliberStale() public withTokenAsBT(address(baseToken)) {
         // add a spoke caliber
         vm.prank(dao);
-        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        machine.setSpokeCaliber(
+            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
@@ -232,7 +235,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_PositiveSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
         // add a spoke caliber
         vm.prank(dao);
-        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        machine.setSpokeCaliber(
+            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
 
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;
@@ -255,7 +260,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_NegativeSpokeCaliberValue() public withTokenAsBT(address(baseToken)) {
         // add a spoke caliber
         vm.prank(dao);
-        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        machine.setSpokeCaliber(
+            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
 
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;

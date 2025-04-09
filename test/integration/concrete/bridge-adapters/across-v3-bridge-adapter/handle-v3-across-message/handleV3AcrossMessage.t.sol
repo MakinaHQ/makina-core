@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge-adapters/AcrossV3BridgeAdapter.sol";
+import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 
 import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3BridgeAdapter.t.sol";
 

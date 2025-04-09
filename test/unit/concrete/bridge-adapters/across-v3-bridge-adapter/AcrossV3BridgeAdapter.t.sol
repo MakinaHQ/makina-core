@@ -25,7 +25,7 @@ abstract contract AcrossV3BridgeAdapter_Unit_Concrete_Test is BridgeAdapter_Unit
 contract Getters_AcrossV3BridgeAdapter_Unit_Concrete_Test is AcrossV3BridgeAdapter_Unit_Concrete_Test {
     function test_Getters() public view {
         assertEq(bridgeAdapter.parent(), address(parent));
-        assertEq(bridgeAdapter.bridgeId(), uint256(IBridgeAdapter.Bridge.ACCROSS_V3));
+        assertEq(bridgeAdapter.bridgeId(), uint256(IBridgeAdapter.Bridge.ACROSS_V3));
         assertEq(bridgeAdapter.nextOutTransferId(), 1);
         assertEq(bridgeAdapter.nextInTransferId(), 1);
     }

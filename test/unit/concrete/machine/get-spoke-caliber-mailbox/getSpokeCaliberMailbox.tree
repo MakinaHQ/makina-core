@@ -1,0 +1,6 @@
+getSpokeCaliberMailbox.t.sol
+├── given no spoke caliber was registered in this contract for the provided chain ID
+│  └── it should revert with InvalidChainID
+└── given a spoke caliber was registered in this contract for the provided chain ID
+   └── it should return the spoke caliber mailbox address associated with spoke caliber on the provided chain ID
+   

@@ -62,7 +62,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
 
         vm.expectEmit(false, false, false, true, address(parent1));
         emit MockMachineEndpoint.ManageTransfer(
-            address(token1), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACCROSS_V3, inputAmount)
+            address(token1), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, inputAmount)
         );
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
