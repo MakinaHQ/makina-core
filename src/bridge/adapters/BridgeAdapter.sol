@@ -29,7 +29,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
     /// @custom:storage-location erc7201:makina.storage.BridgeAdapter
     struct BridgeAdapterStorage {
-        address _parent;
+        address _controller;
         Bridge _bridge;
         uint256 _nextOutTransferId;
         uint256 _nextInTransferId;
@@ -56,24 +56,24 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         _disableInitializers();
     }
 
-    function __BridgeAdapter_init(address _parent) internal onlyInitializing {
+    function __BridgeAdapter_init(address _controller) internal onlyInitializing {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
-        $._parent = _parent;
+        $._controller = _controller;
         $._nextOutTransferId = 1;
         $._nextInTransferId = 1;
         __ReentrancyGuard_init();
     }
 
-    modifier onlyParent() {
-        if (msg.sender != _getBridgeAdapterStorage()._parent) {
-            revert NotParent();
+    modifier onlyController() {
+        if (msg.sender != _getBridgeAdapterStorage()._controller) {
+            revert NotController();
         }
         _;
     }
 
     /// @inheritdoc IBridgeAdapter
-    function parent() external view override returns (address) {
-        return _getBridgeAdapterStorage()._parent;
+    function controller() external view override returns (address) {
+        return _getBridgeAdapterStorage()._controller;
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -99,7 +99,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         uint256 inputAmount,
         address outputToken,
         uint256 minOutputAmount
-    ) external override nonReentrant onlyParent returns (bytes32) {
+    ) external override nonReentrant onlyController returns (bytes32) {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         IERC20Metadata(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
@@ -138,7 +138,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     }
 
     /// @inheritdoc IBridgeAdapter
-    function authorizeInBridgeTransfer(bytes32 messageHash) external override onlyParent {
+    function authorizeInBridgeTransfer(bytes32 messageHash) external override onlyController {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         if ($._expectedInMessages[messageHash]) {
@@ -150,7 +150,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     }
 
     /// @inheritdoc IBridgeAdapter
-    function claimInBridgeTransfer(uint256 id) external override nonReentrant onlyParent {
+    function claimInBridgeTransfer(uint256 id) external override nonReentrant onlyController {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         InBridgeTransfer storage receipt = $._incomingTransfers[id];
@@ -159,8 +159,8 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             revert InvalidTransferStatus();
         }
 
-        IERC20Metadata(receipt.outputToken).forceApprove($._parent, receipt.outputAmount);
-        IMachineEndpoint($._parent).manageTransfer(
+        IERC20Metadata(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
+        IMachineEndpoint($._controller).manageTransfer(
             receipt.outputToken, receipt.outputAmount, abi.encode($._bridge, receipt.inputAmount)
         );
 
@@ -202,8 +202,8 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             revert InvalidTransferStatus();
         }
 
-        IERC20Metadata(receipt.inputToken).forceApprove($._parent, receipt.inputAmount);
-        IMachineEndpoint($._parent).manageTransfer(
+        IERC20Metadata(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
+        IMachineEndpoint($._controller).manageTransfer(
             receipt.inputToken, receipt.inputAmount, abi.encode($._bridge, receipt.inputAmount)
         );
 

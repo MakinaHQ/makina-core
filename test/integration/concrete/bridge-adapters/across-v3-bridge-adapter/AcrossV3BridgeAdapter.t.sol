@@ -23,10 +23,14 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
 
         address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
         bridgeAdapter1 = IBridgeAdapter(
-            address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(parent1), ""))))
+            address(
+                new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController1), "")))
+            )
         );
         bridgeAdapter2 = IBridgeAdapter(
-            address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(parent2), ""))))
+            address(
+                new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController2), "")))
+            )
         );
     }
 }
@@ -64,7 +68,7 @@ contract ClaimInBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         address receivedToken,
         uint256 receivedAmount
     ) internal override {
-        vm.prank(IBridgeAdapter(bridgeAdapter).parent());
+        vm.prank(IBridgeAdapter(bridgeAdapter).controller());
         IBridgeAdapter(bridgeAdapter).authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         deal(receivedToken, address(bridgeAdapter), receivedAmount, true);

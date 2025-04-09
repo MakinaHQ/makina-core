@@ -18,9 +18,9 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -35,14 +35,14 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
     }
 
-    function test_RevertWhen_CallerNotParent() public {
-        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+    function test_RevertWhen_CallerNotController() public {
+        vm.expectRevert(IBridgeAdapter.NotController.selector);
         bridgeAdapter1.cancelOutBridgeTransfer(0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.cancelOutBridgeTransfer(0);
     }
 
@@ -51,16 +51,16 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), 0
         );
 
-        vm.expectEmit(false, false, false, true, address(parent1));
+        vm.expectEmit(false, false, false, true, address(bridgeController1));
         emit MockMachineEndpoint.ManageTransfer(
             address(token1), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, inputAmount)
         );
@@ -70,7 +70,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
 
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), inputAmount);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), inputAmount);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
     }
 
@@ -84,9 +84,9 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
         uint256 acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -106,9 +106,9 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
         uint256 acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -122,7 +122,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), inputAmount);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), inputAmount);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
     }
 
@@ -136,9 +136,9 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
         uint256 acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -159,7 +159,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), inputAmount);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), inputAmount);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
     }
 }

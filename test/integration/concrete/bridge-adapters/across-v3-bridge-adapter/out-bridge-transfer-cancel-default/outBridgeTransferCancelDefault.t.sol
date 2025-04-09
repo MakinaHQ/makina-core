@@ -10,7 +10,7 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
 {
     function test_RevertGiven_InvalidTransferStatus() public {
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.outBridgeTransferCancelDefault(0);
     }
 
@@ -19,9 +19,9 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
@@ -35,9 +35,9 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
         uint256 acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
@@ -58,9 +58,9 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
         uint256 acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);

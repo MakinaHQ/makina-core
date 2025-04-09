@@ -17,12 +17,17 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {}
 
     /// @inheritdoc IBridgeAdapter
-    function initialize(address _parent, bytes calldata) external override initializer {
-        __BridgeAdapter_init(_parent);
+    function initialize(address _controller, bytes calldata) external override initializer {
+        __BridgeAdapter_init(_controller);
     }
 
     /// @inheritdoc IBridgeAdapter
-    function sendOutBridgeTransfer(uint256 transferId, bytes calldata data) external override nonReentrant onlyParent {
+    function sendOutBridgeTransfer(uint256 transferId, bytes calldata data)
+        external
+        override
+        nonReentrant
+        onlyController
+    {
         _beforeSendOutBridgeTransfer(transferId);
 
         (uint32 fillDeadlineOffset) = abi.decode(data, (uint32));
@@ -45,7 +50,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     }
 
     /// @inheritdoc IBridgeAdapter
-    function cancelOutBridgeTransfer(uint256 transferId) external override nonReentrant onlyParent {
+    function cancelOutBridgeTransfer(uint256 transferId) external override nonReentrant onlyController {
         _cancelOutBridgeTransfer(transferId);
     }
 

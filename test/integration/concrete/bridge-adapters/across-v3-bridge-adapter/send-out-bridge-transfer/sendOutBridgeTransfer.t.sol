@@ -20,9 +20,9 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -39,8 +39,8 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
     }
 
-    function test_RevertWhen_CallerNotParent() public {
-        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+    function test_RevertWhen_CallerNotController() public {
+        vm.expectRevert(IBridgeAdapter.NotController.selector);
         bridgeAdapter1.sendOutBridgeTransfer(0, "");
     }
 
@@ -48,7 +48,7 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
     }
 
@@ -74,9 +74,9 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             )
         );
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(
@@ -105,7 +105,7 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
 
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
 
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), 0);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(acrossV3SpokePool)), inputAmount);
     }

@@ -35,7 +35,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         bytes memory encodedMessage =
             abi.encode(IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, 0, address(0), 0, address(0), 0));
 
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectRevert(IBridgeAdapter.InvalidRecipientChainId.selector);
@@ -48,7 +48,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 0)
         );
 
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectRevert(IBridgeAdapter.InvalidOutputToken.selector);
@@ -61,7 +61,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 1)
         );
 
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectRevert(IBridgeAdapter.InsufficientOutputAmount.selector);
@@ -75,7 +75,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 0)
         );
 
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectEmit(true, false, false, false, address(acrossV3BridgeAdapter1));

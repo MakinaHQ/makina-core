@@ -17,14 +17,14 @@ abstract contract AcrossV3BridgeAdapter_Unit_Concrete_Test is BridgeAdapter_Unit
 
         address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
         bridgeAdapter = IBridgeAdapter(
-            address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(parent), ""))))
+            address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(controller), ""))))
         );
     }
 }
 
 contract Getters_AcrossV3BridgeAdapter_Unit_Concrete_Test is AcrossV3BridgeAdapter_Unit_Concrete_Test {
     function test_Getters() public view {
-        assertEq(bridgeAdapter.parent(), address(parent));
+        assertEq(bridgeAdapter.controller(), address(controller));
         assertEq(bridgeAdapter.bridgeId(), uint256(IBridgeAdapter.Bridge.ACROSS_V3));
         assertEq(bridgeAdapter.nextOutTransferId(), 1);
         assertEq(bridgeAdapter.nextInTransferId(), 1);

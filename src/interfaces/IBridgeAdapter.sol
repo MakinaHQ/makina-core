@@ -13,7 +13,7 @@ interface IBridgeAdapter {
     error InvalidTransferStatus();
     error MaxValueLossExceeded();
     error MessageAlreadyAuthorized();
-    error NotParent();
+    error NotController();
     error UnauthorizedSource();
     error UnexpectedMessage();
 
@@ -73,12 +73,12 @@ interface IBridgeAdapter {
     }
 
     /// @notice Initializer of the contract.
-    /// @param parent The parent contract.
+    /// @param controller The bridge controller contract.
     /// @param initData The optional initialization data.
-    function initialize(address parent, bytes calldata initData) external;
+    function initialize(address controller, bytes calldata initData) external;
 
-    /// @notice Returns the address of the parent contract.
-    function parent() external view returns (address);
+    /// @notice Returns the address of the bridge controller contract.
+    function controller() external view returns (address);
 
     /// @notice Returns the ID of the adapted external bridge.
     function bridgeId() external view returns (uint256);

@@ -20,7 +20,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
             abi.encodeCall(bridgeAdapter1.scheduleOutBridgeTransfer, (0, address(0), address(0), 0, address(0), 0))
         );
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), 1000);
 
@@ -28,8 +28,8 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), 1000, address(0), 0);
     }
 
-    function test_RevertWhen_CallerNotParent() public {
-        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+    function test_RevertWhen_CallerNotController() public {
+        vm.expectRevert(IBridgeAdapter.NotController.selector);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(0), 0, address(0), 0);
     }
 
@@ -41,18 +41,20 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
                 IERC20Errors.ERC20InsufficientAllowance.selector, address(bridgeAdapter1), 0, inputAmount
             )
         );
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
     }
 
     function test_RevertGiven_InsufficientBalance() public {
         uint256 inputAmount = 1e18;
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
 
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(parent1), 0, inputAmount)
+            abi.encodeWithSelector(
+                IERC20Errors.ERC20InsufficientBalance.selector, address(bridgeController1), 0, inputAmount
+            )
         );
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
     }
@@ -76,9 +78,9 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
         );
         bytes32 expectedMessageHash = keccak256(abi.encode(message));
 
-        deal(address(token1), address(parent1), inputAmount, true);
+        deal(address(token1), address(bridgeController1), inputAmount, true);
 
-        vm.startPrank(address(parent1));
+        vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
 
@@ -91,7 +93,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
 
         assertEq(actualMessageHash, expectedMessageHash);
         assertEq(bridgeAdapter1.nextOutTransferId(), nextOutTransferId + 1);
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), 0);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), inputAmount);
     }
 }

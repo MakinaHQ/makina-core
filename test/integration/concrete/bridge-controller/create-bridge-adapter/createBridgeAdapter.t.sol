@@ -41,7 +41,7 @@ abstract contract CreateBridgeAdapter_Integration_Concrete_Test is BridgeControl
 
         assertTrue(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
         assertEq(adapter, bridgeController.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3));
-        assertEq(IBridgeAdapter(adapter).parent(), address(bridgeController));
+        assertEq(IBridgeAdapter(adapter).controller(), address(bridgeController));
         assertEq(IBridgeAdapter(adapter).bridgeId(), uint256(IBridgeAdapter.Bridge.ACROSS_V3));
     }
 }

@@ -1,7 +1,7 @@
 authorizeInBridgeTransfer.t.sol
-├── given sender is not the parent contract
-│  └── it should revert with NotParent
-└── given sender is the parent contract
+├── given sender is not the controller contract
+│  └── it should revert with NotController
+└── given sender is the controller contract
    ├── given the provided messageHash is already authorized
    │  └── it should revert with MessageAlreadyAuthorized
    └── given the provided messageHash is not already authorized

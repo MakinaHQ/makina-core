@@ -43,12 +43,12 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
         );
 
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
     }
 
-    function test_RevertWhen_CallerNotParent() public {
-        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+    function test_RevertWhen_CallerNotController() public {
+        vm.expectRevert(IBridgeAdapter.NotController.selector);
         bridgeAdapter1.claimInBridgeTransfer(0);
     }
 
@@ -56,7 +56,7 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
         uint256 nextInTransferId = bridgeAdapter1.nextInTransferId();
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
     }
 
@@ -85,16 +85,16 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
             outputAmount
         );
 
-        vm.expectEmit(true, true, false, false, address(parent1));
+        vm.expectEmit(true, true, false, false, address(bridgeController1));
         emit MockMachineEndpoint.ManageTransfer(address(token1), outputAmount, abi.encode(bridgeId, inputAmount));
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
         emit IBridgeAdapter.ClaimInBridgeTransfer(nextInTransferId);
 
-        vm.prank(address(parent1));
+        vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
 
-        assertEq(IERC20(address(token1)).balanceOf(address(parent1)), outputAmount);
+        assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), outputAmount);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(bridgeAdapter1.nextInTransferId(), nextInTransferId + 1);
     }

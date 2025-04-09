@@ -8,15 +8,15 @@ import {BridgeAdapter_Unit_Concrete_Test} from "../BridgeAdapter.t.sol";
 abstract contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is BridgeAdapter_Unit_Concrete_Test {
     function setUp() public virtual override {}
 
-    function test_RevertWhen_CallerNotParent() public {
-        vm.expectRevert(IBridgeAdapter.NotParent.selector);
+    function test_RevertWhen_CallerNotController() public {
+        vm.expectRevert(IBridgeAdapter.NotController.selector);
         bridgeAdapter.authorizeInBridgeTransfer(bytes32(0));
     }
 
     function test_RevertGiven_MessageAlreadyAuthorized() public {
         bytes32 messageHash = bytes32("12345");
 
-        vm.startPrank(address(parent));
+        vm.startPrank(address(controller));
 
         bridgeAdapter.authorizeInBridgeTransfer(messageHash);
 
@@ -32,7 +32,7 @@ abstract contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is BridgeA
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.AuthorizeInBridgeTransfer(messageHash);
-        vm.prank(address(parent));
+        vm.prank(address(controller));
         bridgeAdapter.authorizeInBridgeTransfer(messageHash);
     }
 }
