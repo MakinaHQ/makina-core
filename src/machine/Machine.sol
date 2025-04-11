@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -22,6 +23,7 @@ import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -30,6 +32,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
 
     /// @inheritdoc IMachine
     address public immutable wormhole;
@@ -52,7 +55,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         address _hubCaliber;
         uint256[] _foreignChainIds;
         mapping(uint256 foreignChainId => SpokeCaliberData data) _spokeCalibersData;
-        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
         EnumerableSet.AddressSet _idleTokens;
     }
 
@@ -305,7 +307,42 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             revert ICaliber.NotBaseToken();
         }
         IERC20Metadata(token).safeTransfer($._hubCaliber, amount);
+
         emit TransferToCaliber($._hubChainId, token, amount);
+
+        if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
+            $._idleTokens.remove(token);
+        }
+    }
+
+    /// @inheritdoc IMachine
+    function transferToSpokeCaliber(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 chainId,
+        address token,
+        uint256 amount,
+        uint256 minOutputAmount
+    ) external override notRecoveryMode onlyMechanic {
+        address outputToken = ITokenRegistry(IHubRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
+
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
+
+        if (caliberData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+
+        address recipient = caliberData.bridgeAdapters[bridgeId];
+        if (recipient == address(0)) {
+            revert SpokeBridgeAdapterNotSet();
+        }
+
+        (bool exists, uint256 bridgeOut) = caliberData.machineBridgesOut.tryGet(token);
+        caliberData.machineBridgesOut.set(token, exists ? bridgeOut + amount : amount);
+
+        _scheduleOutBridgeTransfer(bridgeId, chainId, recipient, token, amount, outputToken, minOutputAmount);
+
+        emit TransferToCaliber(chainId, token, amount);
 
         if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);

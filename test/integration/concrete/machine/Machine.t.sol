@@ -25,7 +25,10 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
     uint256 public constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
     uint256 public constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
 
+    address public spokeAccountingTokenAddr;
+    address public spokeBaseTokenAddr;
     address public spokeCaliberMailboxAddr;
+    address public spokeBridgeAdapterAddr;
 
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
@@ -34,6 +37,9 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
+        spokeAccountingTokenAddr = makeAddr("spokeAccountingToken");
+        spokeBaseTokenAddr = makeAddr("spokeBaseToken");
+        spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
 
         vm.startPrank(address(dao));
         hubRegistry.setBridgeAdapterBeacon(

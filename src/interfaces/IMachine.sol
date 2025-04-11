@@ -85,8 +85,8 @@ interface IMachine is IMachineEndpoint {
         bytes[] baseTokens; // abi.encode(token, value)
         bytes[] caliberBridgesIn; // abi.encode(token, amount)
         bytes[] caliberBridgesOut; // abi.encode(token, amount)
-        EnumerableMap.AddressToUintMap machineBridgesIns;
-        EnumerableMap.AddressToUintMap machineBridgesOuts;
+        EnumerableMap.AddressToUintMap machineBridgesIn;
+        EnumerableMap.AddressToUintMap machineBridgesOut;
     }
 
     /// @notice Initializer of the contract.
@@ -158,10 +158,7 @@ interface IMachine is IMachineEndpoint {
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
 
     /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
-    function getSpokeBridgeAdapter(uint256 spokeChainId, IBridgeAdapter.Bridge bridgeId)
-        external
-        view
-        returns (address);
+    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
@@ -178,6 +175,20 @@ interface IMachine is IMachineEndpoint {
     /// @param amount The amount of token to transfer.
     function transferToHubCaliber(address token, uint256 amount) external;
 
+    /// @notice Initiates a token transfers to the spoke caliber.
+    /// @param bridgeId The ID of the bridge to use for the transfer.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber.
+    /// @param token The address of the token to transfer.
+    /// @param amount The amount of token to transfer.
+    /// @param minOutputAmount The minimum output amount expected from the transfer.
+    function transferToSpokeCaliber(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 chainId,
+        address token,
+        uint256 amount,
+        uint256 minOutputAmount
+    ) external;
+
     /// @notice Updates the total AUM of the machine.
     /// @return totalAum The updated total AUM.
     function updateTotalAum() external returns (uint256);
@@ -189,22 +200,22 @@ interface IMachine is IMachineEndpoint {
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
-    /// @param evmChainId The EVM chain ID of the spoke caliber.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
     /// @param bridges The list of bridges supported with the spoke caliber.
     /// @param adapters The list of corresponding adapters for each bridge. Must be the same length as `bridges`.
     function setSpokeCaliber(
-        uint256 evmChainId,
+        uint256 chainId,
         address spokeCaliberMailbox,
         IBridgeAdapter.Bridge[] calldata bridges,
         address[] calldata adapters
     ) external;
 
     /// @notice Registers a spoke bridge adapter.
-    /// @param foreignChainId The foreign chain ID of the adapter.
+    /// @param chainId The foreign EVM chain ID of the adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
-    function setSpokeBridgeAdapter(uint256 foreignChainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
+    function setSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.
