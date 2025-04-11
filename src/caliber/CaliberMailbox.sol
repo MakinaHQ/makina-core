@@ -2,7 +2,9 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
@@ -10,9 +12,13 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
+import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberMailbox {
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using SafeERC20 for IERC20Metadata;
+
     uint256 public immutable hubChainId;
 
     /// @custom:storage-location erc7201:makina.storage.CaliberMailbox
@@ -70,11 +76,57 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
     function getSpokeCaliberAccountingData() external view override returns (SpokeCaliberAccountingData memory data) {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         (data.netAum, data.positions, data.baseTokens) = ICaliber($._caliber).getDetailedAum();
-        // @TODO include bridgesIn and bridgesOut
+
+        uint256 len = $._bridgesIn.length();
+        data.bridgesIn = new bytes[](len);
+        for (uint256 i; i < len; i++) {
+            (address token, uint256 amount) = $._bridgesIn.at(i);
+            data.bridgesIn[i] = abi.encode(token, amount);
+        }
+
+        len = $._bridgesOut.length();
+        data.bridgesOut = new bytes[](len);
+        for (uint256 i; i < len; i++) {
+            (address token, uint256 amount) = $._bridgesOut.at(i);
+            data.bridgesOut[i] = abi.encode(token, amount);
+        }
     }
 
     /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {}
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+
+        if (msg.sender == $._caliber) {
+            (IBridgeAdapter.Bridge bridgeId, uint256 minOutputAmount) =
+                abi.decode(data, (IBridgeAdapter.Bridge, uint256));
+
+            address outputToken =
+                ITokenRegistry(ISpokeRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
+
+            address recipient = $._hubBridgeAdapters[bridgeId];
+            if (recipient == address(0)) {
+                revert HubBridgeAdapterNotSet();
+            }
+
+            (bool exists, uint256 bridgeOut) = $._bridgesOut.tryGet(token);
+            $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
+
+            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+            _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
+        } else if (_isAdapter(msg.sender)) {
+            if (!ICaliber($._caliber).isBaseToken(token)) {
+                revert ICaliber.NotBaseToken();
+            }
+            uint256 inputAmount = abi.decode(data, (uint256));
+
+            (bool exists, uint256 bridgeIn) = $._bridgesIn.tryGet(token);
+            $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+
+            IERC20Metadata(token).safeTransferFrom(msg.sender, $._caliber, amount);
+        } else {
+            revert UnauthorizedCaller();
+        }
+    }
 
     /// @inheritdoc ICaliberMailbox
     function setCaliber(address _caliber) external override onlyFactory {

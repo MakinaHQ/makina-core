@@ -25,7 +25,8 @@ interface IBridgeAdapter {
     event ScheduleOutBridgeTransfer(uint256 indexed transferId, bytes32 indexed messageHash);
 
     enum Bridge {
-        ACROSS_V3
+        ACROSS_V3,
+        CIRCLE_CCTP
     }
 
     enum OutTransferStatus {

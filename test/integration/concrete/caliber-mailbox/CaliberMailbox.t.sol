@@ -15,12 +15,16 @@ import {IsBridgeSupported_Integration_Concrete_Test} from
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
+    address public spokeAccountingTokenAddr;
+    address public spokeBridgeAdapterAddr;
+
     function setUp() public virtual override {
         Integration_Concrete_Spoke_Test.setUp();
 
         vm.startPrank(address(dao));
         spokeRegistry.setBridgeAdapterBeacon(
-            IBridgeAdapter.Bridge.ACROSS_V3, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(0)))
+            IBridgeAdapter.Bridge.ACROSS_V3,
+            address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
     }

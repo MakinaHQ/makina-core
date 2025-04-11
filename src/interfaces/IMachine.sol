@@ -3,11 +3,10 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
-import {IBridgeController} from "./IBridgeController.sol";
 import {ICaliberMailbox} from "./ICaliberMailbox.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
-interface IMachine is IMachineEndpoint, IBridgeController {
+interface IMachine is IMachineEndpoint {
     error CaliberAccountingStale(uint256 caliberChainId);
     error InvalidChainId();
     error InvalidDecimals();

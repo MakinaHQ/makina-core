@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-interface IMachineEndpoint {
+import {IBridgeController} from "./IBridgeController.sol";
+
+interface IMachineEndpoint is IBridgeController {
     /// @notice Manages the transfer of tokens between a machine and a caliber. The transfer direction depends on the caller.
     /// @param token The address of the token.
     /// @param amount The amount of tokens to transfer.

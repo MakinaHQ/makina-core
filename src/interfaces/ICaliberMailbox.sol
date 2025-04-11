@@ -2,15 +2,15 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
-import {IBridgeController} from "./IBridgeController.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
-interface ICaliberMailbox is IMachineEndpoint, IBridgeController {
+interface ICaliberMailbox is IMachineEndpoint {
     error CaliberAlreadySet();
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
     error NotCaliber();
     error NotFactory();
+    error UnauthorizedCaller();
     error ZeroBridgeAdapterAddress();
 
     event CaliberSet(address indexed caliber);

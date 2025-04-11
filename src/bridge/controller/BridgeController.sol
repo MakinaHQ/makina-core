@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IBaseMakinaRegistry} from "../../interfaces/IBaseMakinaRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
@@ -10,9 +12,12 @@ import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
 abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
+    using SafeERC20 for IERC20Metadata;
+
     /// @custom:storage-location erc7201:makina.storage.BridgeController
     struct BridgeControllerStorage {
         mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
+        mapping(address addr => bool isAdapter) _isAdapter;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.BridgeController")) - 1)) & ~bytes32(uint256(0xff))
@@ -31,7 +36,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function getBridgeAdapter(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
+    function getBridgeAdapter(IBridgeAdapter.Bridge bridgeId) public view override returns (address) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
@@ -54,9 +59,30 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (address(this), initData)))
         );
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
+        $._isAdapter[bridgeAdapter] = true;
 
         emit BridgeAdapterCreated(uint256(bridgeId), bridgeAdapter);
 
         return bridgeAdapter;
+    }
+
+    function _isAdapter(address adapter) internal view returns (bool) {
+        return _getBridgeControllerStorage()._isAdapter[adapter];
+    }
+
+    function _scheduleOutBridgeTransfer(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 destinationChainId,
+        address recipient,
+        address inputToken,
+        uint256 inputAmount,
+        address outputToken,
+        uint256 minOutputAmount
+    ) internal {
+        address adapter = getBridgeAdapter(bridgeId);
+        IERC20Metadata(inputToken).forceApprove(adapter, inputAmount);
+        IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
+            destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
+        );
     }
 }

@@ -161,7 +161,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         IERC20Metadata(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
         IMachineEndpoint($._controller).manageTransfer(
-            receipt.outputToken, receipt.outputAmount, abi.encode($._bridge, receipt.inputAmount)
+            receipt.outputToken, receipt.outputAmount, abi.encode(receipt.inputAmount)
         );
 
         delete $._incomingTransfers[id];
@@ -204,7 +204,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         IERC20Metadata(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
         IMachineEndpoint($._controller).manageTransfer(
-            receipt.inputToken, receipt.inputAmount, abi.encode($._bridge, receipt.inputAmount)
+            receipt.inputToken, receipt.inputAmount, abi.encode(receipt.inputAmount)
         );
 
         delete $._outgoingTransfers[id];
