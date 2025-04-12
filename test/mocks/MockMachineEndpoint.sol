@@ -13,6 +13,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
     using SafeERC20 for IERC20;
 
     event ManageTransfer(address token, uint256 amount, bytes data);
+    event SendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes data);
+    event AuthorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash);
+    event ClaimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
+    event CancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
 
     function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -29,5 +33,21 @@ contract MockMachineEndpoint is IMachineEndpoint {
 
     function createBridgeAdapter(IBridgeAdapter.Bridge, bytes calldata) external pure returns (address) {
         return address(0);
+    }
+
+    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) external {
+        emit SendOutBridgeTransfer(bridgeId, transferId, data);
+    }
+
+    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash) external {
+        emit AuthorizeInBridgeTransfer(bridgeId, messageHash);
+    }
+
+    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external {
+        emit ClaimInBridgeTransfer(bridgeId, transferId);
+    }
+
+    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external {
+        emit CancelOutBridgeTransfer(bridgeId, transferId);
     }
 }

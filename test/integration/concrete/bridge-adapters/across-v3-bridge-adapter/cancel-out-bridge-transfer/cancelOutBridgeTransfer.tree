@@ -9,13 +9,13 @@ cancelOutBridgeTransfer.t.sol
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to a outgoing transfer in adapter's storage
          ├── given the corresponding transfer has not been already sent
-         │  ├── it should decrease the adapter's token balance by amount
-         │  ├── it should increase the controller's token balance by amount
+         │  ├── it should decrease the adapter's token balance by bridge transfer input amount
+         │  ├── it should increase the controller's token balance by bridge transfer input amount
          │  └── it should emit a CancelOutBridgeTransfer event
          └── given the corresponding transfer has been already sent
             ├── given the bridge adapter does not have a sufficient balance, excluding any balance related to another pending transfer
             │  └── it should emit a InsufficientBalance event
             └── given the bridge adapter has a sufficient balance, excluding any balance related to another pending transfer
-               ├── it should decrease the adapter's token balance by amount
-               ├── it should increase the controller's token balance by amount
+               ├── it should decrease the adapter's token balance by bridge transfer input amount
+               ├── it should increase the controller's token balance by bridge transfer input amount
                └── it should emit a CancelOutBridgeTransfer event

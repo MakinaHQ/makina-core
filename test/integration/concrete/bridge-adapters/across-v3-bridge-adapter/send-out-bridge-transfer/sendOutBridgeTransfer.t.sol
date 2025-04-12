@@ -49,7 +49,7 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
-        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
+        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, "");
     }
 
     function test_SendOutBridgeTransfer() public {

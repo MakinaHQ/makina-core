@@ -15,16 +15,13 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
     function setUp() public virtual override {
         CaliberMailbox_Integration_Concrete_Test.setUp();
 
-        spokeAccountingTokenAddr = makeAddr("foreignAcountingToken");
-        spokeBridgeAdapterAddr = makeAddr("foreignBridgeAdapter");
-
         vm.startPrank(dao);
 
-        tokenRegistry.setToken(address(accountingToken), hubChainId, spokeAccountingTokenAddr);
+        tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
 
         bridgeAdapter = AcrossV3BridgeAdapter(caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
 
-        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
+        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr);
 
         vm.stopPrank();
     }
@@ -50,7 +47,9 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
 
         accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
 
-        caliberMailbox.manageTransfer(address(accountingToken), bridgeOutputAmount, abi.encode(bridgeInputAmount));
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount)
+        );
 
         assertEq(accountingToken.balanceOf(address(caliber)), bridgeOutputAmount);
         assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
@@ -83,7 +82,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
 
     function test_RevertGiven_BridgeAdapterDoesNotExist_FromCaliber() public {
         vm.prank(dao);
-        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.CIRCLE_CCTP, spokeBridgeAdapterAddr);
+        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.CIRCLE_CCTP, hubBridgeAdapterAddr);
 
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(address(caliber));
@@ -102,12 +101,12 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
                 IBridgeAdapter.BridgeMessage(
                     nextOutTransferId,
                     address(bridgeAdapter),
-                    spokeBridgeAdapterAddr,
+                    hubBridgeAdapterAddr,
                     block.chainid,
                     hubChainId,
                     address(accountingToken),
                     bridgeInputAmount,
-                    spokeAccountingTokenAddr,
+                    hubAccountingTokenAddr,
                     bridgeMinOutputAmount
                 )
             )

@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
+import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
@@ -54,6 +55,27 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
     modifier onlyFactory() {
         if (msg.sender != ISpokeRegistry(registry).caliberFactory()) {
             revert NotFactory();
+        }
+        _;
+    }
+
+    modifier onlyOperator() {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+        address _caliber = $._caliber;
+        if (
+            msg.sender
+                != (
+                    ICaliber(_caliber).recoveryMode() ? ICaliber(_caliber).securityCouncil() : ICaliber(_caliber).mechanic()
+                )
+        ) {
+            revert ICaliber.UnauthorizedOperator();
+        }
+        _;
+    }
+
+    modifier notRecoveryMode() {
+        if (ICaliber(_getCaliberStorage()._caliber).recoveryMode()) {
+            revert ICaliber.RecoveryMode();
         }
         _;
     }
@@ -117,7 +139,8 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
             if (!ICaliber($._caliber).isBaseToken(token)) {
                 revert ICaliber.NotBaseToken();
             }
-            uint256 inputAmount = abi.decode(data, (uint256));
+
+            (, uint256 inputAmount) = abi.decode(data, (uint256, uint256));
 
             (bool exists, uint256 bridgeIn) = $._bridgesIn.tryGet(token);
             $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
@@ -126,6 +149,34 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
         } else {
             revert UnauthorizedCaller();
         }
+    }
+
+    /// @inheritdoc IBridgeController
+    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
+        external
+        notRecoveryMode
+        onlyOperator
+    {
+        _sendOutBridgeTransfer(bridgeId, transferId, data);
+    }
+
+    /// @inheritdoc IBridgeController
+    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash)
+        external
+        notRecoveryMode
+        onlyOperator
+    {
+        _authorizeInBridgeTransfer(bridgeId, messageHash);
+    }
+
+    /// @inheritdoc IBridgeController
+    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+        _claimInBridgeTransfer(bridgeId, transferId);
+    }
+
+    /// @inheritdoc IBridgeController
+    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+        _cancelOutBridgeTransfer(bridgeId, transferId);
     }
 
     /// @inheritdoc ICaliberMailbox

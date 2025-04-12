@@ -85,4 +85,24 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
             destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
         );
     }
+
+    function _sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) internal {
+        address adapter = getBridgeAdapter(bridgeId);
+        IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
+    }
+
+    function _authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash) internal {
+        address adapter = getBridgeAdapter(bridgeId);
+        IBridgeAdapter(adapter).authorizeInBridgeTransfer(messageHash);
+    }
+
+    function _claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) internal {
+        address adapter = getBridgeAdapter(bridgeId);
+        IBridgeAdapter(adapter).claimInBridgeTransfer(transferId);
+    }
+
+    function _cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) internal {
+        address adapter = getBridgeAdapter(bridgeId);
+        IBridgeAdapter(adapter).cancelOutBridgeTransfer(transferId);
+    }
 }

@@ -15,10 +15,12 @@ import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
+import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
-import {IMachine, IMachineEndpoint} from "../interfaces/IMachine.sol";
+import {IMachine} from "../interfaces/IMachine.sol";
+import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
@@ -109,6 +111,14 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     modifier onlyMechanic() {
         MachineStorage storage $ = _getMachineStorage();
         if (msg.sender != $._mechanic) {
+            revert UnauthorizedOperator();
+        }
+        _;
+    }
+
+    modifier onlyOperator() {
+        MachineStorage storage $ = _getMachineStorage();
+        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
             revert UnauthorizedOperator();
         }
         _;
@@ -284,13 +294,26 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata) external override {
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
         MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender == $._hubCaliber) {
-            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
-        } else {
+
+        if (_isAdapter(msg.sender)) {
+            (uint256 chainId, uint256 inputAmount) = abi.decode(data, (uint256, uint256));
+
+            SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
+
+            if (caliberData.mailbox == address(0)) {
+                revert InvalidChainId();
+            }
+
+            (bool exists, uint256 bridgeIn) = caliberData.machineBridgesIn.tryGet(token);
+            caliberData.machineBridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+        } else if (msg.sender != $._hubCaliber) {
             revert UnauthorizedSender();
         }
+
+        IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             bool newlyAdded = $._idleTokens.add(token);
             if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
@@ -347,6 +370,39 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
         }
+    }
+
+    /// @inheritdoc IBridgeController
+    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
+        external
+        override
+        notRecoveryMode
+        onlyMechanic
+    {
+        _sendOutBridgeTransfer(bridgeId, transferId, data);
+    }
+
+    /// @inheritdoc IBridgeController
+    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash)
+        external
+        override
+        onlyOperator
+    {
+        _authorizeInBridgeTransfer(bridgeId, messageHash);
+    }
+
+    /// @inheritdoc IBridgeController
+    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external override onlyOperator {
+        _claimInBridgeTransfer(bridgeId, transferId);
+    }
+
+    /// @inheritdoc IBridgeController
+    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId)
+        external
+        override
+        onlyOperator
+    {
+        _cancelOutBridgeTransfer(bridgeId, transferId);
     }
 
     /// @inheritdoc IMachine

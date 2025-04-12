@@ -1,0 +1,9 @@
+sendOutBridgeTransfer.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── it should decrease the corresponding adapter's token balance by amount
+│     └── it should emit a SendOutBridgeTransfer event
+└── given recovery mode is on
+   └── it should revert with RecoveryMode
