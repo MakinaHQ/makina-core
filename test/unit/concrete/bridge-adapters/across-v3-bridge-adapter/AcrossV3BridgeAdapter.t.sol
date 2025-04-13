@@ -6,7 +6,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 
 import {AuthorizeInBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/authorize-in-bridge-transfer/AuthorizeInBridgeTransfer.t.sol";
+    "../bridge-adapter/authorize-in-bridge-transfer/authorizeInBridgeTransfer.t.sol";
 import {BridgeAdapter_Unit_Concrete_Test} from "../bridge-adapter/BridgeAdapter.t.sol";
 
 abstract contract AcrossV3BridgeAdapter_Unit_Concrete_Test is BridgeAdapter_Unit_Concrete_Test {

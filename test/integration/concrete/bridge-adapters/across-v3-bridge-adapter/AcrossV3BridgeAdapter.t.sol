@@ -8,9 +8,9 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 
 import {ScheduleOutBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/schedule-out-bridge-transfer/ScheduleOutBridgeTransfer.t.sol";
+    "../bridge-adapter/schedule-out-bridge-transfer/scheduleOutBridgeTransfer.t.sol";
 import {ClaimInBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/claim-in-bridge-transfer/ClaimInBridgeTransfer.t.sol";
+    "../bridge-adapter/claim-in-bridge-transfer/claimInBridgeTransfer.t.sol";
 import {BridgeAdapter_Integration_Concrete_Test} from "../bridge-adapter/BridgeAdapter.t.sol";
 
 abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapter_Integration_Concrete_Test {
