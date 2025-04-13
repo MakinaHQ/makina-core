@@ -19,12 +19,10 @@ interface IMachine is IMachineEndpoint {
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
-    error StaleData();
     error UnauthorizedSender();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
     error UnauthorizedOperator();
-    error UnexpectedResultLength();
     error ZeroBridgeAdapterAddress();
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);

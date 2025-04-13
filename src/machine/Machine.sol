@@ -9,9 +9,9 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
-import {EthCallQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
-import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
+
+import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
@@ -458,46 +458,25 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     {
         MachineStorage storage $ = _getMachineStorage();
 
-        QueryResponse memory r = QueryResponseLib.parseAndVerifyQueryResponse(wormhole, response, signatures);
+        QueryResponse memory r = CaliberAccountingCCQ.parseAndVerifyQueryResponse(wormhole, response, signatures);
         uint256 numResponses = r.responses.length;
 
         for (uint256 i; i < numResponses;) {
             uint16 _wmChainId = r.responses[i].chainId;
             uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
+
             SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
+
             if (caliberData.mailbox == address(0)) {
                 revert InvalidChainId();
             }
 
-            EthCallQueryResponse memory eqr = QueryResponseLib.parseEthCallQueryResponse(r.responses[i]);
-
-            // Validate that update is not older than current chain last update, nor stale.
-            uint256 responseTimestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
-            if (
-                responseTimestamp < caliberData.timestamp
-                    || (
-                        block.timestamp > responseTimestamp
-                            && block.timestamp - responseTimestamp >= $._caliberStaleThreshold
-                    )
-            ) {
-                revert StaleData();
-            }
-
-            // Validate that only one result is returned.
-            if (eqr.results.length != 1) {
-                revert UnexpectedResultLength();
-            }
-
-            // Validate addresses and function signatures.
-            address[] memory validAddresses = new address[](1);
-            bytes4[] memory validFunctionSignatures = new bytes4[](1);
-            validAddresses[0] = caliberData.mailbox;
-            validFunctionSignatures[0] = ICaliberMailbox.getSpokeCaliberAccountingData.selector;
-            QueryResponseLib.validateEthCallRecord(eqr.results[0], validAddresses, validFunctionSignatures);
-
             // Decode and update accounting data.
-            ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
-                abi.decode(eqr.results[0].result, (ICaliberMailbox.SpokeCaliberAccountingData));
+            (ICaliberMailbox.SpokeCaliberAccountingData memory accountingData, uint256 responseTimestamp) =
+            CaliberAccountingCCQ.getAccountingData(
+                r.responses[i], caliberData.mailbox, caliberData.timestamp, $._caliberStaleThreshold
+            );
+
             caliberData.netAum = accountingData.netAum;
             caliberData.positions = accountingData.positions;
             caliberData.baseTokens = accountingData.baseTokens;

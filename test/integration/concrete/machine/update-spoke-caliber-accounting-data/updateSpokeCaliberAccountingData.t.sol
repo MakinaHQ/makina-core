@@ -8,6 +8,7 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {CaliberAccountingCCQ} from "src/libraries/CaliberAccountingCCQ.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
@@ -105,7 +106,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(IMachine.StaleData.selector);
+        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // update data
@@ -124,7 +125,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(IMachine.StaleData.selector);
+        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -143,7 +144,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
-        vm.expectRevert(IMachine.UnexpectedResultLength.selector);
+        vm.expectRevert(CaliberAccountingCCQ.UnexpectedResultLength.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
