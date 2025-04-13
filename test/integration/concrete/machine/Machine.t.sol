@@ -11,10 +11,14 @@ import {CreateBridgeAdapter_Integration_Concrete_Test} from
     "../bridge-controller/create-bridge-adapter/createBridgeAdapter.t.sol";
 import {GetBridgeAdapter_Integration_Concrete_Test} from
     "../bridge-controller/get-bridge-adapter/getBridgeAdapter.t.sol";
+import {GetMaxBridgeLossBps_Integration_Concrete_Test} from
+    "../bridge-controller/get-max-bridge-loss-bps/getMaxBridgeLossBps.t.sol";
 import {IsBridgeSupported_Integration_Concrete_Test} from
     "../bridge-controller/is-bridge-supported/isBridgeSupported.t.sol";
 import {IsOutTransferEnabled_Integration_Concrete_Test} from
     "../bridge-controller/is-out-transfer-enabled/isOutTransferEnabled.t.sol";
+import {SetMaxBridgeLossBps_Integration_Concrete_Test} from
+    "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
 import {SetOutTransferEnabled_Integration_Concrete_Test} from
     "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
@@ -120,45 +124,6 @@ abstract contract BridgeController_Machine_Integration_Concrete_Test is
     }
 }
 
-contract CreateBridgeAdapter_Machine_Integration_Concrete_Test is
-    BridgeController_Machine_Integration_Concrete_Test,
-    CreateBridgeAdapter_Integration_Concrete_Test
-{
-    function setUp()
-        public
-        virtual
-        override(BridgeController_Machine_Integration_Concrete_Test, CreateBridgeAdapter_Integration_Concrete_Test)
-    {
-        BridgeController_Machine_Integration_Concrete_Test.setUp();
-    }
-}
-
-contract SetOutTransferEnabled_Machine_Integration_Concrete_Test is
-    BridgeController_Machine_Integration_Concrete_Test,
-    SetOutTransferEnabled_Integration_Concrete_Test
-{
-    function setUp()
-        public
-        virtual
-        override(BridgeController_Machine_Integration_Concrete_Test, SetOutTransferEnabled_Integration_Concrete_Test)
-    {
-        BridgeController_Machine_Integration_Concrete_Test.setUp();
-    }
-}
-
-contract GetBridgeAdapter_Machine_Integration_Concrete_Test is
-    BridgeController_Machine_Integration_Concrete_Test,
-    GetBridgeAdapter_Integration_Concrete_Test
-{
-    function setUp()
-        public
-        virtual
-        override(BridgeController_Machine_Integration_Concrete_Test, GetBridgeAdapter_Integration_Concrete_Test)
-    {
-        BridgeController_Machine_Integration_Concrete_Test.setUp();
-    }
-}
-
 contract IsBridgeSupported_Machine_Integration_Concrete_Test is
     BridgeController_Machine_Integration_Concrete_Test,
     IsBridgeSupported_Integration_Concrete_Test
@@ -180,6 +145,71 @@ contract IsOutTransferEnabled_Machine_Integration_Concrete_Test is
         public
         virtual
         override(BridgeController_Machine_Integration_Concrete_Test, IsOutTransferEnabled_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract GetBridgeAdapter_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    GetBridgeAdapter_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, GetBridgeAdapter_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract GetMaxBridgeLossBps_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    GetMaxBridgeLossBps_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, GetMaxBridgeLossBps_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract CreateBridgeAdapter_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    CreateBridgeAdapter_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, CreateBridgeAdapter_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract SetMaxBridgeLossBps_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    SetMaxBridgeLossBps_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, SetMaxBridgeLossBps_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract SetOutTransferEnabled_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    SetOutTransferEnabled_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, SetOutTransferEnabled_Integration_Concrete_Test)
     {
         BridgeController_Machine_Integration_Concrete_Test.setUp();
     }

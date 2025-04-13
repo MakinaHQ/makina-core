@@ -16,7 +16,9 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
         machine.setSpokeCaliber(
             SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
         );
@@ -88,6 +90,19 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
 
+    function test_RevertWhen_MaxValueLossExceeded_FromCaliber() public {
+        uint256 inputAmount = 1e18;
+        uint256 minOutputAmount = (inputAmount * (10000 - DEFAULT_MAX_BRIDGE_LOSS_BPS) / 10000) - 1;
+
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        vm.expectRevert(IBridgeController.MaxValueLossExceeded.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, minOutputAmount
+        );
+    }
+
     function test_TransferToSpokeCaliber_AccountingToken_FullBalance() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
@@ -101,7 +116,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
                 address(accountingToken),
                 inputAmount,
                 spokeAccountingTokenAddr,
-                0
+                inputAmount
             )
         );
 
@@ -110,7 +125,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, 0
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
         );
 
         assertEq(accountingToken.balanceOf(address(machine)), 0);
@@ -133,7 +148,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
                 address(accountingToken),
                 transferAmount,
                 spokeAccountingTokenAddr,
-                0
+                transferAmount
             )
         );
 
@@ -142,7 +157,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), transferAmount, 0
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), transferAmount, transferAmount
         );
 
         assertEq(accountingToken.balanceOf(address(machine)), inputAmount - transferAmount);
@@ -166,7 +181,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         emit IBridgeAdapter.ScheduleOutBridgeTransfer(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
-                address(bridgeAdapter), SPOKE_CHAIN_ID, address(baseToken), inputAmount, spokeBaseTokenAddr, 0
+                address(bridgeAdapter), SPOKE_CHAIN_ID, address(baseToken), inputAmount, spokeBaseTokenAddr, inputAmount
             )
         );
 
@@ -175,7 +190,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(baseToken), inputAmount, 0
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(baseToken), inputAmount, inputAmount
         );
 
         assertEq(baseToken.balanceOf(address(machine)), 0);
@@ -202,7 +217,12 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         emit IBridgeAdapter.ScheduleOutBridgeTransfer(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
-                address(bridgeAdapter), SPOKE_CHAIN_ID, address(baseToken), transferAmount, spokeBaseTokenAddr, 0
+                address(bridgeAdapter),
+                SPOKE_CHAIN_ID,
+                address(baseToken),
+                transferAmount,
+                spokeBaseTokenAddr,
+                transferAmount
             )
         );
 
@@ -211,7 +231,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(baseToken), transferAmount, 0
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(baseToken), transferAmount, transferAmount
         );
 
         assertEq(baseToken.balanceOf(address(machine)), inputAmount - transferAmount);

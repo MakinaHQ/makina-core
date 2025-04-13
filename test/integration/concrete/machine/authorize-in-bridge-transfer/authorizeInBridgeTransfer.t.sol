@@ -14,7 +14,9 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
         Machine_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        bridgeAdapter = IBridgeAdapter(machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {

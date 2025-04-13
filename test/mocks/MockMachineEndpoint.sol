@@ -27,6 +27,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return false;
     }
 
+    function getMaxBridgeLossBps(IBridgeAdapter.Bridge) external pure returns (uint256) {
+        return 0;
+    }
+
     function isOutTransferEnabled(IBridgeAdapter.Bridge) external pure returns (bool) {
         return false;
     }
@@ -35,8 +39,12 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return address(0);
     }
 
-    function createBridgeAdapter(IBridgeAdapter.Bridge, bytes calldata) external pure returns (address) {
+    function createBridgeAdapter(IBridgeAdapter.Bridge, uint256, bytes calldata) external pure returns (address) {
         return address(0);
+    }
+
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge, uint256) external pure {
+        return;
     }
 
     function setOutTransferEnabled(IBridgeAdapter.Bridge, bool) external pure {

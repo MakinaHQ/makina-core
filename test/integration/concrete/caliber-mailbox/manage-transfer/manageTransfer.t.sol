@@ -19,7 +19,9 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
 
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
 
-        bridgeAdapter = AcrossV3BridgeAdapter(caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = AcrossV3BridgeAdapter(
+            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
 
         caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr);
 
@@ -96,6 +98,24 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
         vm.prank(address(caliber));
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, 0));
+    }
+
+    function test_RevertWhen_MaxValueLossExceeded_FromCaliber() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeMinOutputAmount = (bridgeInputAmount * (10000 - DEFAULT_MAX_BRIDGE_LOSS_BPS) / 10000) - 1;
+
+        deal(address(accountingToken), address(caliber), bridgeInputAmount, true);
+
+        vm.startPrank(address(caliber));
+
+        accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
+
+        vm.expectRevert(IBridgeController.MaxValueLossExceeded.selector);
+        caliberMailbox.manageTransfer(
+            address(accountingToken),
+            bridgeInputAmount,
+            abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, bridgeMinOutputAmount)
+        );
     }
 
     function test_ManageTransfer_FromCaliber() public {

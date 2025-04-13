@@ -23,7 +23,9 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
         vm.stopPrank();
 
         inputAmount = 1e18;

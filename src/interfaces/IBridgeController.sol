@@ -7,8 +7,12 @@ interface IBridgeController {
     error BridgeAdapterAlreadyExists();
     error BridgeAdapterDoesNotExist();
     error OutTransferDisabled();
+    error MaxValueLossExceeded();
 
     event BridgeAdapterCreated(uint256 indexed bridgeId, address indexed adapter);
+    event MaxBridgeLossBpsChange(
+        uint256 indexed bridgeId, uint256 indexed OldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
+    );
     event SetOutTransferEnabled(uint256 indexed bridgeId, bool enabled);
 
     /// @notice Bridge ID => Is bridge adapter deployed.
@@ -17,15 +21,27 @@ interface IBridgeController {
     /// @notice Bridge ID => Is outgoing transfer enabled.
     function isOutTransferEnabled(IBridgeAdapter.Bridge bridgeId) external view returns (bool);
 
-    /// @notice Returns the address of the bridge adapter for a given bridge ID.
-    /// @param bridgeId The ID of the bridge.
+    /// @notice bridge ID => Address of the associated bridge adapter.
     function getBridgeAdapter(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+
+    /// @notice Bridge ID => Max allowed value loss in basis points for an outgoing transfer.
+    function getMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId) external view returns (uint256);
 
     /// @notice Deploys a new BridgeAdapter instance.
     /// @param bridgeId The ID of the bridge.
+    /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for outgoing transfers via this bridge.
     /// @param initData The optional initialization data for the bridge adapter.
     /// @return The address of the deployed BridgeAdapter.
-    function createBridgeAdapter(IBridgeAdapter.Bridge bridgeId, bytes calldata initData) external returns (address);
+    function createBridgeAdapter(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 initialMaxBridgeLossBps,
+        bytes calldata initData
+    ) external returns (address);
+
+    /// @notice Sets the maximum allowed value loss in basis points for a bridge.
+    /// @param bridgeId The ID of the bridge.
+    /// @param maxBridgeLossBps The maximum allowed value loss in basis points.
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps) external;
 
     /// @notice Sets the outgoing transfer enabled status for a bridge.
     /// @param bridgeId The ID of the bridge.

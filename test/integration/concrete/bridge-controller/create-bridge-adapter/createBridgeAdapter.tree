@@ -7,4 +7,5 @@ createBridgeAdapter.t.sol
    └── given an adapter does not already exists for the provided bridge ID
       ├── it should deploy a BridgeAdapter instance for the provided bridge ID
       ├── outgoing bridge transfers through the deployed BridgeAdapter should be marked as enabled by default
+      ├── the max bridge loss basis point value associated with the provided bridge ID must be equal to the provided value
       └── it should emit a BridgeAdapterCreated event

@@ -10,10 +10,14 @@ import {CreateBridgeAdapter_Integration_Concrete_Test} from
     "../bridge-controller/create-bridge-adapter/createBridgeAdapter.t.sol";
 import {GetBridgeAdapter_Integration_Concrete_Test} from
     "../bridge-controller/get-bridge-adapter/getBridgeAdapter.t.sol";
+import {GetMaxBridgeLossBps_Integration_Concrete_Test} from
+    "../bridge-controller/get-max-bridge-loss-bps/getMaxBridgeLossBps.t.sol";
 import {IsBridgeSupported_Integration_Concrete_Test} from
     "../bridge-controller/is-bridge-supported/isBridgeSupported.t.sol";
 import {IsOutTransferEnabled_Integration_Concrete_Test} from
     "../bridge-controller/is-out-transfer-enabled/isOutTransferEnabled.t.sol";
+import {SetMaxBridgeLossBps_Integration_Concrete_Test} from
+    "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
 import {SetOutTransferEnabled_Integration_Concrete_Test} from
     "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
@@ -53,27 +57,27 @@ abstract contract BridgeController_CaliberMailbox_Integration_Concrete_Test is
     }
 }
 
-contract CreateBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
+contract IsBridgeSupported_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    CreateBridgeAdapter_Integration_Concrete_Test
+    IsBridgeSupported_Integration_Concrete_Test
 {
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, CreateBridgeAdapter_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsBridgeSupported_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
 }
 
-contract SetOutTransferEnabled_Machine_Integration_Concrete_Test is
+contract IsOutTransferEnabled_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    SetOutTransferEnabled_Integration_Concrete_Test
+    IsOutTransferEnabled_Integration_Concrete_Test
 {
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, SetOutTransferEnabled_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsOutTransferEnabled_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -92,27 +96,53 @@ contract GetBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
     }
 }
 
-contract IsBridgeSupported_CaliberMailbox_Integration_Concrete_Test is
+contract GetMaxBridgeLossBps_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    IsBridgeSupported_Integration_Concrete_Test
+    GetMaxBridgeLossBps_Integration_Concrete_Test
 {
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsBridgeSupported_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, GetMaxBridgeLossBps_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
 }
 
-contract IsOutTransferEnabled_Machine_Integration_Concrete_Test is
+contract CreateBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    IsOutTransferEnabled_Integration_Concrete_Test
+    CreateBridgeAdapter_Integration_Concrete_Test
 {
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsOutTransferEnabled_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, CreateBridgeAdapter_Integration_Concrete_Test)
+    {
+        BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract SetMaxBridgeLossBps_CaliberMailbox_Integration_Concrete_Test is
+    BridgeController_CaliberMailbox_Integration_Concrete_Test,
+    SetMaxBridgeLossBps_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, SetMaxBridgeLossBps_Integration_Concrete_Test)
+    {
+        BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract SetOutTransferEnabled_CaliberMailbox_Integration_Concrete_Test is
+    BridgeController_CaliberMailbox_Integration_Concrete_Test,
+    SetOutTransferEnabled_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, SetOutTransferEnabled_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }

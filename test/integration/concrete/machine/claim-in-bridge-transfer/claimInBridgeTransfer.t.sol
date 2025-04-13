@@ -25,7 +25,9 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.setSpokeCaliber(
             SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
         );
-        bridgeAdapter = IBridgeAdapter(machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
         vm.stopPrank();
 
         inputAmount = 1e18;

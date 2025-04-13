@@ -15,7 +15,9 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_I
         CaliberMailbox_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        bridgeAdapter = IBridgeAdapter(caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {

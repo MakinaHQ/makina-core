@@ -14,7 +14,7 @@ abstract contract IsBridgeSupported_Integration_Concrete_Test is BridgeControlle
         assertFalse(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
 
         vm.prank(dao);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
+        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         assertTrue(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
     }

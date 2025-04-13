@@ -14,7 +14,7 @@ abstract contract IsOutTransferEnabled_Integration_Concrete_Test is BridgeContro
         assertFalse(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
 
         vm.prank(dao);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
+        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         assertTrue(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
     }

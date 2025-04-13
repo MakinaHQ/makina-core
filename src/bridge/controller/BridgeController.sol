@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IBaseMakinaRegistry} from "../../interfaces/IBaseMakinaRegistry.sol";
@@ -12,11 +13,16 @@ import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
 abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
+    using Math for uint256;
     using SafeERC20 for IERC20Metadata;
+
+    /// @dev Full scale value in basis points
+    uint256 private constant MAX_BPS = 10_000;
 
     /// @custom:storage-location erc7201:makina.storage.BridgeController
     struct BridgeControllerStorage {
         mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
+        mapping(IBridgeAdapter.Bridge bridgeId => uint256 maxBridgeLossBps) _maxBridgeLossBps;
         mapping(IBridgeAdapter.Bridge bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
         mapping(address addr => bool isAdapter) _isAdapter;
     }
@@ -51,11 +57,20 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function createBridgeAdapter(IBridgeAdapter.Bridge bridgeId, bytes calldata initData)
-        external
-        restricted
-        returns (address)
-    {
+    function getMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId) external view returns (uint256) {
+        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
+        if ($._bridgeAdapters[bridgeId] == address(0)) {
+            revert BridgeAdapterDoesNotExist();
+        }
+        return $._maxBridgeLossBps[bridgeId];
+    }
+
+    /// @inheritdoc IBridgeController
+    function createBridgeAdapter(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 initialMaxBridgeLossBps,
+        bytes calldata initData
+    ) external restricted returns (address) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] != address(0)) {
             revert BridgeAdapterAlreadyExists();
@@ -65,6 +80,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (address(this), initData)))
         );
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
+        $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;
         $._isOutTransferEnabled[bridgeId] = true;
         $._isAdapter[bridgeAdapter] = true;
 
@@ -83,6 +99,15 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps) external restricted {
+        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
+        if ($._bridgeAdapters[bridgeId] == address(0)) {
+            revert BridgeAdapterDoesNotExist();
+        }
+        emit MaxBridgeLossBpsChange(uint256(bridgeId), $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
+        $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
+    }
+
     function _isAdapter(address adapter) internal view returns (bool) {
         return _getBridgeControllerStorage()._isAdapter[adapter];
     }
@@ -96,9 +121,13 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         address outputToken,
         uint256 minOutputAmount
     ) internal {
+        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         address adapter = getBridgeAdapter(bridgeId);
-        if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
+        if (!$._isOutTransferEnabled[bridgeId]) {
             revert OutTransferDisabled();
+        }
+        if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS)) {
+            revert MaxValueLossExceeded();
         }
         IERC20Metadata(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(

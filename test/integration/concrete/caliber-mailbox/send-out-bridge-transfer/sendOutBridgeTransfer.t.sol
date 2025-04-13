@@ -18,7 +18,9 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, ""));
+        bridgeAdapter = IBridgeAdapter(
+            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+        );
         caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr);
         vm.stopPrank();
 
@@ -29,7 +31,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         transferId = bridgeAdapter.nextOutTransferId();
         vm.prank(mechanic);
         caliber.transferToHubMachine(
-            address(accountingToken), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, 0)
+            address(accountingToken), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, inputAmount)
         );
     }
 

@@ -26,7 +26,7 @@ abstract contract SetOutTransferEnabled_Integration_Concrete_Test is BridgeContr
 
     function test_SetOutTransferEnabled() public {
         vm.prank(dao);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
+        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         vm.expectEmit(true, true, false, false, address(bridgeController));
         emit IBridgeController.SetOutTransferEnabled(uint256(IBridgeAdapter.Bridge.ACROSS_V3), false);

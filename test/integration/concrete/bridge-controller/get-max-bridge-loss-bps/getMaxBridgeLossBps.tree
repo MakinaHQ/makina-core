@@ -1,0 +1,5 @@
+getMaxBridgeLossBps.t.sol
+├── given an adapter already exists for the provided bridge ID
+│  └── it should revert with BridgeAdapterAlreadyExists
+└── given an adapter does not already exists for the provided bridge ID
+   └── it should return the max bridge loss basis point value associated with the provided bridge ID
