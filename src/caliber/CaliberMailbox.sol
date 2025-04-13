@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -16,7 +17,7 @@ import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberMailbox {
+contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using SafeERC20 for IERC20Metadata;
 
@@ -49,6 +50,7 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
     function initialize(address _hubMachine, address _initialAuthority) external override initializer {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         $._hubMachine = _hubMachine;
+        __ReentrancyGuard_init();
         __AccessManaged_init(_initialAuthority);
     }
 
@@ -115,7 +117,7 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
     }
 
     /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override nonReentrant {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
         if (msg.sender == $._caliber) {
