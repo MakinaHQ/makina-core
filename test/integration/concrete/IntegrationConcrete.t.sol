@@ -17,7 +17,7 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
-import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
+import {Base_Test, Base_Hub_Test, Base_Spoke_Test, Base_CrossChain_Test} from "test/base/Base.t.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
     /// @dev A denotes the accounting token, B denotes the base token
@@ -180,5 +180,40 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         vm.prank(dao);
         caliber.addBaseToken(_token);
         _;
+    }
+}
+
+abstract contract Integration_Concrete_CrossChain_Test is Integration_Concrete_Test, Base_CrossChain_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
+    Machine public machine;
+    Caliber public hubCaliber;
+    // AcrossV3BridgeAdapter public acrossV3Adapter;
+
+    Caliber public spokeCaliber;
+    CaliberMailbox public spokeCaliberMailbox;
+    address public spokeAcrossV3Adapter;
+
+    function setUp() public virtual override(Integration_Concrete_Test, Base_CrossChain_Test) {
+        Base_CrossChain_Test.setUp();
+        Integration_Concrete_Test.setUp();
+
+        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
+
+        (spokeCaliber, spokeCaliberMailbox) =
+            _deployCaliber(address(machine), address(accountingToken), bytes32(0), address(flashLoanModule));
+
+        // address spokeAcrossV3Adapter = spokeCaliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
+
+        // IBridgeAdapter.Bridge[] memory bridges = new IBridgeAdapter.Bridge[](1);
+        // bridges[0] = IBridgeAdapter.Bridge.ACROSS_V3;
+
+        // address[] memory adapters = new address[](1);
+        // adapters[0] = acrossV3Adapter;
+
+        // vm.startPrank(dao);
+        // machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailbox), bridges, adapters);
+        // machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(spokeCaliberMailbox), "");
+        // spokeCaliberMailbox.addHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(machine));
     }
 }

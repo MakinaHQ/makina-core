@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -101,6 +102,20 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 1);
+        assertEq(accountingData.bridgesOut.length, 1);
+        assertEq(accountingData.netAum, inputAmount);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, inputAmount);
+
+        (token, amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, inputAmount);
     }
 
     function test_CancelSentTransfer_WithoutFee_WhileInRecoveryMode() public {
@@ -120,5 +135,15 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, inputAmount);
+
+        (token, amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, inputAmount);
     }
 }
