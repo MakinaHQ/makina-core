@@ -5,7 +5,6 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";

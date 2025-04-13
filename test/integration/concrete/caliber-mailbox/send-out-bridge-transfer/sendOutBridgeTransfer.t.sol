@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
