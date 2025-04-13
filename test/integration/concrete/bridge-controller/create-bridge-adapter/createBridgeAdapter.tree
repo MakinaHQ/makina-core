@@ -6,4 +6,5 @@ createBridgeAdapter.t.sol
    │  └── it should revert with BridgeAdapterAlreadyExists
    └── given an adapter does not already exists for the provided bridge ID
       ├── it should deploy a BridgeAdapter instance for the provided bridge ID
+      ├── outgoing bridge transfers through the deployed BridgeAdapter should be marked as enabled by default
       └── it should emit a BridgeAdapterCreated event

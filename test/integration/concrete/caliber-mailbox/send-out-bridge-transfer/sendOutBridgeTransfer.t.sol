@@ -33,12 +33,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         );
     }
 
-    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
-        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
-    }
-
-    function test_RevertWhen_CallerNotMechanic() public {
+    function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
 
@@ -47,17 +42,26 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
-    function test_RevertWhen_InvalidChainId() public {
+    function test_RevertWhen_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0, "");
+    }
+
+    function test_RevertGiven_OutTransferDisabled() public {
+        vm.prank(dao);
+        caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+
+        vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
+        vm.prank(mechanic);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
         uint256 nextOutTransferId = bridgeAdapter.nextOutTransferId();
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
-        vm.prank(address(mechanic));
+        vm.prank(mechanic);
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextOutTransferId, "");
     }
 
@@ -65,7 +69,47 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
 
-        vm.prank(address(mechanic));
+        vm.prank(mechanic);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
+    }
+
+    function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+    }
+
+    function test_RevertWhen_BridgeAdapterDoesNotExist_WhileInRecoveryMode() public whileInRecoveryMode {
+        vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
+        vm.prank(securityCouncil);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0, "");
+    }
+
+    function test_RevertGiven_OutTransferDisabled_WhileInRecoveryMode() public whileInRecoveryMode {
+        vm.prank(dao);
+        caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+
+        vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
+        vm.prank(securityCouncil);
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+    }
+
+    function test_RevertGiven_InvalidTransferStatus_WhileInRecoveryMode() public whileInRecoveryMode {
+        uint256 nextOutTransferId = bridgeAdapter.nextOutTransferId();
+
+        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.prank(address(securityCouncil));
+        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextOutTransferId, "");
+    }
+
+    function test_SendOutBridgeTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
+        vm.expectEmit(true, false, false, false, address(bridgeAdapter));
+        emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
+
+        vm.prank(address(securityCouncil));
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
     }
 }

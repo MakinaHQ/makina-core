@@ -19,7 +19,10 @@ manageTransfer.t.sol
          ├── given no local bridge adapter is set for the provided bridge ID
          │  └── it should revert with BridgeAdapterDoesNotExist
          └── given a local bridge adapter is set for the provided bridge ID
-            ├── it should decrease the caliber's token balance by amount
-            ├── it should increase the local bridge adapter's token balance by amount
-            ├── it should increase the caliberMailbox's bridgeOut value by amount for the input token
-            └── it should emit a ScheduleOutBridgeTransfer event
+            ├── given outgoing bridge transfers through the given bridge are marked as disabled
+            │  └── it should revert with BridgeAdapterDoesNotExist
+            └── given outgoing bridge transfers through the given bridge are marked as enabled
+               ├── it should decrease the caliber's token balance by amount
+               ├── it should increase the local bridge adapter's token balance by amount
+               ├── it should increase the caliberMailbox's bridgeOut value by amount for the input token
+               └── it should emit a ScheduleOutBridgeTransfer event

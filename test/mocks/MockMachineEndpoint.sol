@@ -27,12 +27,20 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return false;
     }
 
+    function isOutTransferEnabled(IBridgeAdapter.Bridge) external pure returns (bool) {
+        return false;
+    }
+
     function getBridgeAdapter(IBridgeAdapter.Bridge) external pure returns (address) {
         return address(0);
     }
 
     function createBridgeAdapter(IBridgeAdapter.Bridge, bytes calldata) external pure returns (address) {
         return address(0);
+    }
+
+    function setOutTransferEnabled(IBridgeAdapter.Bridge, bool) external pure {
+        return;
     }
 
     function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) external {

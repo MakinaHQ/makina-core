@@ -49,10 +49,19 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
-    function test_RevertWhen_InvalidChainId() public {
+    function test_RevertGiven_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0, "");
+    }
+
+    function test_RevertGiven_OutTransferDisabled() public {
+        vm.prank(dao);
+        machine.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+
+        vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
+        vm.prank(mechanic);
+        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {

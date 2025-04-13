@@ -17,6 +17,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     /// @custom:storage-location erc7201:makina.storage.BridgeController
     struct BridgeControllerStorage {
         mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
+        mapping(IBridgeAdapter.Bridge bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
         mapping(address addr => bool isAdapter) _isAdapter;
     }
 
@@ -33,6 +34,11 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     /// @inheritdoc IBridgeController
     function isBridgeSupported(IBridgeAdapter.Bridge bridgeId) external view override returns (bool) {
         return _getBridgeControllerStorage()._bridgeAdapters[bridgeId] != address(0);
+    }
+
+    /// @inheritdoc IBridgeController
+    function isOutTransferEnabled(IBridgeAdapter.Bridge bridgeId) external view override returns (bool) {
+        return _getBridgeControllerStorage()._isOutTransferEnabled[bridgeId];
     }
 
     /// @inheritdoc IBridgeController
@@ -59,11 +65,22 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (address(this), initData)))
         );
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
+        $._isOutTransferEnabled[bridgeId] = true;
         $._isAdapter[bridgeAdapter] = true;
 
         emit BridgeAdapterCreated(uint256(bridgeId), bridgeAdapter);
 
         return bridgeAdapter;
+    }
+
+    /// @inheritdoc IBridgeController
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled) external override restricted {
+        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
+        if ($._bridgeAdapters[bridgeId] == address(0)) {
+            revert BridgeAdapterDoesNotExist();
+        }
+        emit SetOutTransferEnabled(uint256(bridgeId), enabled);
+        $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
     function _isAdapter(address adapter) internal view returns (bool) {
@@ -80,6 +97,9 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         uint256 minOutputAmount
     ) internal {
         address adapter = getBridgeAdapter(bridgeId);
+        if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
+            revert OutTransferDisabled();
+        }
         IERC20Metadata(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
             destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
@@ -88,6 +108,9 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
 
     function _sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) internal {
         address adapter = getBridgeAdapter(bridgeId);
+        if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
+            revert OutTransferDisabled();
+        }
         IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
     }
 

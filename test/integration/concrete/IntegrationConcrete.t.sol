@@ -155,6 +155,8 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 }
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
+    address public hubMachineAddr;
+
     Caliber public caliber;
     CaliberMailbox public caliberMailbox;
 
@@ -162,8 +164,10 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
+        hubMachineAddr = makeAddr("hubMachine");
+
         (caliber, caliberMailbox) =
-            _deployCaliber(address(0), address(accountingToken), bytes32(0), address(flashLoanModule));
+            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 
     modifier whileInRecoveryMode() {

@@ -6,11 +6,16 @@ import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 interface IBridgeController {
     error BridgeAdapterAlreadyExists();
     error BridgeAdapterDoesNotExist();
+    error OutTransferDisabled();
 
     event BridgeAdapterCreated(uint256 indexed bridgeId, address indexed adapter);
+    event SetOutTransferEnabled(uint256 indexed bridgeId, bool enabled);
 
     /// @notice Bridge ID => Is bridge adapter deployed.
     function isBridgeSupported(IBridgeAdapter.Bridge bridgeId) external view returns (bool);
+
+    /// @notice Bridge ID => Is outgoing transfer enabled.
+    function isOutTransferEnabled(IBridgeAdapter.Bridge bridgeId) external view returns (bool);
 
     /// @notice Returns the address of the bridge adapter for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
@@ -21,6 +26,11 @@ interface IBridgeController {
     /// @param initData The optional initialization data for the bridge adapter.
     /// @return The address of the deployed BridgeAdapter.
     function createBridgeAdapter(IBridgeAdapter.Bridge bridgeId, bytes calldata initData) external returns (address);
+
+    /// @notice Sets the outgoing transfer enabled status for a bridge.
+    /// @param bridgeId The ID of the bridge.
+    /// @param enabled True to enable outgoing transfer for the given bridge ID, false to disable.
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled) external;
 
     /// @notice Executes a scheduled outgoing bridge transfer.
     /// @param bridgeId The ID of the bridge.

@@ -130,10 +130,11 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
                 revert HubBridgeAdapterNotSet();
             }
 
+            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+
             (bool exists, uint256 bridgeOut) = $._bridgesOut.tryGet(token);
             $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
 
-            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
             _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
         } else if (_isAdapter(msg.sender)) {
             if (!ICaliber($._caliber).isBaseToken(token)) {
@@ -154,7 +155,6 @@ contract CaliberMailbox is AccessManagedUpgradeable, BridgeController, ICaliberM
     /// @inheritdoc IBridgeController
     function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
         external
-        notRecoveryMode
         onlyOperator
     {
         _sendOutBridgeTransfer(bridgeId, transferId, data);

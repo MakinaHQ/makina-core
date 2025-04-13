@@ -89,6 +89,15 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0));
     }
 
+    function test_RevertGiven_OutTransferDisabled_FromCaliber() public {
+        vm.prank(dao);
+        caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+
+        vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
+        vm.prank(address(caliber));
+        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, 0));
+    }
+
     function test_ManageTransfer_FromCaliber() public {
         uint256 bridgeInputAmount = 1e18;
         uint256 bridgeMinOutputAmount = 999e15;
