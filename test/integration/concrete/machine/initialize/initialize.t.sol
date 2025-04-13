@@ -14,6 +14,8 @@ import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     MachineShare public shareToken;
 
+    address public hubCaliberAddr;
+
     function setUp() public override {
         Machine_Integration_Concrete_Test.setUp();
         shareToken = new MachineShare(
@@ -22,6 +24,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             Constants.SHARE_TOKEN_DECIMALS,
             address(this)
         );
+        hubCaliberAddr = makeAddr("hubCaliber");
     }
 
     function test_RevertWhen_ProvidedATDecimalsTooLow() public {
@@ -31,7 +34,10 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
+            abi.encodeCall(
+                IMachine.initialize,
+                (_getMachineInitParams(address(accountingToken2)), address(shareToken), hubCaliberAddr)
+            )
         );
     }
 
@@ -42,7 +48,10 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
+            abi.encodeCall(
+                IMachine.initialize,
+                (_getMachineInitParams(address(accountingToken2)), address(shareToken), hubCaliberAddr)
+            )
         );
     }
 
@@ -59,7 +68,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         new BeaconProxy(
             address(machineBeacon),
             abi.encodeCall(
-                IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken2))
+                IMachine.initialize,
+                (_getMachineInitParams(address(accountingToken2)), address(shareToken2), hubCaliberAddr)
             )
         );
     }
@@ -71,14 +81,19 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
         new BeaconProxy(
             address(machineBeacon),
-            abi.encodeCall(IMachine.initialize, (_getMachineInitParams(address(accountingToken2)), address(shareToken)))
+            abi.encodeCall(
+                IMachine.initialize,
+                (_getMachineInitParams(address(accountingToken2)), address(shareToken), hubCaliberAddr)
+            )
         );
     }
 
     function test_Initialize() public {
         machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
         shareToken.transferOwnership(address(machine));
-        IMachine(machine).initialize(_getMachineInitParams(address(accountingToken)), address(shareToken));
+        IMachine(machine).initialize(
+            _getMachineInitParams(address(accountingToken)), address(shareToken), hubCaliberAddr
+        );
 
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
@@ -89,6 +104,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
+        assertEq(machine.hubCaliber(), hubCaliberAddr);
     }
 
     function _getMachineInitParams(address accountingToken) internal view returns (IMachine.MachineInitParams memory) {

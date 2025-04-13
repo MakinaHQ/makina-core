@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
-import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -75,7 +74,11 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function initialize(MachineInitParams calldata params, address _shareToken) external override initializer {
+    function initialize(MachineInitParams calldata params, address _shareToken, address _hubCaliber)
+        external
+        override
+        initializer
+    {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
@@ -105,7 +108,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         __AccessManaged_init(params.initialAuthority);
 
         $._hubChainId = block.chainid;
-        $._hubCaliber = _createHubCaliber(params);
+        $._hubCaliber = _hubCaliber;
     }
 
     modifier onlyMechanic() {
@@ -622,30 +625,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
         }
-    }
-
-    /// @dev Deploys the hub caliber.
-    function _createHubCaliber(MachineInitParams calldata params) internal onlyInitializing returns (address) {
-        ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
-            accountingToken: params.accountingToken,
-            initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
-            initialAllowedInstrRoot: params.hubCaliberAllowedInstrRoot,
-            initialTimelockDuration: params.hubCaliberTimelockDuration,
-            initialMaxPositionIncreaseLossBps: params.hubCaliberMaxPositionIncreaseLossBps,
-            initialMaxPositionDecreaseLossBps: params.hubCaliberMaxPositionDecreaseLossBps,
-            initialMaxSwapLossBps: params.hubCaliberMaxSwapLossBps,
-            initialFlashLoanModule: params.hubCaliberInitialFlashLoanModule,
-            initialMechanic: params.initialMechanic,
-            initialSecurityCouncil: params.initialSecurityCouncil,
-            initialAuthority: authority()
-        });
-        address caliber = address(
-            new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams, address(this)))
-            )
-        );
-        emit HubCaliberDeployed(caliber);
-        return caliber;
     }
 
     /// @dev Computes the total AUM of the machine.

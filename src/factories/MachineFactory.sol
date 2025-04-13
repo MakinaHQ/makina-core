@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -37,13 +38,34 @@ contract MachineFactory is AccessManagedUpgradeable, IMachineFactory {
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
 
+        ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
+            accountingToken: params.accountingToken,
+            initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
+            initialAllowedInstrRoot: params.hubCaliberAllowedInstrRoot,
+            initialTimelockDuration: params.hubCaliberTimelockDuration,
+            initialMaxPositionIncreaseLossBps: params.hubCaliberMaxPositionIncreaseLossBps,
+            initialMaxPositionDecreaseLossBps: params.hubCaliberMaxPositionDecreaseLossBps,
+            initialMaxSwapLossBps: params.hubCaliberMaxSwapLossBps,
+            initialFlashLoanModule: params.hubCaliberInitialFlashLoanModule,
+            initialMechanic: params.initialMechanic,
+            initialSecurityCouncil: params.initialSecurityCouncil,
+            initialAuthority: params.initialAuthority
+        });
+
+        address caliber = address(
+            new BeaconProxy(
+                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams, machine))
+            )
+        );
+
         IOwnable2Step(token).transferOwnership(machine);
-        IMachine(machine).initialize(params, token);
+
+        IMachine(machine).initialize(params, token, caliber);
 
         isMachine[machine] = true;
-        isCaliber[IMachine(machine).hubCaliber()] = true;
+        isCaliber[caliber] = true;
 
-        emit MachineDeployed(machine);
+        emit MachineDeployed(machine, token, caliber);
 
         return machine;
     }

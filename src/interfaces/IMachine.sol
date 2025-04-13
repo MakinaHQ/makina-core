@@ -92,7 +92,8 @@ interface IMachine is IMachineEndpoint {
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
     /// @param _shareToken The address of the share token.
-    function initialize(MachineInitParams calldata params, address _shareToken) external;
+    /// @param _hubCaliber The address of the hub caliber.
+    function initialize(MachineInitParams calldata params, address _shareToken, address _hubCaliber) external;
 
     /// @notice Address of the Wormhole Core Bridge.
     function wormhole() external view returns (address);

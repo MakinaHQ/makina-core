@@ -30,7 +30,7 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(machineFactory));
-        emit IMachineFactory.MachineDeployed(address(0));
+        emit IMachineFactory.MachineDeployed(address(0), address(0), address(0));
         vm.prank(dao);
         machine = Machine(
             machineFactory.createMachine(

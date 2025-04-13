@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IMachine} from "./IMachine.sol";
 
 interface IMachineFactory {
-    event MachineDeployed(address indexed machine);
+    event MachineDeployed(address indexed machine, address indexed shareToken, address indexed machineOwner);
     event ShareTokenDeployed(address indexed shareToken);
 
     /// @notice Address of the registry.
