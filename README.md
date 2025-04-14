@@ -53,7 +53,7 @@ yarn
 ### Build
 
 ```shell
-$ forge build
+$ yarn buildWeirollVM && forge build
 ```
 
 ### Test
