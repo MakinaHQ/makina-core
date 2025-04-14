@@ -8,7 +8,6 @@ interface ICaliberMailbox is IMachineEndpoint {
     error CaliberAlreadySet();
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
-    error NotCaliber();
     error NotFactory();
     error UnauthorizedCaller();
     error ZeroBridgeAdapterAddress();

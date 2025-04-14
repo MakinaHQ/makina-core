@@ -2,13 +2,14 @@
 pragma solidity 0.8.28;
 
 import {IMachine} from "./IMachine.sol";
+import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
-interface IMachineFactory {
+interface IMachineFactory is IBridgeAdapterFactory {
+    error NotMachine();
+
+    event HubCaliberDeployed(address indexed caliber);
     event MachineDeployed(address indexed machine, address indexed shareToken, address indexed machineOwner);
     event ShareTokenDeployed(address indexed shareToken);
-
-    /// @notice Address of the registry.
-    function registry() external view returns (address);
 
     /// @notice Machine => whether the machine was deployed by this factory
     function isMachine(address machine) external view returns (bool);

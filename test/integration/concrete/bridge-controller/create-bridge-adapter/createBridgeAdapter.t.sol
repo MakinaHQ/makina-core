@@ -40,6 +40,7 @@ abstract contract CreateBridgeAdapter_Integration_Concrete_Test is BridgeControl
         address adapter =
             bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
+        assertTrue(bridgeAdapterFactory.isBridgeAdapter(adapter));
         assertTrue(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
         assertTrue(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
         assertEq(adapter, bridgeController.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3));

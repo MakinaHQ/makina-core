@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
@@ -48,7 +49,8 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                 _hubMachine
             )
         );
-        assertEq(caliberFactory.isCaliber(address(caliber)), true);
+        assertTrue(caliberFactory.isCaliber(address(caliber)));
+        assertTrue(caliberFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
 
         assertEq(ICaliberMailbox(caliber.hubMachineEndpoint()).caliber(), address(caliber));
         assertEq(IAccessManaged(caliber.hubMachineEndpoint()).authority(), address(accessManager));
@@ -66,5 +68,10 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
         assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
+    }
+
+    function test_CreateBridgeAdapter_RevertWhen_CallerNotCaliberMailbox() public {
+        vm.expectRevert(ICaliberFactory.NotCaliberMailbox.selector);
+        caliberFactory.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
     }
 }

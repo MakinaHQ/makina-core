@@ -8,9 +8,13 @@ interface IBaseMakinaRegistry {
         uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
     );
     event CaliberBeaconChange(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
+    event CoreFactoryChange(address indexed oldCoreFactory, address indexed newCoreFactory);
     event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
     event SwapModuleChange(address indexed oldSwapModule, address indexed newSwapModule);
     event TokenRegistryChange(address indexed oldTokenRegistry, address indexed newTokenRegistry);
+
+    /// @notice Address of the core factory.
+    function coreFactory() external view returns (address);
 
     /// @notice Address of the oracle registry.
     function oracleRegistry() external view returns (address);
@@ -26,6 +30,10 @@ interface IBaseMakinaRegistry {
 
     /// @notice Bridge ID => Address of the bridge adapter beacon contract.
     function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+
+    /// @notice Sets the core factory address.
+    /// @param _coreFactory The core factory address.
+    function setCoreFactory(address _coreFactory) external;
 
     /// @notice Sets the oracle registry address.
     /// @param _oracleRegistry The oracle registry address.

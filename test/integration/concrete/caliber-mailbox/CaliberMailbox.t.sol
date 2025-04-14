@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../bridge-controller/BridgeController.t.sol";
@@ -54,6 +55,7 @@ abstract contract BridgeController_CaliberMailbox_Integration_Concrete_Test is
 
         registry = IBaseMakinaRegistry(address(spokeRegistry));
         bridgeController = IBridgeController(address(caliberMailbox));
+        bridgeAdapterFactory = IBridgeAdapterFactory(address(caliberFactory));
     }
 }
 

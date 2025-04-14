@@ -207,14 +207,14 @@ abstract contract Base is DeployViaIr {
     function setupHubRegistry(HubCore memory deployment) public {
         deployment.hubRegistry.setTokenRegistry(address(deployment.tokenRegistry));
         deployment.hubRegistry.setChainRegistry(address(deployment.chainRegistry));
-        deployment.hubRegistry.setMachineFactory(address(deployment.machineFactory));
+        deployment.hubRegistry.setCoreFactory(address(deployment.machineFactory));
         deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
         deployment.hubRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {
         deployment.spokeRegistry.setTokenRegistry(address(deployment.tokenRegistry));
-        deployment.spokeRegistry.setCaliberFactory(address(deployment.caliberFactory));
+        deployment.spokeRegistry.setCoreFactory(address(deployment.caliberFactory));
         deployment.spokeRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.spokeRegistry.setCaliberMailboxBeacon(address(deployment.caliberMailboxBeacon));
     }

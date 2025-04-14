@@ -29,7 +29,6 @@ interface IMachine is IMachineEndpoint {
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
-    event HubCaliberDeployed(address indexed caliber);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);

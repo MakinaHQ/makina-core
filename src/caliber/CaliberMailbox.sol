@@ -55,7 +55,7 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
     }
 
     modifier onlyFactory() {
-        if (msg.sender != ISpokeRegistry(registry).caliberFactory()) {
+        if (msg.sender != ISpokeRegistry(registry).coreFactory()) {
             revert NotFactory();
         }
         _;

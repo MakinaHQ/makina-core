@@ -8,7 +8,6 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     /// @custom:storage-location erc7201:makina.storage.HubRegistry
     struct HubRegistryStorage {
         address _chainRegistry;
-        address _machineFactory;
         address _machineBeacon;
     }
 
@@ -43,11 +42,6 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
-    function machineFactory() external view override returns (address) {
-        return _getHubRegistryStorage()._machineFactory;
-    }
-
-    /// @inheritdoc IHubRegistry
     function machineBeacon() external view override returns (address) {
         return _getHubRegistryStorage()._machineBeacon;
     }
@@ -57,13 +51,6 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
         emit ChainRegistryChange($._chainRegistry, _chainRegistry);
         $._chainRegistry = _chainRegistry;
-    }
-
-    /// @inheritdoc IHubRegistry
-    function setMachineFactory(address _machineFactory) external override restricted {
-        HubRegistryStorage storage $ = _getHubRegistryStorage();
-        emit MachineFactoryChange($._machineFactory, _machineFactory);
-        $._machineFactory = _machineFactory;
     }
 
     /// @inheritdoc IHubRegistry

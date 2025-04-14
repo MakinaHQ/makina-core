@@ -8,10 +8,10 @@ import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaRegistry {
     /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
     struct BaseMakinaRegistryStorage {
+        address _coreFactory;
         address _oracleRegistry;
         address _tokenRegistry;
         address _swapModule;
-        address _caliberFactory;
         address _caliberBeacon;
         mapping(IBridgeAdapter.Bridge => address) _bridgeAdapters;
     }
@@ -44,6 +44,11 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
+    function coreFactory() external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._coreFactory;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
     function oracleRegistry() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._oracleRegistry;
     }
@@ -66,6 +71,13 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     /// @inheritdoc IBaseMakinaRegistry
     function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._bridgeAdapters[bridgeId];
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function setCoreFactory(address _coreFactory) external override restricted {
+        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        emit CoreFactoryChange($._coreFactory, _coreFactory);
+        $._coreFactory = _coreFactory;
     }
 
     /// @inheritdoc IBaseMakinaRegistry

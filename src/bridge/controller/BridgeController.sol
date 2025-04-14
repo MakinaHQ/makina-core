@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
-import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,6 +9,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IBaseMakinaRegistry} from "../../interfaces/IBaseMakinaRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../../interfaces/IBridgeController.sol";
+import {IBridgeAdapterFactory} from "../../interfaces/IBridgeAdapterFactory.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
 abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
@@ -72,13 +72,14 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         bytes calldata initData
     ) external restricted returns (address) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
+
         if ($._bridgeAdapters[bridgeId] != address(0)) {
             revert BridgeAdapterAlreadyExists();
         }
-        address bridgeAdapterBeacon = IBaseMakinaRegistry(registry).bridgeAdapterBeacon(bridgeId);
-        address bridgeAdapter = address(
-            new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (address(this), initData)))
-        );
+
+        address bridgeAdapter =
+            IBridgeAdapterFactory(IBaseMakinaRegistry(registry).coreFactory()).createBridgeAdapter(bridgeId, initData);
+
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
         $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;
         $._isOutTransferEnabled[bridgeId] = true;

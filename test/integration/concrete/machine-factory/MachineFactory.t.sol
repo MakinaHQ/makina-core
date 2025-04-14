@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
@@ -20,17 +21,21 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         assertFalse(machineFactory.isCaliber(address(0)));
     }
 
-    function test_RevertWhen_CallerWithoutRole() public {
+    function test_CreateMachine_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         machineFactory.createMachine(params, "", "");
     }
 
-    function test_DeployMachine() public {
+    function test_CreateMachine() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(machineFactory));
+        emit IMachineFactory.HubCaliberDeployed(address(0));
+
+        vm.expectEmit(false, false, false, false, address(machineFactory));
         emit IMachineFactory.MachineDeployed(address(0), address(0), address(0));
+
         vm.prank(dao);
         machine = Machine(
             machineFactory.createMachine(
@@ -78,5 +83,10 @@ contract MachineFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Te
         assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
+    }
+
+    function test_CreateBridgeAdapter_RevertWhen_CallerNotMachine() public {
+        vm.expectRevert(IMachineFactory.NotMachine.selector);
+        machineFactory.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
     }
 }
