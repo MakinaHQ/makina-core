@@ -1,5 +1,5 @@
-getSpokeCaliberAccountingData.t.sol
+getSpokeCaliberDetailedAum.t.sol
 ├── when the provided chain is not that of a supported spoke chain
 │  └── it should return an empty SpokeCaliberData object
 └── when the provided chain is that of a supported spoke chain
-   └── it should return a SpokeCaliberData object corresponding to spoke caliber deployed on the spoke chain
+   └── it should return net AUM, individual positions breakdown and accounting timestamp of spoke caliber deployed on the spoke chain

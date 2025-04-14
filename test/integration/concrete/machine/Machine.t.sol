@@ -91,18 +91,18 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         }
 
         data.baseTokens = new bytes[](2);
-        data.baseTokens[0] = abi.encode(address(accountingToken), SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
-        data.baseTokens[1] = abi.encode(address(baseToken), SPOKE_CALIBER_BASE_TOKEN_VALUE);
+        data.baseTokens[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
+        data.baseTokens[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_BASE_TOKEN_VALUE);
 
         if (withTransfers) {
             data.bridgesOut = new bytes[](2);
             data.bridgesOut[0] =
-                abi.encode(address(accountingToken), SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB);
-            data.bridgesOut[1] = abi.encode(address(baseToken), SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB);
+                abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB);
+            data.bridgesOut[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB);
 
             data.bridgesIn = new bytes[](2);
-            data.bridgesIn[0] = abi.encode(address(accountingToken), SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB);
-            data.bridgesIn[1] = abi.encode(address(baseToken), SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB);
+            data.bridgesIn[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB);
+            data.bridgesIn[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB);
         }
 
         return data;

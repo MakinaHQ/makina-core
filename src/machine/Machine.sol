@@ -238,23 +238,17 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberAccountingData(uint256 chainId)
+    function getSpokeCaliberDetailedAum(uint256 chainId)
         external
         view
         override
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256 timestamp)
+        returns (uint256, bytes[] memory, bytes[] memory, uint256)
     {
-        MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert InvalidChainId();
         }
-        return (
-            ICaliberMailbox.SpokeCaliberAccountingData(
-                scData.netAum, scData.positions, scData.baseTokens, scData.caliberBridgesIn, scData.caliberBridgesOut
-            ),
-            scData.timestamp
-        );
+        return (scData.netAum, scData.positions, scData.baseTokens, scData.timestamp);
     }
 
     /// @inheritdoc IMachine
@@ -480,9 +474,10 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             caliberData.netAum = accountingData.netAum;
             caliberData.positions = accountingData.positions;
             caliberData.baseTokens = accountingData.baseTokens;
-            caliberData.caliberBridgesIn = accountingData.bridgesIn;
-            caliberData.caliberBridgesOut = accountingData.bridgesOut;
             caliberData.timestamp = responseTimestamp;
+
+            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn);
+            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut);
 
             unchecked {
                 ++i;
@@ -603,6 +598,25 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
+        }
+    }
+
+    /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
+    function _decodeAndMapBridgeAmounts(
+        uint256 chainId,
+        bytes[] memory data,
+        EnumerableMap.AddressToUintMap storage map
+    ) internal {
+        address tokenRegistry = IHubRegistry(registry).tokenRegistry();
+        uint256 len = data.length;
+        for (uint256 i; i < len;) {
+            (address foreignToken, uint256 amount) = abi.decode(data[i], (address, uint256));
+            address localToken = ITokenRegistry(tokenRegistry).getLocalToken(foreignToken, chainId);
+            map.set(localToken, amount);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 

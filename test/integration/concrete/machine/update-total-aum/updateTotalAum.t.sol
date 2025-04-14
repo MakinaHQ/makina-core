@@ -42,11 +42,15 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertGiven_SpokeCaliberStale() public withTokenAsBT(address(baseToken)) {
+        vm.startPrank(dao);
         // add a spoke caliber
-        vm.prank(dao);
         machine.setSpokeCaliber(
             SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
         );
+
+        tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
+        tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
+        vm.stopPrank();
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);

@@ -80,8 +80,8 @@ interface IMachine is IMachineEndpoint {
         uint256 netAum;
         bytes[] positions; // abi.encode(positionId, value)
         bytes[] baseTokens; // abi.encode(token, value)
-        bytes[] caliberBridgesIn; // abi.encode(token, amount)
-        bytes[] caliberBridgesOut; // abi.encode(token, amount)
+        EnumerableMap.AddressToUintMap caliberBridgesIn;
+        EnumerableMap.AddressToUintMap caliberBridgesOut;
         EnumerableMap.AddressToUintMap machineBridgesIn;
         EnumerableMap.AddressToUintMap machineBridgesOut;
     }
@@ -146,11 +146,11 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke caliber index => Spoke Chain ID.
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
-    /// @notice Spoke Chain ID => Spoke Caliber Accounting Data + Timestamp.
-    function getSpokeCaliberAccountingData(uint256 chainId)
+    /// @notice Spoke Chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
+    function getSpokeCaliberDetailedAum(uint256 chainId)
         external
         view
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256 timestamp);
+        returns (uint256 aum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp);
 
     /// @notice Spoke Chain ID => Spoke Caliber Mailbox Address.
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
