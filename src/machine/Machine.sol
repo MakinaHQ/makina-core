@@ -625,10 +625,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         uint256 totalAum;
 
-        // hub caliber net AUM
-        (uint256 hcAum,,) = ICaliber($._hubCaliber).getDetailedAum();
-        totalAum += hcAum;
-
+        // spoke calibers net AUM
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._foreignChainIds.length;
         for (uint256 i; i < len;) {
@@ -641,12 +638,54 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
                 revert CaliberAccountingStale(chainId);
             }
             totalAum += spokeCaliberData.netAum;
-            // @TODO take async fund bridging into account
+
+            // check for funds received by machine but not yet declared by spoke caliber
+            uint256 len2 = spokeCaliberData.machineBridgesIn.length();
+            for (uint256 j; j < len2;) {
+                (address token, uint256 mBridgeIn) = spokeCaliberData.machineBridgesIn.at(j);
+                (, uint256 cBridgeOut) = spokeCaliberData.caliberBridgesOut.tryGet(token);
+                if (mBridgeIn > cBridgeOut) {
+                    revert CaliberAccountingStale(chainId);
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+
+            // check for funds sent by machine but not yet received by spoke caliber
+            len2 = spokeCaliberData.machineBridgesOut.length();
+            for (uint256 j; j < len2;) {
+                (address token, uint256 mBridgeOut) = spokeCaliberData.machineBridgesOut.at(j);
+                (, uint256 cBridgeIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
+                if (mBridgeOut > cBridgeIn) {
+                    totalAum += _accountingValueOf(token, mBridgeOut - cBridgeIn);
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+
+            // check for funds sent by spoke caliber but not yet received by machine
+            len2 = spokeCaliberData.caliberBridgesOut.length();
+            for (uint256 j; j < len2;) {
+                (address token, uint256 cBridgeOut) = spokeCaliberData.caliberBridgesOut.at(j);
+                (, uint256 mBridgeIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
+                if (cBridgeOut > mBridgeIn) {
+                    totalAum += _accountingValueOf(token, cBridgeOut - mBridgeIn);
+                }
+                unchecked {
+                    ++j;
+                }
+            }
 
             unchecked {
                 ++i;
             }
         }
+
+        // hub caliber net AUM
+        (uint256 hcAum,,) = ICaliber($._hubCaliber).getDetailedAum();
+        totalAum += hcAum;
 
         // idle tokens
         len = $._idleTokens.length();
@@ -657,6 +696,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
                 ++i;
             }
         }
+
         return totalAum;
     }
 

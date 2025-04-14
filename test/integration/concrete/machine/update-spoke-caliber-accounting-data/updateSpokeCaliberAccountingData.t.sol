@@ -29,7 +29,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
@@ -47,7 +47,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID + 1, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
@@ -69,7 +69,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID + 1, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
@@ -99,7 +99,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
         vm.stopPrank();
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
 
         // data is stale according to machine's staleness threshold
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
@@ -139,7 +139,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
@@ -158,7 +158,12 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        bytes[] memory bridgesIn = new bytes[](1);
+        bridgesIn[0] = abi.encode(spokeAccountingTokenAddr, 1e18);
+        bytes[] memory bridgesOut;
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingDataWithTransfers(false, 1e18, bridgesIn, bridgesOut);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
@@ -184,7 +189,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
         vm.stopPrank();
 
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false, true);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );

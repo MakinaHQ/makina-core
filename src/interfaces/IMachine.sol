@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
-import {ICaliberMailbox} from "./ICaliberMailbox.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
