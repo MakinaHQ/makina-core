@@ -105,17 +105,13 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
             caliberMailbox.getSpokeCaliberAccountingData();
-        assertEq(accountingData.bridgesIn.length, 1);
+        assertEq(accountingData.bridgesIn.length, 0);
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, inputAmount);
 
         (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
         assertEq(token, address(accountingToken));
-        assertEq(amount, inputAmount);
-
-        (token, amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, inputAmount);
+        assertEq(amount, 0);
     }
 
     function test_CancelSentTransfer_WithoutFee_WhileInRecoveryMode() public {
@@ -138,12 +134,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
             caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 0);
+        assertEq(accountingData.bridgesOut.length, 1);
+        assertEq(accountingData.netAum, inputAmount);
         (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
         assertEq(token, address(accountingToken));
-        assertEq(amount, inputAmount);
-
-        (token, amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, inputAmount);
+        assertEq(amount, 0);
     }
 }

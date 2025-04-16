@@ -294,8 +294,8 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
         MachineStorage storage $ = _getMachineStorage();
 
-        if (_isAdapter(msg.sender)) {
-            (uint256 chainId, uint256 inputAmount) = abi.decode(data, (uint256, uint256));
+        if (_isBridgeAdapter(msg.sender)) {
+            (uint256 chainId, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
 
             SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
@@ -303,8 +303,13 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
                 revert InvalidChainId();
             }
 
-            (bool exists, uint256 bridgeIn) = caliberData.machineBridgesIn.tryGet(token);
-            caliberData.machineBridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+            if (refund) {
+                uint256 bridgeOut = caliberData.machineBridgesOut.get(token);
+                caliberData.machineBridgesOut.set(token, bridgeOut - inputAmount);
+            } else {
+                (bool exists, uint256 bridgeIn) = caliberData.machineBridgesIn.tryGet(token);
+                caliberData.machineBridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+            }
         } else if (msg.sender != $._hubCaliber) {
             revert UnauthorizedSender();
         }

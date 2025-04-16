@@ -24,7 +24,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
         mapping(IBridgeAdapter.Bridge bridgeId => uint256 maxBridgeLossBps) _maxBridgeLossBps;
         mapping(IBridgeAdapter.Bridge bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
-        mapping(address addr => bool isAdapter) _isAdapter;
+        mapping(address addr => bool isAdapter) _isBridgeAdapter;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.BridgeController")) - 1)) & ~bytes32(uint256(0xff))
@@ -83,7 +83,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
         $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;
         $._isOutTransferEnabled[bridgeId] = true;
-        $._isAdapter[bridgeAdapter] = true;
+        $._isBridgeAdapter[bridgeAdapter] = true;
 
         emit BridgeAdapterCreated(uint256(bridgeId), bridgeAdapter);
 
@@ -109,8 +109,8 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
     }
 
-    function _isAdapter(address adapter) internal view returns (bool) {
-        return _getBridgeControllerStorage()._isAdapter[adapter];
+    function _isBridgeAdapter(address adapter) internal view returns (bool) {
+        return _getBridgeControllerStorage()._isBridgeAdapter[adapter];
     }
 
     function _scheduleOutBridgeTransfer(

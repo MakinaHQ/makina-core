@@ -61,7 +61,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         );
 
         vm.expectEmit(false, false, false, true, address(bridgeController1));
-        emit MockMachineEndpoint.ManageTransfer(address(token1), inputAmount, abi.encode(chainId2, inputAmount));
+        emit MockMachineEndpoint.ManageTransfer(address(token1), inputAmount, abi.encode(chainId2, inputAmount, true));
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
         emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);

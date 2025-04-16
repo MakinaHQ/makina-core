@@ -57,80 +57,12 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(address(0), 0, "");
     }
 
-    function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter() public {
-        vm.expectRevert(ICaliber.NotBaseToken.selector);
-        vm.prank(address(bridgeAdapter));
-        caliberMailbox.manageTransfer(address(baseToken), 0, "");
-    }
-
-    function test_ManageTransfer_FromBridgeAdapter() public {
-        uint256 bridgeInputAmount = 1e18;
-        uint256 bridgeOutputAmount = 999e15;
-
-        deal(address(accountingToken), address(bridgeAdapter), bridgeOutputAmount, true);
-
-        vm.startPrank(address(bridgeAdapter));
-
-        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
-
-        caliberMailbox.manageTransfer(
-            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount)
-        );
-
-        assertEq(accountingToken.balanceOf(address(caliber)), bridgeOutputAmount);
-        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
-        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
-
-        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
-            caliberMailbox.getSpokeCaliberAccountingData();
-        assertEq(accountingData.bridgesIn.length, 1);
-        assertEq(accountingData.bridgesOut.length, 0);
-        assertEq(accountingData.netAum, bridgeOutputAmount);
-
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, bridgeInputAmount);
-    }
-
-    function test_ManageTransfer_Twice_FromBridgeAdapter() public {
-        uint256 bridgeInputAmount = 1e18;
-        uint256 bridgeOutputAmount = 999e15;
-
-        deal(address(accountingToken), address(bridgeAdapter), 2 * bridgeOutputAmount, true);
-
-        vm.startPrank(address(bridgeAdapter));
-
-        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
-        caliberMailbox.manageTransfer(
-            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount)
-        );
-
-        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
-        caliberMailbox.manageTransfer(
-            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount)
-        );
-
-        assertEq(accountingToken.balanceOf(address(caliber)), 2 * bridgeOutputAmount);
-        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
-        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
-
-        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
-            caliberMailbox.getSpokeCaliberAccountingData();
-        assertEq(accountingData.bridgesIn.length, 1);
-        assertEq(accountingData.bridgesOut.length, 0);
-        assertEq(accountingData.netAum, 2 * bridgeOutputAmount);
-
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, 2 * bridgeInputAmount);
-    }
-
     function test_RevertGiven_ForeignTokenNotRegistered_FromCaliber() public {
         vm.expectRevert(
             abi.encodeWithSelector(ITokenRegistry.ForeignTokenNotRegistered.selector, address(baseToken), hubChainId)
         );
         vm.prank(address(caliber));
-        caliberMailbox.manageTransfer(address(baseToken), 0, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, 0));
+        caliberMailbox.manageTransfer(address(baseToken), 0, "");
     }
 
     function test_RevertGiven_HubBridgeAdapterNotSet_FromCaliber() public {
@@ -255,5 +187,185 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
         assertEq(token, address(accountingToken));
         assertEq(amount, 2 * bridgeInputAmount);
+    }
+
+    function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter() public {
+        vm.expectRevert(ICaliber.NotBaseToken.selector);
+        vm.prank(address(bridgeAdapter));
+        caliberMailbox.manageTransfer(address(baseToken), 0, "");
+    }
+
+    function test_ManageTransfer_FromBridgeAdapter_NotRefund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeOutputAmount = 999e15;
+
+        deal(address(accountingToken), address(bridgeAdapter), bridgeOutputAmount, true);
+
+        vm.startPrank(address(bridgeAdapter));
+
+        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
+
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount, false)
+        );
+
+        assertEq(accountingToken.balanceOf(address(caliber)), bridgeOutputAmount);
+        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 1);
+        assertEq(accountingData.bridgesOut.length, 0);
+        assertEq(accountingData.netAum, bridgeOutputAmount);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, bridgeInputAmount);
+    }
+
+    function test_ManageTransfer_Twice_FromBridgeAdapter_NotRefund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeOutputAmount = 999e15;
+
+        deal(address(accountingToken), address(bridgeAdapter), 2 * bridgeOutputAmount, true);
+
+        vm.startPrank(address(bridgeAdapter));
+
+        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount, false)
+        );
+
+        accountingToken.approve(address(caliberMailbox), bridgeOutputAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount, false)
+        );
+
+        assertEq(accountingToken.balanceOf(address(caliber)), 2 * bridgeOutputAmount);
+        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 1);
+        assertEq(accountingData.bridgesOut.length, 0);
+        assertEq(accountingData.netAum, 2 * bridgeOutputAmount);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, 2 * bridgeInputAmount);
+    }
+
+    function test_ManageTransfer_BothDirection_NotRefund() public {
+        uint256 amount1 = 1e18;
+        uint256 amount2 = 999e15;
+
+        deal(address(accountingToken), address(bridgeAdapter), amount2, true);
+
+        vm.startPrank(address(bridgeAdapter));
+
+        accountingToken.approve(address(caliberMailbox), amount2);
+        caliberMailbox.manageTransfer(address(accountingToken), amount2, abi.encode(hubChainId, amount1, false));
+
+        vm.startPrank(address(caliber));
+
+        accountingToken.approve(address(caliberMailbox), amount2);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), amount2, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, amount2)
+        );
+
+        assertEq(accountingToken.balanceOf(address(caliber)), 0);
+        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), amount2);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 1);
+        assertEq(accountingData.bridgesOut.length, 1);
+        assertEq(accountingData.netAum, 0);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, amount1);
+        (token, amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, amount2);
+    }
+
+    function test_ManageTransfer_FromBridgeAdapter_Refund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeRefundAmount = 999e15;
+
+        // transfer from caliber needed first before a refund can occur
+        deal(address(accountingToken), address(caliber), bridgeInputAmount, true);
+        vm.startPrank(address(caliber));
+        accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeInputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, bridgeInputAmount)
+        );
+        vm.stopPrank();
+
+        vm.startPrank(address(bridgeAdapter));
+        accountingToken.approve(address(caliberMailbox), bridgeRefundAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeRefundAmount, abi.encode(hubChainId, bridgeInputAmount, true)
+        );
+
+        assertEq(accountingToken.balanceOf(address(caliber)), bridgeRefundAmount);
+        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), bridgeInputAmount - bridgeRefundAmount);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 0);
+        assertEq(accountingData.bridgesOut.length, 1);
+        assertEq(accountingData.netAum, bridgeRefundAmount);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, 0);
+    }
+
+    function test_ManageTransfer_Twice_FromBridgeAdapter_Refund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeRefundAmount = 999e15;
+
+        // transfer from caliber needed first before a refund can occur
+        deal(address(accountingToken), address(caliber), 2 * bridgeInputAmount, true);
+        vm.startPrank(address(caliber));
+        accountingToken.approve(address(caliberMailbox), 2 * bridgeInputAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken),
+            2 * bridgeInputAmount,
+            abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, 2 * bridgeInputAmount)
+        );
+        vm.stopPrank();
+
+        vm.startPrank(address(bridgeAdapter));
+
+        accountingToken.approve(address(caliberMailbox), bridgeRefundAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeRefundAmount, abi.encode(hubChainId, bridgeInputAmount, true)
+        );
+
+        accountingToken.approve(address(caliberMailbox), bridgeRefundAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeRefundAmount, abi.encode(hubChainId, bridgeInputAmount, true)
+        );
+
+        assertEq(accountingToken.balanceOf(address(caliber)), 2 * bridgeRefundAmount);
+        assertEq(accountingToken.balanceOf(address(caliberMailbox)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 2 * bridgeInputAmount - 2 * bridgeRefundAmount);
+
+        ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
+            caliberMailbox.getSpokeCaliberAccountingData();
+        assertEq(accountingData.bridgesIn.length, 0);
+        assertEq(accountingData.bridgesOut.length, 1);
+        assertEq(accountingData.netAum, 2 * bridgeRefundAmount);
+
+        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
+        assertEq(token, address(accountingToken));
+        assertEq(amount, 0);
     }
 }

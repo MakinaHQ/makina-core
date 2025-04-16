@@ -21,7 +21,11 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         bridgeAdapter = IBridgeAdapter(
             machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
         );
+        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
         vm.stopPrank();
+
+        assertFalse(machine.isIdleToken(address(baseToken)));
+        assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
     function test_RevertWhen_CallerNotAuthorized() public {
@@ -48,7 +52,10 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         vm.startPrank(address(caliber));
         accountingToken.approve(address(machine), inputAmount);
         machine.manageTransfer(address(accountingToken), inputAmount, "");
-        // call passes and token is still registered as idle
+
+        assertEq(accountingToken.balanceOf(address(caliber)), 0);
+        assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
+        // token is still registered as idle
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
@@ -70,39 +77,64 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         vm.startPrank(address(caliber));
         baseToken.approve(address(machine), inputAmount);
         machine.manageTransfer(address(baseToken), inputAmount, "");
+
+        assertEq(baseToken.balanceOf(address(caliber)), 0);
+        assertEq(baseToken.balanceOf(address(machine)), inputAmount);
         assertTrue(machine.isIdleToken(address(baseToken)));
     }
 
-    function test_RevertGiven_InvalidChainId_FromHubCaliber() public {
+    function test_RevertGiven_InvalidChainId_FromBridgeAdapter() public {
         vm.prank(address(bridgeAdapter));
         vm.expectRevert(IMachine.InvalidChainId.selector);
-        machine.manageTransfer(address(0), 0, abi.encode(SPOKE_CHAIN_ID + 1, 0));
+        machine.manageTransfer(address(0), 0, abi.encode(SPOKE_CHAIN_ID + 1, 0, false));
     }
 
-    function test_ManageTransfer_EmptyBalance_FromBridgeAdapter() public {
+    function test_ManageTransfer_EmptyBalance_FromBridgeAdapter_NotRefund() public {
+        uint256 inputAmount = 1;
         vm.prank(address(bridgeAdapter));
-        machine.manageTransfer(address(baseToken), 0, abi.encode(SPOKE_CHAIN_ID, 0));
+        machine.manageTransfer(address(baseToken), 0, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
         assertFalse(machine.isIdleToken(address(baseToken)));
     }
 
-    function test_ManageTransfer_EmptyBalanceAndNonPriceableToken_FromBridgeAdapter() public {
+    function test_ManageTransfer_EmptyBalanceAndNonPriceableToken_FromBridgeAdapter_NotRefund() public {
+        uint256 inputAmount = 1;
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         vm.prank(address(bridgeAdapter));
-        machine.manageTransfer(address(baseToken2), 0, abi.encode(SPOKE_CHAIN_ID, 0));
+        machine.manageTransfer(address(baseToken2), 0, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
         assertFalse(machine.isIdleToken(address(baseToken2)));
     }
 
-    function test_ManageTransfer_AccountingToken_FromBridgeAdapter() public {
+    function test_ManageTransfer_AccountingToken_FromBridgeAdapter_NotRefund() public {
         uint256 inputAmount = 1;
         deal(address(accountingToken), address(bridgeAdapter), inputAmount, true);
         vm.startPrank(address(bridgeAdapter));
         accountingToken.approve(address(machine), inputAmount);
-        machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount));
+        machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
         // call passes and token is still registered as idle
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
-    function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromBridgeAdapter() public {
+    function test_ManageTransfer_Twice_AccountingToken_FromBridgeAdapter_NotRefund() public {
+        uint256 inputAmount = 1;
+        deal(address(accountingToken), address(bridgeAdapter), 2 * inputAmount, true);
+
+        vm.startPrank(address(bridgeAdapter));
+
+        accountingToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        accountingToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(accountingToken.balanceOf(address(machine)), 2 * inputAmount);
+        assertTrue(machine.isIdleToken(address(accountingToken)));
+    }
+
+    function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromBridgeAdapter_NotRefund() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1;
         deal(address(baseToken2), address(bridgeAdapter), inputAmount, true);
@@ -111,15 +143,104 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         vm.expectRevert(
             abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
         );
-        machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount));
+        machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
     }
 
-    function test_ManageTransfer_BaseToken_FromBridgeAdapter() public {
+    function test_ManageTransfer_BaseToken_FromBridgeAdapter_NotRefund() public {
         uint256 inputAmount = 1;
         deal(address(baseToken), address(bridgeAdapter), inputAmount, true);
         vm.startPrank(address(bridgeAdapter));
         baseToken.approve(address(machine), inputAmount);
-        machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount));
+        machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        assertEq(baseToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(baseToken.balanceOf(address(machine)), inputAmount);
         assertTrue(machine.isIdleToken(address(baseToken)));
+    }
+
+    function test_ManageTransfer_Twice_BaseToken_FromBridgeAdapter_NotRefund() public {
+        uint256 inputAmount = 1;
+        deal(address(baseToken), address(bridgeAdapter), 2 * inputAmount, true);
+
+        vm.startPrank(address(bridgeAdapter));
+
+        baseToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        baseToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
+
+        assertEq(baseToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(baseToken.balanceOf(address(machine)), 2 * inputAmount);
+        assertTrue(machine.isIdleToken(address(baseToken)));
+    }
+
+    function test_ManageTransfer_EmptyBalance_FromBridgeAdapter_Refund() public {
+        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken), 0);
+
+        vm.prank(address(bridgeAdapter));
+        machine.manageTransfer(address(baseToken), 0, abi.encode(SPOKE_CHAIN_ID, 0, true));
+        assertFalse(machine.isIdleToken(address(baseToken)));
+    }
+
+    function test_ManageTransfer_EmptyBalanceAndNonPriceableToken_FromBridgeAdapter_Refund() public {
+        MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
+        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken2), 0);
+
+        vm.prank(address(bridgeAdapter));
+        machine.manageTransfer(address(baseToken2), 0, abi.encode(SPOKE_CHAIN_ID, 0, true));
+        assertFalse(machine.isIdleToken(address(baseToken2)));
+    }
+
+    function test_ManageTransfer_AccountingToken_FromBridgeAdapter_Refund() public {
+        uint256 inputAmount = 1;
+        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+
+        vm.startPrank(address(bridgeAdapter));
+        accountingToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
+
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
+        // call passes and token is still registered as idle
+        assertTrue(machine.isIdleToken(address(accountingToken)));
+    }
+
+    function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromBridgeAdapter_Refund() public {
+        MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
+        uint256 inputAmount = 1;
+        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken2), inputAmount);
+
+        vm.startPrank(address(bridgeAdapter));
+        baseToken2.approve(address(machine), inputAmount);
+        vm.expectRevert(
+            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
+        );
+        machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
+    }
+
+    function test_ManageTransfer_BaseToken_FromBridgeAdapter_Refund() public {
+        uint256 inputAmount = 1;
+
+        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken), inputAmount);
+
+        vm.startPrank(address(bridgeAdapter));
+        baseToken.approve(address(machine), inputAmount);
+        machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
+
+        assertEq(baseToken.balanceOf(address(bridgeAdapter)), 0);
+        assertEq(baseToken.balanceOf(address(machine)), inputAmount);
+        assertTrue(machine.isIdleToken(address(baseToken)));
+    }
+
+    function _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge bridgeId, address token, uint256 inputAmount)
+        internal
+    {
+        vm.prank(dao);
+        tokenRegistry.setToken(token, SPOKE_CHAIN_ID, makeAddr("spokeToken"));
+
+        deal(token, address(machine), inputAmount, true);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(bridgeId, SPOKE_CHAIN_ID, token, inputAmount, inputAmount);
     }
 }

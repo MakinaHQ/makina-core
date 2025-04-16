@@ -121,11 +121,11 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
         if (msg.sender == $._caliber) {
-            (IBridgeAdapter.Bridge bridgeId, uint256 minOutputAmount) =
-                abi.decode(data, (IBridgeAdapter.Bridge, uint256));
-
             address outputToken =
                 ITokenRegistry(ISpokeRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
+
+            (IBridgeAdapter.Bridge bridgeId, uint256 minOutputAmount) =
+                abi.decode(data, (IBridgeAdapter.Bridge, uint256));
 
             address recipient = $._hubBridgeAdapters[bridgeId];
             if (recipient == address(0)) {
@@ -138,15 +138,20 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
             $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
 
             _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
-        } else if (_isAdapter(msg.sender)) {
+        } else if (_isBridgeAdapter(msg.sender)) {
             if (!ICaliber($._caliber).isBaseToken(token)) {
                 revert ICaliber.NotBaseToken();
             }
 
-            (, uint256 inputAmount) = abi.decode(data, (uint256, uint256));
+            (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
 
-            (bool exists, uint256 bridgeIn) = $._bridgesIn.tryGet(token);
-            $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+            if (refund) {
+                uint256 bridgeOut = $._bridgesOut.get(token);
+                $._bridgesOut.set(token, bridgeOut - inputAmount);
+            } else {
+                (bool exists, uint256 bridgeIn) = $._bridgesIn.tryGet(token);
+                $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+            }
 
             IERC20Metadata(token).safeTransferFrom(msg.sender, $._caliber, amount);
         } else {
