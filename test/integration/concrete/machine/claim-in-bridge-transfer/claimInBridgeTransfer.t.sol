@@ -3,9 +3,14 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
+import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -51,6 +56,22 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+
+        // simulate the caliber having sent the transfer
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        bytes[] memory cBridgeIn;
+        bytes[] memory cBridgeOut = new bytes[](1);
+        cBridgeOut[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);

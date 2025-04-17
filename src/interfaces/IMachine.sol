@@ -7,6 +7,7 @@ import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
     error CaliberAccountingStale(uint256 caliberChainId);
+    error BridgeStateMismatch();
     error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);

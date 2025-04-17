@@ -21,30 +21,36 @@ manageTransfer.t.sol
    │  └── it should revert with InvalidChainId
    └── given a spoke caliber is registered for the provided bridge ID
       ├── given the refund flag is not set
-      │  ├── given the machine has a null token balance
-      │  │  └── no visible change
-      │  └── given the machine has a positive token balance
-      │     ├── given the token is already registered as idle in the machine
-      │     │  ├── it should decrease the adapter's token balance by amount
-      │     │  └── it should increase the machine's token balance by amount
-      │     └── given the token is not already registered as idle in the machine
-      │        ├── given the token does not have associated feed route in the oracle registry
-      │        │  └── it should revert with PriceFeedRouteNotRegistered
-      │        └── given the token has associated feed route in the oracle registry
-      │           ├── it should decrease the adapter's token balance by amount
-      │           ├── it should increase the machine's token balance by amount
-      │           └── it should mark the token as an idle token in the machine
+      │  ├── given the transfer was no declared as sent by the corresponding caliber
+      │  │  └── it should revert with BridgeStateMismatch
+      │  └── given the transfer was declared as sent by the corresponding caliber
+      │     ├── given the machine has a null token balance
+      │     │  └── no visible change
+      │     └── given the machine has a positive token balance
+      │        ├── given the token is already registered as idle in the machine
+      │        │  ├── it should decrease the adapter's token balance by amount
+      │        │  └── it should increase the machine's token balance by amount
+      │        └── given the token is not already registered as idle in the machine
+      │           ├── given the token does not have associated feed route in the oracle registry
+      │           │  └── it should revert with PriceFeedRouteNotRegistered
+      │           └── given the token has associated feed route in the oracle registry
+      │              ├── it should decrease the adapter's token balance by amount
+      │              ├── it should increase the machine's token balance by amount
+      │              └── it should mark the token as an idle token in the machine
       └── given the refund flag is set
-         ├── given the machine has a null token balance
-         │  └── no visible change
-         └── given the machine has a positive token balance
-            ├── given the token is already registered as idle in the machine
-            │  ├── it should decrease the adapter's token balance by amount
-            │  └── it should increase the machine's token balance by amount
-            └── given the token is not already registered as idle in the machine
-               ├── given the token does not have associated feed route in the oracle registry
-               │  └── it should revert with PriceFeedRouteNotRegistered
-               └── given the token has associated feed route in the oracle registry
-                  ├── it should decrease the adapter's token balance by amount
-                  ├── it should increase the machine's token balance by amount
-                  └── it should mark the token as an idle token in the machine
+         ├── given the transfer was declared as received by the corresponding caliber
+         │  └── it should revert with BridgeStateMismatch
+         └── given the transfer was not declared as received by the corresponding caliber
+            ├── given the machine has a null token balance
+            │  └── no visible change
+            └── given the machine has a positive token balance
+               ├── given the token is already registered as idle in the machine
+               │  ├── it should decrease the adapter's token balance by amount
+               │  └── it should increase the machine's token balance by amount
+               └── given the token is not already registered as idle in the machine
+                  ├── given the token does not have associated feed route in the oracle registry
+                  │  └── it should revert with PriceFeedRouteNotRegistered
+                  └── given the token has associated feed route in the oracle registry
+                     ├── it should decrease the adapter's token balance by amount
+                     ├── it should increase the machine's token balance by amount
+                     └── it should mark the token as an idle token in the machine

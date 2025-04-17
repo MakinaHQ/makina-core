@@ -104,33 +104,91 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // data age exceeds staleness threshold
         vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
         machine.updateTotalAum();
+    }
 
-        // reupdate accounting data
-        blockNum++;
-        blockTime = uint64(block.timestamp);
-        perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+    function test_RevertGiven_CaliberTransferCancelledAfterBeingClaimed()
+        public
+        withTokenAsBT(address(baseToken))
+        withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
+        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+    {
+        vm.startPrank(dao);
+        tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
+        tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
+        vm.stopPrank();
+
+        // receive and claim incoming bridge transfer
+        uint256 inputAmount = 1e18;
+        _receiveAndClaimBridgeTransfer(
+            SPOKE_CHAIN_ID,
+            IBridgeAdapter.Bridge.ACROSS_V3,
+            spokeAccountingTokenAddr,
+            inputAmount,
+            address(accountingToken),
+            inputAmount
+        );
+
+        // simulate the caliber transfer being cancelled by error
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
+        queriedData.bridgesOut = new bytes[](1);
+        queriedData.bridgesOut[0] = abi.encode(spokeAccountingTokenAddr, 0);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
-        (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        // aum update does not revert
+        // aum update now reverts
+        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
         machine.updateTotalAum();
+    }
 
-        // receive incoming bridge transfer
-        _receiveBridgeTransfer(
-            SPOKE_CHAIN_ID,
-            IBridgeAdapter.Bridge.ACROSS_V3,
-            spokeAccountingTokenAddr,
-            1e18,
-            address(accountingToken),
-            1e18
+    function test_RevertGiven_MachineTransferCancelledAfterBeingClaimed()
+        public
+        withTokenAsBT(address(baseToken))
+        withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
+        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+    {
+        vm.startPrank(dao);
+        tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
+        tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
+        vm.stopPrank();
+
+        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
+
+        // schedule and send outgoing bridge transfer
+        uint256 inputAmount = 1e18;
+        deal(address(accountingToken), address(machine), inputAmount, true);
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+
+        // cancel the transfer
+        deal(address(accountingToken), bridgeAdapterAddr, inputAmount, true);
+        vm.prank(mechanic);
+        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+
+        // simulate the machine transfer being received and claimed by spoke caliber
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
+        queriedData.bridgesIn = new bytes[](1);
+        queriedData.bridgesIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
+        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        // data age exceeds staleness threshold
-        vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
+        // aum update now reverts
+        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
         machine.updateTotalAum();
     }
 
@@ -439,7 +497,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 bridgeFee = 1e16;
         uint256 outputAmount = inputAmount - bridgeFee;
 
-        _receiveBridgeTransfer(
+        _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
             IBridgeAdapter.Bridge.ACROSS_V3,
             spokeAccountingTokenAddr,
@@ -562,7 +620,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
         );
 
-        _receiveBridgeTransfer(
+        _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
             IBridgeAdapter.Bridge.ACROSS_V3,
             spokeAccountingTokenAddr,
@@ -614,7 +672,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
         );
 
-        _receiveBridgeTransfer(
+        _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
             IBridgeAdapter.Bridge.ACROSS_V3,
             spokeBaseTokenAddr,
@@ -658,7 +716,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.stopPrank();
     }
 
-    function _receiveBridgeTransfer(
+    function _receiveAndClaimBridgeTransfer(
         uint256 chainId,
         IBridgeAdapter.Bridge bridgeId,
         address inputToken,
@@ -686,7 +744,24 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.prank(mechanic);
         machine.authorizeInBridgeTransfer(bridgeId, messageHash);
-
+        {
+            // simulate the caliber having sent the transfer
+            uint64 blockNum = 1e10;
+            uint64 blockTime = uint64(block.timestamp);
+            bytes[] memory cBridgeIn;
+            bytes[] memory cBridgeOut = new bytes[](1);
+            cBridgeOut[0] = abi.encode(inputToken, inputAmount);
+            ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+                _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
+            PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+                WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+            );
+            (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+                perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+            );
+            machine.updateSpokeCaliberAccountingData(response, signatures);
+        }
+        // send funds with message from bridge
         if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
             deal(address(outputToken), address(bridgeAdapterAddr), outputAmount, true);
             vm.prank(address(acrossV3SpokePool));

@@ -304,11 +304,21 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             }
 
             if (refund) {
-                uint256 bridgeOut = caliberData.machineBridgesOut.get(token);
-                caliberData.machineBridgesOut.set(token, bridgeOut - inputAmount);
+                uint256 mOut = caliberData.machineBridgesOut.get(token);
+                uint256 newMOut = mOut - inputAmount;
+                caliberData.machineBridgesOut.set(token, newMOut);
+                (, uint256 cIn) = caliberData.caliberBridgesIn.tryGet(token);
+                if (cIn > newMOut) {
+                    revert BridgeStateMismatch();
+                }
             } else {
-                (bool exists, uint256 bridgeIn) = caliberData.machineBridgesIn.tryGet(token);
-                caliberData.machineBridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+                (, uint256 mIn) = caliberData.machineBridgesIn.tryGet(token);
+                uint256 newMIn = mIn + inputAmount;
+                caliberData.machineBridgesIn.set(token, newMIn);
+                (, uint256 cOut) = caliberData.caliberBridgesOut.tryGet(token);
+                if (newMIn > cOut) {
+                    revert BridgeStateMismatch();
+                }
             }
         } else if (msg.sender != $._hubCaliber) {
             revert UnauthorizedSender();
@@ -362,8 +372,8 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             revert SpokeBridgeAdapterNotSet();
         }
 
-        (bool exists, uint256 bridgeOut) = caliberData.machineBridgesOut.tryGet(token);
-        caliberData.machineBridgesOut.set(token, exists ? bridgeOut + amount : amount);
+        (bool exists, uint256 mOut) = caliberData.machineBridgesOut.tryGet(token);
+        caliberData.machineBridgesOut.set(token, exists ? mOut + amount : amount);
 
         _scheduleOutBridgeTransfer(bridgeId, chainId, recipient, token, amount, outputToken, minOutputAmount);
 
@@ -644,13 +654,26 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             }
             totalAum += spokeCaliberData.netAum;
 
-            // check for funds received by machine but not yet declared by spoke caliber
+            // check for funds received by machine but not declared by spoke caliber
             uint256 len2 = spokeCaliberData.machineBridgesIn.length();
             for (uint256 j; j < len2;) {
-                (address token, uint256 mBridgeIn) = spokeCaliberData.machineBridgesIn.at(j);
-                (, uint256 cBridgeOut) = spokeCaliberData.caliberBridgesOut.tryGet(token);
-                if (mBridgeIn > cBridgeOut) {
-                    revert CaliberAccountingStale(chainId);
+                (address token, uint256 mIn) = spokeCaliberData.machineBridgesIn.at(j);
+                (, uint256 cOut) = spokeCaliberData.caliberBridgesOut.tryGet(token);
+                if (mIn > cOut) {
+                    revert BridgeStateMismatch();
+                }
+                unchecked {
+                    ++j;
+                }
+            }
+
+            // check for funds received by spoke caliber but not declared by machine
+            len2 = spokeCaliberData.caliberBridgesIn.length();
+            for (uint256 j; j < len2;) {
+                (address token, uint256 cIn) = spokeCaliberData.caliberBridgesIn.at(j);
+                (, uint256 mOut) = spokeCaliberData.machineBridgesOut.tryGet(token);
+                if (cIn > mOut) {
+                    revert BridgeStateMismatch();
                 }
                 unchecked {
                     ++j;
@@ -660,10 +683,10 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             // check for funds sent by machine but not yet received by spoke caliber
             len2 = spokeCaliberData.machineBridgesOut.length();
             for (uint256 j; j < len2;) {
-                (address token, uint256 mBridgeOut) = spokeCaliberData.machineBridgesOut.at(j);
-                (, uint256 cBridgeIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
-                if (mBridgeOut > cBridgeIn) {
-                    totalAum += _accountingValueOf(token, mBridgeOut - cBridgeIn);
+                (address token, uint256 mOut) = spokeCaliberData.machineBridgesOut.at(j);
+                (, uint256 cIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
+                if (mOut > cIn) {
+                    totalAum += _accountingValueOf(token, mOut - cIn);
                 }
                 unchecked {
                     ++j;
@@ -673,10 +696,10 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             // check for funds sent by spoke caliber but not yet received by machine
             len2 = spokeCaliberData.caliberBridgesOut.length();
             for (uint256 j; j < len2;) {
-                (address token, uint256 cBridgeOut) = spokeCaliberData.caliberBridgesOut.at(j);
-                (, uint256 mBridgeIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
-                if (cBridgeOut > mBridgeIn) {
-                    totalAum += _accountingValueOf(token, cBridgeOut - mBridgeIn);
+                (address token, uint256 cOut) = spokeCaliberData.caliberBridgesOut.at(j);
+                (, uint256 mIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
+                if (cOut > mIn) {
+                    totalAum += _accountingValueOf(token, cOut - mIn);
                 }
                 unchecked {
                     ++j;
