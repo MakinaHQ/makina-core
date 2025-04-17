@@ -235,6 +235,9 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         if (receivedAmount < message.minOutputAmount) {
             revert InsufficientOutputAmount();
         }
+        if (message.inputAmount < receivedAmount) {
+            revert InvalidInputAmount();
+        }
 
         uint256 id = $._nextInTransferId++;
         $._incomingTransfers[id] = InBridgeTransfer(

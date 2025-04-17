@@ -7,8 +7,9 @@ interface IBridgeAdapter {
     error BridgeTransferAlreadySent();
     error InsufficientBalance();
     error InsufficientOutputAmount();
-    error InvalidRecipientChainId();
+    error InvalidInputAmount();
     error InvalidOutputToken();
+    error InvalidRecipientChainId();
     error InvalidSenderChainId();
     error InvalidTransferStatus();
     error MaxValueLossExceeded();

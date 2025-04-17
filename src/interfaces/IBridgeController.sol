@@ -8,6 +8,7 @@ interface IBridgeController {
     error BridgeAdapterDoesNotExist();
     error OutTransferDisabled();
     error MaxValueLossExceeded();
+    error MinOutputAmountExceedsInputAmount();
 
     event BridgeAdapterCreated(uint256 indexed bridgeId, address indexed adapter);
     event MaxBridgeLossBpsChange(

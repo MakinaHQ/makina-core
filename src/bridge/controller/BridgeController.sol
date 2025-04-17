@@ -130,6 +130,9 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS)) {
             revert MaxValueLossExceeded();
         }
+        if (minOutputAmount > inputAmount) {
+            revert MinOutputAmountExceedsInputAmount();
+        }
         IERC20Metadata(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
             destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount

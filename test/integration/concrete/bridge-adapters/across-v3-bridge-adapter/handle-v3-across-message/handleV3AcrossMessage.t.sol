@@ -69,6 +69,19 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
     }
 
+    function testRevertWhen_InvalidInputAmount() public {
+        bytes memory encodedMessage = abi.encode(
+            IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 1)
+        );
+
+        vm.prank(address(bridgeController1));
+        acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
+
+        vm.expectRevert(IBridgeAdapter.InvalidInputAmount.selector);
+        vm.prank(address(acrossV3SpokePool));
+        acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 1, address(0), encodedMessage);
+    }
+
     function test_HandleV3AcrossMessage() public {
         uint256 nextInTransferId = acrossV3BridgeAdapter1.nextInTransferId();
         bytes memory encodedMessage = abi.encode(

@@ -14,5 +14,8 @@ handleV3AcrossMessage.t.sol
             ├── given the adapter received some amount of output token smaller than expected
             │  └── it should revert with InsufficientOutputAmount
             └── given the message received an amount of output token not smaller than expected
-               ├── it should emit a ReceiveInBridgeTransfer event
-               └── it should increase the nextInTransferId in the receiving adapter
+               ├── given the input amount specified in the message is smaller than received amount
+               │  └── it should revert with InvalidInputAmount
+               └── given the input amount specified in the message is not smaller than received amount
+                  ├── it should emit a ReceiveInBridgeTransfer event
+                  └── it should increase the nextInTransferId in the receiving adapter

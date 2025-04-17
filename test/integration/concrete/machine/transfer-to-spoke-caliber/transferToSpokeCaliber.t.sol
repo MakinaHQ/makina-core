@@ -90,13 +90,26 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
 
-    function test_RevertWhen_MaxValueLossExceeded_FromCaliber() public {
+    function test_RevertWhen_MaxValueLossExceeded() public {
         uint256 inputAmount = 1e18;
         uint256 minOutputAmount = (inputAmount * (10000 - DEFAULT_MAX_BRIDGE_LOSS_BPS) / 10000) - 1;
 
         deal(address(accountingToken), address(machine), inputAmount, true);
 
         vm.expectRevert(IBridgeController.MaxValueLossExceeded.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, minOutputAmount
+        );
+    }
+
+    function test_RevertWhen_MinOutputAmountExceedsInputAmount() public {
+        uint256 inputAmount = 1e18;
+        uint256 minOutputAmount = inputAmount + 1;
+
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        vm.expectRevert(IBridgeController.MinOutputAmountExceedsInputAmount.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
             IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, minOutputAmount
