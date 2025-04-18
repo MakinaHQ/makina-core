@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 
@@ -52,7 +52,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
-        AcrossV3BridgeAdapter(address(bridgeAdapter)).handleV3AcrossMessage(
+        IAcrossV3MessageHandler(address(bridgeAdapter)).handleV3AcrossMessage(
             address(accountingToken), outputAmount, address(0), encodedMessage
         );
     }

@@ -71,10 +71,10 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0));
     }
 
-    function test_RevertGiven_BridgeAdapterDoesNotExist_FromCaliber() public {
-        vm.prank(dao);
-        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.CIRCLE_CCTP, hubBridgeAdapterAddr);
-
+    function test_RevertGiven_BridgeAdapterDoesNotExist_FromCaliber()
+        public
+        withHubBridgeAdapter(IBridgeAdapter.Bridge.CIRCLE_CCTP, hubBridgeAdapterAddr)
+    {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(address(caliber));
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0));
@@ -170,9 +170,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, 0);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, bridgeInputAmount);
+        _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), bridgeInputAmount);
     }
 
     function test_ManageTransfer_Twice_FromCaliber() public {
@@ -202,9 +200,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, 0);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, 2 * bridgeInputAmount);
+        _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), 2 * bridgeInputAmount);
     }
 
     function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter() public {
@@ -237,9 +233,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 0);
         assertEq(accountingData.netAum, bridgeOutputAmount);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, bridgeInputAmount);
+        _checkBridgeCounterValue(accountingData.bridgesIn[0], address(accountingToken), bridgeInputAmount);
     }
 
     function test_ManageTransfer_Twice_FromBridgeAdapter_NotRefund() public {
@@ -303,12 +297,8 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, 0);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesIn[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, amount1);
-        (token, amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, amount2);
+        _checkBridgeCounterValue(accountingData.bridgesIn[0], address(accountingToken), amount1);
+        _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), amount2);
     }
 
     function test_ManageTransfer_FromBridgeAdapter_Refund() public {
@@ -340,9 +330,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, bridgeRefundAmount);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, 0);
+        _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), 0);
     }
 
     function test_ManageTransfer_Twice_FromBridgeAdapter_Refund() public {
@@ -382,8 +370,6 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         assertEq(accountingData.bridgesOut.length, 1);
         assertEq(accountingData.netAum, 2 * bridgeRefundAmount);
 
-        (address token, uint256 amount) = abi.decode(accountingData.bridgesOut[0], (address, uint256));
-        assertEq(token, address(accountingToken));
-        assertEq(amount, 0);
+        _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), 0);
     }
 }

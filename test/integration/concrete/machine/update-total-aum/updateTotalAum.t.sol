@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -22,24 +22,6 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
         tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
         vm.stopPrank();
-    }
-
-    modifier withSpokeCaliber(uint256 chainId, address mailbox) {
-        vm.prank(dao);
-        machine.setSpokeCaliber(chainId, mailbox, new IBridgeAdapter.Bridge[](0), new address[](0));
-        _;
-    }
-
-    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
-        vm.prank(dao);
-        machine.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
-        _;
-    }
-
-    modifier withSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) {
-        vm.prank(dao);
-        machine.setSpokeBridgeAdapter(chainId, bridgeId, adapter);
-        _;
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -108,15 +90,12 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_RevertGiven_CaliberTransferCancelledAfterBeingClaimed()
         public
-        withTokenAsBT(address(baseToken))
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
         withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
         withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
     {
-        vm.startPrank(dao);
+        vm.prank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
-        tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
-        vm.stopPrank();
 
         // receive and claim incoming bridge transfer
         uint256 inputAmount = 1e18;
@@ -150,15 +129,12 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_RevertGiven_MachineTransferCancelledAfterBeingClaimed()
         public
-        withTokenAsBT(address(baseToken))
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
         withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
         withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
     {
-        vm.startPrank(dao);
+        vm.prank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
-        tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
-        vm.stopPrank();
 
         address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
@@ -711,7 +687,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     {
         uint256 nextOutTransferId = IBridgeAdapter(machine.getBridgeAdapter(bridgeId)).nextOutTransferId();
         vm.startPrank(mechanic);
-        machine.transferToSpokeCaliber(bridgeId, chainId, address(token), amount, amount);
+        machine.transferToSpokeCaliber(bridgeId, chainId, token, amount, amount);
         machine.sendOutBridgeTransfer(bridgeId, nextOutTransferId, abi.encode(1 days));
         vm.stopPrank();
     }
@@ -765,7 +741,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
             deal(address(outputToken), address(bridgeAdapterAddr), outputAmount, true);
             vm.prank(address(acrossV3SpokePool));
-            AcrossV3BridgeAdapter(bridgeAdapterAddr).handleV3AcrossMessage(
+            IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
                 outputToken, outputAmount, address(0), encodedMessage
             );
         } else {

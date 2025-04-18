@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
@@ -68,6 +69,12 @@ abstract contract Integration_Concrete_Test is Base_Test {
         vm.stopPrank();
     }
 
+    modifier withForeignTokenRegistered(address localToken, uint256 chainId, address foreignToken) {
+        vm.prank(dao);
+        tokenRegistry.setToken(localToken, chainId, foreignToken);
+        _;
+    }
+
     ///
     /// Helper functions
     ///
@@ -123,6 +130,15 @@ abstract contract Integration_Concrete_Test is Base_Test {
         assertEq(token, expectedAddress);
         assertEq(value, expectedValue);
     }
+
+    function _checkBridgeCounterValue(bytes memory encodedData, address expectedAddress, uint256 expectedValue)
+        internal
+        pure
+    {
+        (address token, uint256 value) = abi.decode(encodedData, (address, uint256));
+        assertEq(token, expectedAddress);
+        assertEq(value, expectedValue);
+    }
 }
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
@@ -152,6 +168,24 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         caliber.addBaseToken(_token);
         _;
     }
+
+    modifier withSpokeCaliber(uint256 chainId, address mailbox) {
+        vm.prank(dao);
+        machine.setSpokeCaliber(chainId, mailbox, new IBridgeAdapter.Bridge[](0), new address[](0));
+        _;
+    }
+
+    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+        vm.prank(dao);
+        machine.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        _;
+    }
+
+    modifier withSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) {
+        vm.prank(dao);
+        machine.setSpokeBridgeAdapter(chainId, bridgeId, adapter);
+        _;
+    }
 }
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
@@ -179,6 +213,18 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
     modifier withTokenAsBT(address _token) {
         vm.prank(dao);
         caliber.addBaseToken(_token);
+        _;
+    }
+
+    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+        vm.prank(dao);
+        caliberMailbox.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        _;
+    }
+
+    modifier withHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address foreignAdapter) {
+        vm.prank(dao);
+        caliberMailbox.setHubBridgeAdapter(bridgeId, foreignAdapter);
         _;
     }
 }

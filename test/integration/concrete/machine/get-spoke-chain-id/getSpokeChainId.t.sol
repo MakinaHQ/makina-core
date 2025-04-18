@@ -11,12 +11,7 @@ contract GetSpokeChainId_Integration_Concrete_Test is Machine_Integration_Concre
         machine.getSpokeChainId(0);
     }
 
-    function test_GetSpokeChainId() public {
-        vm.prank(dao);
-        machine.setSpokeCaliber(
-            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
-        );
-
+    function test_GetSpokeChainId() public withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr) {
         assertEq(machine.getSpokeChainId(0), SPOKE_CHAIN_ID);
 
         vm.startPrank(dao);

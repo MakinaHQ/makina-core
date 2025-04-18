@@ -616,6 +616,19 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         }
     }
 
+    /// @inheritdoc IMachine
+    function resetBridgeCounters(uint256 chainId, address token) external restricted {
+        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[chainId];
+        if (caliberData.mailbox == address(0)) {
+            revert InvalidChainId();
+        }
+        caliberData.caliberBridgesIn.remove(token);
+        caliberData.caliberBridgesOut.remove(token);
+        caliberData.machineBridgesIn.remove(token);
+        caliberData.machineBridgesOut.remove(token);
+        emit ResetBridgeCounters(chainId, token);
+    }
+
     /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
     function _decodeAndMapBridgeAmounts(
         uint256 chainId,

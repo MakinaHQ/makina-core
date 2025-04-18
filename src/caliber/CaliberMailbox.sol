@@ -210,4 +210,12 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
 
         emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
     }
+
+    /// @inheritdoc ICaliberMailbox
+    function resetBridgeCounters(address token) external restricted {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+        $._bridgesIn.remove(token);
+        $._bridgesOut.remove(token);
+        emit ResetBridgeCounters(token);
+    }
 }

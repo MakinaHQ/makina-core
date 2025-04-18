@@ -33,6 +33,7 @@ interface IMachine is IMachineEndpoint {
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
+    event ResetBridgeCounters(uint256 indexed chainId, address indexed token);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
@@ -242,4 +243,11 @@ interface IMachine is IMachineEndpoint {
     /// @notice Sets the recovery mode status.
     /// @param enabled True to enable recovery mode, false to disable.
     function setRecoveryMode(bool enabled) external;
+
+    /// @notice Resets internal bridge counters for a given token and spoke chain when necessary to maintain protocol consistency.
+    /// @dev This function is intended to be used by the DAO to realign bridge accounting state, typically
+    /// in response to operator deviations, external bridge discrepancies, or unbounded counter growth.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber.
+    /// @param token The address of the token.
+    function resetBridgeCounters(uint256 chainId, address token) external;
 }

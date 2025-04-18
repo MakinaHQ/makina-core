@@ -70,10 +70,10 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         );
     }
 
-    function test_RevertWhen_BridgeAdapterDoesNotExist() public {
-        vm.prank(dao);
-        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.CIRCLE_CCTP, spokeBridgeAdapterAddr);
-
+    function test_RevertWhen_BridgeAdapterDoesNotExist()
+        public
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.CIRCLE_CCTP, spokeBridgeAdapterAddr)
+    {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(

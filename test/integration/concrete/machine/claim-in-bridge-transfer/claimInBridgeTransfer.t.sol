@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -76,7 +76,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
-        AcrossV3BridgeAdapter(address(bridgeAdapter)).handleV3AcrossMessage(
+        IAcrossV3MessageHandler(address(bridgeAdapter)).handleV3AcrossMessage(
             address(accountingToken), outputAmount, address(0), encodedMessage
         );
     }
