@@ -26,8 +26,8 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
                     nextInTransferId,
                     address(bridgeAdapter2),
                     address(bridgeAdapter1),
+                    chainId2,
                     block.chainid,
-                    chainId1,
                     address(token2),
                     inputAmount,
                     address(token1),
@@ -73,8 +73,8 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
                     nextInTransferId,
                     address(bridgeAdapter2),
                     address(bridgeAdapter1),
+                    chainId2,
                     block.chainid,
-                    chainId1,
                     address(token2),
                     inputAmount,
                     address(token1),
@@ -85,8 +85,8 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
             outputAmount
         );
 
-        vm.expectEmit(true, true, false, false, address(bridgeController1));
-        emit MockMachineEndpoint.ManageTransfer(address(token1), outputAmount, abi.encode(chainId1, inputAmount, false));
+        vm.expectEmit(false, false, false, true, address(bridgeController1));
+        emit MockMachineEndpoint.ManageTransfer(address(token1), outputAmount, abi.encode(chainId2, inputAmount, false));
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
         emit IBridgeAdapter.ClaimInBridgeTransfer(nextInTransferId);
@@ -98,16 +98,4 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(bridgeAdapter1.nextInTransferId(), nextInTransferId + 1);
     }
-
-    ///
-    /// UTILS
-    ///
-
-    /// @dev Simulates incoming bridge transfer reception. To be overridden for each bridge adapter.
-    function _receiveInBridgeTransfer(
-        address, /*bridgeAdapter*/
-        bytes memory, /* encodedMessage*/
-        address, /*receivedToken*/
-        uint256 /*receivedAmount*/
-    ) internal virtual {}
 }

@@ -34,4 +34,19 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
         token1 = new MockERC20("Token1", "T1", 18);
         token2 = new MockERC20("Token2", "T2", 18);
     }
+
+    ///
+    /// UTILS
+    ///
+
+    /// @dev Sends out scheduled outgoing bridge transfer. To be overridden for each bridge adapter version.
+    function _sendOutBridgeTransfer(address, /*bridgeAdapter*/ uint256 /*transferId*/ ) internal virtual {}
+
+    /// @dev Simulates incoming bridge transfer reception. To be overridden for each bridge adapter version.
+    function _receiveInBridgeTransfer(
+        address, /*bridgeAdapter*/
+        bytes memory, /* encodedMessage*/
+        address, /*receivedToken*/
+        uint256 /*receivedAmount*/
+    ) internal virtual {}
 }

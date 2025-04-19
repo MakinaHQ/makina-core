@@ -24,6 +24,7 @@ interface IBridgeAdapter {
     event SendOutBridgeTransfer(uint256 indexed transferId);
     event ReceiveInBridgeTransfer(uint256 indexed transferId);
     event ScheduleOutBridgeTransfer(uint256 indexed transferId, bytes32 indexed messageHash);
+    event WithdrawPendingFunds(address indexed token, uint256 amount);
 
     enum Bridge {
         ACROSS_V3,
@@ -127,4 +128,10 @@ interface IBridgeAdapter {
     /// @notice Transfers a received bridge transfer out of the adapter.
     /// @param transferId The ID of the transfer to claim.
     function claimInBridgeTransfer(uint256 transferId) external;
+
+    /// @notice Resets internal state for a given token address, and transfers token balance to associated controller.
+    /// @dev This function is intended to be used by the DAO to unlock funds stuck in the adapter, typically
+    /// in response to operator deviations or external bridge discrepancies.
+    /// @param token The address of the token.
+    function withdrawPendingFunds(address token) external;
 }

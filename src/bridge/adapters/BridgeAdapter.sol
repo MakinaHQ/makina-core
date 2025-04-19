@@ -171,6 +171,23 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         emit ClaimInBridgeTransfer(id);
     }
 
+    /// @inheritdoc IBridgeAdapter
+    function withdrawPendingFunds(address token) external nonReentrant onlyController {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+
+        _clearSet($._pendingOutTransferIds[token]);
+        _clearSet($._sentOutTransferIds[token]);
+        _clearSet($._pendingInTransferIds[token]);
+        $._reservedBalances[token] = 0;
+
+        uint256 amount = IERC20Metadata(token).balanceOf(address(this));
+        if (amount != 0) {
+            IERC20Metadata(token).safeTransfer($._controller, amount);
+        }
+
+        emit WithdrawPendingFunds(token, amount);
+    }
+
     /// @dev Updates contract state before sending out a bridge transfer.
     function _beforeSendOutBridgeTransfer(uint256 id) internal {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();

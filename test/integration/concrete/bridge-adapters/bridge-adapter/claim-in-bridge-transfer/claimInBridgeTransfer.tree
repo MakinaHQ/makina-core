@@ -1,6 +1,6 @@
 claimInBridgeTransfer.t.sol
 ├── when call is reentrant
-│  └── it should revert
+│  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
    ├── given sender is not the controller contract
    │  └── it should revert with NotController
