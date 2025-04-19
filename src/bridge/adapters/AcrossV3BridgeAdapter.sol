@@ -57,19 +57,18 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     /// @inheritdoc IBridgeAdapter
     function outBridgeTransferCancelDefault(uint256 transferId) public view returns (uint256) {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
-
         OutBridgeTransfer storage receipt = $._outgoingTransfers[transferId];
 
-        if (receipt.status == OutTransferStatus.NULL) {
-            revert InvalidTransferStatus();
-        }
-        if (
-            receipt.status == OutTransferStatus.SENT
-                && IERC20Metadata(receipt.inputToken).balanceOf(address(this))
+        if (_getSet($._sentOutTransferIds[receipt.inputToken]).contains(transferId)) {
+            if (
+                IERC20Metadata(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
-        ) {
-            return $._reservedBalances[receipt.inputToken] + receipt.inputAmount
-                - IERC20Metadata(receipt.inputToken).balanceOf(address(this));
+            ) {
+                return $._reservedBalances[receipt.inputToken] + receipt.inputAmount
+                    - IERC20Metadata(receipt.inputToken).balanceOf(address(this));
+            }
+        } else if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).contains(transferId)) {
+            revert InvalidTransferStatus();
         }
         return 0;
     }

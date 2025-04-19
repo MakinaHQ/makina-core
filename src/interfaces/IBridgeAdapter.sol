@@ -30,17 +30,6 @@ interface IBridgeAdapter {
         CIRCLE_CCTP
     }
 
-    enum OutTransferStatus {
-        NULL,
-        SCHEDULED,
-        SENT
-    }
-
-    enum InTransferStatus {
-        NULL,
-        RECEIVED
-    }
-
     struct OutBridgeTransfer {
         address recipient;
         uint256 destinationChainId;
@@ -49,7 +38,6 @@ interface IBridgeAdapter {
         address outputToken;
         uint256 minOutputAmount;
         bytes encodedMessage;
-        OutTransferStatus status;
     }
 
     struct InBridgeTransfer {
@@ -59,7 +47,6 @@ interface IBridgeAdapter {
         uint256 inputAmount;
         address outputToken;
         uint256 outputAmount;
-        InTransferStatus status;
     }
 
     struct BridgeMessage {

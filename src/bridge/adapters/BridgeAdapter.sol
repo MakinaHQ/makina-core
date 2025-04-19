@@ -27,6 +27,12 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     /// @inheritdoc IBridgeAdapter
     address public immutable override receiveSource;
 
+    /// @dev EnumerableSet wrapper supporting efficient clearing by switching to a new version.
+    struct VersionedUintSet {
+        mapping(uint256 => EnumerableSet.UintSet) _sets;
+        uint256 _currentVersion;
+    }
+
     /// @custom:storage-location erc7201:makina.storage.BridgeAdapter
     struct BridgeAdapterStorage {
         address _controller;
@@ -35,6 +41,9 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         uint256 _nextInTransferId;
         mapping(uint256 outTransferId => OutBridgeTransfer transfer) _outgoingTransfers;
         mapping(uint256 inTransferId => InBridgeTransfer transfer) _incomingTransfers;
+        mapping(address token => VersionedUintSet) _pendingOutTransferIds;
+        mapping(address token => VersionedUintSet) _sentOutTransferIds;
+        mapping(address token => VersionedUintSet) _pendingInTransferIds;
         mapping(bytes32 messageHash => bool isExpected) _expectedInMessages;
         mapping(address token => uint256 amount) _reservedBalances;
     }
@@ -119,15 +128,9 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             )
         );
         $._outgoingTransfers[id] = OutBridgeTransfer(
-            recipient,
-            destinationChainId,
-            inputToken,
-            inputAmount,
-            outputToken,
-            minOutputAmount,
-            encodedMessage,
-            OutTransferStatus.SCHEDULED
+            recipient, destinationChainId, inputToken, inputAmount, outputToken, minOutputAmount, encodedMessage
         );
+        _getSet($._pendingOutTransferIds[inputToken]).add(id);
         $._reservedBalances[inputToken] += inputAmount;
 
         bytes32 messageHash = keccak256(encodedMessage);
@@ -154,8 +157,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         InBridgeTransfer storage receipt = $._incomingTransfers[id];
-
-        if (receipt.status != InTransferStatus.RECEIVED) {
+        if (!_getSet($._pendingInTransferIds[receipt.outputToken]).remove(id)) {
             revert InvalidTransferStatus();
         }
 
@@ -164,7 +166,6 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             receipt.outputToken, receipt.outputAmount, abi.encode(receipt.originChainId, receipt.inputAmount, false)
         );
 
-        delete $._incomingTransfers[id];
         $._reservedBalances[receipt.outputToken] -= receipt.outputAmount;
 
         emit ClaimInBridgeTransfer(id);
@@ -174,10 +175,10 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     function _beforeSendOutBridgeTransfer(uint256 id) internal {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
-        if (receipt.status != OutTransferStatus.SCHEDULED) {
+        if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
             revert InvalidTransferStatus();
         }
-        receipt.status = OutTransferStatus.SENT;
+        _getSet($._sentOutTransferIds[receipt.inputToken]).add(id);
         $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
 
         emit SendOutBridgeTransfer(id);
@@ -186,17 +187,16 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     /// @dev Cancels an outgoing bridge transfer that is either scheduled or refunded.
     function _cancelOutBridgeTransfer(uint256 id) internal {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
-
         OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
 
-        if (receipt.status == OutTransferStatus.SENT) {
+        if (_getSet($._sentOutTransferIds[receipt.inputToken]).remove(id)) {
             if (
                 IERC20Metadata(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
             ) {
                 revert InsufficientBalance();
             }
-        } else if (receipt.status == OutTransferStatus.SCHEDULED) {
+        } else if (_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
             $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
         } else {
             revert InvalidTransferStatus();
@@ -206,8 +206,6 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         IMachineEndpoint($._controller).manageTransfer(
             receipt.inputToken, receipt.inputAmount, abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
         );
-
-        delete $._outgoingTransfers[id];
 
         emit CancelOutBridgeTransfer(id);
     }
@@ -246,10 +244,22 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             message.inputToken,
             message.inputAmount,
             receivedToken,
-            receivedAmount,
-            InTransferStatus.RECEIVED
+            receivedAmount
         );
+        _getSet($._pendingInTransferIds[receivedToken]).add(id);
         $._reservedBalances[receivedToken] += receivedAmount;
         emit ReceiveInBridgeTransfer(id);
+    }
+
+    /// @dev Returns a reference to the current active set for this versioned set.
+    function _getSet(VersionedUintSet storage self) internal view returns (EnumerableSet.UintSet storage) {
+        return self._sets[self._currentVersion];
+    }
+
+    /// @dev Virtually clears the set by incrementing the version.
+    ///      All future operations will apply to a fresh, empty set.
+    ///      Previous versions remain in storage and are not deleted.
+    function _clearSet(VersionedUintSet storage self) internal {
+        ++self._currentVersion;
     }
 }
