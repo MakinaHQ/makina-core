@@ -66,4 +66,8 @@ contract MockMachineEndpoint is IMachineEndpoint {
     function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external {
         emit CancelOutBridgeTransfer(bridgeId, transferId);
     }
+
+    function resetBridgingState(address) external pure override {
+        return;
+    }
 }

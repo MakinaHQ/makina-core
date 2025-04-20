@@ -211,11 +211,28 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
     }
 
-    /// @inheritdoc ICaliberMailbox
-    function resetBridgeCounters(address token) external restricted {
+    /// @inheritdoc IBridgeController
+    function resetBridgingState(address token) external override restricted {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
+
+        if (!ICaliber($._caliber).isBaseToken(token)) {
+            revert ICaliber.NotBaseToken();
+        }
+
         $._bridgesIn.remove(token);
         $._bridgesOut.remove(token);
-        emit ResetBridgeCounters(token);
+
+        BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
+        uint256 len = $bc._supportedBridges.length;
+        for (uint256 i; i < len;) {
+            address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
+            IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
+            unchecked {
+                ++i;
+            }
+        }
+        IERC20Metadata(token).safeTransfer($._caliber, IERC20Metadata(token).balanceOf(address(this)));
+
+        emit ResetBridgingState(token);
     }
 }

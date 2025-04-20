@@ -325,13 +325,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         }
 
         IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
-
-        if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
-            bool newlyAdded = $._idleTokens.add(token);
-            if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
-                revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
-            }
-        }
+        _notifyIdleToken(token);
     }
 
     /// @inheritdoc IMachine
@@ -616,17 +610,36 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         }
     }
 
-    /// @inheritdoc IMachine
-    function resetBridgeCounters(uint256 chainId, address token) external restricted {
-        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[chainId];
-        if (caliberData.mailbox == address(0)) {
-            revert InvalidChainId();
+    /// @inheritdoc IBridgeController
+    function resetBridgingState(address token) external override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        uint256 len = $._foreignChainIds.length;
+        for (uint256 i; i < len;) {
+            SpokeCaliberData storage caliberData = $._spokeCalibersData[$._foreignChainIds[i]];
+
+            caliberData.caliberBridgesIn.remove(token);
+            caliberData.caliberBridgesOut.remove(token);
+            caliberData.machineBridgesIn.remove(token);
+            caliberData.machineBridgesOut.remove(token);
+
+            unchecked {
+                ++i;
+            }
         }
-        caliberData.caliberBridgesIn.remove(token);
-        caliberData.caliberBridgesOut.remove(token);
-        caliberData.machineBridgesIn.remove(token);
-        caliberData.machineBridgesOut.remove(token);
-        emit ResetBridgeCounters(chainId, token);
+
+        BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
+        len = $bc._supportedBridges.length;
+        for (uint256 i; i < len;) {
+            address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
+            IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
+            unchecked {
+                ++i;
+            }
+        }
+
+        _notifyIdleToken(token);
+
+        emit ResetBridgingState(token);
     }
 
     /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
@@ -746,6 +759,16 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         uint256 price = IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+    }
+
+    /// @dev transfers funds from caller to self, and updates the machine's idle tokens.
+    function _notifyIdleToken(address token) internal {
+        if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
+            bool newlyAdded = _getMachineStorage()._idleTokens.add(token);
+            if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+                revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
+            }
+        }
     }
 
     /// @dev Converts accounting token amount to share amount, with support for rounding direction.

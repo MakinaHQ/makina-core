@@ -21,6 +21,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
 
     /// @custom:storage-location erc7201:makina.storage.BridgeController
     struct BridgeControllerStorage {
+        IBridgeAdapter.Bridge[] _supportedBridges;
         mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
         mapping(IBridgeAdapter.Bridge bridgeId => uint256 maxBridgeLossBps) _maxBridgeLossBps;
         mapping(IBridgeAdapter.Bridge bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
@@ -31,7 +32,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     bytes32 private constant BridgeControllerStorageLocation =
         0x7363d524082cdf545f1ac33985598b84d2470b8b4fbcc6cb47698cc1b2a03500;
 
-    function _getBridgeControllerStorage() private pure returns (BridgeControllerStorage storage $) {
+    function _getBridgeControllerStorage() internal pure returns (BridgeControllerStorage storage $) {
         assembly {
             $.slot := BridgeControllerStorageLocation
         }
@@ -84,6 +85,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;
         $._isOutTransferEnabled[bridgeId] = true;
         $._isBridgeAdapter[bridgeAdapter] = true;
+        $._supportedBridges.push(bridgeId);
 
         emit BridgeAdapterCreated(uint256(bridgeId), bridgeAdapter);
 

@@ -1,6 +1,7 @@
-resetBridgeCounters.t.sol
+resetBridgingState.t.sol
 ├── given sender does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── given sender has the relevant role
    ├── it should erase all the existing bridge counters for the given token, in caliber mailbox storage
-   └── it should emit a ResetBridgeCounters event
+   ├── it should withdraw token balance in all bridge adapters to caliber, and wipe out pending transfers
+   └── it should emit a ResetBridgingState event

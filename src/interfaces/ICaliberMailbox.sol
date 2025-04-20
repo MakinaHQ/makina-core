@@ -14,7 +14,6 @@ interface ICaliberMailbox is IMachineEndpoint {
 
     event CaliberSet(address indexed caliber);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
-    event ResetBridgeCounters(address indexed token);
 
     struct SpokeCaliberAccountingData {
         uint256 netAum;
@@ -51,10 +50,4 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
     function setHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address adapter) external;
-
-    /// @notice Resets internal bridge counters for a given token when necessary to maintain protocol consistency.
-    /// @dev This function is intended to be used by the DAO to realign bridge accounting state, typically
-    /// in response to operator deviations, external bridge discrepancies, or unbounded counter growth.
-    /// @param token The address of the token.
-    function resetBridgeCounters(address token) external;
 }

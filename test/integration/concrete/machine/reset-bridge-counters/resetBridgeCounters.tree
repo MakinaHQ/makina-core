@@ -1,9 +1,0 @@
-resetBridgeCounters.t.sol
-├── given sender does not have the relevant role
-│  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
-   ├── given no spoke caliber was registered in this contract for the provided chain ID
-   │  └── it should revert with InvalidChainID
-   └── given a spoke caliber was registered in this contract for the provided chain ID
-      ├── it should erase all the existing bridge counters for the given chainid and token, in machine storage
-      └── it should emit a ResetBridgeCounters event

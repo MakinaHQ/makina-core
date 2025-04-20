@@ -14,6 +14,7 @@ interface IBridgeController {
     event MaxBridgeLossBpsChange(
         uint256 indexed bridgeId, uint256 indexed OldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
     );
+    event ResetBridgingState(address indexed token);
     event SetOutTransferEnabled(uint256 indexed bridgeId, bool enabled);
 
     /// @notice Bridge ID => Is bridge adapter deployed.
@@ -69,4 +70,10 @@ interface IBridgeController {
     /// @param bridgeId The ID of the bridge.
     /// @param transferId The ID of the transfer to cancel.
     function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external;
+
+    /// @notice Resets internal bridge counters for a given token, and withdraw token balances held by all bridge adapters.
+    /// @dev This function is intended to be used by the DAO to realign bridge accounting state and maintain protocol consistency,
+    ///      typically in response to operator deviations, external bridge discrepancies, or unbounded counter growth.
+    /// @param token The address of the token.
+    function resetBridgingState(address token) external;
 }
