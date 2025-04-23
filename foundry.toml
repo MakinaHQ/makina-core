@@ -31,3 +31,7 @@ vtn_base = { key = "${VTN_BASE_ETHERSCAN_API_KEY}", chain = 8453, url = "${VTN_B
 
 [fuzz]
 runs = 1024
+
+[invariant]
+fail_on_revert = true
+runs = 50

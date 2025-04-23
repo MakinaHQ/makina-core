@@ -177,8 +177,6 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
         Base_Test.setUp();
         Base_Hub_Test.setUp();
 
-        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
-
         spokeRegistry = _deploySpokeRegistry(
             dao, address(oracleRegistry), address(tokenRegistry), address(swapModule), address(accessManager)
         );
@@ -187,6 +185,7 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
 
         caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeRegistry), hubChainId);
 
+        vm.startPrank(dao);
         setupSpokeRegistry(
             SpokeCore({
                 accessManager: accessManager,
@@ -199,5 +198,6 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
                 caliberMailboxBeacon: caliberMailboxBeacon
             })
         );
+        vm.stopPrank();
     }
 }
