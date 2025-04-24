@@ -24,7 +24,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         uint256 expectedShares = machine.convertToShares(inputAmount);
         uint256 newShareLimit = expectedShares - 1;
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
 
         deal(address(accountingToken), machineDepositor, inputAmount, true);

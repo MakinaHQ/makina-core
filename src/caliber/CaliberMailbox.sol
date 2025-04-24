@@ -76,6 +76,13 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         _;
     }
 
+    modifier onlyRiskManagerTimelock() {
+        if (msg.sender != ICaliber(_getCaliberStorage()._caliber).riskManagerTimelock()) {
+            revert IMakinaGovernable.UnauthorizedCaller();
+        }
+        _;
+    }
+
     modifier notRecoveryMode() {
         if (ICaliber(_getCaliberStorage()._caliber).recoveryMode()) {
             revert IMakinaGovernable.RecoveryMode();
@@ -210,6 +217,24 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         $._hubBridgeAdapters[bridgeId] = adapter;
 
         emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setOutTransferEnabled(bridgeId, enabled);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 
     /// @inheritdoc IBridgeController

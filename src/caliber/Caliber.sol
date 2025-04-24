@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -186,12 +185,12 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     }
 
     /// @inheritdoc ICaliber
-    function addBaseToken(address token) external override restricted {
+    function addBaseToken(address token) external override onlyRiskManagerTimelock {
         _addBaseToken(token);
     }
 
     /// @inheritdoc ICaliber
-    function removeBaseToken(address token) external override restricted {
+    function removeBaseToken(address token) external override onlyRiskManagerTimelock {
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (token == $._accountingToken) {
@@ -425,21 +424,21 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     }
 
     /// @inheritdoc ICaliber
-    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external override restricted {
+    function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external override onlyRiskManagerTimelock {
         CaliberStorage storage $ = _getCaliberStorage();
         emit PositionStaleThresholdChanged($._positionStaleThreshold, newPositionStaleThreshold);
         $._positionStaleThreshold = newPositionStaleThreshold;
     }
 
     /// @inheritdoc ICaliber
-    function setTimelockDuration(uint256 newTimelockDuration) external override restricted {
+    function setTimelockDuration(uint256 newTimelockDuration) external override onlyRiskManagerTimelock {
         CaliberStorage storage $ = _getCaliberStorage();
         emit TimelockDurationChanged($._timelockDuration, newTimelockDuration);
         $._timelockDuration = newTimelockDuration;
     }
 
     /// @inheritdoc ICaliber
-    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external override restricted {
+    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external override onlyRiskManager {
         CaliberStorage storage $ = _getCaliberStorage();
         _updateAllowedInstrRoot();
         if ($._pendingTimelockExpiry != 0) {
@@ -462,21 +461,29 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     }
 
     /// @inheritdoc ICaliber
-    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps) external override restricted {
+    function setMaxPositionIncreaseLossBps(uint256 newMaxPositionIncreaseLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxPositionIncreaseLossBpsChanged($._maxPositionIncreaseLossBps, newMaxPositionIncreaseLossBps);
         $._maxPositionIncreaseLossBps = newMaxPositionIncreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
-    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps) external override restricted {
+    function setMaxPositionDecreaseLossBps(uint256 newMaxPositionDecreaseLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxPositionDecreaseLossBpsChanged($._maxPositionDecreaseLossBps, newMaxPositionDecreaseLossBps);
         $._maxPositionDecreaseLossBps = newMaxPositionDecreaseLossBps;
     }
 
     /// @inheritdoc ICaliber
-    function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external override restricted {
+    function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external override onlyRiskManagerTimelock {
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
         $._maxSwapLossBps = newMaxSwapLossBps;

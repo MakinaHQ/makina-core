@@ -8,7 +8,6 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";

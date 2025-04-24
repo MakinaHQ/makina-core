@@ -83,7 +83,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);

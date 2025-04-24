@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -553,17 +552,35 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override restricted {
+    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
         $._caliberStaleThreshold = newCaliberStaleThreshold;
     }
 
     /// @inheritdoc IMachine
-    function setShareLimit(uint256 newShareLimit) external override restricted {
+    function setShareLimit(uint256 newShareLimit) external override onlyRiskManager {
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
+    }
+
+    /// @inheritdoc IBridgeController
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setOutTransferEnabled(bridgeId, enabled);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 
     /// @inheritdoc IBridgeController

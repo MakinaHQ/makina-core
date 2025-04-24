@@ -92,8 +92,10 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
             _deployCaliber(address(machine), address(accountingToken), bytes32(0), address(0));
 
         // set up machine and spoke caliber
-        vm.startPrank(dao);
+        vm.prank(riskManagerTimelock);
         spokeCaliber.addBaseToken(address(baseToken));
+
+        vm.startPrank(dao);
         machine.setSpokeCaliber(
             machineStore.spokeChainId(), address(spokeCaliberMailbox), new IBridgeAdapter.Bridge[](0), new address[](0)
         );

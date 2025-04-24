@@ -17,7 +17,7 @@ abstract contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
         defaultRoot = keccak256(abi.encodePacked("defaultRoot"));
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(defaultRoot);
         skip(caliber.timelockDuration() + 1);
     }
@@ -66,8 +66,8 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         assertEq(caliber.flashLoanModule(), newFlashLoanModule);
     }
 
-    function test_SetPositionStaleThreshold_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.setPositionStaleThreshold(2 hours);
     }
 
@@ -75,13 +75,13 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         uint256 newThreshold = 2 hours;
         vm.expectEmit(true, true, false, false, address(caliber));
         emit ICaliber.PositionStaleThresholdChanged(DEFAULT_CALIBER_POS_STALE_THRESHOLD, newThreshold);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.setPositionStaleThreshold(newThreshold);
         assertEq(caliber.positionStaleThreshold(), newThreshold);
     }
 
-    function test_SetTimelockDuration_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetTimelockDuration_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.setTimelockDuration(2 hours);
     }
 
@@ -89,46 +89,46 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         uint256 newDuration = 2 hours;
         vm.expectEmit(true, true, false, false, address(caliber));
         emit ICaliber.TimelockDurationChanged(DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK, newDuration);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.setTimelockDuration(newDuration);
         assertEq(caliber.timelockDuration(), newDuration);
     }
 
-    function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.setMaxPositionIncreaseLossBps(1000);
     }
 
     function test_setMaxPositionIncreaseLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
         emit ICaliber.MaxPositionIncreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS, 1000);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.setMaxPositionIncreaseLossBps(1000);
         assertEq(caliber.maxPositionIncreaseLossBps(), 1000);
     }
 
-    function test_SetMaxPositionDecreaseLossBps_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxPositionDecreaseLossBps_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.setMaxPositionDecreaseLossBps(1000);
     }
 
     function test_setMaxPositionDecreaseLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
         emit ICaliber.MaxPositionDecreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS, 1000);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.setMaxPositionDecreaseLossBps(1000);
         assertEq(caliber.maxPositionDecreaseLossBps(), 1000);
     }
 
-    function test_SetMaxSwapLossBps_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxSwapLossBps_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.setMaxSwapLossBps(1000);
     }
 
     function test_SetMaxSwapLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
         emit ICaliber.MaxSwapLossBpsChanged(DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS, 1000);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.setMaxSwapLossBps(1000);
         assertEq(caliber.maxSwapLossBps(), 1000);
     }

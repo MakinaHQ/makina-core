@@ -24,7 +24,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
         vm.warp(effectiveUpdateTime);
@@ -40,7 +40,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
         vm.warp(effectiveUpdateTime - 1);

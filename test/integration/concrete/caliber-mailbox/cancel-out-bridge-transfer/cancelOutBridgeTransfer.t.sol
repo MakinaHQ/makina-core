@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 

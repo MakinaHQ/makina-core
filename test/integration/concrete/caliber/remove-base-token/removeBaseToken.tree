@@ -1,7 +1,7 @@
 removeBaseToken.t.sol
-├── given sender does not have the relevant role
-│  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+├── given sender is not the risk manager timelock
+│  └── it should revert with UnauthorizedCaller
+└── given sender is the risk manager timelock
    ├── given the base token is the accounting token of the Caliber
    │  └── it should revert with AccountingToken
    └── given the base token is not the accounting token of the Caliber

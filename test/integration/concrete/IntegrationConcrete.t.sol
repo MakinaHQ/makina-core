@@ -97,7 +97,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
             LOOP_POS_ID
         );
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         _caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
         skip(_caliber.timelockDuration() + 1);
     }
@@ -164,7 +164,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
     }
 
     modifier withTokenAsBT(address _token) {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.addBaseToken(_token);
         _;
     }
@@ -211,7 +211,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
     }
 
     modifier withTokenAsBT(address _token) {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.addBaseToken(_token);
         _;
     }

@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";

@@ -78,8 +78,8 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.redeemer(), newRedeemer);
     }
 
-    function test_SetCaliberStaleThreshold_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetCaliberStaleThreshold_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.setCaliberStaleThreshold(2 hours);
     }
 
@@ -87,13 +87,13 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newThreshold = 2 hours;
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.CaliberStaleThresholdChanged(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD, newThreshold);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setCaliberStaleThreshold(newThreshold);
         assertEq(machine.caliberStaleThreshold(), newThreshold);
     }
 
-    function test_SetShareLimit_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetShareLimit_RevertWhen_CallerNotRM() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.setShareLimit(1e18);
     }
 
@@ -101,7 +101,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newShareLimit = 1e18;
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.ShareLimitChanged(DEFAULT_MACHINE_SHARE_LIMIT, newShareLimit);
-        vm.prank(dao);
+        vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.shareLimit(), newShareLimit);
     }

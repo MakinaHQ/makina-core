@@ -78,7 +78,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         assertEq(baseToken.balanceOf(address(caliber)), 0);
 
         // set baseToken as an actual base token
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.addBaseToken(address(baseToken));
 
         // swap accountingToken to baseToken

@@ -81,7 +81,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
     }
 
     function test_RevertGiven_OutTransferDisabled_FromCaliber() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);

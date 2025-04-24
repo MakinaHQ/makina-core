@@ -182,7 +182,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // schedule root update with a wrong root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
 
         // instruction can still be executed while the update is pending
@@ -197,7 +197,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // schedule root update with the correct root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
 
         // instruction cannot be executed while the update is pending

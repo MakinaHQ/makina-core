@@ -5,7 +5,6 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";

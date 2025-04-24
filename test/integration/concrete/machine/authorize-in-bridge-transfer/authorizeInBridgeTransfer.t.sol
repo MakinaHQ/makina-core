@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";

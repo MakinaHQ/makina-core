@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
@@ -51,7 +50,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
@@ -91,7 +90,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     }
 
     function test_RevertGiven_OutTransferDisabled_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
