@@ -7,6 +7,7 @@ import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.so
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -25,7 +26,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMachine.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         machine.updateTotalAum();
     }
 

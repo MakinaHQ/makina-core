@@ -4,7 +4,7 @@ managePosition.t.sol
 └── when call is not reentrant
    ├── given recovery mode is off
    │  ├── when sender is not the Mechanic
-   │  │  └── it should revert with UnauthorizedOperator
+   │  │  └── it should revert with UnauthorizedCaller
    │  └── when sender is the Mechanic
    │     ├── when not 2 instructions are provided
    │     │  └── it should revert with InvalidInstructionsLength
@@ -75,7 +75,7 @@ managePosition.t.sol
    │                                                  └── it should return the new value and the value change since last accounting
    └── given recovery mode is on
       ├── when sender is not the Security Council
-      │  └── it should revert with UnauthorizedOperator
+      │  └── it should revert with UnauthorizedCaller
       └── when sender is the Security Council  
          ├── given the position value did not decrease
          │  └── it should revert with RecoveryMode

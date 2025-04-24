@@ -29,8 +29,9 @@ import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
+contract Machine is MakinaGovernable, BridgeController, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -43,8 +44,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     struct MachineStorage {
         address _shareToken;
         address _accountingToken;
-        address _mechanic;
-        address _securityCouncil;
         address _depositor;
         address _redeemer;
         uint256 _caliberStaleThreshold;
@@ -52,7 +51,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         uint256 _lastGlobalAccountingTime;
         uint256 _shareTokenDecimalsOffset;
         uint256 _shareLimit;
-        bool _recoveryMode;
         uint256 _hubChainId;
         address _hubCaliber;
         uint256[] _foreignChainIds;
@@ -76,7 +74,8 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
 
     /// @inheritdoc IMachine
     function initialize(
-        MachineInitParams calldata params,
+        MachineInitParams calldata mParams,
+        MakinaGovernableInitParams calldata mgParams,
         address _preDepositVault,
         address _shareToken,
         address _hubCaliber
@@ -86,23 +85,23 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
+        uint256 atDecimals = IERC20Metadata(mParams.accountingToken).decimals();
         uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
         ) {
             revert InvalidDecimals();
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(params.accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(params.accountingToken);
+        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(mParams.accountingToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(mParams.accountingToken);
         }
-        $._accountingToken = params.accountingToken;
-        $._idleTokens.add(params.accountingToken);
+        $._accountingToken = mParams.accountingToken;
+        $._idleTokens.add(mParams.accountingToken);
 
         if (_preDepositVault != address(0)) {
             if (
                 IPreDepositVault(_preDepositVault).shareToken() != _shareToken
-                    || IPreDepositVault(_preDepositVault).accountingToken() != params.accountingToken
+                    || IPreDepositVault(_preDepositVault).accountingToken() != mParams.accountingToken
             ) {
                 revert PreDepositVaultMismatch();
             }
@@ -115,27 +114,17 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         $._shareToken = _shareToken;
         $._shareTokenDecimalsOffset = stDecimals - atDecimals;
 
-        $._mechanic = params.initialMechanic;
-        $._securityCouncil = params.initialSecurityCouncil;
-        $._depositor = params.initialDepositor;
-        $._redeemer = params.initialRedeemer;
-        $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
-        $._shareLimit = params.initialShareLimit;
-        __AccessManaged_init(params.initialAuthority);
+        $._depositor = mParams.initialDepositor;
+        $._redeemer = mParams.initialRedeemer;
+        $._caliberStaleThreshold = mParams.initialCaliberStaleThreshold;
+        $._shareLimit = mParams.initialShareLimit;
+        __MakinaGovernable_init(mgParams);
     }
 
     modifier onlyMechanic() {
         MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != $._mechanic) {
-            revert UnauthorizedOperator();
-        }
-        _;
-    }
-
-    modifier onlyOperator() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
-            revert UnauthorizedOperator();
+        if (msg.sender != mechanic()) {
+            revert UnauthorizedCaller();
         }
         _;
     }
@@ -154,24 +143,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             revert UnauthorizedRedeemer();
         }
         _;
-    }
-
-    modifier notRecoveryMode() {
-        MachineStorage storage $ = _getMachineStorage();
-        if ($._recoveryMode) {
-            revert RecoveryMode();
-        }
-        _;
-    }
-
-    /// @inheritdoc IMachine
-    function mechanic() external view override returns (address) {
-        return _getMachineStorage()._mechanic;
-    }
-
-    /// @inheritdoc IMachine
-    function securityCouncil() external view override returns (address) {
-        return _getMachineStorage()._securityCouncil;
     }
 
     /// @inheritdoc IMachine
@@ -223,11 +194,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     function maxWithdraw() public view override returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
         return IERC20Metadata($._accountingToken).balanceOf(address(this));
-    }
-
-    /// @inheritdoc IMachine
-    function recoveryMode() external view override returns (bool) {
-        return _getMachineStorage()._recoveryMode;
     }
 
     /// @inheritdoc IMachine
@@ -573,20 +539,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function setMechanic(address newMechanic) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        emit MechanicChanged($._mechanic, newMechanic);
-        $._mechanic = newMechanic;
-    }
-
-    /// @inheritdoc IMachine
-    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
-        $._securityCouncil = newSecurityCouncil;
-    }
-
-    /// @inheritdoc IMachine
     function setDepositor(address newDepositor) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         emit DepositorChanged($._depositor, newDepositor);
@@ -612,15 +564,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
-    }
-
-    /// @inheritdoc IMachine
-    function setRecoveryMode(bool enabled) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        if ($._recoveryMode != enabled) {
-            $._recoveryMode = enabled;
-            emit RecoveryModeChanged(enabled);
-        }
     }
 
     /// @inheritdoc IBridgeController

@@ -1,7 +1,7 @@
 transferToHubCaliber.t.sol
 ├── given recovery mode is off
 │  ├── when sender is not the Mechanic
-│  │  └── it should revert with UnauthorizedOperator
+│  │  └── it should revert with UnauthorizedCaller
 │  └── when sender is the Mechanic
 │     ├── given caliber's token balance is insufficient
 │     │  └── it should revert with ERC20InsufficientBalance

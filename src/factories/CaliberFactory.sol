@@ -10,6 +10,7 @@ import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
@@ -28,21 +29,21 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
     }
 
     /// @inheritdoc ICaliberFactory
-    function createCaliber(ICaliber.CaliberInitParams calldata params, address hubMachine)
-        external
-        override
-        restricted
-        returns (address)
-    {
+    function createCaliber(
+        ICaliber.CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address hubMachine
+    ) external override restricted returns (address) {
         address mailbox = address(
             new BeaconProxy(
                 ISpokeRegistry(registry).caliberMailboxBeacon(),
-                abi.encodeCall(ICaliberMailbox.initialize, (hubMachine, params.initialAuthority))
+                abi.encodeCall(ICaliberMailbox.initialize, (hubMachine, mgParams.initialAuthority))
             )
         );
         address caliber = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (params, mailbox))
+                ISpokeRegistry(registry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (cParams, mgParams, mailbox))
             )
         );
         ICaliberMailbox(mailbox).setCaliber(caliber);

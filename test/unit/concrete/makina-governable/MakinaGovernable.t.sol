@@ -7,7 +7,7 @@ import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
-abstract contract MakinaGovernable_Util_Concrete_Test is Unit_Concrete_Test {
+abstract contract MakinaGovernable_Unit_Concrete_Test is Unit_Concrete_Test {
     IMakinaGovernable internal governable;
 
     function setUp() public virtual override {}

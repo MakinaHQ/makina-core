@@ -4,10 +4,13 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeployHubMachine is Script {
+contract DeployHubMachine is Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -16,24 +19,6 @@ contract DeployHubMachine is Script {
     string public outputPath;
 
     address public deployedInstance;
-
-    struct MachineInitParamsSorted {
-        address accountingToken;
-        bytes32 hubCaliberAllowedInstrRoot;
-        address hubCaliberFlashLoanModule;
-        uint256 hubCaliberMaxPositionDecreaseLossBps;
-        uint256 hubCaliberMaxPositionIncreaseLossBps;
-        uint256 hubCaliberMaxSwapLossBps;
-        uint256 hubCaliberPosStaleThreshold;
-        uint256 hubCaliberTimelockDuration;
-        address initialAuthority;
-        uint256 initialCaliberStaleThreshold;
-        address initialDepositor;
-        address initialMechanic;
-        address initialRedeemer;
-        address initialSecurityCouncil;
-        uint256 initialShareLimit;
-    }
 
     constructor() {
         string memory inputFilename = vm.envString("HUB_INPUT_FILENAME");
@@ -57,8 +42,12 @@ contract DeployHubMachine is Script {
     }
 
     function run() public {
-        MachineInitParamsSorted memory initParams =
+        MachineInitParamsSorted memory mParams =
             abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (MachineInitParamsSorted));
+        CaliberInitParamsSorted memory cParams =
+            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
+        MakinaGovernableInitParamsSorted memory mgParams =
+            abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
         string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
         string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
 
@@ -69,21 +58,28 @@ contract DeployHubMachine is Script {
         vm.startBroadcast();
         deployedInstance = machineFactory.createMachine(
             IMachine.MachineInitParams(
-                initParams.accountingToken,
-                initParams.initialMechanic,
-                initParams.initialSecurityCouncil,
-                initParams.initialAuthority,
-                initParams.initialDepositor,
-                initParams.initialRedeemer,
-                initParams.initialCaliberStaleThreshold,
-                initParams.initialShareLimit,
-                initParams.hubCaliberPosStaleThreshold,
-                initParams.hubCaliberAllowedInstrRoot,
-                initParams.hubCaliberTimelockDuration,
-                initParams.hubCaliberMaxPositionIncreaseLossBps,
-                initParams.hubCaliberMaxPositionDecreaseLossBps,
-                initParams.hubCaliberMaxSwapLossBps,
-                initParams.hubCaliberFlashLoanModule
+                mParams.accountingToken,
+                mParams.initialDepositor,
+                mParams.initialRedeemer,
+                mParams.initialCaliberStaleThreshold,
+                mParams.initialShareLimit
+            ),
+            ICaliber.CaliberInitParams(
+                cParams.accountingToken,
+                cParams.initialPositionStaleThreshold,
+                cParams.initialAllowedInstrRoot,
+                cParams.initialTimelockDuration,
+                cParams.initialMaxPositionIncreaseLossBps,
+                cParams.initialMaxPositionDecreaseLossBps,
+                cParams.initialMaxSwapLossBps,
+                cParams.initialFlashLoanModule
+            ),
+            IMakinaGovernable.MakinaGovernableInitParams(
+                mgParams.initialMechanic,
+                mgParams.initialSecurityCouncil,
+                mgParams.initialRiskManager,
+                mgParams.initialRiskManagerTimelock,
+                mgParams.initialAuthority
             ),
             shareTokenName,
             shareTokenSymbol

@@ -15,6 +15,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
+import {SortedParams} from "script/deployments/utils/SortedParams.sol";
 
 import {Base_Test} from "../base/Base.t.sol";
 
@@ -110,8 +111,15 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubMachine.run();
 
         // Check that Hub Machine is correctly set up
-        DeployHubMachine.MachineInitParamsSorted memory machineInitParams = abi.decode(
-            vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (DeployHubMachine.MachineInitParamsSorted)
+        SortedParams.MachineInitParamsSorted memory mParams = abi.decode(
+            vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (SortedParams.MachineInitParamsSorted)
+        );
+        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
+            vm.parseJson(deployHubMachine.inputJson(), ".caliberInitParams"), (SortedParams.CaliberInitParamsSorted)
+        );
+        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+            vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams"),
+            (SortedParams.MakinaGovernableInitParamsSorted)
         );
         string memory shareTokenName =
             abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenName"), (string));
@@ -120,25 +128,34 @@ contract Deploy_Scripts_Test is Base_Test {
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
-        address authority = IAccessManaged(address(machine)).authority();
+
         assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
         assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
-        assertEq(machine.mechanic(), machineInitParams.initialMechanic);
-        assertEq(machine.securityCouncil(), machineInitParams.initialSecurityCouncil);
-        assertEq(machine.depositor(), machineInitParams.initialDepositor);
-        assertEq(machine.redeemer(), machineInitParams.initialRedeemer);
-        assertEq(machine.accountingToken(), machineInitParams.accountingToken);
-        assertEq(machine.caliberStaleThreshold(), machineInitParams.initialCaliberStaleThreshold);
-        assertEq(machine.shareLimit(), machineInitParams.initialShareLimit);
-        assertEq(authority, machineInitParams.initialAuthority);
-        assertEq(machine.getSpokeCalibersLength(), 0);
+        assertEq(machine.depositor(), mParams.initialDepositor);
+        assertEq(machine.redeemer(), mParams.initialRedeemer);
+        assertEq(machine.accountingToken(), mParams.accountingToken);
+        assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
+        assertEq(machine.shareLimit(), mParams.initialShareLimit);
+
+        assertEq(machine.mechanic(), mgParams.initialMechanic);
+        assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
+        assertEq(machine.riskManager(), mgParams.initialRiskManager);
+        assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
+        assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
+        assertEq(hubCaliber.accountingToken(), cParams.accountingToken);
+        assertEq(hubCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
+        assertEq(hubCaliber.allowedInstrRoot(), cParams.initialAllowedInstrRoot);
+        assertEq(hubCaliber.timelockDuration(), cParams.initialTimelockDuration);
+        assertEq(hubCaliber.maxPositionIncreaseLossBps(), cParams.initialMaxPositionIncreaseLossBps);
+        assertEq(hubCaliber.maxPositionDecreaseLossBps(), cParams.initialMaxPositionDecreaseLossBps);
+        assertEq(hubCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
+        assertEq(hubCaliber.flashLoanModule(), cParams.initialFlashLoanModule);
+
+        assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
-
-        // set machine authority to core access manager for convenience
-        vm.prank(authority);
-        IAccessManaged(address(machine)).setAuthority(address(hubCoreDeployment.accessManager));
     }
 
     function testDeployScriptSpoke() public {
@@ -194,25 +211,36 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that Spoke Caliber is correctly set up
-        DeploySpokeCaliber.CaliberInitParamsSorted memory caliberInitParams = abi.decode(
-            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"),
-            (DeploySpokeCaliber.CaliberInitParamsSorted)
+        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
+            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"), (SortedParams.CaliberInitParamsSorted)
         );
-
+        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+            vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams"),
+            (SortedParams.MakinaGovernableInitParamsSorted)
+        );
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
+
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
+        assertTrue(spokeCoreDeployment.caliberFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
         assertEq(ICaliberMailbox(spokeCaliber.hubMachineEndpoint()).caliber(), address(spokeCaliber));
-        assertEq(IAccessManaged(spokeCaliber.hubMachineEndpoint()).authority(), caliberInitParams.initialAuthority);
-        assertEq(spokeCaliber.accountingToken(), caliberInitParams.accountingToken);
-        assertEq(spokeCaliber.positionStaleThreshold(), caliberInitParams.initialPositionStaleThreshold);
-        assertEq(spokeCaliber.allowedInstrRoot(), caliberInitParams.initialAllowedInstrRoot);
-        assertEq(spokeCaliber.timelockDuration(), caliberInitParams.initialTimelockDuration);
-        assertEq(spokeCaliber.maxPositionIncreaseLossBps(), caliberInitParams.initialMaxPositionIncreaseLossBps);
-        assertEq(spokeCaliber.maxPositionDecreaseLossBps(), caliberInitParams.initialMaxPositionDecreaseLossBps);
-        assertEq(spokeCaliber.maxSwapLossBps(), caliberInitParams.initialMaxSwapLossBps);
-        assertEq(spokeCaliber.flashLoanModule(), caliberInitParams.initialFlashLoanModule);
-        assertEq(spokeCaliber.mechanic(), caliberInitParams.initialMechanic);
-        assertEq(IAccessManaged(address(spokeCaliber)).authority(), caliberInitParams.initialAuthority);
+
+        assertEq(spokeCaliber.accountingToken(), cParams.accountingToken);
+        assertEq(spokeCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
+        assertEq(spokeCaliber.allowedInstrRoot(), cParams.initialAllowedInstrRoot);
+        assertEq(spokeCaliber.timelockDuration(), cParams.initialTimelockDuration);
+        assertEq(spokeCaliber.maxPositionIncreaseLossBps(), cParams.initialMaxPositionIncreaseLossBps);
+        assertEq(spokeCaliber.maxPositionDecreaseLossBps(), cParams.initialMaxPositionDecreaseLossBps);
+        assertEq(spokeCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
+        assertEq(spokeCaliber.flashLoanModule(), cParams.initialFlashLoanModule);
+
+        assertEq(spokeCaliber.mechanic(), mgParams.initialMechanic);
+        assertEq(spokeCaliber.securityCouncil(), mgParams.initialSecurityCouncil);
+        assertEq(spokeCaliber.riskManager(), mgParams.initialRiskManager);
+        assertEq(spokeCaliber.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
+        assertEq(IAccessManaged(address(spokeCaliber)).authority(), mgParams.initialAuthority);
+
+        assertEq(IAccessManaged(spokeCaliber.hubMachineEndpoint()).authority(), mgParams.initialAuthority);
+
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);
     }

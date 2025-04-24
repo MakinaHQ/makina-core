@@ -46,13 +46,6 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         _;
     }
 
-    modifier onlyRiskManagerTimelock() {
-        if (msg.sender != _getMakinaGovernableStorage()._riskManagerTimelock) {
-            revert UnauthorizedCaller();
-        }
-        _;
-    }
-
     modifier notRecoveryMode() {
         if (_getMakinaGovernableStorage()._recoveryMode) {
             revert RecoveryMode();

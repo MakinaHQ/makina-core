@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -58,11 +59,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
@@ -86,11 +87,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 

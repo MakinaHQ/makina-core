@@ -9,6 +9,7 @@ import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.so
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
@@ -82,11 +83,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
@@ -110,11 +111,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 

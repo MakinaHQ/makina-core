@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -19,11 +20,11 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, bytes32(0));
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, bytes32(0));
     }
 
@@ -37,11 +38,11 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, bytes32(0));
 
         vm.prank(mechanic);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, bytes32(0));
     }
 

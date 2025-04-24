@@ -1,16 +1,20 @@
 {
   "caliberInitParams": {
     "accountingToken": "0x0000000000000000000000000000000000000000",
-    "initialPositionStaleThreshold": 0,
+    "initialPosStaleThreshold": 0,
     "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "initialTimelockDuration": 0,
     "initialMaxPositionIncreaseLossBps": 0,
     "initialMaxPositionDecreaseLossBps": 0,
     "initialMaxSwapLossBps": 0,
-    "initialFlashLoanModule": "0x0000000000000000000000000000000000000000",
+    "initialFlashLoanModule": "0x0000000000000000000000000000000000000000"
+  },
+  "makinaGovernableInitParams": {
     "initialMechanic": "0x0000000000000000000000000000000000000000",
-    "initialAuthority": "0x0000000000000000000000000000000000000000",
-    "initialSecurityCouncil": "0x0000000000000000000000000000000000000000"
+    "initialSecurityCouncil": "0x0000000000000000000000000000000000000000",
+    "initialRiskManager": "0x0000000000000000000000000000000000000000",
+    "initialRiskManagerTimelock": "0x0000000000000000000000000000000000000000",
+    "initialAuthority": "0x0000000000000000000000000000000000000000"
   },
   "hubMachine": "0x0000000000000000000000000000000000000000"
 }

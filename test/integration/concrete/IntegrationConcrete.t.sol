@@ -156,7 +156,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
     }
 
     modifier whileInRecoveryMode() {
-        vm.startPrank(dao);
+        vm.startPrank(securityCouncil);
         machine.setRecoveryMode(true);
         caliber.setRecoveryMode(true);
         vm.stopPrank();
@@ -205,7 +205,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
     }
 
     modifier whileInRecoveryMode() {
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
         _;
     }

@@ -6,6 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -40,11 +41,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
@@ -82,18 +83,15 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
-    function test_CancelScheduledTransfer_WhileInRecoveryMode() public {
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
-
+    function test_CancelScheduledTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
@@ -118,7 +116,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         vm.prank(mechanic);
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
 
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);

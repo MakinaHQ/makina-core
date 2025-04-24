@@ -1,7 +1,7 @@
 transferToSpokeCaliber.t.sol
 ├── given recovery mode is off
 │  ├── when sender is not the Mechanic
-│  │  └── it should revert with UnauthorizedOperator
+│  │  └── it should revert with UnauthorizedCaller
 │  └── when sender is the Mechanic
 │     ├── given no foreign token is registered in token registry for given input token and destination chain ID
 │     │  └── it should revert with ForeignTokenNotRegistered

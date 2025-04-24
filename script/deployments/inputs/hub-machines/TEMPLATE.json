@@ -1,19 +1,27 @@
 {
   "machineInitParams": {
     "accountingToken": "0x0000000000000000000000000000000000000000",
-    "initialMechanic": "0x0000000000000000000000000000000000000000",
-    "initialSecurityCouncil": "0x0000000000000000000000000000000000000000",
-    "initialAuthority": "0x0000000000000000000000000000000000000000",
     "initialDepositor": "0x0000000000000000000000000000000000000000",
     "initialRedeemer": "0x0000000000000000000000000000000000000000",
     "initialCaliberStaleThreshold": 0,
-    "initialShareLimit": 0,
-    "hubCaliberPosStaleThreshold": 0,
-    "hubCaliberAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "hubCaliberTimelockDuration": 0,
-    "hubCaliberMaxPositionIncreaseLossBps": 0,
-    "hubCaliberMaxPositionDecreaseLossBps": 0,
-    "hubCaliberMaxSwapLossBps": 0
+    "initialShareLimit": 0
+  },
+  "caliberInitParams": {
+    "accountingToken": "0x0000000000000000000000000000000000000000",
+    "initialPosStaleThreshold": 0,
+    "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "initialTimelockDuration": 0,
+    "initialMaxPositionIncreaseLossBps": 0,
+    "initialMaxPositionDecreaseLossBps": 0,
+    "initialMaxSwapLossBps": 0,
+    "initialFlashLoanModule": "0x0000000000000000000000000000000000000000"
+  },
+  "makinaGovernableInitParams": {
+    "initialMechanic": "0x0000000000000000000000000000000000000000",
+    "initialSecurityCouncil": "0x0000000000000000000000000000000000000000",
+    "initialRiskManager": "0x0000000000000000000000000000000000000000",
+    "initialRiskManagerTimelock": "0x0000000000000000000000000000000000000000",
+    "initialAuthority": "0x0000000000000000000000000000000000000000"
   },
   "shareTokenName": "",
   "shareTokenSymbol": ""

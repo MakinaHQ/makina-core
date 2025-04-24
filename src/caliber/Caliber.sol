@@ -9,14 +9,19 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
-contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
+import {MakinaContext} from "../utils/MakinaContext.sol";
+import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
+
+contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -26,17 +31,12 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     uint256 private constant MAX_BPS = 10_000;
 
     /// @inheritdoc ICaliber
-    address public immutable registry;
-
-    /// @inheritdoc ICaliber
     address public immutable weirollVm;
 
     /// @custom:storage-location erc7201:makina.storage.Caliber
     struct CaliberStorage {
         address _hubMachineEndpoint;
         address _accountingToken;
-        address _mechanic;
-        address _securityCouncil;
         address _flashLoanModule;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
@@ -49,7 +49,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         uint256 _managedPositionId;
         bool _isManagedPositionDebt;
         bool _isManagingFlashloan;
-        bool _recoveryMode;
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
@@ -66,37 +65,30 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         }
     }
 
-    constructor(address _registry, address _weirollVm) {
-        registry = _registry;
+    constructor(address _registry, address _weirollVm) MakinaContext(_registry) {
         weirollVm = _weirollVm;
         _disableInitializers();
     }
 
     /// @inheritdoc ICaliber
-    function initialize(CaliberInitParams calldata params, address _hubMachineEndpoint) external override initializer {
+    function initialize(
+        CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address _hubMachineEndpoint
+    ) external override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
         $._hubMachineEndpoint = _hubMachineEndpoint;
-        $._accountingToken = params.accountingToken;
-        $._positionStaleThreshold = params.initialPositionStaleThreshold;
-        $._allowedInstrRoot = params.initialAllowedInstrRoot;
-        $._timelockDuration = params.initialTimelockDuration;
-        $._maxPositionIncreaseLossBps = params.initialMaxPositionIncreaseLossBps;
-        $._maxPositionDecreaseLossBps = params.initialMaxPositionDecreaseLossBps;
-        $._maxSwapLossBps = params.initialMaxSwapLossBps;
-        $._flashLoanModule = params.initialFlashLoanModule;
-        $._mechanic = params.initialMechanic;
-        $._securityCouncil = params.initialSecurityCouncil;
-        _addBaseToken(params.accountingToken);
+        $._accountingToken = cParams.accountingToken;
+        $._positionStaleThreshold = cParams.initialPositionStaleThreshold;
+        $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
+        $._timelockDuration = cParams.initialTimelockDuration;
+        $._maxPositionIncreaseLossBps = cParams.initialMaxPositionIncreaseLossBps;
+        $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
+        $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
+        $._flashLoanModule = cParams.initialFlashLoanModule;
+        _addBaseToken(cParams.accountingToken);
+        __MakinaGovernable_init(mgParams);
         __ReentrancyGuard_init();
-        __AccessManaged_init(params.initialAuthority);
-    }
-
-    modifier onlyOperator() {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
-            revert UnauthorizedOperator();
-        }
-        _;
     }
 
     /// @inheritdoc ICaliber
@@ -107,16 +99,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     /// @inheritdoc ICaliber
     function accountingToken() external view override returns (address) {
         return _getCaliberStorage()._accountingToken;
-    }
-
-    /// @inheritdoc ICaliber
-    function mechanic() external view override returns (address) {
-        return _getCaliberStorage()._mechanic;
-    }
-
-    /// @inheritdoc ICaliber
-    function securityCouncil() external view override returns (address) {
-        return _getCaliberStorage()._securityCouncil;
     }
 
     /// @inheritdoc ICaliber
@@ -171,11 +153,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     /// @inheritdoc ICaliber
     function maxSwapLossBps() external view override returns (uint256) {
         return _getCaliberStorage()._maxSwapLossBps;
-    }
-
-    /// @inheritdoc ICaliber
-    function recoveryMode() external view override returns (bool) {
-        return _getCaliberStorage()._recoveryMode;
     }
 
     /// @inheritdoc ICaliber
@@ -359,7 +336,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
-        if (isPositionIncrease && $._recoveryMode) {
+        if (isPositionIncrease && recoveryMode()) {
             revert RecoveryMode();
         }
 
@@ -441,20 +418,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
     }
 
     /// @inheritdoc ICaliber
-    function setMechanic(address newMechanic) external override restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        emit MechanicChanged($._mechanic, newMechanic);
-        $._mechanic = newMechanic;
-    }
-
-    /// @inheritdoc ICaliber
-    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
-        $._securityCouncil = newSecurityCouncil;
-    }
-
-    /// @inheritdoc ICaliber
     function setFlashLoanModule(address newFlashLoanModule) external restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
@@ -517,15 +480,6 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
         $._maxSwapLossBps = newMaxSwapLossBps;
-    }
-
-    /// @inheritdoc ICaliber
-    function setRecoveryMode(bool enabled) external override restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if ($._recoveryMode != enabled) {
-            $._recoveryMode = enabled;
-            emit RecoveryModeChanged(enabled);
-        }
     }
 
     /// @dev Adds a new base token to storage.
@@ -739,7 +693,7 @@ contract Caliber is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICalib
 
     function _swap(ISwapModule.SwapOrder calldata order) internal {
         CaliberStorage storage $ = _getCaliberStorage();
-        if ($._recoveryMode && order.outputToken != $._accountingToken) {
+        if (recoveryMode() && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
         } else if (!$._baseTokens.contains(order.outputToken)) {
             revert InvalidOutputToken();

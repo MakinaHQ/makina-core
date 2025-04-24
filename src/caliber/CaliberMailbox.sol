@@ -13,6 +13,7 @@ import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -70,14 +71,14 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
                     ICaliber(_caliber).recoveryMode() ? ICaliber(_caliber).securityCouncil() : ICaliber(_caliber).mechanic()
                 )
         ) {
-            revert ICaliber.UnauthorizedOperator();
+            revert IMakinaGovernable.UnauthorizedCaller();
         }
         _;
     }
 
     modifier notRecoveryMode() {
         if (ICaliber(_getCaliberStorage()._caliber).recoveryMode()) {
-            revert ICaliber.RecoveryMode();
+            revert IMakinaGovernable.RecoveryMode();
         }
         _;
     }

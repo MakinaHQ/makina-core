@@ -7,15 +7,17 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
     function test_RevertWhen_CallerWithoutRole() public {
-        ICaliber.CaliberInitParams memory params;
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.createCaliber(params, address(0));
+        caliberFactory.createCaliber(cParams, mgParams, address(0));
     }
 
     function test_DeployCaliber() public {
@@ -36,9 +38,13 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialFlashLoanModule: _flashLoanModule,
+                    initialFlashLoanModule: _flashLoanModule
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
+                    initialRiskManager: riskManager,
+                    initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
                 _hubMachine

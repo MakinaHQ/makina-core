@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -36,11 +37,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -952,11 +953,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -977,7 +978,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -998,7 +999,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1025,7 +1026,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         // try increase position
@@ -1057,7 +1058,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS + 1);
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         mgmtInstruction =
@@ -1097,7 +1098,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setRateBps(10_000 - DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS - 1);
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         mgmtInstruction =
@@ -1137,7 +1138,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         mgmtInstruction =
@@ -1145,7 +1146,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try decrease position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1169,7 +1170,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         mgmtInstruction =
@@ -1198,7 +1199,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         // check security council can decrease position
@@ -1231,7 +1232,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliber.setRecoveryMode(true);
 
         // check that security council can close position

@@ -11,12 +11,8 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
 
     address public newMachineAddr;
 
-    address public riskManager;
-
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
-
-        riskManager = makeAddr("riskManager");
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
