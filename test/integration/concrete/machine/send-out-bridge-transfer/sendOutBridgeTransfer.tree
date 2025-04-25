@@ -1,0 +1,18 @@
+sendOutBridgeTransfer.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── given no local bridge adapter is set for the provided bridge ID
+│     │  └── it should revert with BridgeAdapterDoesNotExist
+│     └── given a local bridge adapter is set for the provided bridge ID
+│        ├── given outgoing bridge transfers through the given bridge are marked as disabled
+│        │  └── it should revert with BridgeAdapterDoesNotExist
+│        └── given outgoing bridge transfers through the given bridge are marked as enabled
+│           ├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
+│           │  └── it should revert with InvalidTransferStatus
+│           └── given the provided transfer ID corresponds to a outgoing transfer in adapter's storage
+│              ├── it should decrease the corresponding adapter's token balance by amount
+│              └── it should emit a SendOutBridgeTransfer event
+└── given recovery mode is on
+   └── it should revert with RecoveryMode

@@ -41,6 +41,8 @@ abstract contract Base_Test is Base, Constants, Test {
     TokenRegistry public tokenRegistry;
     SwapModule public swapModule;
 
+    UpgradeableBeacon public caliberBeacon;
+
     function setUp() public virtual {
         deployer = address(this);
         dao = makeAddr("MakinaDAO");
@@ -54,7 +56,6 @@ abstract contract Base_Hub_Test is Base_Test {
     ChainRegistry public chainRegistry;
     MachineFactory public machineFactory;
     UpgradeableBeacon public machineBeacon;
-    UpgradeableBeacon public caliberBeacon;
 
     IWormhole public wormhole;
 
@@ -121,7 +122,6 @@ abstract contract Base_Hub_Test is Base_Test {
 abstract contract Base_Spoke_Test is Base_Test {
     SpokeRegistry public spokeRegistry;
     CaliberFactory public caliberFactory;
-    UpgradeableBeacon public caliberBeacon;
     UpgradeableBeacon public caliberMailboxBeacon;
 
     function setUp() public virtual override {
@@ -169,5 +169,35 @@ abstract contract Base_Spoke_Test is Base_Test {
         );
         CaliberMailbox _mailbox = CaliberMailbox(_caliber.hubMachineEndpoint());
         return (_caliber, _mailbox);
+    }
+}
+
+abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
+    function setUp() public virtual override(Base_Hub_Test, Base_Spoke_Test) {
+        Base_Test.setUp();
+        Base_Hub_Test.setUp();
+
+        spokeRegistry = _deploySpokeRegistry(
+            dao, address(oracleRegistry), address(tokenRegistry), address(swapModule), address(accessManager)
+        );
+
+        caliberFactory = _deployCaliberFactory(dao, address(spokeRegistry), address(accessManager));
+
+        caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeRegistry), hubChainId);
+
+        vm.startPrank(dao);
+        setupSpokeRegistry(
+            SpokeCore({
+                accessManager: accessManager,
+                oracleRegistry: oracleRegistry,
+                swapModule: swapModule,
+                spokeRegistry: spokeRegistry,
+                tokenRegistry: tokenRegistry,
+                caliberBeacon: caliberBeacon,
+                caliberFactory: caliberFactory,
+                caliberMailboxBeacon: caliberMailboxBeacon
+            })
+        );
+        vm.stopPrank();
     }
 }

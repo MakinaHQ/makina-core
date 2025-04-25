@@ -2,17 +2,18 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "./ICaliber.sol";
+import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
-interface ICaliberFactory {
-    error NotMachine();
+interface ICaliberFactory is IBridgeAdapterFactory {
+    error NotCaliberMailbox();
 
     event SpokeCaliberCreated(address indexed machine, address indexed caliber, address indexed mailbox);
 
-    /// @notice Address of the Makina registry.
-    function registry() external view returns (address);
-
     /// @notice Caliber => Is a caliber deployed by this factory
     function isCaliber(address caliber) external view returns (bool);
+
+    /// @notice CaliberMailbox => Is a caliber mailbox deployed by this factory
+    function isCaliberMailbox(address mailbox) external view returns (bool);
 
     /// @notice Deploys a new Caliber instance.
     /// @param params The deployment parameters.

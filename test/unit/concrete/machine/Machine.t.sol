@@ -8,7 +8,22 @@ import {Constants} from "src/libraries/Constants.sol";
 
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
-contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
+abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
+    address public spokeCaliberMailboxAddr;
+    address public spokeBridgeAdapterAddr;
+
+    function setUp() public virtual override {
+        Unit_Concrete_Hub_Test.setUp();
+
+        vm.prank(dao);
+        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
+
+        spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
+        spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
+    }
+}
+
+contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.depositor(), machineDepositor);

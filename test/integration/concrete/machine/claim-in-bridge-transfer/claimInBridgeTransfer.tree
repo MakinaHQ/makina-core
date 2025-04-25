@@ -1,0 +1,15 @@
+claimInBridgeTransfer.t.sol
+├── given recovery mode is off
+│  ├── when sender is not the Mechanic
+│  │  └── it should revert with UnauthorizedOperator
+│  └── when sender is the Mechanic
+│     ├── it should decrease the corresponding adapter's token balance by amount
+│     ├── it should increase the caliber's token balance by amount
+│     └── it should emit a ClaimInBridgeTransfer event
+└── given recovery mode is on
+   ├── when sender is not the Security Council
+   │  └── it should revert with UnauthorizedOperator
+   └── when sender is the Security Council
+      ├── it should decrease the corresponding adapter's token balance by amount
+      ├── it should increase the caliber's token balance by amount
+      └── it should emit a ClaimInBridgeTransfer event

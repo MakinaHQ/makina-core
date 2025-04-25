@@ -215,14 +215,14 @@ interface ICaliber {
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
 
-    /// @notice Gets the caliber's AUM and individual positions values.
-    /// @return aum The caliber's AUM, i.e the total value of all positions.
-    /// @return positionsValues The array of encoded tuples of the form (positionId, value, isDebt).
-    /// @return baseTokensValues The array of encoded tuples of the form (token, value).
+    /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
+    /// @return netAum The total value of all base token balances and positive positions, minus total debts.
+    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
+    /// @return baseTokens The array of encoded tuples of the form (token, value).
     function getDetailedAum()
         external
         view
-        returns (uint256 aum, bytes[] memory positionsValues, bytes[] memory baseTokensValues);
+        returns (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:

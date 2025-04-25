@@ -15,6 +15,8 @@ contract Constants {
     uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
 
+    uint256 public constant DEFAULT_MAX_BRIDGE_LOSS_BPS = 300;
+
     uint256 internal constant VAULT_POS_ID = 3;
     uint256 internal constant SUPPLY_POS_ID = 4;
     uint256 internal constant BORROW_POS_ID = 5;

@@ -1,0 +1,7 @@
+isOutTransferEnabled.t.sol
+├── given no adapter for the provided bridge ID was deployed by this contract
+│  └── it should return false
+└── given an adapter for the provided bridge ID was deployed by this contract
+   ├── given no adapter for the provided bridge ID was deployed by this contract
+   │  └── it should return false
+   └── given an adapter for the provided bridge ID was deployed by this contract

@@ -202,6 +202,7 @@ contract Deploy_Scripts_Test is Base_Test {
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
         assertEq(ICaliberMailbox(spokeCaliber.hubMachineEndpoint()).caliber(), address(spokeCaliber));
+        assertEq(IAccessManaged(spokeCaliber.hubMachineEndpoint()).authority(), caliberInitParams.initialAuthority);
         assertEq(spokeCaliber.accountingToken(), caliberInitParams.accountingToken);
         assertEq(spokeCaliber.positionStaleThreshold(), caliberInitParams.initialPositionStaleThreshold);
         assertEq(spokeCaliber.allowedInstrRoot(), caliberInitParams.initialAllowedInstrRoot);

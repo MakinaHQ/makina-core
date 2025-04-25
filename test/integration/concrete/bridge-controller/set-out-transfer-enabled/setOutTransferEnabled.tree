@@ -1,0 +1,8 @@
+setOutTransferEnabled.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given no adapter for the provided bridge ID was deployed by this contract
+   │  └── it should revert with BridgeAdapterDoesNotExist
+   └── given an adapter for the provided bridge ID was deployed by this contract
+      └── it should set the outgoing bridge transfers enablence status for the corresponding bridge

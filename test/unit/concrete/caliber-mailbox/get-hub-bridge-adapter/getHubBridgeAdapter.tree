@@ -1,0 +1,5 @@
+getHubBridgeAdapter.t.sol
+├──  given no foreign adapter address for the provided bridge ID was set in this contract
+│  └── it should revert with HubBridgeAdapterNotSet
+└── given a foreign adapter address for the provided bridge ID was set in this contract
+   └── it should return the address of the foreign adapter corresponding to the provided Bridge ID 

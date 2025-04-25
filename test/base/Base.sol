@@ -1,18 +1,20 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {StdCheats} from "forge-std/StdCheats.sol";
-
 import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberFactory} from "src/factories/CaliberFactory.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
+import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
+import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
@@ -21,14 +23,14 @@ import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 import {TokenRegistry} from "src/registries/TokenRegistry.sol";
 
-abstract contract Base is StdCheats {
+abstract contract Base is DeployViaIr {
     struct HubCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
         HubRegistry hubRegistry;
-        ChainRegistry chainRegistry;
         TokenRegistry tokenRegistry;
+        ChainRegistry chainRegistry;
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
         MachineFactory machineFactory;
@@ -37,11 +39,11 @@ abstract contract Base is StdCheats {
     struct SpokeCore {
         AccessManager accessManager;
         OracleRegistry oracleRegistry;
-        TokenRegistry tokenRegistry;
         SwapModule swapModule;
+        SpokeRegistry spokeRegistry;
+        TokenRegistry tokenRegistry;
         UpgradeableBeacon caliberBeacon;
         CaliberFactory caliberFactory;
-        SpokeRegistry spokeRegistry;
         UpgradeableBeacon caliberMailboxBeacon;
     }
 
@@ -65,13 +67,16 @@ abstract contract Base is StdCheats {
         ISwapModule.Swapper swapperId;
     }
 
+    struct BridgeData {
+        address approvalTarget;
+        IBridgeAdapter.Bridge bridgeId;
+        address executionTarget;
+        address receiveSource;
+    }
+
     ///
     /// CORE DEPLOYMENTS
     ///
-
-    function deployWeirollVMViaIR() public returns (address weirollVM) {
-        weirollVM = deployCode("out-ir-based/WeirollVM.sol/WeirollVM.json");
-    }
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
@@ -150,7 +155,7 @@ abstract contract Base is StdCheats {
             )
         );
 
-        address weirollVMImplemAddr = deployWeirollVMViaIR();
+        address weirollVMImplemAddr = DeployViaIr.deployWeirollVMViaIR();
         address caliberImplemAddr = address(new Caliber(address(deployment.hubRegistry), weirollVMImplemAddr));
         deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
@@ -176,42 +181,23 @@ abstract contract Base is StdCheats {
         (deployment.accessManager, deployment.oracleRegistry, deployment.tokenRegistry, deployment.swapModule) =
             deploySharedCore(initialAMAdmin, dao);
 
-        address spokeRegistryImplemAddr = address(new SpokeRegistry());
-        deployment.spokeRegistry = SpokeRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    spokeRegistryImplemAddr,
-                    dao,
-                    abi.encodeCall(
-                        SpokeRegistry.initialize,
-                        (
-                            address(deployment.oracleRegistry),
-                            address(deployment.tokenRegistry),
-                            address(deployment.swapModule),
-                            address(deployment.accessManager)
-                        )
-                    )
-                )
-            )
+        deployment.spokeRegistry = _deploySpokeRegistry(
+            dao,
+            address(deployment.oracleRegistry),
+            address(deployment.tokenRegistry),
+            address(deployment.swapModule),
+            address(deployment.accessManager)
         );
 
         address weirollVMImplemAddr = deployWeirollVMViaIR();
         address caliberImplemAddr = address(new Caliber(address(deployment.spokeRegistry), weirollVMImplemAddr));
         deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
-        address caliberFactoryImplemAddr = address(new CaliberFactory(address(deployment.spokeRegistry)));
-        deployment.caliberFactory = CaliberFactory(
-            address(
-                new TransparentUpgradeableProxy(
-                    caliberFactoryImplemAddr,
-                    dao,
-                    abi.encodeCall(CaliberFactory.initialize, (address(deployment.accessManager)))
-                )
-            )
-        );
+        deployment.caliberFactory =
+            _deployCaliberFactory(dao, address(deployment.spokeRegistry), address(deployment.accessManager));
 
-        address caliberMailboxImplemAddr = address(new CaliberMailbox(address(deployment.spokeRegistry), hubChainId));
-        deployment.caliberMailboxBeacon = new UpgradeableBeacon(caliberMailboxImplemAddr, dao);
+        deployment.caliberMailboxBeacon =
+            _deployCaliberMailboxBeacon(dao, address(deployment.spokeRegistry), hubChainId);
     }
 
     ///
@@ -219,13 +205,16 @@ abstract contract Base is StdCheats {
     ///
 
     function setupHubRegistry(HubCore memory deployment) public {
-        deployment.hubRegistry.setMachineFactory(address(deployment.machineFactory));
+        deployment.hubRegistry.setTokenRegistry(address(deployment.tokenRegistry));
+        deployment.hubRegistry.setChainRegistry(address(deployment.chainRegistry));
+        deployment.hubRegistry.setCoreFactory(address(deployment.machineFactory));
         deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
         deployment.hubRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {
-        deployment.spokeRegistry.setCaliberFactory(address(deployment.caliberFactory));
+        deployment.spokeRegistry.setTokenRegistry(address(deployment.tokenRegistry));
+        deployment.spokeRegistry.setCoreFactory(address(deployment.caliberFactory));
         deployment.spokeRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.spokeRegistry.setCaliberMailboxBeacon(address(deployment.caliberMailboxBeacon));
     }
@@ -270,11 +259,87 @@ abstract contract Base is StdCheats {
     }
 
     ///
+    /// BRIDGE ADAPTER BEACONS DEPLOYMENTS & SETUP
+    ///
+
+    function deployAndSetupBridgeAdapterBeacon(
+        IBaseMakinaRegistry makinaRegistry,
+        BridgeData[] memory bridgesData,
+        address dao
+    ) public {
+        for (uint256 i; i < bridgesData.length; i++) {
+            IBridgeAdapter.Bridge bridgeId = bridgesData[i].bridgeId;
+            address baBeacon;
+            if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
+                baBeacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
+            } else {
+                revert("Bridge not supported");
+            }
+            makinaRegistry.setBridgeAdapterBeacon(bridgeId, baBeacon);
+        }
+    }
+
+    ///
     /// ACCESS MANAGER SETUP
     ///
 
     function setupAccessManager(AccessManager accessManager, address dao) public {
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
+    }
+
+    ///
+    /// DEPLOYMENT UTILS
+    ///
+
+    function _deploySpokeRegistry(
+        address _dao,
+        address _oracleRegistry,
+        address _tokenRegistry,
+        address _swapModule,
+        address _accessManager
+    ) internal returns (SpokeRegistry spokeRegistry) {
+        address spokeRegistryImplemAddr = address(new SpokeRegistry());
+        return SpokeRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    spokeRegistryImplemAddr,
+                    _dao,
+                    abi.encodeCall(
+                        SpokeRegistry.initialize, (_oracleRegistry, _tokenRegistry, _swapModule, _accessManager)
+                    )
+                )
+            )
+        );
+    }
+
+    function _deployCaliberFactory(address _dao, address _spokeRegistry, address _accessManager)
+        internal
+        returns (CaliberFactory caliberFactory)
+    {
+        address caliberFactoryImplemAddr = address(new CaliberFactory(_spokeRegistry));
+        return CaliberFactory(
+            address(
+                new TransparentUpgradeableProxy(
+                    caliberFactoryImplemAddr, _dao, abi.encodeCall(CaliberFactory.initialize, (_accessManager))
+                )
+            )
+        );
+    }
+
+    function _deployCaliberMailboxBeacon(address _dao, address _spokeRegistry, uint256 _hubChainId)
+        internal
+        returns (UpgradeableBeacon caliberMailboxBeacon)
+    {
+        address caliberMailboxImplemAddr = address(new CaliberMailbox(_spokeRegistry, _hubChainId));
+        caliberMailboxBeacon = new UpgradeableBeacon(caliberMailboxImplemAddr, _dao);
+    }
+
+    function _deployAccrossV3BridgeAdapterBeacon(address _dao, address _acrossV3SpokePool)
+        internal
+        returns (UpgradeableBeacon acrossV3BridgeAdapterBeacon)
+    {
+        address acrossV3BridgeAdapterImplemAddr = address(new AcrossV3BridgeAdapter(_acrossV3SpokePool));
+        return UpgradeableBeacon(address(new UpgradeableBeacon(acrossV3BridgeAdapterImplemAddr, _dao)));
     }
 }

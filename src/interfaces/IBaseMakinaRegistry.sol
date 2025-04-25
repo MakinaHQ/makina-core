@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {IBridgeAdapter} from "./IBridgeAdapter.sol";
+
 interface IBaseMakinaRegistry {
+    event BridgeAdapterBeaconChange(
+        uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
+    );
     event CaliberBeaconChange(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
+    event CoreFactoryChange(address indexed oldCoreFactory, address indexed newCoreFactory);
     event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
     event SwapModuleChange(address indexed oldSwapModule, address indexed newSwapModule);
     event TokenRegistryChange(address indexed oldTokenRegistry, address indexed newTokenRegistry);
+
+    /// @notice Address of the core factory.
+    function coreFactory() external view returns (address);
 
     /// @notice Address of the oracle registry.
     function oracleRegistry() external view returns (address);
@@ -18,6 +27,13 @@ interface IBaseMakinaRegistry {
 
     /// @notice Address of the caliber beacon contract.
     function caliberBeacon() external view returns (address);
+
+    /// @notice Bridge ID => Address of the bridge adapter beacon contract.
+    function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+
+    /// @notice Sets the core factory address.
+    /// @param _coreFactory The core factory address.
+    function setCoreFactory(address _coreFactory) external;
 
     /// @notice Sets the oracle registry address.
     /// @param _oracleRegistry The oracle registry address.
@@ -34,4 +50,9 @@ interface IBaseMakinaRegistry {
     /// @notice Sets the caliber beacon address.
     /// @param _caliberBeacon The caliber beacon address.
     function setCaliberBeacon(address _caliberBeacon) external;
+
+    /// @notice Sets the bridge adapter beacon address.
+    /// @param bridgeId The bridge ID.
+    /// @param _bridgeAdapter The bridge adapter beacon address.
+    function setBridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId, address _bridgeAdapter) external;
 }

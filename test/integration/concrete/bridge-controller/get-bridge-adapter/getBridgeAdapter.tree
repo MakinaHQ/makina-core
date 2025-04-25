@@ -1,0 +1,5 @@
+getBridgeAdapter.t.sol
+├── given no adapter for the provided bridge ID was deployed by this contract
+│  └── it should revert with BridgeAdapterDoesNotExist
+└── given an adapter for the provided bridge ID was deployed by this contract
+   └── it should return the address of the deployed adapter corresponding to the provided Bridge ID 

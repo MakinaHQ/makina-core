@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
@@ -90,7 +91,9 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
 
         vm.prank(dao);
-        machine.addSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr);
+        machine.setSpokeCaliber(
+            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
 
         skip(caliber.timelockDuration() + 1);
     }

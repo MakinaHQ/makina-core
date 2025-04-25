@@ -3,15 +3,17 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
+import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 
 abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaRegistry {
     /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
     struct BaseMakinaRegistryStorage {
+        address _coreFactory;
         address _oracleRegistry;
         address _tokenRegistry;
         address _swapModule;
-        address _caliberFactory;
         address _caliberBeacon;
+        mapping(IBridgeAdapter.Bridge => address) _bridgeAdapters;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.BaseMakinaRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -42,6 +44,11 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
+    function coreFactory() external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._coreFactory;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
     function oracleRegistry() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._oracleRegistry;
     }
@@ -59,6 +66,18 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     /// @inheritdoc IBaseMakinaRegistry
     function caliberBeacon() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._caliberBeacon;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._bridgeAdapters[bridgeId];
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function setCoreFactory(address _coreFactory) external override restricted {
+        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        emit CoreFactoryChange($._coreFactory, _coreFactory);
+        $._coreFactory = _coreFactory;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
@@ -87,5 +106,16 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit CaliberBeaconChange($._caliberBeacon, _caliberBeacon);
         $._caliberBeacon = _caliberBeacon;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function setBridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId, address _bridgeAdapter)
+        external
+        override
+        restricted
+    {
+        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        emit BridgeAdapterBeaconChange(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
+        $._bridgeAdapters[bridgeId] = _bridgeAdapter;
     }
 }

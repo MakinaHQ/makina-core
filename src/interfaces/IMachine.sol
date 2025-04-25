@@ -1,36 +1,41 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
     error CaliberAccountingStale(uint256 caliberChainId);
+    error BridgeStateMismatch();
     error InvalidChainId();
     error InvalidDecimals();
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
     error MachineMailboxDoesNotExist();
+    error MismatchedLength();
     error NotMailbox();
     error RecoveryMode();
-    error SpokeCaliberAlreadyExists();
-    error StaleData();
+    error SpokeBridgeAdapterAlreadySet();
+    error SpokeBridgeAdapterNotSet();
+    error SpokeCaliberAlreadySet();
     error UnauthorizedSender();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
     error UnauthorizedOperator();
-    error UnexpectedResultLength();
+    error ZeroBridgeAdapterAddress();
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
-    event HubCaliberDeployed(address indexed caliber);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event RecoveryModeChanged(bool indexed enabled);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
-    event SpokeCaliberAdded(uint256 indexed spokeChainId);
+    event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
+    event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
 
@@ -69,22 +74,23 @@ interface IMachine is IMachineEndpoint {
     }
 
     struct SpokeCaliberData {
-        address caliberMailbox;
+        address mailbox;
+        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
         bytes[] positions; // abi.encode(positionId, value)
         bytes[] baseTokens; // abi.encode(token, value)
-        bytes[] totalReceivedFromHM; // abi.encode(baseToken, nativeValue)
-        bytes[] totalSentToHM; // abi.encode(baseToken, nativeValue)
+        EnumerableMap.AddressToUintMap caliberBridgesIn;
+        EnumerableMap.AddressToUintMap caliberBridgesOut;
+        EnumerableMap.AddressToUintMap machineBridgesIn;
+        EnumerableMap.AddressToUintMap machineBridgesOut;
     }
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
     /// @param _shareToken The address of the share token.
-    function initialize(MachineInitParams calldata params, address _shareToken) external;
-
-    /// @notice Address of the registry.
-    function registry() external view returns (address);
+    /// @param _hubCaliber The address of the hub caliber.
+    function initialize(MachineInitParams calldata params, address _shareToken, address _hubCaliber) external;
 
     /// @notice Address of the Wormhole Core Bridge.
     function wormhole() external view returns (address);
@@ -131,8 +137,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Timestamp of the last global machine accounting.
     function lastGlobalAccountingTime() external view returns (uint256);
 
-    /// @notice Returns whether a token is an idle token help by the machine.
-    /// @param token The address of the token.
+    /// @notice Token => Is the token an idle token.
     function isIdleToken(address token) external view returns (bool);
 
     /// @notice Number of calibers associated with the machine.
@@ -141,8 +146,17 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke caliber index => Spoke Chain ID.
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
-    /// @notice Spoke Chain ID => Spoke Caliber Data.
-    function getSpokeCaliberData(uint256 chainId) external view returns (SpokeCaliberData memory);
+    /// @notice Spoke Chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
+    function getSpokeCaliberDetailedAum(uint256 chainId)
+        external
+        view
+        returns (uint256 aum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp);
+
+    /// @notice Spoke Chain ID => Spoke Caliber Mailbox Address.
+    function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
+
+    /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
+    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
@@ -159,6 +173,20 @@ interface IMachine is IMachineEndpoint {
     /// @param amount The amount of token to transfer.
     function transferToHubCaliber(address token, uint256 amount) external;
 
+    /// @notice Initiates a token transfers to the spoke caliber.
+    /// @param bridgeId The ID of the bridge to use for the transfer.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber.
+    /// @param token The address of the token to transfer.
+    /// @param amount The amount of token to transfer.
+    /// @param minOutputAmount The minimum output amount expected from the transfer.
+    function transferToSpokeCaliber(
+        IBridgeAdapter.Bridge bridgeId,
+        uint256 chainId,
+        address token,
+        uint256 amount,
+        uint256 minOutputAmount
+    ) external;
+
     /// @notice Updates the total AUM of the machine.
     /// @return totalAum The updated total AUM.
     function updateTotalAum() external returns (uint256);
@@ -169,10 +197,23 @@ interface IMachine is IMachineEndpoint {
     /// @return shares The amount of shares minted
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
-    /// @notice Register a spoke caliber.
-    /// @param evmChainId The EVM chain ID of the spoke caliber.
+    /// @notice Registers a spoke caliber mailbox and related bridge adapters.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
-    function addSpokeCaliber(uint256 evmChainId, address spokeCaliberMailbox) external;
+    /// @param bridges The list of bridges supported with the spoke caliber.
+    /// @param adapters The list of corresponding adapters for each bridge. Must be the same length as `bridges`.
+    function setSpokeCaliber(
+        uint256 chainId,
+        address spokeCaliberMailbox,
+        IBridgeAdapter.Bridge[] calldata bridges,
+        address[] calldata adapters
+    ) external;
+
+    /// @notice Registers a spoke bridge adapter.
+    /// @param chainId The foreign EVM chain ID of the adapter.
+    /// @param bridgeId The ID of the bridge.
+    /// @param adapter The foreign address of the bridge adapter.
+    function setSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
 
     /// @notice Sets a new mechanic.
     /// @param newMechanic The address of new mechanic.

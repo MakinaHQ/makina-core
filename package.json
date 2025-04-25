@@ -13,7 +13,7 @@
     "solhint": "5.0.5"
   },
   "scripts": {
-    "buildWeirollVM": "FOUNDRY_PROFILE=ir forge build",
+    "build:ir": "FOUNDRY_PROFILE=ir forge build",
     "lint": "yarn lint:sol && yarn prettier:check",
     "lint:sol": "forge fmt --check && yarn solhint \"{script,src,test}/**/*.sol\"",
     "prettier:check": "prettier --check \"**/*.{js,json,md,yml}\" \"!script/constants/output/**/*\"",

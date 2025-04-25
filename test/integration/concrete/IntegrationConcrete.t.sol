@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
@@ -16,7 +18,7 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
-import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
+import {Base_Test, Base_Hub_Test, Base_Spoke_Test, Base_CrossChain_Test} from "test/base/Base.t.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
     /// @dev A denotes the accounting token, B denotes the base token
@@ -35,6 +37,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
     MockBorrowModule internal borrowModule;
     MockPool internal pool;
 
+    IMockAcrossV3SpokePool internal acrossV3SpokePool;
+
     MockPriceFeed internal aPriceFeed1;
     MockPriceFeed internal bPriceFeed1;
 
@@ -49,6 +53,8 @@ abstract contract Integration_Concrete_Test is Base_Test {
         borrowModule = new MockBorrowModule(IERC20(baseToken));
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
+        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
 
@@ -61,6 +67,12 @@ abstract contract Integration_Concrete_Test is Base_Test {
         );
         swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));
         vm.stopPrank();
+    }
+
+    modifier withForeignTokenRegistered(address localToken, uint256 chainId, address foreignToken) {
+        vm.prank(dao);
+        tokenRegistry.setToken(localToken, chainId, foreignToken);
+        _;
     }
 
     ///
@@ -118,6 +130,15 @@ abstract contract Integration_Concrete_Test is Base_Test {
         assertEq(token, expectedAddress);
         assertEq(value, expectedValue);
     }
+
+    function _checkBridgeCounterValue(bytes memory encodedData, address expectedAddress, uint256 expectedValue)
+        internal
+        pure
+    {
+        (address token, uint256 value) = abi.decode(encodedData, (address, uint256));
+        assertEq(token, expectedAddress);
+        assertEq(value, expectedValue);
+    }
 }
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
@@ -147,9 +168,29 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         caliber.addBaseToken(_token);
         _;
     }
+
+    modifier withSpokeCaliber(uint256 chainId, address mailbox) {
+        vm.prank(dao);
+        machine.setSpokeCaliber(chainId, mailbox, new IBridgeAdapter.Bridge[](0), new address[](0));
+        _;
+    }
+
+    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+        vm.prank(dao);
+        machine.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        _;
+    }
+
+    modifier withSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) {
+        vm.prank(dao);
+        machine.setSpokeBridgeAdapter(chainId, bridgeId, adapter);
+        _;
+    }
 }
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
+    address public hubMachineAddr;
+
     Caliber public caliber;
     CaliberMailbox public caliberMailbox;
 
@@ -157,8 +198,10 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
+        hubMachineAddr = makeAddr("hubMachine");
+
         (caliber, caliberMailbox) =
-            _deployCaliber(address(0), address(accountingToken), bytes32(0), address(flashLoanModule));
+            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), address(flashLoanModule));
     }
 
     modifier whileInRecoveryMode() {
@@ -171,5 +214,52 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         vm.prank(dao);
         caliber.addBaseToken(_token);
         _;
+    }
+
+    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+        vm.prank(dao);
+        caliberMailbox.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        _;
+    }
+
+    modifier withHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address foreignAdapter) {
+        vm.prank(dao);
+        caliberMailbox.setHubBridgeAdapter(bridgeId, foreignAdapter);
+        _;
+    }
+}
+
+abstract contract Integration_Concrete_CrossChain_Test is Integration_Concrete_Test, Base_CrossChain_Test {
+    uint256 public constant SPOKE_CHAIN_ID = 1000;
+
+    Machine public machine;
+    Caliber public hubCaliber;
+    // AcrossV3BridgeAdapter public acrossV3Adapter;
+
+    Caliber public spokeCaliber;
+    CaliberMailbox public spokeCaliberMailbox;
+    address public spokeAcrossV3Adapter;
+
+    function setUp() public virtual override(Integration_Concrete_Test, Base_CrossChain_Test) {
+        Base_CrossChain_Test.setUp();
+        Integration_Concrete_Test.setUp();
+
+        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
+
+        (spokeCaliber, spokeCaliberMailbox) =
+            _deployCaliber(address(machine), address(accountingToken), bytes32(0), address(flashLoanModule));
+
+        // address spokeAcrossV3Adapter = spokeCaliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
+
+        // IBridgeAdapter.Bridge[] memory bridges = new IBridgeAdapter.Bridge[](1);
+        // bridges[0] = IBridgeAdapter.Bridge.ACROSS_V3;
+
+        // address[] memory adapters = new address[](1);
+        // adapters[0] = acrossV3Adapter;
+
+        // vm.startPrank(dao);
+        // machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailbox), bridges, adapters);
+        // machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(spokeCaliberMailbox), "");
+        // spokeCaliberMailbox.addHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(machine));
     }
 }

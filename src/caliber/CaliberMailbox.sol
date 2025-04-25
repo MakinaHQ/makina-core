@@ -1,28 +1,40 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+import {BridgeController} from "../bridge/controller/BridgeController.sol";
+import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
+import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
+import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
+import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract CaliberMailbox is Initializable, ICaliberMailbox {
-    address public immutable registry;
+contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
+    using EnumerableMap for EnumerableMap.AddressToUintMap;
+    using SafeERC20 for IERC20Metadata;
+
     uint256 public immutable hubChainId;
 
     /// @custom:storage-location erc7201:makina.storage.CaliberMailbox
     struct CaliberMailboxStorage {
         address _hubMachine;
         address _caliber;
+        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _hubBridgeAdapters;
+        EnumerableMap.AddressToUintMap _bridgesIn;
+        EnumerableMap.AddressToUintMap _bridgesOut;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberMailbox")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant CaliberMailboxStorageLocation =
         0xc8f2c10c9147366283b13eb82b7eca93d88636f13eec15d81ed4c6aa5006aa00;
-
-    bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
     function _getCaliberStorage() private pure returns (CaliberMailboxStorage storage $) {
         assembly {
@@ -30,35 +42,148 @@ contract CaliberMailbox is Initializable, ICaliberMailbox {
         }
     }
 
-    constructor(address _registry, uint256 _hubChainId) {
-        registry = _registry;
+    constructor(address _registry, uint256 _hubChainId) MakinaContext(_registry) {
         hubChainId = _hubChainId;
         _disableInitializers();
     }
 
-    function initialize(address _hubMachine) external override initializer {
+    function initialize(address _hubMachine, address _initialAuthority) external override initializer {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         $._hubMachine = _hubMachine;
+        __ReentrancyGuard_init();
+        __AccessManaged_init(_initialAuthority);
     }
 
     modifier onlyFactory() {
-        if (msg.sender != ISpokeRegistry(registry).caliberFactory()) {
+        if (msg.sender != ISpokeRegistry(registry).coreFactory()) {
             revert NotFactory();
+        }
+        _;
+    }
+
+    modifier onlyOperator() {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+        address _caliber = $._caliber;
+        if (
+            msg.sender
+                != (
+                    ICaliber(_caliber).recoveryMode() ? ICaliber(_caliber).securityCouncil() : ICaliber(_caliber).mechanic()
+                )
+        ) {
+            revert ICaliber.UnauthorizedOperator();
+        }
+        _;
+    }
+
+    modifier notRecoveryMode() {
+        if (ICaliber(_getCaliberStorage()._caliber).recoveryMode()) {
+            revert ICaliber.RecoveryMode();
         }
         _;
     }
 
     /// @inheritdoc ICaliberMailbox
     function caliber() external view override returns (address) {
+        return _getCaliberStorage()._caliber;
+    }
+
+    /// @inheritdoc ICaliberMailbox
+    function getHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
-        return $._caliber;
+        if ($._hubBridgeAdapters[bridgeId] == address(0)) {
+            revert HubBridgeAdapterNotSet();
+        }
+        return $._hubBridgeAdapters[bridgeId];
     }
 
     /// @inheritdoc ICaliberMailbox
     function getSpokeCaliberAccountingData() external view override returns (SpokeCaliberAccountingData memory data) {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         (data.netAum, data.positions, data.baseTokens) = ICaliber($._caliber).getDetailedAum();
-        // @TODO include totalReceivedFromHM and totalSentToHM
+
+        uint256 len = $._bridgesIn.length();
+        data.bridgesIn = new bytes[](len);
+        for (uint256 i; i < len; i++) {
+            (address token, uint256 amount) = $._bridgesIn.at(i);
+            data.bridgesIn[i] = abi.encode(token, amount);
+        }
+
+        len = $._bridgesOut.length();
+        data.bridgesOut = new bytes[](len);
+        for (uint256 i; i < len; i++) {
+            (address token, uint256 amount) = $._bridgesOut.at(i);
+            data.bridgesOut[i] = abi.encode(token, amount);
+        }
+    }
+
+    /// @inheritdoc IMachineEndpoint
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override nonReentrant {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+
+        if (msg.sender == $._caliber) {
+            address outputToken =
+                ITokenRegistry(ISpokeRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
+
+            (IBridgeAdapter.Bridge bridgeId, uint256 minOutputAmount) =
+                abi.decode(data, (IBridgeAdapter.Bridge, uint256));
+
+            address recipient = $._hubBridgeAdapters[bridgeId];
+            if (recipient == address(0)) {
+                revert HubBridgeAdapterNotSet();
+            }
+
+            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+
+            (bool exists, uint256 bridgeOut) = $._bridgesOut.tryGet(token);
+            $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
+
+            _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
+        } else if (_isBridgeAdapter(msg.sender)) {
+            if (!ICaliber($._caliber).isBaseToken(token)) {
+                revert ICaliber.NotBaseToken();
+            }
+
+            (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
+
+            if (refund) {
+                uint256 bridgeOut = $._bridgesOut.get(token);
+                $._bridgesOut.set(token, bridgeOut - inputAmount);
+            } else {
+                (bool exists, uint256 bridgeIn) = $._bridgesIn.tryGet(token);
+                $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
+            }
+
+            IERC20Metadata(token).safeTransferFrom(msg.sender, $._caliber, amount);
+        } else {
+            revert UnauthorizedCaller();
+        }
+    }
+
+    /// @inheritdoc IBridgeController
+    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
+        external
+        onlyOperator
+    {
+        _sendOutBridgeTransfer(bridgeId, transferId, data);
+    }
+
+    /// @inheritdoc IBridgeController
+    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash)
+        external
+        notRecoveryMode
+        onlyOperator
+    {
+        _authorizeInBridgeTransfer(bridgeId, messageHash);
+    }
+
+    /// @inheritdoc IBridgeController
+    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+        _claimInBridgeTransfer(bridgeId, transferId);
+    }
+
+    /// @inheritdoc IBridgeController
+    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+        _cancelOutBridgeTransfer(bridgeId, transferId);
     }
 
     /// @inheritdoc ICaliberMailbox
@@ -68,8 +193,46 @@ contract CaliberMailbox is Initializable, ICaliberMailbox {
             revert CaliberAlreadySet();
         }
         $._caliber = _caliber;
+
+        emit CaliberSet(_caliber);
     }
 
-    /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {}
+    /// @inheritdoc ICaliberMailbox
+    function setHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address adapter) external restricted {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+        if ($._hubBridgeAdapters[bridgeId] != address(0)) {
+            revert HubBridgeAdapterAlreadySet();
+        }
+        if (adapter == address(0)) {
+            revert ZeroBridgeAdapterAddress();
+        }
+        $._hubBridgeAdapters[bridgeId] = adapter;
+
+        emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
+    }
+
+    /// @inheritdoc IBridgeController
+    function resetBridgingState(address token) external override restricted {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+
+        if (!ICaliber($._caliber).isBaseToken(token)) {
+            revert ICaliber.NotBaseToken();
+        }
+
+        $._bridgesIn.remove(token);
+        $._bridgesOut.remove(token);
+
+        BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
+        uint256 len = $bc._supportedBridges.length;
+        for (uint256 i; i < len;) {
+            address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
+            IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
+            unchecked {
+                ++i;
+            }
+        }
+        IERC20Metadata(token).safeTransfer($._caliber, IERC20Metadata(token).balanceOf(address(this)));
+
+        emit ResetBridgingState(token);
+    }
 }

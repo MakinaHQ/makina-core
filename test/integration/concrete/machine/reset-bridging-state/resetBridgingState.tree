@@ -1,0 +1,20 @@
+resetBridgingState.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given the machine has a resulting null token balance
+   │  ├── it should erase all the existing bridge counters for the given token, in machine storage
+   │  └── it should emit a ResetBridgingState event
+   └── given the machine has a resulting positive token balance
+      ├── given the token is already registered as idle in the machine
+      │  ├── it should erase all the existing bridge counters for the given token, in machine storage
+      │  ├── it should withdraw token balance in all bridge adapters to machine, and wipe out pending transfers
+      │  └── it should emit a ResetBridgingState event
+      └── given the token is not already registered as idle in the machine
+         ├── given the token does not have associated feed route in the oracle registry
+         │  └── it should revert with PriceFeedRouteNotRegistered
+         └── given the token has associated feed route in the oracle registry
+            ├── it should erase all the existing bridge counters for the given token, in machine storage
+            ├── it should withdraw token balance in all bridge adapters to machine, and wipe out pending transfers
+            ├── it should mark the token as an idle token in the machine
+            └── it should emit a ResetBridgingState event

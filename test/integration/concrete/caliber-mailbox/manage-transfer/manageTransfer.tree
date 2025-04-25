@@ -1,0 +1,42 @@
+manageTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── given sender is the associated caliber
+   │  ├── given no foreign token is registered in token registry for given input token and destination chain ID
+   │  │  └── it should revert with ForeignTokenNotRegistered
+   │  └── given a foreign token is registered in token registry for given input token and destination chain ID
+   │     ├── given no hub bridge adapter is set for the provided bridge ID
+   │     │  └── it should revert with HubBridgeAdapterNotSet
+   │     └── given a hub bridge adapter is set for the provided bridge ID
+   │        ├── given no local bridge adapter is set for the provided bridge ID
+   │        │  └── it should revert with BridgeAdapterDoesNotExist
+   │        └── given a local bridge adapter is set for the provided bridge ID
+   │           ├── given outgoing bridge transfers through the given bridge are marked as disabled
+   │           │  └── it should revert with BridgeAdapterDoesNotExist
+   │           └── given outgoing bridge transfers through the given bridge are marked as enabled
+   │              ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
+   │              │  └── it should revert with MaxValueLossExceeded
+   │              └── given the maximum allowed value loss induced by the bridge transfer is not higher than maxBridgeLossBps
+   │                 ├── it should decrease the caliber's token balance by amount
+   │                 ├── it should increase the local bridge adapter's token balance by amount
+   │                 ├── it should increase the caliberMailbox's bridgeOut value by amount for the input token
+   │                 └── it should emit a ScheduleOutBridgeTransfer event
+   └── given sender is not the associated caliber
+      ├── given sender is not a registered bridge adapter
+      │  └── it should revert with UnauthorizedCaller
+      └── given sender is a registered bridge adapter
+         ├── given the refund flag is not set
+         │  ├── given output token is not a registered base token in associated caliber
+         │  │  └── it should revert with NotBaseToken
+         │  └── given output token is a registered base token in associated caliber
+         │     ├── it should decrease the adapter's token balance by amount
+         │     ├── it should increase the caliber's token balance by amount
+         │     └── it should increase the caliberMailbox's bridgeIn value by bridge input amount for the bridged token
+         └── given the refund flag is set
+            ├── given output token is not a registered base token in associated caliber
+            │  └── it should revert with NotBaseToken
+            └── given output token is a registered base token in associated caliber
+               ├── it should decrease the adapter's token balance by amount
+               ├── it should increase the caliber's token balance by amount
+               └── it should decrease the caliberMailbox's bridgeOut value by bridge input amount for the input token

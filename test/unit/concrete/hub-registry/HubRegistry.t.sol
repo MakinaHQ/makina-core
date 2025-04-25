@@ -13,13 +13,13 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
     function setUp() public override(BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test) {
         Unit_Concrete_Hub_Test.setUp();
         registry = hubRegistry;
+        coreFactoryAddr = address(machineFactory);
     }
 
     function test_HubRegistryGetters() public view {
         assertEq(hubRegistry.caliberBeacon(), address(caliberBeacon));
         assertEq(hubRegistry.chainRegistry(), address(chainRegistry));
         assertEq(hubRegistry.machineBeacon(), address(machineBeacon));
-        assertEq(hubRegistry.machineFactory(), address(machineFactory));
         assertEq(hubRegistry.authority(), address(accessManager));
     }
 
@@ -30,7 +30,7 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
 
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
-        vm.expectEmit(false, false, false, false, address(hubRegistry));
+        vm.expectEmit(true, true, false, false, address(hubRegistry));
         emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         hubRegistry.setCaliberBeacon(newCaliberBeacon);
@@ -44,7 +44,7 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
 
     function test_SetChainRegistry() public {
         address newChainRegistry = makeAddr("newChainRegistry");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
+        vm.expectEmit(true, true, false, false, address(hubRegistry));
         emit IHubRegistry.ChainRegistryChange(address(chainRegistry), newChainRegistry);
         vm.prank(dao);
         hubRegistry.setChainRegistry(newChainRegistry);
@@ -58,24 +58,10 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
 
     function test_SetMachineBeacon() public {
         address newMachineBeacon = makeAddr("newMachineBeacon");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
+        vm.expectEmit(true, true, false, false, address(hubRegistry));
         emit IHubRegistry.MachineBeaconChange(address(machineBeacon), newMachineBeacon);
         vm.prank(dao);
         hubRegistry.setMachineBeacon(newMachineBeacon);
         assertEq(hubRegistry.machineBeacon(), newMachineBeacon);
-    }
-
-    function test_SetMachineFactory_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubRegistry.setMachineFactory(address(0));
-    }
-
-    function test_SetMachineFactory() public {
-        address newMachineFactory = makeAddr("newMachineFactory");
-        vm.expectEmit(true, true, true, true, address(hubRegistry));
-        emit IHubRegistry.MachineFactoryChange(address(machineFactory), newMachineFactory);
-        vm.prank(dao);
-        hubRegistry.setMachineFactory(newMachineFactory);
-        assertEq(hubRegistry.machineFactory(), newMachineFactory);
     }
 }

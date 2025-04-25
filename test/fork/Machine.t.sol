@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -153,7 +154,9 @@ contract Machine_Fork_Test is Fork_Test {
 
         // register spoke caliber mailbox in machine
         vm.prank(ethForkData.dao);
-        machine.addSpokeCaliber(ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox);
+        machine.setSpokeCaliber(
+            ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox, new IBridgeAdapter.Bridge[](0), new address[](0)
+        );
 
         // write spoke caliber accounting data in machine
         machine.updateSpokeCaliberAccountingData(response, signatures);

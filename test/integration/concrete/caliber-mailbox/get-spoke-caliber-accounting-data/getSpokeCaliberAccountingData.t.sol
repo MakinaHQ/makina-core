@@ -5,11 +5,11 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
-import {Integration_Concrete_Spoke_Test} from "../../IntegrationConcrete.t.sol";
+import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
-contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
+contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailbox_Integration_Concrete_Test {
     function setUp() public override {
-        Integration_Concrete_Spoke_Test.setUp();
+        CaliberMailbox_Integration_Concrete_Test.setUp();
         _setUpCaliberMerkleRoot(caliber);
     }
 
@@ -35,7 +35,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         caliberMailbox.getSpokeCaliberAccountingData();
     }
 
-    function test_GetDetailedAum() public withTokenAsBT(address(baseToken)) {
+    function test_GetSpokeCaliberAccountingData() public withTokenAsBT(address(baseToken)) {
         uint256 aInputAmount = 3e18;
         uint256 bInputAmount = 5e18;
 
@@ -55,8 +55,8 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         // check accounting token position is correctly accounted for in AUM
         ICaliberMailbox.SpokeCaliberAccountingData memory data = caliberMailbox.getSpokeCaliberAccountingData();
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
-        assertEq(data.totalReceivedFromHM.length, 0);
-        assertEq(data.totalSentToHM.length, 0);
+        assertEq(data.bridgesIn.length, 0);
+        assertEq(data.bridgesOut.length, 0);
         assertEq(data.positions.length, 1);
         assertEq(data.baseTokens.length, 2);
         _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);
@@ -70,8 +70,8 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is Integration_
         // check data is the same after a day
         data = caliberMailbox.getSpokeCaliberAccountingData();
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
-        assertEq(data.totalReceivedFromHM.length, 0);
-        assertEq(data.totalSentToHM.length, 0);
+        assertEq(data.bridgesIn.length, 0);
+        assertEq(data.bridgesOut.length, 0);
         assertEq(data.positions.length, 1);
         assertEq(data.baseTokens.length, 2);
         _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);

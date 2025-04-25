@@ -20,5 +20,13 @@
       "stalenessThreshold2": 0
     }
   ],
-  "swappersTargets": []
+  "swappersTargets": [],
+  "bridges": [
+    {
+      "bridgeId": 0,
+      "approvalTarget": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
+      "executionTarget": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F",
+      "receiveSource": "0x82B564983aE7274c86695917BBf8C99ECb6F0F8F"
+    }
+  ]
 }
