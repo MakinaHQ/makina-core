@@ -1,0 +1,17 @@
+deposit.t.sol
+├── given pre-deposit vault was migrated
+│  └── it should revert with Migrated
+└── given pre-deposit vault was not migrated
+   ├── given pre-deposit vault is in whitelist mode
+   │  ├── given sender is not whitelisted
+   │  │  └── it should revert with UnauthorizedCaller
+   │  └── given sender is whitelisted
+   │     ├── it should transfer assets from sender to vault
+   │     ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
+   │     ├── it should increase the totalAssets value by assets
+   │     └── it should emit a Deposit event
+   └── given pre-deposit vault is not in whitelist mode
+      ├── it should transfer assets from sender to vault
+      ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
+      ├── it should increase the totalAssets value by assets
+      └── it should emit a Deposit event

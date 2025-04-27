@@ -1,0 +1,14 @@
+migrateToMachine.t.sol
+├── given pre-deposit vault was migrated
+│  └── it should revert with Migrated
+└── given pre-deposit vault was not migrated
+   ├── when caller is not the machine set via setPendingMachine
+   │  └── it should revert with NotPendingMachine
+   └── when caller is the machine set via setPendingMachine
+      ├── when caller is not the machine set via setPendingMachine
+      │  └── it should revert with NotPendingMachine
+      └── when caller is the machine set via setPendingMachine
+         ├── it should set the migrated flag to true in vautl's storage
+         ├── it should transfer share token ownership to caller
+         ├── it should transfer asset balance to caller
+         └── it should emit a MigrateToMachine event

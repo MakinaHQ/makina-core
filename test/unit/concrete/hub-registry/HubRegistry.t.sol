@@ -73,7 +73,7 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
     function test_SetPreDepositVaultBeacon() public {
         address newPreDepositVaultBeacon = makeAddr("newPreDepositVaultBeacon");
         vm.expectEmit(true, true, false, false, address(hubRegistry));
-        emit IHubRegistry.PreDepositVaultBeaconChange(address(0), newPreDepositVaultBeacon);
+        emit IHubRegistry.PreDepositVaultBeaconChange(address(preDepositVaultBeacon), newPreDepositVaultBeacon);
         vm.prank(dao);
         hubRegistry.setPreDepositVaultBeacon(newPreDepositVaultBeacon);
         assertEq(hubRegistry.preDepositVaultBeacon(), newPreDepositVaultBeacon);

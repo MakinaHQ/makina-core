@@ -5,7 +5,22 @@ initialize.t.sol
    ├── given the accounting token does not have associated feed route in the oracle registry
    │  └── it should revert with PriceFeedRouteNotRegistered
    └── given the accounting token has associated feed route in the oracle registry
-      ├── it should mark the token as an idle token in the machine
-      ├── it should should initialize the machine with provided params
-      └── it should deploy a caliber with provided params
-      
+      ├── given the provided preDepositVault address is zero
+      │  ├── given the vault is not the pending owner of the share token
+      │  │  └── it should revert with OwnableUnauthorizedAccount
+      │  └── given the vault is the pending owner of the share token
+      │     ├── it should mark the accounting token as an idle token in the machine
+      │     ├── it should should initialize the machine with provided params
+      │     └── it should set the machine as owner of the share token
+      └── given the provided preDepositVault address is non-zero
+         ├── given the preDepositVault's share token or accounting token do not match the provided share token and accounting token addresses
+         │  └── it should revert with PreDepositVaultMismatch
+         └── given the preDepositVault's share token or accounting token match the provided share token and accounting token addresses
+            ├── given the vault is not the pending owner of the share token
+            │  └── it should revert with OwnableUnauthorizedAccount
+            └── given the vault is the pending owner of the share token
+               ├── it should transfer the pre-deposit vault asset balance to the machine
+               ├── it should mark the deposit token as an idle token in the machine
+               ├── it should mark the accounting token as an idle token in the machine
+               ├── it should should initialize the machine with provided params
+               └── it should set the machine as owner of the share token

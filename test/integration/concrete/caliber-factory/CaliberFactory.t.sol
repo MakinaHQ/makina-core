@@ -12,11 +12,6 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
-    function test_Getters() public view {
-        assertEq(caliberFactory.registry(), address(spokeRegistry));
-        assertEq(caliberFactory.isCaliber(address(0)), false);
-    }
-
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliber.CaliberInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));

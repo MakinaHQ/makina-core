@@ -56,6 +56,7 @@ abstract contract Base_Hub_Test is Base_Test {
     ChainRegistry public chainRegistry;
     MachineFactory public machineFactory;
     UpgradeableBeacon public machineBeacon;
+    UpgradeableBeacon public preDepositVaultBeacon;
 
     IWormhole public wormhole;
 
@@ -75,8 +76,9 @@ abstract contract Base_Hub_Test is Base_Test {
         tokenRegistry = deployment.tokenRegistry;
         chainRegistry = deployment.chainRegistry;
         machineFactory = deployment.machineFactory;
-        machineBeacon = deployment.machineBeacon;
         caliberBeacon = deployment.caliberBeacon;
+        machineBeacon = deployment.machineBeacon;
+        preDepositVaultBeacon = deployment.preDepositVaultBeacon;
 
         setupHubRegistry(deployment);
         setupAccessManager(accessManager, dao);

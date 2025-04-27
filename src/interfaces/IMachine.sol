@@ -16,6 +16,7 @@ interface IMachine is IMachineEndpoint {
     error MismatchedLength();
     error NotMailbox();
     error RecoveryMode();
+    error PreDepositVaultMismatch();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
@@ -88,9 +89,15 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
+    /// @param _preDepositVault The address of the pre-deposit vault.
     /// @param _shareToken The address of the share token.
     /// @param _hubCaliber The address of the hub caliber.
-    function initialize(MachineInitParams calldata params, address _shareToken, address _hubCaliber) external;
+    function initialize(
+        MachineInitParams calldata params,
+        address _preDepositVault,
+        address _shareToken,
+        address _hubCaliber
+    ) external;
 
     /// @notice Address of the Wormhole Core Bridge.
     function wormhole() external view returns (address);
