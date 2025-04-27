@@ -99,7 +99,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
 
                 // deposit assets into the preDepositVault
                 depositToken.approve(address(preDepositVault), assets);
-                preDepositVault.deposit(assets, address(this));
+                preDepositVault.deposit(assets, address(this), 0);
             } else {
                 uint256 maxRedeem = shareToken.balanceOf(address(this));
                 if (maxRedeem == 0) {
@@ -117,7 +117,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
                 }
 
                 // redeem shares from the preDepositVault
-                preDepositVault.redeem(sharesToRedeem, address(this));
+                preDepositVault.redeem(sharesToRedeem, address(this), 0);
             }
 
             assertApproxEqRel(

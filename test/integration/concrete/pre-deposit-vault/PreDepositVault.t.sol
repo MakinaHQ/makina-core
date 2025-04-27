@@ -42,6 +42,15 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
         _;
     }
 
+    modifier whitelistedUser(address user) {
+        address[] memory whitelist = new address[](1);
+        whitelist[0] = user;
+        vm.prank(dao);
+        preDepositVault.setWhitelistedUsers(whitelist, true);
+
+        _;
+    }
+
     modifier migrated() {
         newMachineAddr = makeAddr("newMachine");
 

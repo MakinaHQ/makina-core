@@ -26,7 +26,7 @@ contract MaxDeposit_Integration_Concrete_Test is PreDepositVault_Integration_Con
     function test_MaxDeposit_SupplyExceedsLimit() public {
         deal(address(baseToken), address(this), 100e18);
         baseToken.approve(address(preDepositVault), 100e18);
-        preDepositVault.deposit(100e18, address(this));
+        preDepositVault.deposit(100e18, address(this), 0);
 
         vm.prank(riskManager);
         preDepositVault.setShareLimit(1);

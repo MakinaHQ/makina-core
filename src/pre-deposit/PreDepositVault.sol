@@ -190,7 +190,12 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function deposit(uint256 assets, address receiver) external override notMigrated returns (uint256) {
+    function deposit(uint256 assets, address receiver, uint256 minShares)
+        external
+        override
+        notMigrated
+        returns (uint256)
+    {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
         if ($._whitelistMode && !$._isWhitelistedUser[msg.sender]) {
@@ -198,6 +203,10 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         }
 
         uint256 shares = previewDeposit(assets);
+        if (shares < minShares) {
+            revert SlippageProtection();
+        }
+
         IERC20Metadata($._depositToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
 
@@ -207,7 +216,12 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function redeem(uint256 shares, address receiver) external override notMigrated returns (uint256) {
+    function redeem(uint256 shares, address receiver, uint256 minAssets)
+        external
+        override
+        notMigrated
+        returns (uint256)
+    {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
         if ($._whitelistMode && !$._isWhitelistedUser[msg.sender]) {
@@ -215,6 +229,10 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         }
 
         uint256 assets = previewRedeem(shares);
+        if (assets < minAssets) {
+            revert SlippageProtection();
+        }
+
         IMachineShare($._shareToken).burn(msg.sender, shares);
         IERC20Metadata($._depositToken).safeTransfer(receiver, assets);
 

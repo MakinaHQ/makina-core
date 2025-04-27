@@ -49,7 +49,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
         uint256 preDepositAmount = 1e18;
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
-        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this));
+        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
 
         vm.expectEmit(false, false, false, false, address(machineFactory));
         emit IMachineFactory.HubCaliberDeployed(address(0));

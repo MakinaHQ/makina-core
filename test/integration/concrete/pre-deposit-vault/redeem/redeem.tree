@@ -6,12 +6,18 @@ redeem.t.sol
    │  ├── given sender is not whitelisted
    │  │  └── it should revert with UnauthorizedCaller
    │  └── given sender is whitelisted
-   │     ├── it should burn shares from caller
-   │     ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
-   │     ├── it should decrease the totalAssets value by assets
-   │     └── it should emit a Redeem event
+   │     ├── given output asset amount is lower than provided minAssets
+   │     │  └── it should revert with SlippageProtection
+   │     └── given output asset amount is not lower than provided minAssets
+   │        ├── it should burn shares from caller
+   │        ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
+   │        ├── it should decrease the totalAssets value by assets
+   │        └── it should emit a Redeem event
    └── given pre-deposit vault is not in whitelist mode
-      ├── it should burn shares from caller
-      ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
-      ├── it should decrease the totalAssets value by assets
-      └── it should emit a Redeem event
+      ├── given output asset amount is lower than provided minAssets
+      │  └── it should revert with SlippageProtection
+      └── given output asset amount is not lower than provided minAssets
+         ├── it should burn shares from caller
+         ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
+         ├── it should decrease the totalAssets value by assets
+         └── it should emit a Redeem event

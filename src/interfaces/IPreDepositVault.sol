@@ -7,6 +7,7 @@ interface IPreDepositVault {
     error NotPendingMachine();
     error NotMigrated();
     error Migrated();
+    error SlippageProtection();
     error UnauthorizedCaller();
 
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
@@ -74,14 +75,16 @@ interface IPreDepositVault {
     /// @notice Deposits a given amount of assets and mints shares to the receiver.
     /// @param amount The amount of assets to be deposited.
     /// @param receiver The receiver of the shares.
+    /// @param minShares The minimum amount of shares to be minted.
     /// @return shares The amount of shares minted.
-    function deposit(uint256 amount, address receiver) external returns (uint256);
+    function deposit(uint256 amount, address receiver, uint256 minShares) external returns (uint256);
 
     /// @notice Burns exactly shares from caller and transfers the corresponding amount of assets to the receiver.
     /// @param amount The amount of shares to be redeemed.
     /// @param receiver The receiver of withdrawn assets.
+    /// @param minAssets The minimum amount of assets to be transferred.
     /// @return assets The amount of assets transferred.
-    function redeem(uint256 amount, address receiver) external returns (uint256);
+    function redeem(uint256 amount, address receiver, uint256 minAssets) external returns (uint256);
 
     /// @notice Migrates the pre-deposit vault to the machine.
     function migrateToMachine() external;
