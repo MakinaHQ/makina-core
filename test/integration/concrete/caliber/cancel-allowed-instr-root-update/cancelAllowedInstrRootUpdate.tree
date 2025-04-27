@@ -1,7 +1,7 @@
 cancelAllowedInstrRootUpdate.t.sol
-├── given sender does not have the relevant role
-│  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+├── given sender is not in the set of root guardians
+│  └── it should revert with UnauthorizedCaller
+└── given sender is in the set of root guardians
    ├── given there is no pending root update
    │  └── it should revert with NoPendingUpdate
    └── given there is a pending root update

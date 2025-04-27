@@ -51,6 +51,7 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
+        EnumerableSet.AddressSet _instrRootGuardians;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff))
@@ -76,6 +77,7 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         address _hubMachineEndpoint
     ) external override initializer {
         CaliberStorage storage $ = _getCaliberStorage();
+
         $._hubMachineEndpoint = _hubMachineEndpoint;
         $._accountingToken = cParams.accountingToken;
         $._positionStaleThreshold = cParams.initialPositionStaleThreshold;
@@ -86,7 +88,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._flashLoanModule = cParams.initialFlashLoanModule;
         _addBaseToken(cParams.accountingToken);
+
         __MakinaGovernable_init(mgParams);
+        $._instrRootGuardians.add(mgParams.initialRiskManager);
+        $._instrRootGuardians.add(mgParams.initialSecurityCouncil);
+
         __ReentrancyGuard_init();
     }
 
@@ -182,6 +188,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     /// @inheritdoc ICaliber
     function getBaseTokenAddress(uint256 idx) external view override returns (address) {
         return _getCaliberStorage()._baseTokens.at(idx);
+    }
+
+    /// @inheritdoc ICaliber
+    function isInstrRootGuardian(address user) external view override returns (bool) {
+        return _getCaliberStorage()._instrRootGuardians.contains(user);
     }
 
     /// @inheritdoc ICaliber
@@ -450,8 +461,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     }
 
     /// @inheritdoc ICaliber
-    function cancelAllowedInstrRootUpdate() external override restricted {
+    function cancelAllowedInstrRootUpdate() external override {
         CaliberStorage storage $ = _getCaliberStorage();
+        if (!_getCaliberStorage()._instrRootGuardians.contains(msg.sender)) {
+            revert UnauthorizedCaller();
+        }
         if ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry) {
             revert NoPendingUpdate();
         }
@@ -487,6 +501,27 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         CaliberStorage storage $ = _getCaliberStorage();
         emit MaxSwapLossBpsChanged($._maxSwapLossBps, newMaxSwapLossBps);
         $._maxSwapLossBps = newMaxSwapLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function addInstrRootGuardian(address newGuardian) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._instrRootGuardians.add(newGuardian)) {
+            revert AlreadyRootGuardian();
+        }
+        emit InstrRootGuardianAdded(newGuardian);
+    }
+
+    /// @inheritdoc ICaliber
+    function removeInstrRootGuardian(address guardian) external override restricted {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (guardian == riskManager() || guardian == securityCouncil()) {
+            revert ProtectedRootGuardian();
+        }
+        if (!$._instrRootGuardians.remove(guardian)) {
+            revert NotRootGuardian();
+        }
+        emit InstrRootGuardianRemoved(guardian);
     }
 
     /// @dev Adds a new base token to storage.

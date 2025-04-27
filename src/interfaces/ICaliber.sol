@@ -7,6 +7,7 @@ import {ISwapModule} from "../interfaces/ISwapModule.sol";
 interface ICaliber is IMakinaGovernable {
     error AccountingToken();
     error ActiveUpdatePending();
+    error AlreadyRootGuardian();
     error BaseTokenAlreadyExists();
     error DirectManageFlashLoanCall();
     error InvalidAccounting();
@@ -24,9 +25,11 @@ interface ICaliber is IMakinaGovernable {
     error NoPendingUpdate();
     error NotBaseToken();
     error NotFlashLoanModule();
+    error NotRootGuardian();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
+    error ProtectedRootGuardian();
     error TimelockDurationTooShort();
     error UnmatchingInstructions();
     error ZeroTokenAddress();
@@ -35,6 +38,8 @@ interface ICaliber is IMakinaGovernable {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
+    event InstrRootGuardianAdded(address indexed newGuardian);
+    event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
     );
@@ -175,6 +180,10 @@ interface ICaliber is IMakinaGovernable {
     ///      and it may change when values are added or removed.
     function getBaseTokenAddress(uint256 idx) external view returns (address);
 
+    /// @dev User => Whether the user is a root guardian
+    ///      Guardians have veto power over the Merkle root update.
+    function isInstrRootGuardian(address user) external view returns (bool);
+
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
 
@@ -275,7 +284,7 @@ interface ICaliber is IMakinaGovernable {
     /// @notice Schedules an update of the root of the Merkle tree containing allowed instructions.
     /// @dev The update will take effect after the timelock duration stored in the contract
     /// at the time of the call.
-    /// @param newMerkleRoot The root of the Merkle tree containing allowed instructions.
+    /// @param newMerkleRoot The new Merkle root.
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
 
     /// @notice Cancels a scheduled update of the root of the Merkle tree containing allowed instructions.
@@ -293,4 +302,12 @@ interface ICaliber is IMakinaGovernable {
     /// @notice Sets the max allowed value loss for base token swaps.
     /// @param newMaxSwapLossBps The new max value loss in basis points.
     function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external;
+
+    /// @notice Adds a new guardian for the Merkle tree containing allowed instructions.
+    /// @param newGuardian The address of the new guardian.
+    function addInstrRootGuardian(address newGuardian) external;
+
+    /// @notice Removes a guardian for the Merkle tree containing allowed instructions.
+    /// @param guardian The address of the guardian to remove.
+    function removeInstrRootGuardian(address guardian) external;
 }

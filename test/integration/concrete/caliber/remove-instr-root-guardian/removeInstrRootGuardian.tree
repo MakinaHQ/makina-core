@@ -1,0 +1,12 @@
+removeInstrRootGuardian.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── given provided address is a protected root guardian
+   │  └── it should revert with ProtectedRootGuardian
+   └── given provided address is not a protected root guardian
+      ├── given provided address is not a root guardian
+      │  └── it should revert with NotRootGuardian
+      └── given provided address is a root guardian
+         ├── it should unset the provided address as a root guardian
+         └── it should emit a InstrRootGuardianRemoved event
