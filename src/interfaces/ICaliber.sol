@@ -20,6 +20,7 @@ interface ICaliber {
     error InvalidOutputToken();
     error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
+    error MismatchedLengths();
     error NonZeroBalance();
     error NoPendingUpdate();
     error NotBaseToken();
@@ -199,7 +200,7 @@ interface ICaliber {
     function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
 
     /// @notice Accounts for a batch of positions.
-    /// @dev If a position value reaches zero, it is closed, i.e. removed from storage.
+    /// @dev Convenience function to account for multiple positions in a single transaction.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
 
@@ -243,6 +244,13 @@ interface ICaliber {
     function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
         external
         returns (uint256 value, int256 change);
+
+    /// @notice Manages a batch of positions.
+    /// @dev Convenience function to manage multiple positions in a single transaction.
+    /// @param mgmtInstructions The array of management instructions.
+    /// @param acctInstructions The array of accounting instructions.
+    function managePositionBatch(Instruction[] calldata mgmtInstructions, Instruction[] calldata acctInstructions)
+        external;
 
     /// @notice Manages flashLoan funds.
     /// @param instruction The flashLoan management instruction.
