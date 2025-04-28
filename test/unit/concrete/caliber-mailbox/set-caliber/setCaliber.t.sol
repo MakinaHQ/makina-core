@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Unit_Concrete_Spoke_Test} from "../../UnitConcrete.t.sol";
 
@@ -13,10 +14,12 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();
 
+        IMakinaGovernable.MakinaGovernableInitParams memory params;
+
         caliberMailbox2 = CaliberMailbox(
             address(
                 new BeaconProxy(
-                    address(caliberMailboxBeacon), abi.encodeCall(ICaliberMailbox.initialize, (address(0), address(0)))
+                    address(caliberMailboxBeacon), abi.encodeCall(ICaliberMailbox.initialize, (params, address(0)))
                 )
             )
         );

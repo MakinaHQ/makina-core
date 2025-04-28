@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";

@@ -14,9 +14,19 @@ contract AddInstrRootGuardian_Integration_Concrete_Test is Caliber_Integration_C
     }
 
     function test_RevertWhen_TargetIsAlreadyRootGuardian() public {
+        vm.startPrank(dao);
+
         vm.expectRevert(ICaliber.AlreadyRootGuardian.selector);
-        vm.prank(dao);
         caliber.addInstrRootGuardian(riskManager);
+
+        vm.expectRevert(ICaliber.AlreadyRootGuardian.selector);
+        caliber.addInstrRootGuardian(securityCouncil);
+
+        address newGuardian = makeAddr("newGuardian");
+        caliber.addInstrRootGuardian(newGuardian);
+
+        vm.expectRevert(ICaliber.AlreadyRootGuardian.selector);
+        caliber.addInstrRootGuardian(newGuardian);
     }
 
     function test_AddInstrRootGuardian() public {

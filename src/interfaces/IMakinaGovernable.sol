@@ -14,6 +14,8 @@ interface IMakinaGovernable {
     /// @notice Initialization parameters.
     /// @param initialMechanic The address of the initial mechanic.
     /// @param initialSecurityCouncil The address of the initial security council.
+    /// @param initialRiskManager The address of the initial risk manager.
+    /// @param initialRiskManagerTimelock The address of the initial risk manager timelock.
     /// @param initialAuthority The address of the initial authority.
     struct MakinaGovernableInitParams {
         address initialMechanic;

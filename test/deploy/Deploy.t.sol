@@ -222,7 +222,6 @@ contract Deploy_Scripts_Test is Base_Test {
 
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
-        assertEq(ICaliberMailbox(spokeCaliber.hubMachineEndpoint()).caliber(), address(spokeCaliber));
 
         assertEq(spokeCaliber.accountingToken(), cParams.accountingToken);
         assertEq(spokeCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
@@ -233,13 +232,15 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(spokeCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
         assertEq(spokeCaliber.flashLoanModule(), cParams.initialFlashLoanModule);
 
-        assertEq(spokeCaliber.mechanic(), mgParams.initialMechanic);
-        assertEq(spokeCaliber.securityCouncil(), mgParams.initialSecurityCouncil);
-        assertEq(spokeCaliber.riskManager(), mgParams.initialRiskManager);
-        assertEq(spokeCaliber.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
-        assertEq(IAccessManaged(address(spokeCaliber)).authority(), mgParams.initialAuthority);
+        ICaliberMailbox mailbox = ICaliberMailbox(spokeCaliber.hubMachineEndpoint());
+        assertEq(ICaliberMailbox(mailbox).caliber(), address(spokeCaliber));
 
-        assertEq(IAccessManaged(spokeCaliber.hubMachineEndpoint()).authority(), mgParams.initialAuthority);
+        assertEq(mailbox.mechanic(), mgParams.initialMechanic);
+        assertEq(mailbox.securityCouncil(), mgParams.initialSecurityCouncil);
+        assertEq(mailbox.riskManager(), mgParams.initialRiskManager);
+        assertEq(mailbox.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
+        assertEq(IAccessManaged(address(mailbox)).authority(), mgParams.initialAuthority);
+        assertEq(IAccessManaged(address(spokeCaliber)).authority(), mgParams.initialAuthority);
 
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);

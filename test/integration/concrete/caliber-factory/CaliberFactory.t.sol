@@ -4,11 +4,11 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
+import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
@@ -53,8 +53,6 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertTrue(caliberFactory.isCaliber(address(caliber)));
         assertTrue(caliberFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
 
-        assertEq(ICaliberMailbox(caliber.hubMachineEndpoint()).caliber(), address(caliber));
-        assertEq(IAccessManaged(caliber.hubMachineEndpoint()).authority(), address(accessManager));
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);
@@ -63,7 +61,15 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.flashLoanModule(), _flashLoanModule);
-        assertEq(caliber.mechanic(), mechanic);
+
+        caliberMailbox = CaliberMailbox(caliber.hubMachineEndpoint());
+        assertEq(caliberMailbox.caliber(), address(caliber));
+
+        assertEq(caliberMailbox.mechanic(), mechanic);
+        assertEq(caliberMailbox.securityCouncil(), securityCouncil);
+        assertEq(caliberMailbox.riskManager(), riskManager);
+        assertEq(caliberMailbox.riskManagerTimelock(), riskManagerTimelock);
+        assertEq(caliberMailbox.authority(), address(accessManager));
         assertEq(caliber.authority(), address(accessManager));
 
         assertEq(caliber.getPositionsLength(), 0);

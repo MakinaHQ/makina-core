@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
@@ -16,11 +18,9 @@ import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
-
 import {MakinaContext} from "../utils/MakinaContext.sol";
-import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable, ICaliber {
+contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -71,11 +71,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     }
 
     /// @inheritdoc ICaliber
-    function initialize(
-        CaliberInitParams calldata cParams,
-        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        address _hubMachineEndpoint
-    ) external override initializer {
+    function initialize(CaliberInitParams calldata cParams, address _hubMachineEndpoint)
+        external
+        override
+        initializer
+    {
         CaliberStorage storage $ = _getCaliberStorage();
 
         $._hubMachineEndpoint = _hubMachineEndpoint;
@@ -89,11 +89,41 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         $._flashLoanModule = cParams.initialFlashLoanModule;
         _addBaseToken(cParams.accountingToken);
 
-        __MakinaGovernable_init(mgParams);
-        $._instrRootGuardians.add(mgParams.initialRiskManager);
-        $._instrRootGuardians.add(mgParams.initialSecurityCouncil);
-
         __ReentrancyGuard_init();
+    }
+
+    modifier onlyOperator() {
+        IMakinaGovernable _hubMachineEndpoint = IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint);
+        if (
+            msg.sender
+                != (
+                    _hubMachineEndpoint.recoveryMode()
+                        ? _hubMachineEndpoint.securityCouncil()
+                        : _hubMachineEndpoint.mechanic()
+                )
+        ) {
+            revert UnauthorizedCaller();
+        }
+        _;
+    }
+
+    modifier onlyRiskManager() {
+        if (msg.sender != IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).riskManager()) {
+            revert UnauthorizedCaller();
+        }
+        _;
+    }
+
+    modifier onlyRiskManagerTimelock() {
+        if (msg.sender != IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).riskManagerTimelock()) {
+            revert UnauthorizedCaller();
+        }
+        _;
+    }
+
+    /// @inheritdoc IAccessManaged
+    function authority() public view override returns (address) {
+        return IAccessManaged(_getCaliberStorage()._hubMachineEndpoint).authority();
     }
 
     /// @inheritdoc ICaliber
@@ -192,7 +222,9 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
 
     /// @inheritdoc ICaliber
     function isInstrRootGuardian(address user) external view override returns (bool) {
-        return _getCaliberStorage()._instrRootGuardians.contains(user);
+        CaliberStorage storage $ = _getCaliberStorage();
+        return user == IMakinaGovernable($._hubMachineEndpoint).riskManager()
+            || user == IMakinaGovernable($._hubMachineEndpoint).securityCouncil() || $._instrRootGuardians.contains(user);
     }
 
     /// @inheritdoc ICaliber
@@ -346,7 +378,7 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
-        if (isPositionIncrease && recoveryMode()) {
+        if (isPositionIncrease && IMachineEndpoint($._hubMachineEndpoint).recoveryMode()) {
             revert RecoveryMode();
         }
 
@@ -463,7 +495,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     /// @inheritdoc ICaliber
     function cancelAllowedInstrRootUpdate() external override {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (!_getCaliberStorage()._instrRootGuardians.contains(msg.sender)) {
+        IMachineEndpoint _hubMachineEndpoint = IMachineEndpoint($._hubMachineEndpoint);
+        if (
+            msg.sender != _hubMachineEndpoint.riskManager() && msg.sender != _hubMachineEndpoint.securityCouncil()
+                && !_getCaliberStorage()._instrRootGuardians.contains(msg.sender)
+        ) {
             revert UnauthorizedCaller();
         }
         if ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry) {
@@ -506,7 +542,11 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     /// @inheritdoc ICaliber
     function addInstrRootGuardian(address newGuardian) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._instrRootGuardians.add(newGuardian)) {
+        IMachineEndpoint _hubMachineEndpoint = IMachineEndpoint($._hubMachineEndpoint);
+        if (
+            newGuardian == _hubMachineEndpoint.riskManager() || newGuardian == _hubMachineEndpoint.securityCouncil()
+                || !$._instrRootGuardians.add(newGuardian)
+        ) {
             revert AlreadyRootGuardian();
         }
         emit InstrRootGuardianAdded(newGuardian);
@@ -515,7 +555,8 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
     /// @inheritdoc ICaliber
     function removeInstrRootGuardian(address guardian) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (guardian == riskManager() || guardian == securityCouncil()) {
+        IMachineEndpoint _hubMachineEndpoint = IMachineEndpoint($._hubMachineEndpoint);
+        if (guardian == _hubMachineEndpoint.riskManager() || guardian == _hubMachineEndpoint.securityCouncil()) {
             revert ProtectedRootGuardian();
         }
         if (!$._instrRootGuardians.remove(guardian)) {
@@ -735,7 +776,7 @@ contract Caliber is MakinaGovernable, MakinaContext, ReentrancyGuardUpgradeable,
 
     function _swap(ISwapModule.SwapOrder calldata order) internal {
         CaliberStorage storage $ = _getCaliberStorage();
-        if (recoveryMode() && order.outputToken != $._accountingToken) {
+        if (IMachineEndpoint($._hubMachineEndpoint).recoveryMode() && order.outputToken != $._accountingToken) {
             revert RecoveryMode();
         } else if (!$._baseTokens.contains(order.outputToken)) {
             revert InvalidOutputToken();

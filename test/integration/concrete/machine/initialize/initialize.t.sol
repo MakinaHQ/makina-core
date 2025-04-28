@@ -206,7 +206,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         hubCaliberAddr = address(
             new BeaconProxy(
                 IHubRegistry(hubRegistry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, mgParams, address(machine)))
+                abi.encodeCall(ICaliber.initialize, (cParams, address(machine)))
             )
         );
 

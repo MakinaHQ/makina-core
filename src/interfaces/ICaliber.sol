@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
-interface ICaliber is IMakinaGovernable {
+interface ICaliber {
     error AccountingToken();
     error ActiveUpdatePending();
     error AlreadyRootGuardian();
@@ -30,7 +29,9 @@ interface ICaliber is IMakinaGovernable {
     error PositionAlreadyExists();
     error PositionDoesNotExist();
     error ProtectedRootGuardian();
+    error RecoveryMode();
     error TimelockDurationTooShort();
+    error UnauthorizedCaller();
     error UnmatchingInstructions();
     error ZeroTokenAddress();
     error ZeroPositionId();
@@ -114,13 +115,8 @@ interface ICaliber is IMakinaGovernable {
 
     /// @notice Initializer of the contract.
     /// @param cParams The caliber initialization parameters.
-    /// @param mgParams The makina governable initialization parameters.
     /// @param hubMachineEndpoint The address of the hub machine endpoints.
-    function initialize(
-        CaliberInitParams calldata cParams,
-        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        address hubMachineEndpoint
-    ) external;
+    function initialize(CaliberInitParams calldata cParams, address hubMachineEndpoint) external;
 
     /// @notice Address of the Weiroll VM.
     function weirollVm() external view returns (address);

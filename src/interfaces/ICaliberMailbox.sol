@@ -3,13 +3,13 @@ pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
+import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
 interface ICaliberMailbox is IMachineEndpoint {
     error CaliberAlreadySet();
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
     error NotFactory();
-    error UnauthorizedCaller();
     error ZeroBridgeAdapterAddress();
 
     event CaliberSet(address indexed caliber);
@@ -24,9 +24,9 @@ interface ICaliberMailbox is IMachineEndpoint {
     }
 
     /// @notice Initializer of the contract.
+    /// @param mgParams The makina governable initialization parameters.
     /// @param hubMachine The foreign address of the hub machine.
-    /// @param initialAuthority The address of the initial authority.
-    function initialize(address hubMachine, address initialAuthority) external;
+    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, address hubMachine) external;
 
     /// @notice Address of the associated caliber.
     function caliber() external view returns (address);

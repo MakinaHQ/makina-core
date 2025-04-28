@@ -1026,8 +1026,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // try increase position
         vm.prank(securityCouncil);
@@ -1058,8 +1057,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS + 1);
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
@@ -1098,8 +1096,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setRateBps(10_000 - DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS - 1);
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
@@ -1138,8 +1135,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
@@ -1170,8 +1166,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
@@ -1199,8 +1194,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // check security council can decrease position
         uint256 sharesToRedeem = receivedShares / 2;
@@ -1232,8 +1226,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // check that security council can close position
         mgmtInstruction = WeirollUtils._build4626RedeemInstruction(
@@ -1244,5 +1237,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionsLength(), posLengthBefore - 1);
         assertEq(vault.balanceOf(address(caliber)), 0);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
+    }
+
+    function _setRecoveryMode() internal {
+        vm.prank(securityCouncil);
+        machine.setRecoveryMode(true);
     }
 }

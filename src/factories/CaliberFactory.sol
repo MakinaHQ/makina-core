@@ -37,13 +37,12 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
         address mailbox = address(
             new BeaconProxy(
                 ISpokeRegistry(registry).caliberMailboxBeacon(),
-                abi.encodeCall(ICaliberMailbox.initialize, (hubMachine, mgParams.initialAuthority))
+                abi.encodeCall(ICaliberMailbox.initialize, (mgParams, hubMachine))
             )
         );
         address caliber = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, mgParams, mailbox))
+                ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (cParams, mailbox))
             )
         );
         ICaliberMailbox(mailbox).setCaliber(caliber);

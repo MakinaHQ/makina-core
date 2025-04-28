@@ -18,9 +18,44 @@ contract MockMachineEndpoint is IMachineEndpoint {
     event ClaimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
     event CancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
 
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
-        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
-        emit ManageTransfer(token, amount, data);
+    function mechanic() public pure returns (address) {
+        return address(0);
+    }
+
+    function securityCouncil() public pure returns (address) {
+        return address(0);
+    }
+
+    function riskManager() public pure returns (address) {
+        return address(0);
+    }
+
+    function riskManagerTimelock() public pure returns (address) {
+        return address(0);
+    }
+
+    function recoveryMode() public pure returns (bool) {
+        return false;
+    }
+
+    function setMechanic(address) external pure {
+        return;
+    }
+
+    function setSecurityCouncil(address) external pure {
+        return;
+    }
+
+    function setRiskManager(address) external pure {
+        return;
+    }
+
+    function setRiskManagerTimelock(address) external pure {
+        return;
+    }
+
+    function setRecoveryMode(bool) external pure {
+        return;
     }
 
     function isBridgeSupported(IBridgeAdapter.Bridge) external pure returns (bool) {
@@ -69,5 +104,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
 
     function resetBridgingState(address) external pure override {
         return;
+    }
+
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+        emit ManageTransfer(token, amount, data);
     }
 }

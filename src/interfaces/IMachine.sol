@@ -4,9 +4,8 @@ pragma solidity 0.8.28;
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
-import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
-interface IMachine is IMachineEndpoint, IMakinaGovernable {
+interface IMachine is IMachineEndpoint {
     error CaliberAccountingStale(uint256 caliberChainId);
     error BridgeStateMismatch();
     error InvalidChainId();

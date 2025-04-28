@@ -4,9 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
-import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGovernable.t.sol";
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
 abstract contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
@@ -20,16 +18,6 @@ abstract contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(defaultRoot);
         skip(caliber.timelockDuration() + 1);
-    }
-}
-
-contract MakinaGovernable_Caliber_Unit_Concrete_Test is
-    MakinaGovernable_Unit_Concrete_Test,
-    Caliber_Unit_Concrete_Test
-{
-    function setUp() public override(MakinaGovernable_Unit_Concrete_Test, Caliber_Unit_Concrete_Test) {
-        Caliber_Unit_Concrete_Test.setUp();
-        governable = IMakinaGovernable(address(caliber));
     }
 }
 
@@ -67,7 +55,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
         caliber.setPositionStaleThreshold(2 hours);
     }
 
@@ -81,7 +69,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetTimelockDuration_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
         caliber.setTimelockDuration(2 hours);
     }
 
@@ -95,7 +83,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
         caliber.setMaxPositionIncreaseLossBps(1000);
     }
 
@@ -108,7 +96,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxPositionDecreaseLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
         caliber.setMaxPositionDecreaseLossBps(1000);
     }
 
@@ -121,7 +109,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxSwapLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
         caliber.setMaxSwapLossBps(1000);
     }
 

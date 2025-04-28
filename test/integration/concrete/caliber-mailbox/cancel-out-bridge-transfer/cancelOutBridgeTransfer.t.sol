@@ -116,7 +116,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
 
         vm.prank(securityCouncil);
-        caliber.setRecoveryMode(true);
+        caliberMailbox.setRecoveryMode(true);
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 

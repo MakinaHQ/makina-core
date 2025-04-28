@@ -8,7 +8,6 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
-import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Machine} from "src/machine/Machine.sol";
 
