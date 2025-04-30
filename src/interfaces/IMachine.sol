@@ -15,7 +15,6 @@ interface IMachine is IMachineEndpoint {
     error MachineMailboxDoesNotExist();
     error MismatchedLength();
     error NotMailbox();
-    error RecoveryMode();
     error PreDepositVaultMismatch();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
@@ -23,7 +22,6 @@ interface IMachine is IMachineEndpoint {
     error UnauthorizedSender();
     error UnauthorizedDepositor();
     error UnauthorizedRedeemer();
-    error UnauthorizedOperator();
     error ZeroBridgeAdapterAddress();
 
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
@@ -31,10 +29,7 @@ interface IMachine is IMachineEndpoint {
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
-    event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
-    event RecoveryModeChanged(bool indexed enabled);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
-    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum, uint256 timestamp);
@@ -42,36 +37,16 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Initialization parameters.
     /// @param accountingToken The address of the accounting token.
-    /// @param initialMechanic The address of the initial mechanic.
-    /// @param initialSecurityCouncil The address of the initial security council.
-    /// @param initialAuthority The address of the initial authority.
     /// @param initialDepositor The address of the initial depositor.
     /// @param initialRedeemer The address of the initial redeemer.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialShareLimit The share cap value.
-    /// @param hubCaliberPosStaleThreshold The hub caliber's position accounting staleness threshold.
-    /// @param hubCaliberAllowedInstrRoot The root of the Merkle tree containing allowed caliber instructions.
-    /// @param hubCaliberTimelockDuration The duration of the hub caliber's Merkle tree root update timelock.
-    /// @param hubCaliberMaxPositionIncreaseLossBps The max allowed value loss (in basis point) in the hub caliber when increasing a position.
-    /// @param hubCaliberMaxPositionDecreaseLossBps The max allowed value loss (in basis point) in the hub caliber when decreasing a position.
-    /// @param hubCaliberMaxSwapLossBps The max allowed value loss (in basis point) when swapping a base token into another in the hub caliber.
-    /// @param hubCaliberInitialFlashLoanModule The address of the initial flashLoan module.
     struct MachineInitParams {
         address accountingToken;
-        address initialMechanic;
-        address initialSecurityCouncil;
-        address initialAuthority;
         address initialDepositor;
         address initialRedeemer;
         uint256 initialCaliberStaleThreshold;
         uint256 initialShareLimit;
-        uint256 hubCaliberPosStaleThreshold;
-        bytes32 hubCaliberAllowedInstrRoot;
-        uint256 hubCaliberTimelockDuration;
-        uint256 hubCaliberMaxPositionIncreaseLossBps;
-        uint256 hubCaliberMaxPositionDecreaseLossBps;
-        uint256 hubCaliberMaxSwapLossBps;
-        address hubCaliberInitialFlashLoanModule;
     }
 
     struct SpokeCaliberData {
@@ -88,12 +63,14 @@ interface IMachine is IMachineEndpoint {
     }
 
     /// @notice Initializer of the contract.
-    /// @param params The initialization parameters.
+    /// @param mParams The machine initialization parameters.
+    /// @param mgParams The makina governable initialization parameters.
     /// @param _preDepositVault The address of the pre-deposit vault.
     /// @param _shareToken The address of the share token.
     /// @param _hubCaliber The address of the hub caliber.
     function initialize(
-        MachineInitParams calldata params,
+        MachineInitParams calldata mParams,
+        MakinaGovernableInitParams calldata mgParams,
         address _preDepositVault,
         address _shareToken,
         address _hubCaliber
@@ -101,12 +78,6 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Address of the Wormhole Core Bridge.
     function wormhole() external view returns (address);
-
-    /// @notice Address of the mechanic.
-    function mechanic() external view returns (address);
-
-    /// @notice Address of the security council.
-    function securityCouncil() external view returns (address);
 
     /// @notice Address of the depositor.
     function depositor() external view returns (address);
@@ -134,9 +105,6 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Maximum amount of assets that can currently be withdrawn through share redemptions.
     function maxWithdraw() external view returns (uint256);
-
-    /// @notice Whether the machine is in recovery mode.
-    function recoveryMode() external view returns (bool);
 
     /// @notice Last total machine AUM.
     function lastTotalAum() external view returns (uint256);
@@ -222,14 +190,6 @@ interface IMachine is IMachineEndpoint {
     /// @param adapter The foreign address of the bridge adapter.
     function setSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
 
-    /// @notice Sets a new mechanic.
-    /// @param newMechanic The address of new mechanic.
-    function setMechanic(address newMechanic) external;
-
-    /// @notice Sets a new security council.
-    /// @param newSecurityCouncil The address of the new security council.
-    function setSecurityCouncil(address newSecurityCouncil) external;
-
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.
     function setDepositor(address newDepositor) external;
@@ -245,8 +205,4 @@ interface IMachine is IMachineEndpoint {
     /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
     /// @param newShareLimit The new share limit
     function setShareLimit(uint256 newShareLimit) external;
-
-    /// @notice Sets the recovery mode status.
-    /// @param enabled True to enable recovery mode, false to disable.
-    function setRecoveryMode(bool enabled) external;
 }

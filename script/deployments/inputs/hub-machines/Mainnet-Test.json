@@ -1,20 +1,27 @@
 {
   "machineInitParams": {
     "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
-    "initialSecurityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
-    "initialAuthority": "0x0000000000000000000000000000000000000000",
     "initialDepositor": "0x000000000000000000000000000000000DE20511",
     "initialRedeemer": "0x00000000000000000000000000000000002edee3",
     "initialCaliberStaleThreshold": 14400,
-    "initialShareLimit": 115792089237316195423570985008687907853269984665640564039457584007913129639935,
-    "hubCaliberPosStaleThreshold": 10800,
-    "hubCaliberAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "hubCaliberTimelockDuration": 0,
-    "hubCaliberMaxPositionIncreaseLossBps": 300,
-    "hubCaliberMaxPositionDecreaseLossBps": 3000,
-    "hubCaliberMaxSwapLossBps": 300,
-    "hubCaliberFlashLoanModule": "0x0000000000000000000000000000000000000000"
+    "initialShareLimit": 115792089237316195423570985008687907853269984665640564039457584007913129639935
+  },
+  "caliberInitParams": {
+    "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "initialPosStaleThreshold": 10800,
+    "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "initialTimelockDuration": 0,
+    "initialMaxPositionIncreaseLossBps": 300,
+    "initialMaxPositionDecreaseLossBps": 3000,
+    "initialMaxSwapLossBps": 200,
+    "initialFlashLoanModule": "0x0000000000000000000000000000000000000000"
+  },
+  "makinaGovernableInitParams": {
+    "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
+    "initialSecurityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
+    "initialRiskManager": "0xad60446470333ad23bececceda26071bb245ef6f",
+    "initialRiskManagerTimelock": "0xad60446470333ad23bececceda26071bb245ef6f",
+    "initialAuthority": "0x0000000000000000000000000000000000000000"
   },
   "shareTokenName": "Makina Share (test)",
   "shareTokenSymbol": "MS"

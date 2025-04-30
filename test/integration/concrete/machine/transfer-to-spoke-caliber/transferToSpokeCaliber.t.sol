@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
@@ -28,16 +29,16 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         machine.transferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, 0, address(0), 0, 0);
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.transferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, 0, address(0), 0, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.transferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, 0, address(0), 0, 0);
     }
 
@@ -82,7 +83,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);

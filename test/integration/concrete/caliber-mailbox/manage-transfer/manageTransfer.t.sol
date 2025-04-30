@@ -8,6 +8,7 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
@@ -53,7 +54,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
     }
 
     function test_RevertWhen_CallerUnauthorized() public {
-        vm.expectRevert(ICaliberMailbox.UnauthorizedCaller.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliberMailbox.manageTransfer(address(0), 0, "");
     }
 
@@ -81,7 +82,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
     }
 
     function test_RevertGiven_OutTransferDisabled_FromCaliber() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliberMailbox.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);

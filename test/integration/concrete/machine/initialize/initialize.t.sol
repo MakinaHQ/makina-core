@@ -7,6 +7,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {Constants} from "src/libraries/Constants.sol";
@@ -43,7 +44,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             address(machineBeacon),
             abi.encodeCall(
                 IMachine.initialize,
-                (_getMachineInitParams(address(accountingToken2)), address(0), address(shareToken), hubCaliberAddr)
+                (
+                    _getMachineInitParams(address(accountingToken2)),
+                    _getMakinaGovernableInitParams(),
+                    address(0),
+                    address(shareToken),
+                    hubCaliberAddr
+                )
             )
         );
     }
@@ -57,7 +64,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             address(machineBeacon),
             abi.encodeCall(
                 IMachine.initialize,
-                (_getMachineInitParams(address(accountingToken2)), address(0), address(shareToken), hubCaliberAddr)
+                (
+                    _getMachineInitParams(address(accountingToken2)),
+                    _getMakinaGovernableInitParams(),
+                    address(0),
+                    address(shareToken),
+                    hubCaliberAddr
+                )
             )
         );
     }
@@ -72,7 +85,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             address(machineBeacon),
             abi.encodeCall(
                 IMachine.initialize,
-                (_getMachineInitParams(address(accountingToken2)), address(0), address(shareToken), hubCaliberAddr)
+                (
+                    _getMachineInitParams(address(accountingToken2)),
+                    _getMakinaGovernableInitParams(),
+                    address(0),
+                    address(shareToken),
+                    hubCaliberAddr
+                )
             )
         );
     }
@@ -99,6 +118,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
         IMachine(machine).initialize(
             _getMachineInitParams(address(accountingToken)),
+            _getMakinaGovernableInitParams(),
             address(preDepositVault),
             address(shareToken),
             hubCaliberAddr
@@ -128,7 +148,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
         IMachine(machine).initialize(
-            _getMachineInitParams(address(baseToken)), address(preDepositVault), address(shareToken), hubCaliberAddr
+            _getMachineInitParams(address(baseToken)),
+            _getMakinaGovernableInitParams(),
+            address(preDepositVault),
+            address(shareToken),
+            hubCaliberAddr
         );
     }
 
@@ -139,7 +163,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(machine))
         );
         IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)), address(0), address(shareToken), hubCaliberAddr
+            _getMachineInitParams(address(accountingToken)),
+            _getMakinaGovernableInitParams(),
+            address(0),
+            address(shareToken),
+            hubCaliberAddr
         );
     }
 
@@ -148,7 +176,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         shareToken.transferOwnership(address(machine));
 
         IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)), address(0), address(shareToken), hubCaliberAddr
+            _getMachineInitParams(address(accountingToken)),
+            _getMakinaGovernableInitParams(),
+            address(0),
+            address(shareToken),
+            hubCaliberAddr
         );
 
         assertEq(machine.mechanic(), mechanic);
@@ -168,12 +200,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
 
         // deploy caliber to be called in machine initializer
-        ICaliber.CaliberInitParams memory caliberParams;
-        caliberParams.accountingToken = address(accountingToken);
+        ICaliber.CaliberInitParams memory cParams;
+        cParams.accountingToken = address(accountingToken);
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
         hubCaliberAddr = address(
             new BeaconProxy(
                 IHubRegistry(hubRegistry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (caliberParams, address(machine)))
+                abi.encodeCall(ICaliber.initialize, (cParams, address(machine)))
             )
         );
 
@@ -208,6 +241,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         IMachine(machine).initialize(
             _getMachineInitParams(address(accountingToken)),
+            mgParams,
             address(preDepositVault),
             address(shareToken),
             hubCaliberAddr
@@ -241,20 +275,24 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
     function _getMachineInitParams(address accountingToken) internal view returns (IMachine.MachineInitParams memory) {
         return IMachine.MachineInitParams({
             accountingToken: accountingToken,
-            initialMechanic: mechanic,
-            initialSecurityCouncil: securityCouncil,
             initialDepositor: machineDepositor,
             initialRedeemer: machineRedeemer,
-            initialAuthority: address(accessManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-            initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-            hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-            hubCaliberAllowedInstrRoot: bytes32(""),
-            hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-            hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
-            hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
-            hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-            hubCaliberInitialFlashLoanModule: address(0)
+            initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+        });
+    }
+
+    function _getMakinaGovernableInitParams()
+        internal
+        view
+        returns (IMakinaGovernable.MakinaGovernableInitParams memory)
+    {
+        return IMakinaGovernable.MakinaGovernableInitParams({
+            initialMechanic: mechanic,
+            initialSecurityCouncil: securityCouncil,
+            initialRiskManager: riskManager,
+            initialRiskManagerTimelock: riskManagerTimelock,
+            initialAuthority: address(accessManager)
         });
     }
 }

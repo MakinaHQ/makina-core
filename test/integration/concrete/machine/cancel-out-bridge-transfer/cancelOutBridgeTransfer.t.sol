@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -42,11 +42,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
@@ -84,18 +84,15 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
     }
 
-    function test_CancelScheduledTransfer_WhileInRecoveryMode() public {
-        vm.prank(dao);
-        machine.setRecoveryMode(true);
-
+    function test_CancelScheduledTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
@@ -110,7 +107,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
         vm.prank(mechanic);
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 hours));
 
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.setRecoveryMode(true);
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);

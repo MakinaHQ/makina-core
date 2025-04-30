@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_RevertWhen_CallerNotRM() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.scheduleAllowedInstrRootUpdate(bytes32(0));
     }
 
@@ -18,7 +17,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
 
-        vm.startPrank(dao);
+        vm.startPrank(riskManager);
 
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
@@ -38,7 +37,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
 
         vm.expectEmit(true, true, false, true, address(caliber));
         emit ICaliber.NewAllowedInstrRootScheduled(newRoot, effectiveUpdateTime);
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
         assertEq(caliber.allowedInstrRoot(), currentRoot);
@@ -58,9 +57,10 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
 
-        vm.startPrank(dao);
-
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
+
+        vm.prank(riskManagerTimelock);
         caliber.setTimelockDuration(2 hours);
 
         assertEq(caliber.pendingTimelockExpiry(), effectiveUpdateTime);
@@ -71,6 +71,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
 
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
     }
 }

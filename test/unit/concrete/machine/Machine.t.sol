@@ -4,8 +4,10 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Constants} from "src/libraries/Constants.sol";
 
+import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGovernable.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
 abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
@@ -23,7 +25,14 @@ abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     }
 }
 
-contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
+contract MakinaGovernable_Machine_Unit_Concrete_Test is MakinaGovernable_Unit_Concrete_Test, Unit_Concrete_Hub_Test {
+    function setUp() public override(MakinaGovernable_Unit_Concrete_Test, Unit_Concrete_Hub_Test) {
+        Unit_Concrete_Hub_Test.setUp();
+        governable = IMakinaGovernable(address(machine));
+    }
+}
+
+contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.depositor(), machineDepositor);
@@ -39,34 +48,6 @@ contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_ConvertToShares() public view {
         // should hold when no yield occurred
         assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** Constants.SHARE_TOKEN_DECIMALS);
-    }
-
-    function test_SetMechanic_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setMechanic(address(0));
-    }
-
-    function test_SetMechanic() public {
-        address newMechanic = makeAddr("NewMechanic");
-        vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.MechanicChanged(mechanic, newMechanic);
-        vm.prank(dao);
-        machine.setMechanic(newMechanic);
-        assertEq(machine.mechanic(), newMechanic);
-    }
-
-    function test_SetSecurityCouncil_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setSecurityCouncil(address(0));
-    }
-
-    function test_SetSecurityCouncil() public {
-        address newSecurityCouncil = makeAddr("NewSecurityCouncil");
-        vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.SecurityCouncilChanged(securityCouncil, newSecurityCouncil);
-        vm.prank(dao);
-        machine.setSecurityCouncil(newSecurityCouncil);
-        assertEq(machine.securityCouncil(), newSecurityCouncil);
     }
 
     function test_SetDepositor_RevertWhen_CallerWithoutRole() public {
@@ -97,8 +78,8 @@ contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.redeemer(), newRedeemer);
     }
 
-    function test_SetCaliberStaleThreshold_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetCaliberStaleThreshold_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.setCaliberStaleThreshold(2 hours);
     }
 
@@ -106,13 +87,13 @@ contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newThreshold = 2 hours;
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.CaliberStaleThresholdChanged(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD, newThreshold);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setCaliberStaleThreshold(newThreshold);
         assertEq(machine.caliberStaleThreshold(), newThreshold);
     }
 
-    function test_SetShareLimit_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetShareLimit_RevertWhen_CallerNotRM() public {
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.setShareLimit(1e18);
     }
 
@@ -120,21 +101,8 @@ contract Getters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newShareLimit = 1e18;
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.ShareLimitChanged(DEFAULT_MACHINE_SHARE_LIMIT, newShareLimit);
-        vm.prank(dao);
+        vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.shareLimit(), newShareLimit);
-    }
-
-    function test_SetRecoveryMode_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setRecoveryMode(true);
-    }
-
-    function test_SetRecoveryMode() public {
-        vm.expectEmit(true, false, false, true, address(machine));
-        emit IMachine.RecoveryModeChanged(true);
-        vm.prank(dao);
-        machine.setRecoveryMode(true);
-        assertTrue(machine.recoveryMode());
     }
 }

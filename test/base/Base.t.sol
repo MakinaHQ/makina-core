@@ -17,6 +17,7 @@ import {Constants} from "../utils/Constants.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
@@ -35,6 +36,8 @@ abstract contract Base_Test is Base, Constants, Test {
     address public dao;
     address public mechanic;
     address public securityCouncil;
+    address public riskManager;
+    address public riskManagerTimelock;
 
     AccessManager public accessManager;
     OracleRegistry public oracleRegistry;
@@ -48,6 +51,8 @@ abstract contract Base_Test is Base, Constants, Test {
         dao = makeAddr("MakinaDAO");
         mechanic = makeAddr("Mechanic");
         securityCouncil = makeAddr("SecurityCouncil");
+        riskManager = makeAddr("RiskManager");
+        riskManagerTimelock = makeAddr("RiskManagerTimelock");
     }
 }
 
@@ -97,20 +102,27 @@ abstract contract Base_Hub_Test is Base_Test {
             machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: _accountingToken,
-                    initialMechanic: mechanic,
-                    initialSecurityCouncil: securityCouncil,
-                    initialAuthority: address(accessManager),
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    hubCaliberAllowedInstrRoot: _allowedInstrMerkleRoot,
-                    hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                    hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
-                    hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
-                    hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: _flashLoanModule
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+                }),
+                ICaliber.CaliberInitParams({
+                    accountingToken: _accountingToken,
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: _allowedInstrMerkleRoot,
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialFlashLoanModule: _flashLoanModule
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialRiskManager: riskManager,
+                    initialRiskManagerTimelock: riskManagerTimelock,
+                    initialAuthority: address(accessManager)
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -161,9 +173,13 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialFlashLoanModule: _flashLoanModule,
+                    initialFlashLoanModule: _flashLoanModule
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
                     initialSecurityCouncil: securityCouncil,
+                    initialRiskManager: riskManager,
+                    initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
                 _hubMachine

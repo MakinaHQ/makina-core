@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -33,11 +34,11 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ISwapModule.SwapOrder memory order;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.swap(order);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.swap(order);
     }
 
@@ -77,7 +78,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         assertEq(baseToken.balanceOf(address(caliber)), 0);
 
         // set baseToken as an actual base token
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.addBaseToken(address(baseToken));
 
         // swap accountingToken to baseToken
@@ -100,11 +101,11 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ISwapModule.SwapOrder memory order;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.swap(order);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.swap(order);
     }
 
@@ -114,7 +115,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         whileInRecoveryMode
     {
         ISwapModule.SwapOrder memory order;
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.swap(order);
 
@@ -129,7 +130,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
             minOutputAmount: 0
         });
 
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.swap(order);
     }

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
@@ -13,11 +12,13 @@ import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
+contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using SafeERC20 for IERC20Metadata;
 
@@ -47,37 +48,20 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         _disableInitializers();
     }
 
-    function initialize(address _hubMachine, address _initialAuthority) external override initializer {
+    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, address _hubMachine)
+        external
+        override
+        initializer
+    {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         $._hubMachine = _hubMachine;
         __ReentrancyGuard_init();
-        __AccessManaged_init(_initialAuthority);
+        __MakinaGovernable_init(mgParams);
     }
 
     modifier onlyFactory() {
         if (msg.sender != ISpokeRegistry(registry).coreFactory()) {
             revert NotFactory();
-        }
-        _;
-    }
-
-    modifier onlyOperator() {
-        CaliberMailboxStorage storage $ = _getCaliberStorage();
-        address _caliber = $._caliber;
-        if (
-            msg.sender
-                != (
-                    ICaliber(_caliber).recoveryMode() ? ICaliber(_caliber).securityCouncil() : ICaliber(_caliber).mechanic()
-                )
-        ) {
-            revert ICaliber.UnauthorizedOperator();
-        }
-        _;
-    }
-
-    modifier notRecoveryMode() {
-        if (ICaliber(_getCaliberStorage()._caliber).recoveryMode()) {
-            revert ICaliber.RecoveryMode();
         }
         _;
     }
@@ -209,6 +193,24 @@ contract CaliberMailbox is AccessManagedUpgradeable, ReentrancyGuardUpgradeable,
         $._hubBridgeAdapters[bridgeId] = adapter;
 
         emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setOutTransferEnabled(bridgeId, enabled);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 
     /// @inheritdoc IBridgeController

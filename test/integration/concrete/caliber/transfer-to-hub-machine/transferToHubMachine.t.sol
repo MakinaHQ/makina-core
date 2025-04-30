@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
@@ -11,11 +12,11 @@ import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
     }
 
@@ -55,11 +56,11 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
     }
 

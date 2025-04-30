@@ -92,8 +92,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         return bridgeAdapter;
     }
 
-    /// @inheritdoc IBridgeController
-    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled) external override restricted {
+    function _setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
@@ -102,7 +101,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
-    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps) external restricted {
+    function _setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();

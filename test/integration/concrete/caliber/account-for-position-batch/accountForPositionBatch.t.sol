@@ -16,7 +16,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
     function setUp() public override {
         Caliber_Integration_Concrete_Test.setUp();
 
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         caliber.addBaseToken(address(baseToken));
 
         inputAmount = 3e18;
@@ -129,7 +129,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
 
     function test_RevertGiven_WrongRoot() public {
         // schedule root update with a wrong root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
 
         // accounting can still be executed while the update is pending
@@ -145,7 +145,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.accountForPositionBatch(accountingInstructions);
 
         // schedule root update with the correct root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
 
         // accounting cannot be executed while the update is pending

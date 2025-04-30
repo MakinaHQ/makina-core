@@ -6,6 +6,7 @@ import {ISwapModule} from "../interfaces/ISwapModule.sol";
 interface ICaliber {
     error AccountingToken();
     error ActiveUpdatePending();
+    error AlreadyRootGuardian();
     error BaseTokenAlreadyExists();
     error DirectManageFlashLoanCall();
     error InvalidAccounting();
@@ -23,12 +24,14 @@ interface ICaliber {
     error NoPendingUpdate();
     error NotBaseToken();
     error NotFlashLoanModule();
+    error NotRootGuardian();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
+    error ProtectedRootGuardian();
     error RecoveryMode();
     error TimelockDurationTooShort();
-    error UnauthorizedOperator();
+    error UnauthorizedCaller();
     error UnmatchingInstructions();
     error ZeroTokenAddress();
     error ZeroPositionId();
@@ -36,6 +39,8 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
+    event InstrRootGuardianAdded(address indexed newGuardian);
+    event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
         uint256 indexed oldMaxPositionDecreaseLossBps, uint256 indexed newMaxPositionDecreaseLossBps
     );
@@ -43,14 +48,11 @@ interface ICaliber {
         uint256 indexed oldMaxPositionIncreaseLossBps, uint256 indexed newMaxPositionIncreaseLossBps
     );
     event MaxSwapLossBpsChanged(uint256 indexed oldMaxSwapLossBps, uint256 indexed newMaxSwapLossBps);
-    event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event NewAllowedInstrRootCancelled(bytes32 indexed cancelledMerkleRoot);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event PositionClosed(uint256 indexed id);
     event PositionCreated(uint256 indexed id);
     event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
-    event RecoveryModeChanged(bool indexed enabled);
-    event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
     event TransferToHubMachine(address indexed token, uint256 amount);
 
@@ -70,9 +72,6 @@ interface ICaliber {
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialFlashLoanModule The address of the initial flashLoan module.
-    /// @param initialMechanic The address of the initial mechanic.
-    /// @param initialSecurityCouncil The address of the initial security council.
-    /// @param initialAuthority The address of the initial authority.
     struct CaliberInitParams {
         address accountingToken;
         uint256 initialPositionStaleThreshold;
@@ -82,9 +81,6 @@ interface ICaliber {
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         address initialFlashLoanModule;
-        address initialMechanic;
-        address initialSecurityCouncil;
-        address initialAuthority;
     }
 
     /// @notice Instruction parameters.
@@ -118,24 +114,15 @@ interface ICaliber {
     }
 
     /// @notice Initializer of the contract.
-    /// @param params The initialization parameters.
+    /// @param cParams The caliber initialization parameters.
     /// @param hubMachineEndpoint The address of the hub machine endpoints.
-    function initialize(CaliberInitParams calldata params, address hubMachineEndpoint) external;
-
-    /// @notice Address of the Makina registry.
-    function registry() external view returns (address);
+    function initialize(CaliberInitParams calldata cParams, address hubMachineEndpoint) external;
 
     /// @notice Address of the Weiroll VM.
     function weirollVm() external view returns (address);
 
     /// @notice Address of the hub machine endpoint.
     function hubMachineEndpoint() external view returns (address);
-
-    /// @notice Address of the mechanic.
-    function mechanic() external view returns (address);
-
-    /// @notice Address of the security council.
-    function securityCouncil() external view returns (address);
 
     /// @notice Address of the flashLoan module.
     function flashLoanModule() external view returns (address);
@@ -145,9 +132,6 @@ interface ICaliber {
 
     /// @notice Maximum duration a position can remain unaccounted for before it is considered stale.
     function positionStaleThreshold() external view returns (uint256);
-
-    /// @notice Is the caliber in recovery mode.
-    function recoveryMode() external view returns (bool);
 
     /// @notice Root of the Merkle tree containing allowed instructions.
     function allowedInstrRoot() external view returns (bytes32);
@@ -191,6 +175,10 @@ interface ICaliber {
     /// @dev There are no guarantees on the ordering of values inside the base tokens list,
     ///      and it may change when values are added or removed.
     function getBaseTokenAddress(uint256 idx) external view returns (address);
+
+    /// @dev User => Whether the user is a root guardian
+    ///      Guardians have veto power over the Merkle root update.
+    function isInstrRootGuardian(address user) external view returns (bool);
 
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
@@ -277,14 +265,6 @@ interface ICaliber {
     /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
 
-    /// @notice Sets a new mechanic.
-    /// @param newMechanic The address of new mechanic.
-    function setMechanic(address newMechanic) external;
-
-    /// @notice Sets a new security council.
-    /// @param newSecurityCouncil The address of the new security council.
-    function setSecurityCouncil(address newSecurityCouncil) external;
-
     /// @notice Sets a new flashLoan module.
     /// @param newFlashLoanModule The address of the new flashLoan module.
     function setFlashLoanModule(address newFlashLoanModule) external;
@@ -293,10 +273,6 @@ interface ICaliber {
     /// @param newPositionStaleThreshold The new threshold in seconds.
     function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external;
 
-    /// @notice Sets the recovery mode.
-    /// @param enabled True to enable recovery mode, false to disable.
-    function setRecoveryMode(bool enabled) external;
-
     /// @notice Sets the duration of the allowedInstrRoot update timelock.
     /// @param newTimelockDuration The new duration in seconds.
     function setTimelockDuration(uint256 newTimelockDuration) external;
@@ -304,7 +280,7 @@ interface ICaliber {
     /// @notice Schedules an update of the root of the Merkle tree containing allowed instructions.
     /// @dev The update will take effect after the timelock duration stored in the contract
     /// at the time of the call.
-    /// @param newMerkleRoot The root of the Merkle tree containing allowed instructions.
+    /// @param newMerkleRoot The new Merkle root.
     function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
 
     /// @notice Cancels a scheduled update of the root of the Merkle tree containing allowed instructions.
@@ -322,4 +298,12 @@ interface ICaliber {
     /// @notice Sets the max allowed value loss for base token swaps.
     /// @param newMaxSwapLossBps The new max value loss in basis points.
     function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external;
+
+    /// @notice Adds a new guardian for the Merkle tree containing allowed instructions.
+    /// @param newGuardian The address of the new guardian.
+    function addInstrRootGuardian(address newGuardian) external;
+
+    /// @notice Removes a guardian for the Merkle tree containing allowed instructions.
+    /// @param guardian The address of the guardian to remove.
+    function removeInstrRootGuardian(address guardian) external;
 }

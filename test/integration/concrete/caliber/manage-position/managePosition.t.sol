@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -36,11 +37,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -181,7 +182,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // schedule root update with a wrong root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(keccak256(abi.encodePacked("wrongRoot")));
 
         // instruction can still be executed while the update is pending
@@ -196,7 +197,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // schedule root update with the correct root
-        vm.prank(dao);
+        vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
 
         // instruction cannot be executed while the update is pending
@@ -952,11 +953,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -977,7 +978,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -998,7 +999,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1025,8 +1026,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // try increase position
         vm.prank(securityCouncil);
@@ -1057,8 +1057,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setRateBps(10_000 + DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS + 1);
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
@@ -1097,8 +1096,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setRateBps(10_000 - DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS - 1);
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
@@ -1137,15 +1135,14 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         supplyModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
 
         // try decrease position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1169,8 +1166,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         borrowModule.setFaultyMode(true);
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
@@ -1198,8 +1194,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // check security council can decrease position
         uint256 sharesToRedeem = receivedShares / 2;
@@ -1231,8 +1226,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
 
         // turn on recovery mode
-        vm.prank(dao);
-        caliber.setRecoveryMode(true);
+        _setRecoveryMode();
 
         // check that security council can close position
         mgmtInstruction = WeirollUtils._build4626RedeemInstruction(
@@ -1243,5 +1237,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionsLength(), posLengthBefore - 1);
         assertEq(vault.balanceOf(address(caliber)), 0);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, 0);
+    }
+
+    function _setRecoveryMode() internal {
+        vm.prank(securityCouncil);
+        machine.setRecoveryMode(true);
     }
 }

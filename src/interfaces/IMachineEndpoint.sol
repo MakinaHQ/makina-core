@@ -2,8 +2,9 @@
 pragma solidity 0.8.28;
 
 import {IBridgeController} from "./IBridgeController.sol";
+import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
-interface IMachineEndpoint is IBridgeController {
+interface IMachineEndpoint is IBridgeController, IMakinaGovernable {
     /// @notice Manages the transfer of tokens between a machine and a caliber. The transfer direction depends on the caller.
     /// @param token The address of the token.
     /// @param amount The amount of tokens to transfer.

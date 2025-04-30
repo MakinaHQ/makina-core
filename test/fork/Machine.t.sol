@@ -9,6 +9,7 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
@@ -51,20 +52,27 @@ contract Machine_Fork_Test is Fork_Test {
             hubCore.machineFactory.createMachine(
                 IMachine.MachineInitParams({
                     accountingToken: ethForkData.usdc,
-                    initialMechanic: ethForkData.mechanic,
-                    initialSecurityCouncil: ethForkData.securityCouncil,
-                    initialAuthority: address(hubCore.accessManager),
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    hubCaliberPosStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    hubCaliberAllowedInstrRoot: bytes32(""),
-                    hubCaliberTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                    hubCaliberMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
-                    hubCaliberMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
-                    hubCaliberMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    hubCaliberInitialFlashLoanModule: address(0)
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+                }),
+                ICaliber.CaliberInitParams({
+                    accountingToken: ethForkData.usdc,
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: bytes32(""),
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialFlashLoanModule: address(0)
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
+                    initialMechanic: ethForkData.mechanic,
+                    initialSecurityCouncil: ethForkData.securityCouncil,
+                    initialRiskManager: address(0),
+                    initialRiskManagerTimelock: address(0),
+                    initialAuthority: address(hubCore.accessManager)
                 }),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
@@ -116,9 +124,13 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialFlashLoanModule: address(0),
+                    initialFlashLoanModule: address(0)
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: baseForkData.mechanic,
                     initialSecurityCouncil: baseForkData.securityCouncil,
+                    initialRiskManager: address(0),
+                    initialRiskManagerTimelock: address(0),
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].accessManager)
                 }),
                 address(machine)

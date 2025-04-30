@@ -11,12 +11,8 @@ import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     PreDepositVault public preDepositVault;
 
-    address public riskManager;
-
     function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();
-
-        riskManager = makeAddr("riskManager");
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(

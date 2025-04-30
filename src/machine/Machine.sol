@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -12,6 +11,7 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
+import {MachineUtils} from "../libraries/MachineUtils.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
@@ -29,8 +29,9 @@ import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
+contract Machine is MakinaGovernable, BridgeController, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -43,8 +44,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     struct MachineStorage {
         address _shareToken;
         address _accountingToken;
-        address _mechanic;
-        address _securityCouncil;
         address _depositor;
         address _redeemer;
         uint256 _caliberStaleThreshold;
@@ -52,7 +51,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         uint256 _lastGlobalAccountingTime;
         uint256 _shareTokenDecimalsOffset;
         uint256 _shareLimit;
-        bool _recoveryMode;
         uint256 _hubChainId;
         address _hubCaliber;
         uint256[] _foreignChainIds;
@@ -76,7 +74,8 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
 
     /// @inheritdoc IMachine
     function initialize(
-        MachineInitParams calldata params,
+        MachineInitParams calldata mParams,
+        MakinaGovernableInitParams calldata mgParams,
         address _preDepositVault,
         address _shareToken,
         address _hubCaliber
@@ -86,23 +85,23 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
+        uint256 atDecimals = IERC20Metadata(mParams.accountingToken).decimals();
         uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
         ) {
             revert InvalidDecimals();
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(params.accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(params.accountingToken);
+        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(mParams.accountingToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(mParams.accountingToken);
         }
-        $._accountingToken = params.accountingToken;
-        $._idleTokens.add(params.accountingToken);
+        $._accountingToken = mParams.accountingToken;
+        $._idleTokens.add(mParams.accountingToken);
 
         if (_preDepositVault != address(0)) {
             if (
                 IPreDepositVault(_preDepositVault).shareToken() != _shareToken
-                    || IPreDepositVault(_preDepositVault).accountingToken() != params.accountingToken
+                    || IPreDepositVault(_preDepositVault).accountingToken() != mParams.accountingToken
             ) {
                 revert PreDepositVaultMismatch();
             }
@@ -115,63 +114,11 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         $._shareToken = _shareToken;
         $._shareTokenDecimalsOffset = stDecimals - atDecimals;
 
-        $._mechanic = params.initialMechanic;
-        $._securityCouncil = params.initialSecurityCouncil;
-        $._depositor = params.initialDepositor;
-        $._redeemer = params.initialRedeemer;
-        $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
-        $._shareLimit = params.initialShareLimit;
-        __AccessManaged_init(params.initialAuthority);
-    }
-
-    modifier onlyMechanic() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != $._mechanic) {
-            revert UnauthorizedOperator();
-        }
-        _;
-    }
-
-    modifier onlyOperator() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
-            revert UnauthorizedOperator();
-        }
-        _;
-    }
-
-    modifier onlyDepositor() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != $._depositor) {
-            revert UnauthorizedDepositor();
-        }
-        _;
-    }
-
-    modifier onlyRedeemer() {
-        MachineStorage storage $ = _getMachineStorage();
-        if (msg.sender != $._redeemer) {
-            revert UnauthorizedRedeemer();
-        }
-        _;
-    }
-
-    modifier notRecoveryMode() {
-        MachineStorage storage $ = _getMachineStorage();
-        if ($._recoveryMode) {
-            revert RecoveryMode();
-        }
-        _;
-    }
-
-    /// @inheritdoc IMachine
-    function mechanic() external view override returns (address) {
-        return _getMachineStorage()._mechanic;
-    }
-
-    /// @inheritdoc IMachine
-    function securityCouncil() external view override returns (address) {
-        return _getMachineStorage()._securityCouncil;
+        $._depositor = mParams.initialDepositor;
+        $._redeemer = mParams.initialRedeemer;
+        $._caliberStaleThreshold = mParams.initialCaliberStaleThreshold;
+        $._shareLimit = mParams.initialShareLimit;
+        __MakinaGovernable_init(mgParams);
     }
 
     /// @inheritdoc IMachine
@@ -226,11 +173,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function recoveryMode() external view override returns (bool) {
-        return _getMachineStorage()._recoveryMode;
-    }
-
-    /// @inheritdoc IMachine
     function lastTotalAum() external view override returns (uint256) {
         return _getMachineStorage()._lastTotalAum;
     }
@@ -266,8 +208,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
 
     /// @inheritdoc IMachine
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address) {
-        MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert InvalidChainId();
         }
@@ -276,8 +217,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
 
     /// @inheritdoc IMachine
     function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address) {
-        MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage scData = $._spokeCalibersData[chainId];
+        SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert InvalidChainId();
         }
@@ -294,13 +234,19 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function convertToShares(uint256 assets) external view override returns (uint256) {
-        return _convertToShares(assets, Math.Rounding.Floor);
+    function convertToShares(uint256 assets) public view override returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        return assets.mulDiv(
+            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset, $._lastTotalAum + 1
+        );
     }
 
     /// @inheritdoc IMachine
-    function convertToAssets(uint256 shares) external view override returns (uint256) {
-        return _convertToAssets(shares, Math.Rounding.Floor);
+    function convertToAssets(uint256 shares) public view override returns (uint256) {
+        MachineStorage storage $ = _getMachineStorage();
+        return shares.mulDiv(
+            $._lastTotalAum + 1, IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset
+        );
     }
 
     /// @inheritdoc IMachineEndpoint
@@ -342,8 +288,12 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode onlyMechanic {
+    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode {
         MachineStorage storage $ = _getMachineStorage();
+
+        if (msg.sender != mechanic()) {
+            revert UnauthorizedCaller();
+        }
 
         if (!ICaliber($._hubCaliber).isBaseToken(token)) {
             revert ICaliber.NotBaseToken();
@@ -364,10 +314,15 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         address token,
         uint256 amount,
         uint256 minOutputAmount
-    ) external override notRecoveryMode onlyMechanic {
+    ) external override notRecoveryMode {
+        MachineStorage storage $ = _getMachineStorage();
+
+        if (msg.sender != mechanic()) {
+            revert UnauthorizedCaller();
+        }
+
         address outputToken = ITokenRegistry(IHubRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
 
-        MachineStorage storage $ = _getMachineStorage();
         SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
         if (caliberData.mailbox == address(0)) {
@@ -396,8 +351,11 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         external
         override
         notRecoveryMode
-        onlyMechanic
     {
+        if (msg.sender != mechanic()) {
+            revert UnauthorizedCaller();
+        }
+
         _sendOutBridgeTransfer(bridgeId, transferId, data);
     }
 
@@ -427,7 +385,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     /// @inheritdoc IMachine
     function updateTotalAum() public override notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        uint256 totalAum = _getTotalAum();
+        uint256 totalAum = MachineUtils._getTotalAum($, IHubRegistry(registry).oracleRegistry());
         uint256 currentTimestamp = block.timestamp;
         emit TotalAumUpdated(totalAum, currentTimestamp);
         $._lastTotalAum = totalAum;
@@ -436,9 +394,14 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function deposit(uint256 assets, address receiver) external notRecoveryMode onlyDepositor returns (uint256) {
+    function deposit(uint256 assets, address receiver) external notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        uint256 shares = _convertToShares(assets, Math.Rounding.Floor);
+
+        if (msg.sender != $._depositor) {
+            revert UnauthorizedDepositor();
+        }
+
+        uint256 shares = convertToShares(assets);
         uint256 _maxMint = maxMint();
         if (shares > _maxMint) {
             revert ExceededMaxMint(shares, _maxMint);
@@ -452,9 +415,14 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver) external notRecoveryMode onlyRedeemer returns (uint256) {
+    function redeem(uint256 shares, address receiver) external notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        uint256 assets = _convertToAssets(shares, Math.Rounding.Floor);
+
+        if (msg.sender != $._redeemer) {
+            revert UnauthorizedRedeemer();
+        }
+
+        uint256 assets = convertToAssets(shares);
 
         uint256 _maxWithdraw = maxWithdraw();
         if (assets > _maxWithdraw) {
@@ -533,15 +501,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
             revert MismatchedLength();
         }
         for (uint256 i; i < bridges.length;) {
-            if (caliberData.bridgeAdapters[bridges[i]] != address(0)) {
-                revert SpokeBridgeAdapterAlreadySet();
-            }
-            if (adapters[i] == address(0)) {
-                revert ZeroBridgeAdapterAddress();
-            }
-            caliberData.bridgeAdapters[bridges[i]] = adapters[i];
-
-            emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridges[i]), adapters[i]);
+            _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);
 
             unchecked {
                 ++i;
@@ -555,35 +515,12 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         override
         restricted
     {
-        MachineStorage storage $ = _getMachineStorage();
-        SpokeCaliberData storage caliberData = $._spokeCalibersData[foreignChainId];
+        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
 
         if (caliberData.mailbox == address(0)) {
             revert InvalidChainId();
         }
-        if (caliberData.bridgeAdapters[bridgeId] != address(0)) {
-            revert SpokeBridgeAdapterAlreadySet();
-        }
-        if (adapter == address(0)) {
-            revert ZeroBridgeAdapterAddress();
-        }
-        caliberData.bridgeAdapters[bridgeId] = adapter;
-
-        emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
-    }
-
-    /// @inheritdoc IMachine
-    function setMechanic(address newMechanic) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        emit MechanicChanged($._mechanic, newMechanic);
-        $._mechanic = newMechanic;
-    }
-
-    /// @inheritdoc IMachine
-    function setSecurityCouncil(address newSecurityCouncil) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        emit SecurityCouncilChanged($._securityCouncil, newSecurityCouncil);
-        $._securityCouncil = newSecurityCouncil;
+        _setSpokeBridgeAdapter(foreignChainId, bridgeId, adapter);
     }
 
     /// @inheritdoc IMachine
@@ -601,26 +538,35 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override restricted {
+    function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
         $._caliberStaleThreshold = newCaliberStaleThreshold;
     }
 
     /// @inheritdoc IMachine
-    function setShareLimit(uint256 newShareLimit) external override restricted {
+    function setShareLimit(uint256 newShareLimit) external override onlyRiskManager {
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
     }
 
-    /// @inheritdoc IMachine
-    function setRecoveryMode(bool enabled) external override restricted {
-        MachineStorage storage $ = _getMachineStorage();
-        if ($._recoveryMode != enabled) {
-            $._recoveryMode = enabled;
-            emit RecoveryModeChanged(enabled);
-        }
+    /// @inheritdoc IBridgeController
+    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setOutTransferEnabled(bridgeId, enabled);
+    }
+
+    /// @inheritdoc IBridgeController
+    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
+        external
+        override
+        onlyRiskManagerTimelock
+    {
+        _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 
     /// @inheritdoc IBridgeController
@@ -655,6 +601,21 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         emit ResetBridgingState(token);
     }
 
+    /// @dev Sets the spoke bridge adapter for a given foreign chain ID and bridge ID.
+    function _setSpokeBridgeAdapter(uint256 foreignChainId, IBridgeAdapter.Bridge bridgeId, address adapter) internal {
+        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
+
+        if (caliberData.bridgeAdapters[bridgeId] != address(0)) {
+            revert SpokeBridgeAdapterAlreadySet();
+        }
+        if (adapter == address(0)) {
+            revert ZeroBridgeAdapterAddress();
+        }
+        caliberData.bridgeAdapters[bridgeId] = adapter;
+
+        emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
+    }
+
     /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
     function _decodeAndMapBridgeAmounts(
         uint256 chainId,
@@ -674,109 +635,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         }
     }
 
-    /// @dev Computes the total AUM of the machine.
-    function _getTotalAum() internal view returns (uint256) {
-        MachineStorage storage $ = _getMachineStorage();
-        uint256 totalAum;
-
-        // spoke calibers net AUM
-        uint256 currentTimestamp = block.timestamp;
-        uint256 len = $._foreignChainIds.length;
-        for (uint256 i; i < len;) {
-            uint256 chainId = $._foreignChainIds[i];
-            SpokeCaliberData storage spokeCaliberData = $._spokeCalibersData[chainId];
-            if (
-                currentTimestamp > spokeCaliberData.timestamp
-                    && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold
-            ) {
-                revert CaliberAccountingStale(chainId);
-            }
-            totalAum += spokeCaliberData.netAum;
-
-            // check for funds received by machine but not declared by spoke caliber
-            uint256 len2 = spokeCaliberData.machineBridgesIn.length();
-            for (uint256 j; j < len2;) {
-                (address token, uint256 mIn) = spokeCaliberData.machineBridgesIn.at(j);
-                (, uint256 cOut) = spokeCaliberData.caliberBridgesOut.tryGet(token);
-                if (mIn > cOut) {
-                    revert BridgeStateMismatch();
-                }
-                unchecked {
-                    ++j;
-                }
-            }
-
-            // check for funds received by spoke caliber but not declared by machine
-            len2 = spokeCaliberData.caliberBridgesIn.length();
-            for (uint256 j; j < len2;) {
-                (address token, uint256 cIn) = spokeCaliberData.caliberBridgesIn.at(j);
-                (, uint256 mOut) = spokeCaliberData.machineBridgesOut.tryGet(token);
-                if (cIn > mOut) {
-                    revert BridgeStateMismatch();
-                }
-                unchecked {
-                    ++j;
-                }
-            }
-
-            // check for funds sent by machine but not yet received by spoke caliber
-            len2 = spokeCaliberData.machineBridgesOut.length();
-            for (uint256 j; j < len2;) {
-                (address token, uint256 mOut) = spokeCaliberData.machineBridgesOut.at(j);
-                (, uint256 cIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
-                if (mOut > cIn) {
-                    totalAum += _accountingValueOf(token, mOut - cIn);
-                }
-                unchecked {
-                    ++j;
-                }
-            }
-
-            // check for funds sent by spoke caliber but not yet received by machine
-            len2 = spokeCaliberData.caliberBridgesOut.length();
-            for (uint256 j; j < len2;) {
-                (address token, uint256 cOut) = spokeCaliberData.caliberBridgesOut.at(j);
-                (, uint256 mIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
-                if (cOut > mIn) {
-                    totalAum += _accountingValueOf(token, cOut - mIn);
-                }
-                unchecked {
-                    ++j;
-                }
-            }
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        // hub caliber net AUM
-        (uint256 hcAum,,) = ICaliber($._hubCaliber).getDetailedAum();
-        totalAum += hcAum;
-
-        // idle tokens
-        len = $._idleTokens.length();
-        for (uint256 i; i < len;) {
-            address token = $._idleTokens.at(i);
-            totalAum += _accountingValueOf(token, IERC20Metadata(token).balanceOf(address(this)));
-            unchecked {
-                ++i;
-            }
-        }
-
-        return totalAum;
-    }
-
-    /// @dev Computes the accounting value of a given token amount.
-    function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
-        MachineStorage storage $ = _getMachineStorage();
-        if (token == $._accountingToken) {
-            return amount;
-        }
-        uint256 price = IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
-        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
-    }
-
     /// @dev Checks token balance, and registers token if needed.
     function _notifyIdleToken(address token) internal {
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
@@ -785,25 +643,5 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
                 revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
             }
         }
-    }
-
-    /// @dev Converts accounting token amount to share amount, with support for rounding direction.
-    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view virtual returns (uint256) {
-        MachineStorage storage $ = _getMachineStorage();
-        return assets.mulDiv(
-            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset,
-            $._lastTotalAum + 1,
-            rounding
-        );
-    }
-
-    /// @dev Converts share amount to accounting token amount, with support for rounding direction.
-    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256) {
-        MachineStorage storage $ = _getMachineStorage();
-        return shares.mulDiv(
-            $._lastTotalAum + 1,
-            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset,
-            rounding
-        );
     }
 }

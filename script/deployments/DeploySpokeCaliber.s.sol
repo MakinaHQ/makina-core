@@ -6,8 +6,10 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeploySpokeCaliber is Script {
+contract DeploySpokeCaliber is Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -16,20 +18,6 @@ contract DeploySpokeCaliber is Script {
     string public outputPath;
 
     address public deployedInstance;
-
-    struct CaliberInitParamsSorted {
-        address accountingToken;
-        bytes32 initialAllowedInstrRoot;
-        address initialAuthority;
-        address initialFlashLoanModule;
-        uint256 initialMaxPositionDecreaseLossBps;
-        uint256 initialMaxPositionIncreaseLossBps;
-        uint256 initialMaxSwapLossBps;
-        address initialMechanic;
-        uint256 initialPositionStaleThreshold;
-        address initialSecurityCouncil;
-        uint256 initialTimelockDuration;
-    }
 
     constructor() {
         string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
@@ -53,8 +41,10 @@ contract DeploySpokeCaliber is Script {
     }
 
     function run() public {
-        CaliberInitParamsSorted memory initParams =
+        CaliberInitParamsSorted memory cParams =
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
+        MakinaGovernableInitParamsSorted memory mgParams =
+            abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
         address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
 
         ICaliberFactory caliberFactory =
@@ -64,17 +54,21 @@ contract DeploySpokeCaliber is Script {
         vm.startBroadcast();
         deployedInstance = caliberFactory.createCaliber(
             ICaliber.CaliberInitParams(
-                initParams.accountingToken,
-                initParams.initialPositionStaleThreshold,
-                initParams.initialAllowedInstrRoot,
-                initParams.initialTimelockDuration,
-                initParams.initialMaxPositionIncreaseLossBps,
-                initParams.initialMaxPositionDecreaseLossBps,
-                initParams.initialMaxSwapLossBps,
-                initParams.initialFlashLoanModule,
-                initParams.initialMechanic,
-                initParams.initialSecurityCouncil,
-                initParams.initialAuthority
+                cParams.accountingToken,
+                cParams.initialPositionStaleThreshold,
+                cParams.initialAllowedInstrRoot,
+                cParams.initialTimelockDuration,
+                cParams.initialMaxPositionIncreaseLossBps,
+                cParams.initialMaxPositionDecreaseLossBps,
+                cParams.initialMaxSwapLossBps,
+                cParams.initialFlashLoanModule
+            ),
+            IMakinaGovernable.MakinaGovernableInitParams(
+                mgParams.initialMechanic,
+                mgParams.initialSecurityCouncil,
+                mgParams.initialRiskManager,
+                mgParams.initialRiskManagerTimelock,
+                mgParams.initialAuthority
             ),
             hubMachine
         );

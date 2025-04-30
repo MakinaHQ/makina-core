@@ -16,7 +16,7 @@ contract MaxMint_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         uint256 newShareLimit = 1e20;
         uint256 newShareSupply = 1e18;
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.maxMint(), newShareLimit);
 
@@ -30,7 +30,7 @@ contract MaxMint_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         uint256 newShareLimit = 1e18;
         uint256 newShareSupply = 1e20;
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.maxMint(), newShareLimit);
 

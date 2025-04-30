@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -38,16 +38,16 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMachine.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
     }
 
@@ -58,7 +58,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);

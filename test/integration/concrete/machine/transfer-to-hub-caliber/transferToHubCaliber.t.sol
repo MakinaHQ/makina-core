@@ -5,22 +5,23 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract TransferToHubCaliber_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.RecoveryMode.selector);
+        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
         machine.transferToHubCaliber(address(0), 0);
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.transferToHubCaliber(address(0), 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMachine.UnauthorizedOperator.selector);
+        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.transferToHubCaliber(address(0), 0);
     }
 

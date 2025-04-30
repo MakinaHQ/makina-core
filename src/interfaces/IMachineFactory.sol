@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {ICaliber} from "./ICaliber.sol";
 import {IMachine} from "./IMachine.sol";
 import {IPreDepositVault} from "./IPreDepositVault.sol";
+import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
 interface IMachineFactory is IBridgeAdapterFactory {
@@ -34,21 +36,30 @@ interface IMachineFactory is IBridgeAdapterFactory {
         string memory tokenSymbol
     ) external returns (address);
 
-    /// @notice Deploys a new Machine instance.
-    /// @param params The initialization parameters.
+    /// @notice Deploys a new Machine instance and migrates an existing PreDepositVault instance to it.
+    /// @param mParams The machine initialization parameters.
+    /// @param cParams The caliber initialization parameters.
+    /// @param mgParams The makina governable initialization parameters.
     /// @param token The address of the share token.
     /// @return machine The address of the deployed Machine instance.
-    function createMachineFromPreDeposit(IMachine.MachineInitParams calldata params, address token)
-        external
-        returns (address machine);
+    function createMachineFromPreDeposit(
+        IMachine.MachineInitParams calldata mParams,
+        ICaliber.CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address token
+    ) external returns (address machine);
 
     /// @notice Deploys a new Machine instance.
-    /// @param params The initialization parameters.
+    /// @param mParams The machine initialization parameters.
+    /// @param cParams The caliber initialization parameters.
+    /// @param mgParams The makina governable initialization parameters.
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
     /// @return machine The address of the deployed Machine instance.
     function createMachine(
-        IMachine.MachineInitParams calldata params,
+        IMachine.MachineInitParams calldata mParams,
+        ICaliber.CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         string memory tokenName,
         string memory tokenSymbol
     ) external returns (address machine);

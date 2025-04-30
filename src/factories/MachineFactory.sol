@@ -11,6 +11,7 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
@@ -53,23 +54,23 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @inheritdoc IMachineFactory
-    function createMachineFromPreDeposit(IMachine.MachineInitParams calldata params, address preDepositVault)
-        external
-        override
-        restricted
-        returns (address)
-    {
+    function createMachineFromPreDeposit(
+        IMachine.MachineInitParams calldata mParams,
+        ICaliber.CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address preDepositVault
+    ) external override restricted returns (address) {
         if (!isPreDepositVault[preDepositVault]) {
             revert NotPreDepositVault();
         }
 
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(params, machine);
+        address caliber = _createCaliber(cParams, machine);
 
         IPreDepositVault(preDepositVault).setPendingMachine(machine);
         address token = IPreDepositVault(preDepositVault).shareToken();
 
-        IMachine(machine).initialize(params, preDepositVault, token, caliber);
+        IMachine(machine).initialize(mParams, mgParams, preDepositVault, token, caliber);
 
         isMachine[machine] = true;
         isCaliber[caliber] = true;
@@ -81,17 +82,19 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
 
     /// @inheritdoc IMachineFactory
     function createMachine(
-        IMachine.MachineInitParams calldata params,
+        IMachine.MachineInitParams calldata mParams,
+        ICaliber.CaliberInitParams calldata cParams,
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(params, machine);
+        address caliber = _createCaliber(cParams, machine);
 
         IOwnable2Step(token).transferOwnership(machine);
 
-        IMachine(machine).initialize(params, address(0), token, caliber);
+        IMachine(machine).initialize(mParams, mgParams, address(0), token, caliber);
 
         isMachine[machine] = true;
         isCaliber[caliber] = true;
@@ -113,24 +116,10 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @dev Deploys a caliber.
-    function _createCaliber(IMachine.MachineInitParams calldata params, address machine) internal returns (address) {
-        ICaliber.CaliberInitParams memory initParams = ICaliber.CaliberInitParams({
-            accountingToken: params.accountingToken,
-            initialPositionStaleThreshold: params.hubCaliberPosStaleThreshold,
-            initialAllowedInstrRoot: params.hubCaliberAllowedInstrRoot,
-            initialTimelockDuration: params.hubCaliberTimelockDuration,
-            initialMaxPositionIncreaseLossBps: params.hubCaliberMaxPositionIncreaseLossBps,
-            initialMaxPositionDecreaseLossBps: params.hubCaliberMaxPositionDecreaseLossBps,
-            initialMaxSwapLossBps: params.hubCaliberMaxSwapLossBps,
-            initialFlashLoanModule: params.hubCaliberInitialFlashLoanModule,
-            initialMechanic: params.initialMechanic,
-            initialSecurityCouncil: params.initialSecurityCouncil,
-            initialAuthority: params.initialAuthority
-        });
-
+    function _createCaliber(ICaliber.CaliberInitParams calldata cParams, address machine) internal returns (address) {
         address caliber = address(
             new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (initParams, machine))
+                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (cParams, machine))
             )
         );
 
