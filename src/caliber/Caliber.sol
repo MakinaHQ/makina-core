@@ -255,7 +255,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
         }
-        return _accountForPosition(instruction);
+        return _accountForPosition(instruction, true);
     }
 
     /// @inheritdoc ICaliber
@@ -266,7 +266,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (!$._positionIds.contains(instructions[i].positionId)) {
                 revert PositionDoesNotExist();
             }
-            _accountForPosition(instructions[i]);
+            _accountForPosition(instructions[i], true);
         }
     }
 
@@ -559,7 +559,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         $._managedPositionId = posId;
         $._isManagedPositionDebt = mgmtInstruction.isDebt;
 
-        _accountForPosition(acctInstruction);
+        _accountForPosition(acctInstruction, true);
 
         _checkInstructionIsAllowed(mgmtInstruction);
 
@@ -575,7 +575,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         _execute(mgmtInstruction.commands, mgmtInstruction.state);
 
-        (uint256 value, int256 change) = _accountForPosition(acctInstruction);
+        (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
 
         uint256 affectedTokensValueAfter;
         for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
@@ -612,11 +612,13 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @dev Computes the accounting value of a position. Depending on last and current value, the
     /// position is then either created, closed or simply updated in storage.
-    function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
-        if (instruction.instructionType != InstructionType.ACCOUNTING) {
-            revert InvalidInstructionType();
+    function _accountForPosition(Instruction calldata instruction, bool checks) internal returns (uint256, int256) {
+        if (checks) {
+            if (instruction.instructionType != InstructionType.ACCOUNTING) {
+                revert InvalidInstructionType();
+            }
+            _checkInstructionIsAllowed(instruction);
         }
-        _checkInstructionIsAllowed(instruction);
 
         uint256[] memory amounts;
         {
