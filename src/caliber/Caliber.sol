@@ -255,7 +255,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (!$._positionIds.contains(instruction.positionId)) {
             revert PositionDoesNotExist();
         }
-        return _accountForPosition(instruction);
+        return _accountForPosition(instruction, true);
     }
 
     /// @inheritdoc ICaliber
@@ -266,7 +266,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (!$._positionIds.contains(instructions[i].positionId)) {
                 revert PositionDoesNotExist();
             }
-            _accountForPosition(instructions[i]);
+            _accountForPosition(instructions[i], true);
         }
     }
 
@@ -326,77 +326,32 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @inheritdoc ICaliber
     function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
-        external
+        public
         override
         nonReentrant
         onlyOperator
         returns (uint256, int256)
     {
-        CaliberStorage storage $ = _getCaliberStorage();
+        return _managePosition(mgmtInstruction, acctInstruction);
+    }
 
-        uint256 posId = mgmtInstruction.positionId;
-        if (posId == 0) {
-            revert ZeroPositionId();
+    /// @inheritdoc ICaliber
+    function managePositionBatch(Instruction[] calldata mgmtInstructions, Instruction[] calldata acctInstructions)
+        external
+        override
+        nonReentrant
+        onlyOperator
+    {
+        uint256 len = mgmtInstructions.length;
+        if (len != acctInstructions.length) {
+            revert MismatchedLengths();
         }
-        if (posId != acctInstruction.positionId || mgmtInstruction.isDebt != acctInstruction.isDebt) {
-            revert UnmatchingInstructions();
-        }
-        if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
-            revert InvalidInstructionType();
-        }
-
-        $._managedPositionId = posId;
-        $._isManagedPositionDebt = mgmtInstruction.isDebt;
-
-        _accountForPosition(acctInstruction);
-
-        _checkInstructionIsAllowed(mgmtInstruction);
-
-        uint256 affectedTokensValueBefore;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
-            address _affectedToken = mgmtInstruction.affectedTokens[i];
-            if (!$._baseTokens.contains(_affectedToken)) {
-                revert InvalidAffectedToken();
+        for (uint256 i; i < len;) {
+            _managePosition(mgmtInstructions[i], acctInstructions[i]);
+            unchecked {
+                ++i;
             }
-            affectedTokensValueBefore +=
-                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
         }
-
-        _execute(mgmtInstruction.commands, mgmtInstruction.state);
-
-        (uint256 value, int256 change) = _accountForPosition(acctInstruction);
-
-        uint256 affectedTokensValueAfter;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
-            address _affectedToken = mgmtInstruction.affectedTokens[i];
-            affectedTokensValueAfter +=
-                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
-        }
-
-        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
-        bool isPositionIncrease = change >= 0;
-        uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
-        uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
-
-        if (isPositionIncrease && IMachineEndpoint($._hubMachineEndpoint).recoveryMode()) {
-            revert RecoveryMode();
-        }
-
-        if (isBaseTokenInflow) {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
-                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
-            }
-        } else {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
-                revert InvalidPositionChangeDirection();
-            }
-            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
-        }
-
-        $._managedPositionId = 0;
-        $._isManagedPositionDebt = false;
-
-        return (value, change);
     }
 
     /// @inheritdoc ICaliber
@@ -583,13 +538,87 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
     }
 
-    /// @dev Computes the accounting value of a position. Depending on last and current value, the
-    /// position is then either created, closed or simply updated in storage.
-    function _accountForPosition(Instruction calldata instruction) internal returns (uint256, int256) {
-        if (instruction.instructionType != InstructionType.ACCOUNTING) {
+    /// @dev Manages and accounts for a position by executing the provided instructions.
+    function _managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
+        internal
+        returns (uint256, int256)
+    {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        uint256 posId = mgmtInstruction.positionId;
+        if (posId == 0) {
+            revert ZeroPositionId();
+        }
+        if (posId != acctInstruction.positionId || mgmtInstruction.isDebt != acctInstruction.isDebt) {
+            revert UnmatchingInstructions();
+        }
+        if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();
         }
-        _checkInstructionIsAllowed(instruction);
+
+        $._managedPositionId = posId;
+        $._isManagedPositionDebt = mgmtInstruction.isDebt;
+
+        _accountForPosition(acctInstruction, true);
+
+        _checkInstructionIsAllowed(mgmtInstruction);
+
+        uint256 affectedTokensValueBefore;
+        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+            address _affectedToken = mgmtInstruction.affectedTokens[i];
+            if (!$._baseTokens.contains(_affectedToken)) {
+                revert InvalidAffectedToken();
+            }
+            affectedTokensValueBefore +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
+        _execute(mgmtInstruction.commands, mgmtInstruction.state);
+
+        (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
+
+        uint256 affectedTokensValueAfter;
+        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+            address _affectedToken = mgmtInstruction.affectedTokens[i];
+            affectedTokensValueAfter +=
+                _accountingValueOf(_affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this)));
+        }
+
+        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
+        bool isPositionIncrease = change >= 0;
+        uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
+        uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
+
+        if (isPositionIncrease && IMachineEndpoint($._hubMachineEndpoint).recoveryMode()) {
+            revert RecoveryMode();
+        }
+
+        if (isBaseTokenInflow) {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
+                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
+            }
+        } else {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
+                revert InvalidPositionChangeDirection();
+            }
+            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
+        }
+
+        $._managedPositionId = 0;
+        $._isManagedPositionDebt = false;
+
+        return (value, change);
+    }
+
+    /// @dev Computes the accounting value of a position. Depending on last and current value, the
+    /// position is then either created, closed or simply updated in storage.
+    function _accountForPosition(Instruction calldata instruction, bool checks) internal returns (uint256, int256) {
+        if (checks) {
+            if (instruction.instructionType != InstructionType.ACCOUNTING) {
+                revert InvalidInstructionType();
+            }
+            _checkInstructionIsAllowed(instruction);
+        }
 
         uint256[] memory amounts;
         {
