@@ -34,13 +34,18 @@ contract MakinaGovernable_Machine_Unit_Concrete_Test is MakinaGovernable_Unit_Co
 
 contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function test_Getters() public view {
-        assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.depositor(), machineDepositor);
         assertEq(machine.redeemer(), machineRedeemer);
+        assertEq(machine.accountingToken(), address(accountingToken));
+        assertEq(machine.hubCaliber(), address(caliber));
+        assertEq(machine.feeManager(), address(feeManager));
+        assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
+        assertEq(machine.maxFeeAccrualRate(), DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE);
+        assertEq(machine.feeMintCooldown(), DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
         assertEq(machine.lastGlobalAccountingTime(), 0);
-        assertEq(machine.hubCaliber(), address(caliber));
+
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
     }
@@ -78,6 +83,20 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.redeemer(), newRedeemer);
     }
 
+    function test_SetFeeManager_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setFeeManager(address(0));
+    }
+
+    function test_SetFeeManager() public {
+        address newFeeManager = makeAddr("NewFeeManager");
+        vm.expectEmit(true, true, false, false, address(machine));
+        emit IMachine.FeeManagerChanged(address(feeManager), newFeeManager);
+        vm.prank(dao);
+        machine.setFeeManager(newFeeManager);
+        assertEq(machine.feeManager(), newFeeManager);
+    }
+
     function test_SetCaliberStaleThreshold_RevertWhen_CallerNotRMT() public {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         machine.setCaliberStaleThreshold(2 hours);
@@ -90,6 +109,34 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(riskManagerTimelock);
         machine.setCaliberStaleThreshold(newThreshold);
         assertEq(machine.caliberStaleThreshold(), newThreshold);
+    }
+
+    function test_SetMaxFeeAccrualRate_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setMaxFeeAccrualRate(1e18);
+    }
+
+    function test_SetMaxFeeAccrualRate() public {
+        uint256 newMaxFeeAccrualRate = 1e18;
+        vm.expectEmit(true, true, false, false, address(machine));
+        emit IMachine.MaxFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE, newMaxFeeAccrualRate);
+        vm.prank(dao);
+        machine.setMaxFeeAccrualRate(newMaxFeeAccrualRate);
+        assertEq(machine.maxFeeAccrualRate(), newMaxFeeAccrualRate);
+    }
+
+    function test_SetFeeMintCooldown_RevertWhenCallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        machine.setFeeMintCooldown(1 hours);
+    }
+
+    function test_SetFeeMintCooldown() public {
+        uint256 newFeeMintCooldown = 1 hours;
+        vm.expectEmit(true, true, false, false, address(machine));
+        emit IMachine.FeeMintCooldownChanged(DEFAULT_MACHINE_FEE_MINT_COOLDOWN, newFeeMintCooldown);
+        vm.prank(dao);
+        machine.setFeeMintCooldown(newFeeMintCooldown);
+        assertEq(machine.feeMintCooldown(), newFeeMintCooldown);
     }
 
     function test_SetShareLimit_RevertWhen_CallerNotRM() public {

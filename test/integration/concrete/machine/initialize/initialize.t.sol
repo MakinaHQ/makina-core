@@ -277,7 +277,10 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             accountingToken: accountingToken,
             initialDepositor: machineDepositor,
             initialRedeemer: machineRedeemer,
+            initialFeeManager: address(feeManager),
             initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+            initialMaxFeeAccrualRate: DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE,
+            initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
         });
     }

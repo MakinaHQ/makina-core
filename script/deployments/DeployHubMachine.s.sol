@@ -61,7 +61,10 @@ contract DeployHubMachine is Script, SortedParams {
                 mParams.accountingToken,
                 mParams.initialDepositor,
                 mParams.initialRedeemer,
+                mParams.initialFeeManager,
                 mParams.initialCaliberStaleThreshold,
+                mParams.initialMaxFeeAccrualRate,
+                mParams.initialFeeMintCooldown,
                 mParams.initialShareLimit
             ),
             ICaliber.CaliberInitParams(

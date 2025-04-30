@@ -37,7 +37,10 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
                     accountingToken: address(accountingToken),
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
+                    initialFeeManager: address(feeManager),
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialMaxFeeAccrualRate: DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE,
+                    initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({

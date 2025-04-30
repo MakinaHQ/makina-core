@@ -5,11 +5,12 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
+import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
+import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
-import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -99,7 +100,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
 
         vm.prank(riskManager);
         _caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
-        skip(_caliber.timelockDuration() + 1);
+        skip(_caliber.timelockDuration());
     }
 
     function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {
@@ -151,6 +152,8 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
     function setUp() public virtual override(Integration_Concrete_Test, Base_Hub_Test) {
         Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
+
+        feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
         (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
     }

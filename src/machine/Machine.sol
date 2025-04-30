@@ -24,7 +24,6 @@ import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
-import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -46,9 +45,14 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         address _accountingToken;
         address _depositor;
         address _redeemer;
+        address _feeManager;
         uint256 _caliberStaleThreshold;
         uint256 _lastTotalAum;
         uint256 _lastGlobalAccountingTime;
+        uint256 _lastMintedFeesTime;
+        uint256 _lastMintedFeesSharePrice;
+        uint256 _maxFeeAccrualRate;
+        uint256 _feeMintCooldown;
         uint256 _shareTokenDecimalsOffset;
         uint256 _shareLimit;
         uint256 _hubChainId;
@@ -92,31 +96,33 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         ) {
             revert InvalidDecimals();
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(mParams.accountingToken)) {
+        address oracleRegistry = IHubRegistry(registry).oracleRegistry();
+        if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(mParams.accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(mParams.accountingToken);
         }
         $._accountingToken = mParams.accountingToken;
         $._idleTokens.add(mParams.accountingToken);
-
-        if (_preDepositVault != address(0)) {
-            if (
-                IPreDepositVault(_preDepositVault).shareToken() != _shareToken
-                    || IPreDepositVault(_preDepositVault).accountingToken() != mParams.accountingToken
-            ) {
-                revert PreDepositVaultMismatch();
-            }
-            IPreDepositVault(_preDepositVault).migrateToMachine();
-            $._idleTokens.add(IPreDepositVault(_preDepositVault).depositToken());
-            updateTotalAum();
-        }
-
-        IOwnable2Step(_shareToken).acceptOwnership();
         $._shareToken = _shareToken;
         $._shareTokenDecimalsOffset = stDecimals - atDecimals;
 
+        if (_preDepositVault != address(0)) {
+            MachineUtils.migrateFromPreDeposit($, _preDepositVault, oracleRegistry);
+            uint256 currentShareSupply = IERC20Metadata($._shareToken).totalSupply();
+            $._lastMintedFeesSharePrice =
+                MachineUtils.getSharePrice($._lastTotalAum, currentShareSupply, $._shareTokenDecimalsOffset);
+        } else {
+            $._lastMintedFeesSharePrice = 10 ** atDecimals;
+        }
+
+        IOwnable2Step(_shareToken).acceptOwnership();
+
+        $._lastMintedFeesTime = block.timestamp;
         $._depositor = mParams.initialDepositor;
         $._redeemer = mParams.initialRedeemer;
+        $._feeManager = mParams.initialFeeManager;
         $._caliberStaleThreshold = mParams.initialCaliberStaleThreshold;
+        $._maxFeeAccrualRate = mParams.initialMaxFeeAccrualRate;
+        $._feeMintCooldown = mParams.initialFeeMintCooldown;
         $._shareLimit = mParams.initialShareLimit;
         __MakinaGovernable_init(mgParams);
     }
@@ -147,8 +153,23 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function feeManager() external view override returns (address) {
+        return _getMachineStorage()._feeManager;
+    }
+
+    /// @inheritdoc IMachine
     function caliberStaleThreshold() external view override returns (uint256) {
         return _getMachineStorage()._caliberStaleThreshold;
+    }
+
+    /// @inheritdoc IMachine
+    function maxFeeAccrualRate() external view override returns (uint256) {
+        return _getMachineStorage()._maxFeeAccrualRate;
+    }
+
+    /// @inheritdoc IMachine
+    function feeMintCooldown() external view override returns (uint256) {
+        return _getMachineStorage()._feeMintCooldown;
     }
 
     /// @inheritdoc IMachine
@@ -385,12 +406,16 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     /// @inheritdoc IMachine
     function updateTotalAum() public override notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        uint256 totalAum = MachineUtils._getTotalAum($, IHubRegistry(registry).oracleRegistry());
-        uint256 currentTimestamp = block.timestamp;
-        emit TotalAumUpdated(totalAum, currentTimestamp);
-        $._lastTotalAum = totalAum;
-        $._lastGlobalAccountingTime = currentTimestamp;
-        return totalAum;
+
+        uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubRegistry(registry).oracleRegistry());
+        emit TotalAumUpdated($._lastTotalAum);
+
+        uint256 _mintedFees = MachineUtils.manageFees($);
+        if (_mintedFees != 0) {
+            emit FeesMinted(_mintedFees);
+        }
+
+        return _lastTotalAum;
     }
 
     /// @inheritdoc IMachine
@@ -538,10 +563,31 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
+    function setFeeManager(address newFeeManager) external override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit FeeManagerChanged($._feeManager, newFeeManager);
+        $._feeManager = newFeeManager;
+    }
+
+    /// @inheritdoc IMachine
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit CaliberStaleThresholdChanged($._caliberStaleThreshold, newCaliberStaleThreshold);
         $._caliberStaleThreshold = newCaliberStaleThreshold;
+    }
+
+    /// @inheritdoc IMachine
+    function setMaxFeeAccrualRate(uint256 newMaxFeeAccrualRate) external override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit MaxFeeAccrualRateChanged($._maxFeeAccrualRate, newMaxFeeAccrualRate);
+        $._maxFeeAccrualRate = newMaxFeeAccrualRate;
+    }
+
+    /// @inheritdoc IMachine
+    function setFeeMintCooldown(uint256 newFeeMintCooldown) external override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit FeeMintCooldownChanged($._feeMintCooldown, newFeeMintCooldown);
+        $._feeMintCooldown = newFeeMintCooldown;
     }
 
     /// @inheritdoc IMachine
