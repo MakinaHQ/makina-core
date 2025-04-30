@@ -1,0 +1,23 @@
+redeem.t.sol
+├── given pre-deposit vault was migrated
+│  └── it should revert with Migrated
+└── given pre-deposit vault was not migrated
+   ├── given pre-deposit vault is in whitelist mode
+   │  ├── given sender is not whitelisted
+   │  │  └── it should revert with UnauthorizedCaller
+   │  └── given sender is whitelisted
+   │     ├── given output asset amount is lower than provided minAssets
+   │     │  └── it should revert with SlippageProtection
+   │     └── given output asset amount is not lower than provided minAssets
+   │        ├── it should burn shares from caller
+   │        ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
+   │        ├── it should decrease the totalAssets value by assets
+   │        └── it should emit a Redeem event
+   └── given pre-deposit vault is not in whitelist mode
+      ├── given output asset amount is lower than provided minAssets
+      │  └── it should revert with SlippageProtection
+      └── given output asset amount is not lower than provided minAssets
+         ├── it should burn shares from caller
+         ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by previewRedeem
+         ├── it should decrease the totalAssets value by assets
+         └── it should emit a Redeem event

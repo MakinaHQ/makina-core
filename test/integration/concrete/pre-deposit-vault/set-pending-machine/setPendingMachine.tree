@@ -1,0 +1,8 @@
+setPendingMachine.t.sol
+├── given pre-deposit vault was migrated
+│  └── it should revert with Migrated
+└── given pre-deposit vault was not migrated
+   ├── when caller is not the core factory
+   │  └── it should revert with NotFactory
+   └── when caller is the core factory
+      └── it should set the machine address in vault storage

@@ -1,0 +1,5 @@
+previewRedeem.t.sol
+├── given pre-deposit vault was migrated
+│  └── it should revert with Migrated
+└── given pre-deposit vault was not migrated
+   └── it should return the expected amount of received assets for the given amount of shares, at the current exchange rate

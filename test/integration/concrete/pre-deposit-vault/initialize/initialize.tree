@@ -1,0 +1,12 @@
+initialize.t.sol
+├── given the accounting token decimals or deposit token decimals are below minimum or above maximum
+│  └── it should revert with InvalidDecimals
+└── given both the accounting token decimals and deposit token decimals are within allowed range
+   ├── given the accounting token or deposit token do not have associated feed route in the oracle registry
+   │  └── it should revert with PriceFeedRouteNotRegistered
+   └── given both the accounting token and deposit token have associated feed route in the oracle registry
+      ├── given the vault is not the pending owner of the share token
+      │  └── it should revert with OwnableUnauthorizedAccount
+      └── given the vault is the pending owner of the share token
+         ├── it should should initialize the vault with provided parameters
+         └── it should set the vault as owner of the share token

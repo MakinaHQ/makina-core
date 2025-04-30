@@ -64,4 +64,18 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
         hubRegistry.setMachineBeacon(newMachineBeacon);
         assertEq(hubRegistry.machineBeacon(), newMachineBeacon);
     }
+
+    function test_SetPreDepositVaultBeacon_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        hubRegistry.setPreDepositVaultBeacon(address(0));
+    }
+
+    function test_SetPreDepositVaultBeacon() public {
+        address newPreDepositVaultBeacon = makeAddr("newPreDepositVaultBeacon");
+        vm.expectEmit(true, true, false, false, address(hubRegistry));
+        emit IHubRegistry.PreDepositVaultBeaconChange(address(preDepositVaultBeacon), newPreDepositVaultBeacon);
+        vm.prank(dao);
+        hubRegistry.setPreDepositVaultBeacon(newPreDepositVaultBeacon);
+        assertEq(hubRegistry.preDepositVaultBeacon(), newPreDepositVaultBeacon);
+    }
 }

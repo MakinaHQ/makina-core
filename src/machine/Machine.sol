@@ -16,6 +16,7 @@ import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -23,7 +24,7 @@ import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
-import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
@@ -74,18 +75,21 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function initialize(MachineInitParams calldata params, address _shareToken, address _hubCaliber)
-        external
-        override
-        initializer
-    {
+    function initialize(
+        MachineInitParams calldata params,
+        address _preDepositVault,
+        address _shareToken,
+        address _hubCaliber
+    ) external override initializer {
         MachineStorage storage $ = _getMachineStorage();
+
+        $._hubChainId = block.chainid;
+        $._hubCaliber = _hubCaliber;
 
         uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
         uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
-                || stDecimals < atDecimals
         ) {
             revert InvalidDecimals();
         }
@@ -94,6 +98,18 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         }
         $._accountingToken = params.accountingToken;
         $._idleTokens.add(params.accountingToken);
+
+        if (_preDepositVault != address(0)) {
+            if (
+                IPreDepositVault(_preDepositVault).shareToken() != _shareToken
+                    || IPreDepositVault(_preDepositVault).accountingToken() != params.accountingToken
+            ) {
+                revert PreDepositVaultMismatch();
+            }
+            IPreDepositVault(_preDepositVault).migrateToMachine();
+            $._idleTokens.add(IPreDepositVault(_preDepositVault).depositToken());
+            updateTotalAum();
+        }
 
         IOwnable2Step(_shareToken).acceptOwnership();
         $._shareToken = _shareToken;
@@ -106,9 +122,6 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
         $._caliberStaleThreshold = params.initialCaliberStaleThreshold;
         $._shareLimit = params.initialShareLimit;
         __AccessManaged_init(params.initialAuthority);
-
-        $._hubChainId = block.chainid;
-        $._hubCaliber = _hubCaliber;
     }
 
     modifier onlyMechanic() {
@@ -412,7 +425,7 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function updateTotalAum() external override notRecoveryMode returns (uint256) {
+    function updateTotalAum() public override notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
         uint256 totalAum = _getTotalAum();
         uint256 currentTimestamp = block.timestamp;
@@ -757,11 +770,14 @@ contract Machine is AccessManagedUpgradeable, BridgeController, IMachine {
     /// @dev Computes the accounting value of a given token amount.
     function _accountingValueOf(address token, uint256 amount) internal view returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
+        if (token == $._accountingToken) {
+            return amount;
+        }
         uint256 price = IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
     }
 
-    /// @dev transfers funds from caller to self, and updates the machine's idle tokens.
+    /// @dev Checks token balance, and registers token if needed.
     function _notifyIdleToken(address token) internal {
         if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             bool newlyAdded = _getMachineStorage()._idleTokens.add(token);

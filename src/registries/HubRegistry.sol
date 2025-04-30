@@ -9,6 +9,7 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     struct HubRegistryStorage {
         address _chainRegistry;
         address _machineBeacon;
+        address _preDepositVaultBeacon;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.HubRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -47,6 +48,11 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
     }
 
     /// @inheritdoc IHubRegistry
+    function preDepositVaultBeacon() external view override returns (address) {
+        return _getHubRegistryStorage()._preDepositVaultBeacon;
+    }
+
+    /// @inheritdoc IHubRegistry
     function setChainRegistry(address _chainRegistry) external override restricted {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
         emit ChainRegistryChange($._chainRegistry, _chainRegistry);
@@ -58,5 +64,12 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         HubRegistryStorage storage $ = _getHubRegistryStorage();
         emit MachineBeaconChange($._machineBeacon, _machineBeacon);
         $._machineBeacon = _machineBeacon;
+    }
+
+    /// @inheritdoc IHubRegistry
+    function setPreDepositVaultBeacon(address _preDepositVaultBeacon) external override restricted {
+        HubRegistryStorage storage $ = _getHubRegistryStorage();
+        emit PreDepositVaultBeaconChange($._preDepositVaultBeacon, _preDepositVaultBeacon);
+        $._preDepositVaultBeacon = _preDepositVaultBeacon;
     }
 }

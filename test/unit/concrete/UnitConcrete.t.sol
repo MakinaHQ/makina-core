@@ -14,6 +14,7 @@ abstract contract Unit_Concrete_Test is Base_Test {
     MockERC20 public baseToken;
 
     MockPriceFeed internal aPriceFeed1;
+    MockPriceFeed internal bPriceFeed1;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -22,11 +23,13 @@ abstract contract Unit_Concrete_Test is Base_Test {
         baseToken = new MockERC20("baseToken", "BT", 18);
 
         aPriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
+        bPriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
         vm.startPrank(dao);
         oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
+        oracleRegistry.setFeedRoute(address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
         vm.stopPrank();
     }
 }

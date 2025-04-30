@@ -12,11 +12,14 @@ import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
+import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {Constants} from "../libraries/Constants.sol";
 
 contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMachineFactory {
+    /// @inheritdoc IMachineFactory
+    mapping(address preDepositVault => bool isPreDepositVault) public isPreDepositVault;
     /// @inheritdoc IMachineFactory
     mapping(address machine => bool isMachine) public isMachine;
     /// @inheritdoc IMachineFactory
@@ -31,6 +34,52 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @inheritdoc IMachineFactory
+    function createPreDepositVault(
+        IPreDepositVault.PreDepositVaultInitParams calldata params,
+        string memory tokenName,
+        string memory tokenSymbol
+    ) external override restricted returns (address) {
+        address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
+        address preDepositVault = address(new BeaconProxy(IHubRegistry(registry).preDepositVaultBeacon(), ""));
+        IOwnable2Step(shareToken).transferOwnership(preDepositVault);
+
+        IPreDepositVault(preDepositVault).initialize(params, shareToken);
+
+        isPreDepositVault[preDepositVault] = true;
+
+        emit PreDepositVaultDeployed(preDepositVault, shareToken);
+
+        return preDepositVault;
+    }
+
+    /// @inheritdoc IMachineFactory
+    function createMachineFromPreDeposit(IMachine.MachineInitParams calldata params, address preDepositVault)
+        external
+        override
+        restricted
+        returns (address)
+    {
+        if (!isPreDepositVault[preDepositVault]) {
+            revert NotPreDepositVault();
+        }
+
+        address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
+        address caliber = _createCaliber(params, machine);
+
+        IPreDepositVault(preDepositVault).setPendingMachine(machine);
+        address token = IPreDepositVault(preDepositVault).shareToken();
+
+        IMachine(machine).initialize(params, preDepositVault, token, caliber);
+
+        isMachine[machine] = true;
+        isCaliber[caliber] = true;
+
+        emit MachineDeployed(machine, token, caliber);
+
+        return machine;
+    }
+
+    /// @inheritdoc IMachineFactory
     function createMachine(
         IMachine.MachineInitParams calldata params,
         string memory tokenName,
@@ -42,7 +91,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
 
         IOwnable2Step(token).transferOwnership(machine);
 
-        IMachine(machine).initialize(params, token, caliber);
+        IMachine(machine).initialize(params, address(0), token, caliber);
 
         isMachine[machine] = true;
         isCaliber[caliber] = true;

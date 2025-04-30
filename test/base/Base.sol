@@ -19,6 +19,7 @@ import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
+import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 import {TokenRegistry} from "src/registries/TokenRegistry.sol";
@@ -33,6 +34,7 @@ abstract contract Base is DeployViaIr {
         ChainRegistry chainRegistry;
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
+        UpgradeableBeacon preDepositVaultBeacon;
         MachineFactory machineFactory;
     }
 
@@ -162,6 +164,9 @@ abstract contract Base is DeployViaIr {
         address machineImplemAddr = address(new Machine(address(deployment.hubRegistry), wormhole));
         deployment.machineBeacon = new UpgradeableBeacon(machineImplemAddr, dao);
 
+        address preDepositVaultImplemAddr = address(new PreDepositVault(address(deployment.hubRegistry)));
+        deployment.preDepositVaultBeacon = new UpgradeableBeacon(preDepositVaultImplemAddr, dao);
+
         address machineFactoryImplemAddr = address(new MachineFactory(address(deployment.hubRegistry)));
         deployment.machineFactory = MachineFactory(
             address(
@@ -208,8 +213,9 @@ abstract contract Base is DeployViaIr {
         deployment.hubRegistry.setTokenRegistry(address(deployment.tokenRegistry));
         deployment.hubRegistry.setChainRegistry(address(deployment.chainRegistry));
         deployment.hubRegistry.setCoreFactory(address(deployment.machineFactory));
-        deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
         deployment.hubRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
+        deployment.hubRegistry.setMachineBeacon(address(deployment.machineBeacon));
+        deployment.hubRegistry.setPreDepositVaultBeacon(address(deployment.preDepositVaultBeacon));
     }
 
     function setupSpokeRegistry(SpokeCore memory deployment) public {

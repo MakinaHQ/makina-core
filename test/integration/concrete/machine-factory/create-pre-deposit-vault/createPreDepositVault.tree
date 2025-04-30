@@ -1,0 +1,7 @@
+createPreDepositVault.t.sol
+├── given sender does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── given sender has the relevant role
+   ├── it should deploy a pre-deposit vault instance and initialize it with provided parameters
+   ├── it should set the vault as owner of the pre-deposit vault's share token
+   └── it should emit a PreDepositVaultDeployed event
