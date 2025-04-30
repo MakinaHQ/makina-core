@@ -6,6 +6,9 @@ contract SortedParams {
         address accountingToken;
         uint256 initialCaliberStaleThreshold;
         address initialDepositor;
+        address initialFeeManager;
+        uint256 initialFeeMintCooldown;
+        uint256 initialMaxFeeAccrualRate;
         address initialRedeemer;
         uint256 initialShareLimit;
     }

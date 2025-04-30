@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
+import {Constants} from "src/libraries/Constants.sol";
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
@@ -171,7 +174,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_WithZeroAum() public {
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(0, block.timestamp);
+        emit IMachine.TotalAumUpdated(0);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), 0);
     }
@@ -181,7 +184,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken), address(machine), inputAmount);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(0, block.timestamp);
+        emit IMachine.TotalAumUpdated(0);
         machine.updateTotalAum();
         // check that unnoticed token is not accounted for
         assertEq(machine.lastTotalAum(), 0);
@@ -192,7 +195,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(machine), inputAmount);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
     }
@@ -207,7 +210,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount * PRICE_B_A, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount * PRICE_B_A);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount * PRICE_B_A);
     }
@@ -217,7 +220,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(caliber), inputAmount);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
     }
@@ -241,7 +244,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
     }
@@ -265,7 +268,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         caliber.accountForPosition(acctInstruction);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(0, block.timestamp);
+        emit IMachine.TotalAumUpdated(0);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), 0);
     }
@@ -277,7 +280,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(machine), inputAmount);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
 
@@ -285,7 +288,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(caliber), inputAmount);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(2 * inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(2 * inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), 2 * inputAmount);
     }
@@ -301,7 +304,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
 
@@ -324,7 +327,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // check that machine total aum remains the same
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(inputAmount, block.timestamp);
+        emit IMachine.TotalAumUpdated(inputAmount);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount);
     }
@@ -346,7 +349,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(queriedData.netAum, block.timestamp);
+        emit IMachine.TotalAumUpdated(queriedData.netAum);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), queriedData.netAum);
     }
@@ -368,7 +371,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.TotalAumUpdated(0, block.timestamp);
+        emit IMachine.TotalAumUpdated(0);
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), 0);
     }
@@ -683,6 +686,346 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         );
     }
 
+    function test_UpdateTotalAum_NoFeesWhenZeroSupply() public {
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 shareSupply0 = IERC20(machine.shareToken()).totalSupply();
+
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply0);
+
+        // mint assets to machine
+        uint256 assets = 1e30;
+        accountingToken.mint(address(machine), assets);
+
+        // move forward way past the fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN * 1000);
+
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply0);
+    }
+
+    function test_UpdateTotalAum_NoFeeWhenOngoingCooldown() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        // machine was initialized at t = 1
+        // stay within the fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+
+        uint256 shareSupply0 = IERC20(machine.shareToken()).totalSupply();
+
+        machine.updateTotalAum();
+
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply0);
+    }
+
+    function test_UpdateTotalAum_NoFeeWhenFeeManagerRatesTooLow() public {
+        feeManager.setFixedFeeRate(0);
+        feeManager.setPerfFeeRate(0);
+
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 shareSupply0 = IERC20(machine.shareToken()).totalSupply();
+
+        machine.updateTotalAum();
+
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply0);
+    }
+
+    function test_UpdateTotalAum_FixedFeeOnly() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+
+        // fixed fee should be minted and performance fee should be 0
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee1);
+        machine.updateTotalAum();
+        uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
+        assertEq(shareSupply2, shareSupply1 + fixedFee1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fee should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+
+        // fixed fee should be minted and performance fee should be 0
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee2);
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee2);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + fixedFee2);
+    }
+
+    function test_UpdateTotalAum_FixedAndPerfFees() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
+        uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+
+        // mint yield to machine
+        uint256 yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        uint256 adjustedSharePrice =
+            Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+        uint256 perfFee1 = feeManager.calculatePerformanceFee(
+            shareSupply1, sharePrice1, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+        );
+        assertGt(perfFee1, 0);
+
+        // fixed fee and performance fee should be minted
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee1 + perfFee1);
+        machine.updateTotalAum();
+        uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
+        uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+        assertEq(shareSupply2, shareSupply1 + fixedFee1 + perfFee1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1);
+
+        // mint yield to machine
+        yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fees should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        adjustedSharePrice =
+            Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+        uint256 perfFee2 = feeManager.calculatePerformanceFee(
+            shareSupply2, sharePrice2, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+        );
+        assertGt(perfFee2, 0);
+
+        // fixed fee and performance fee should be minted again
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee2 + perfFee2);
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee2 + perfFee2);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1 + fixedFee2 + perfFee2);
+    }
+
+    function test_UpdateTotalAum_FixedAndPerfFees_ReducedByCap() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
+        uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+
+        // mint yield to machine
+        uint256 yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        uint256 adjustedSharePrice =
+            Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+        uint256 perfFee1 = feeManager.calculatePerformanceFee(
+            shareSupply1, sharePrice1, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+        );
+        assertGt(perfFee1, 0);
+
+        // set max fee accrual rate to 2 wei per second
+        uint256 newMaxFeeAccrualRate = 2;
+        vm.prank(dao);
+        machine.setMaxFeeAccrualRate(newMaxFeeAccrualRate);
+
+        // compute capped fees
+        uint256 totalFee = fixedFee1 + perfFee1;
+        uint256 cappedFee = newMaxFeeAccrualRate * DEFAULT_MACHINE_FEE_MINT_COOLDOWN;
+        fixedFee1 = fixedFee1 * cappedFee / totalFee;
+        perfFee1 = cappedFee - fixedFee1;
+
+        // fixed fee and performance fee should be minted
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee1 + perfFee1);
+        machine.updateTotalAum();
+        uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
+        uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+        assertEq(shareSupply2, shareSupply1 + fixedFee1 + perfFee1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1);
+
+        // mint yield to machine
+        yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fees should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        // set max fee accrual rate back to high value
+        vm.prank(dao);
+        machine.setMaxFeeAccrualRate(DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE);
+
+        uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        adjustedSharePrice =
+            Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+        uint256 perfFee2 = feeManager.calculatePerformanceFee(
+            shareSupply2, sharePrice2, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+        );
+        assertGt(perfFee2, 0);
+
+        // fixed fee and performance fee should be minted again
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee2 + perfFee2);
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee2 + perfFee2);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1 + fixedFee2 + perfFee2);
+    }
+
+    function test_UpdateTotalAum_FeeWithRemainingDust() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
+
+        // mint yield to machine
+        uint256 yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        uint256 perfFee1;
+        {
+            uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+            uint256 newAdjustedSharePrice =
+                Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+            perfFee1 = feeManager.calculatePerformanceFee(
+                shareSupply1, sharePrice1, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+            );
+        }
+        assertGt(perfFee1, 0);
+
+        // set feeManager to distribute 60% of notified fees and ignore the rest
+        feeManager.setDistributionRate(6e17);
+        uint256 expectedMintedFees1 = (fixedFee1 + perfFee1) * 6e17 / 1e18;
+
+        // fixed fee and performance fee should be minted
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(expectedMintedFees1);
+        machine.updateTotalAum();
+        uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
+        assertEq(shareSupply2, shareSupply1 + expectedMintedFees1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), expectedMintedFees1);
+
+        // mint yield to machine
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fees should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        uint256 perfFee2;
+        {
+            uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+            uint256 newAdjustedSharePrice =
+                Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+            perfFee2 = feeManager.calculatePerformanceFee(
+                shareSupply2, sharePrice2, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+            );
+        }
+        assertGt(perfFee2, 0);
+
+        // set feeManager to ignore 100% of notified fees
+        feeManager.setDistributionRate(0);
+
+        // fixed fee and performance fee should be minted again
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), expectedMintedFees1);
+
+        // mint yield to machine
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fees should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        uint256 fixedFee3 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        uint256 perfFee3;
+        {
+            uint256 sharePrice3 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + 1);
+            uint256 newAdjustedSharePrice =
+                Constants.SHARE_TOKEN_UNIT * (inputAmount + 3 * yieldAmount + 1) / (shareSupply2 + fixedFee3 + 1);
+            perfFee3 = feeManager.calculatePerformanceFee(
+                shareSupply2, sharePrice3, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+            );
+        }
+        assertGt(perfFee3, 0);
+
+        // set feeManager to distribute 100% of notified fees
+        feeManager.setDistributionRate(1e18);
+
+        // fixed fee and performance fee should be minted again
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee3 + perfFee3);
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee3 + perfFee3);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), expectedMintedFees1 + fixedFee3 + perfFee3);
+    }
+
     function _sendBridgeTransfer(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address token, uint256 amount)
         internal
     {
@@ -751,5 +1094,13 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.prank(mechanic);
         machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextInTransferId);
+    }
+
+    function _deposit(uint256 inputAmount) internal {
+        deal(address(accountingToken), address(machineDepositor), inputAmount, true);
+        vm.startPrank(address(machineDepositor));
+        accountingToken.approve(address(machine), inputAmount);
+        machine.deposit(inputAmount, address(this));
+        vm.stopPrank();
     }
 }

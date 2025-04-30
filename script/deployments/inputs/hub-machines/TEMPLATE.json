@@ -3,7 +3,10 @@
     "accountingToken": "0x0000000000000000000000000000000000000000",
     "initialDepositor": "0x0000000000000000000000000000000000000000",
     "initialRedeemer": "0x0000000000000000000000000000000000000000",
+    "initialFeeManager": "0x0000000000000000000000000000000000000000",
     "initialCaliberStaleThreshold": 0,
+    "initialMaxFeeAccrualRate": 0,
+    "initialFeeMintCooldown": 0,
     "initialShareLimit": 0
   },
   "caliberInitParams": {

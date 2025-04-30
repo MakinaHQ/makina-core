@@ -20,6 +20,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
+import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
 import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
@@ -68,6 +69,8 @@ abstract contract Base_Hub_Test is Base_Test {
     address public machineDepositor = makeAddr("MachineDepositor");
     address public machineRedeemer = makeAddr("MachineRedeemer");
 
+    MockFeeManager public feeManager;
+
     function setUp() public virtual override {
         Base_Test.setUp();
         hubChainId = block.chainid;
@@ -104,7 +107,10 @@ abstract contract Base_Hub_Test is Base_Test {
                     accountingToken: _accountingToken,
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
+                    initialFeeManager: address(feeManager),
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialMaxFeeAccrualRate: DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE,
+                    initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({

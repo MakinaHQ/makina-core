@@ -7,6 +7,8 @@ contract Constants {
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL = "MS";
     uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
+    uint256 public constant DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE = 1e17;
+    uint256 public constant DEFAULT_MACHINE_FEE_MINT_COOLDOWN = 8 hours;
     uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
 
     uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
@@ -24,4 +26,7 @@ contract Constants {
     uint256 internal constant LOOP_POS_ID = 7;
 
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
+
+    uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e9;
+    uint256 public constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 1e10;
 }

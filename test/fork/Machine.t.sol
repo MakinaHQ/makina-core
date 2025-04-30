@@ -11,6 +11,7 @@ import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
+import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -26,6 +27,8 @@ contract Machine_Fork_Test is Fork_Test {
 
     address public machineDepositor;
     address public machineRedeemer;
+
+    MockFeeManager public feeManager;
 
     function setUp() public {
         machineDepositor = makeAddr("MachineDepositor");
@@ -46,6 +49,9 @@ contract Machine_Fork_Test is Fork_Test {
 
         vm.selectFork(ethForkData.forkId);
 
+        feeManager =
+            new MockFeeManager(ethForkData.dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
+
         // deploy machine
         vm.prank(ethForkData.dao);
         machine = Machine(
@@ -54,7 +60,10 @@ contract Machine_Fork_Test is Fork_Test {
                     accountingToken: ethForkData.usdc,
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
+                    initialFeeManager: address(feeManager),
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialMaxFeeAccrualRate: DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE,
+                    initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({
