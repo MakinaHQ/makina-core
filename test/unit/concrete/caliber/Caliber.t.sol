@@ -120,4 +120,17 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         caliber.setMaxSwapLossBps(1000);
         assertEq(caliber.maxSwapLossBps(), 1000);
     }
+
+    function test_SetCooldownDuration_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        caliber.setCooldownDuration(1000);
+    }
+
+    function test_SetCooldownDuration() public {
+        vm.expectEmit(true, true, false, false, address(caliber));
+        emit ICaliber.CooldownDurationChanged(DEFAULT_CALIBER_COOLDOWN_DURATION, 1000);
+        vm.prank(riskManagerTimelock);
+        caliber.setCooldownDuration(1000);
+        assertEq(caliber.cooldownDuration(), 1000);
+    }
 }

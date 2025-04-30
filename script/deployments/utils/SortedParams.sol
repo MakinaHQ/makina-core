@@ -16,6 +16,7 @@ contract SortedParams {
     struct CaliberInitParamsSorted {
         address accountingToken;
         bytes32 initialAllowedInstrRoot;
+        uint256 initialCooldownDuration;
         address initialFlashLoanModule;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxPositionIncreaseLossBps;

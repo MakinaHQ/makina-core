@@ -26,6 +26,7 @@ interface ICaliber {
     error NotBaseToken();
     error NotFlashLoanModule();
     error NotRootGuardian();
+    error OngoingCooldown();
     error PositionAccountingStale(uint256 posId);
     error PositionAlreadyExists();
     error PositionDoesNotExist();
@@ -39,6 +40,7 @@ interface ICaliber {
 
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
+    event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
     event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
     event InstrRootGuardianAdded(address indexed newGuardian);
     event InstrRootGuardianRemoved(address indexed guardian);
@@ -72,6 +74,7 @@ interface ICaliber {
     /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis point) for position increases.
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
+    /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
     /// @param initialFlashLoanModule The address of the initial flashLoan module.
     struct CaliberInitParams {
         address accountingToken;
@@ -81,6 +84,7 @@ interface ICaliber {
         uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
+        uint256 initialCooldownDuration;
         address initialFlashLoanModule;
     }
 
@@ -154,6 +158,9 @@ interface ICaliber {
 
     /// @notice Max allowed value loss (in basis point) for base token swaps.
     function maxSwapLossBps() external view returns (uint256);
+
+    /// @notice Duration of the cooldown period for swaps and position management.
+    function cooldownDuration() external view returns (uint256);
 
     /// @notice Length of the position IDs list.
     function getPositionsLength() external view returns (uint256);
@@ -306,6 +313,10 @@ interface ICaliber {
     /// @notice Sets the max allowed value loss for base token swaps.
     /// @param newMaxSwapLossBps The new max value loss in basis points.
     function setMaxSwapLossBps(uint256 newMaxSwapLossBps) external;
+
+    /// @notice Sets the duration of the cooldown period for swaps and position management.
+    /// @param newCooldownDuration The new duration in seconds.
+    function setCooldownDuration(uint256 newCooldownDuration) external;
 
     /// @notice Adds a new guardian for the Merkle tree containing allowed instructions.
     /// @param newGuardian The address of the new guardian.
