@@ -3,9 +3,10 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
@@ -30,7 +31,7 @@ import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract Machine is MakinaGovernable, BridgeController, IMachine {
+contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeable, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -271,7 +272,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override nonReentrant {
         MachineStorage storage $ = _getMachineStorage();
 
         if (_isBridgeAdapter(msg.sender)) {
@@ -335,7 +336,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         address token,
         uint256 amount,
         uint256 minOutputAmount
-    ) external override notRecoveryMode {
+    ) external override notRecoveryMode nonReentrant {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != mechanic()) {
@@ -404,7 +405,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function updateTotalAum() public override notRecoveryMode returns (uint256) {
+    function updateTotalAum() public override nonReentrant notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubRegistry(registry).oracleRegistry());
@@ -419,7 +420,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function deposit(uint256 assets, address receiver) external notRecoveryMode returns (uint256) {
+    function deposit(uint256 assets, address receiver) external nonReentrant notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._depositor) {
@@ -440,7 +441,14 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver) external notRecoveryMode returns (uint256) {
+    /// @inheritdoc IMachine
+    function redeem(uint256 shares, address receiver)
+        external
+        override
+        nonReentrant
+        notRecoveryMode
+        returns (uint256)
+    {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._redeemer) {
@@ -462,8 +470,11 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         return assets;
     }
 
+    /// @inheritdoc IMachine
     function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
         external
+        override
+        nonReentrant
     {
         MachineStorage storage $ = _getMachineStorage();
 

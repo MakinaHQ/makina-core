@@ -1,30 +1,33 @@
 transferToSpokeCaliber.t.sol
-├── given recovery mode is off
-│  ├── when sender is not the Mechanic
-│  │  └── it should revert with UnauthorizedCaller
-│  └── when sender is the Mechanic
-│     ├── given no foreign token is registered in token registry for given input token and destination chain ID
-│     │  └── it should revert with ForeignTokenNotRegistered
-│     └── given a foreign token is registered in token registry for given input token and destination chain ID
-│        ├── given no spoke caliber is registered for the provided bridge ID
-│        │  └── it should revert with InvalidChainId
-│        └── given a spoke caliber is registered for the provided bridge ID
-│           ├── given no spoke bridge adapter is set for the provided bridge ID
-│           │  └── it should revert with SpokeBridgeAdapterNotSet
-│           └── given a spoke bridge adapter is set for the provided bridge ID
-│              ├── given no local bridge adapter is set for the provided bridge ID
-│              │  └── it should revert with BridgeAdapterDoesNotExist
-│              └── given a local bridge adapter is set for the provided bridge ID
-│                 ├── given outgoing bridge transfers through the given bridge are marked as disabled
-│                 │  └── it should revert with BridgeAdapterDoesNotExist
-│                 └── given outgoing bridge transfers through the given bridge are marked as enabled
-│                    ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
-│                    │  └── it should revert with MaxValueLossExceeded
-│                    └── given the maximum allowed value loss induced by the bridge transfer is not higher than maxBridgeLossBps
-│                       ├── it should decrease the machine's token balance by amount
-│                       ├── it should increase the local bridge adapter's token balance by amount
-│                       ├── it should increase the machine's bridgeOut value by amount for the input token and destination chain ID
-│                       ├── it should emit a TransferToCaliber event
-│                       └── it should emit a ScheduleOutBridgeTransfer event
-└── given recovery mode is on
-   └── it should revert with RecoveryMode
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── given recovery mode is off
+   │  ├── when sender is not the Mechanic
+   │  │  └── it should revert with UnauthorizedCaller
+   │  └── when sender is the Mechanic
+   │     ├── given no foreign token is registered in token registry for given input token and destination chain ID
+   │     │  └── it should revert with ForeignTokenNotRegistered
+   │     └── given a foreign token is registered in token registry for given input token and destination chain ID
+   │        ├── given no spoke caliber is registered for the provided bridge ID
+   │        │  └── it should revert with InvalidChainId
+   │        └── given a spoke caliber is registered for the provided bridge ID
+   │           ├── given no spoke bridge adapter is set for the provided bridge ID
+   │           │  └── it should revert with SpokeBridgeAdapterNotSet
+   │           └── given a spoke bridge adapter is set for the provided bridge ID
+   │              ├── given no local bridge adapter is set for the provided bridge ID
+   │              │  └── it should revert with BridgeAdapterDoesNotExist
+   │              └── given a local bridge adapter is set for the provided bridge ID
+   │                 ├── given outgoing bridge transfers through the given bridge are marked as disabled
+   │                 │  └── it should revert with BridgeAdapterDoesNotExist
+   │                 └── given outgoing bridge transfers through the given bridge are marked as enabled
+   │                    ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
+   │                    │  └── it should revert with MaxValueLossExceeded
+   │                    └── given the maximum allowed value loss induced by the bridge transfer is not higher than maxBridgeLossBps
+   │                       ├── it should decrease the machine's token balance by amount
+   │                       ├── it should increase the local bridge adapter's token balance by amount
+   │                       ├── it should increase the machine's bridgeOut value by amount for the input token and destination chain ID
+   │                       ├── it should emit a TransferToCaliber event
+   │                       └── it should emit a ScheduleOutBridgeTransfer event
+   └── given recovery mode is on
+      └── it should revert with RecoveryMode

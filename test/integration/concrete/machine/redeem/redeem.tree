@@ -1,0 +1,17 @@
+redeem.t.sol
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── given recovery mode is on
+   │  └── it should revert with RecoveryMode
+   └── given recovery mode is off
+      ├── when sender is not redeemer
+      │  └── it should revert with UnauthorizedRedeemer
+      └── when sender is redeemer
+         ├── given that the asset amount to withdraw exceeds the maximum allowed withdrawal amount
+         │  └── it should revert with ExceededMaxWithdraw
+         └── given that the asset amount to withdraw does not exceed the maximum allowed withdrawal amount
+            ├── it should burn shares from caller
+            ├── it should transfer assets to the receiver in exchange for the burnt shares, based on the conversion rate provided by convertToAssets
+            ├── it should decrease the last AUM value by assets
+            └── it should emit a Redeem event

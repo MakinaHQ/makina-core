@@ -1,6 +1,6 @@
 manageTransfer.t.sol
 ├── when call is reentrant
-│  └── it should revert
+│  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
    ├── given sender is the associated caliber
    │  ├── given no foreign token is registered in token registry for given input token and destination chain ID

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
+import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -31,6 +34,18 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
         assertFalse(machine.isIdleToken(address(baseToken)));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(machine),
+            abi.encodeCall(IMachineEndpoint.manageTransfer, (address(0), 0, ""))
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.prank(address(caliber));
+        machine.manageTransfer(address(accountingToken), 0, "");
     }
 
     function test_RevertWhen_CallerNotAuthorized() public {

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -25,6 +28,23 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         );
         machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
         vm.stopPrank();
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        uint256 inputAmount = 1e18;
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(machine),
+            abi.encodeCall(IMachine.transferToSpokeCaliber, (IBridgeAdapter.Bridge.ACROSS_V3, 0, address(0), 0, 0))
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(
+            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+        );
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
