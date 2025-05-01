@@ -19,7 +19,7 @@ import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
-import {Base_Test, Base_Hub_Test, Base_Spoke_Test, Base_CrossChain_Test} from "test/base/Base.t.sol";
+import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
 abstract contract Integration_Concrete_Test is Base_Test {
     /// @dev A denotes the accounting token, B denotes the base token

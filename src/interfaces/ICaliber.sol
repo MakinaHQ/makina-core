@@ -6,14 +6,13 @@ import {ISwapModule} from "../interfaces/ISwapModule.sol";
 interface ICaliber {
     error AccountingToken();
     error ActiveUpdatePending();
+    error AlreadyBaseToken();
     error AlreadyRootGuardian();
-    error BaseTokenAlreadyExists();
     error DirectManageFlashLoanCall();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidDebtFlag();
     error InvalidPositionChangeDirection();
-    error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
     error InvalidInstructionType();
@@ -28,7 +27,6 @@ interface ICaliber {
     error NotRootGuardian();
     error OngoingCooldown();
     error PositionAccountingStale(uint256 posId);
-    error PositionAlreadyExists();
     error PositionDoesNotExist();
     error ProtectedRootGuardian();
     error RecoveryMode();
@@ -177,10 +175,10 @@ interface ICaliber {
     /// @dev Base token index => Base token address
     /// @dev There are no guarantees on the ordering of values inside the base tokens list,
     ///      and it may change when values are added or removed.
-    function getBaseTokenAddress(uint256 idx) external view returns (address);
+    function getBaseToken(uint256 idx) external view returns (address);
 
     /// @dev User => Whether the user is a root guardian
-    ///      Guardians have veto power over the Merkle root update.
+    ///      Guardians have veto power over updates of the Merkle root.
     function isInstrRootGuardian(address user) external view returns (bool);
 
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.

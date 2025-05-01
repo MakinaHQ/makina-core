@@ -72,7 +72,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
 
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
-        assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
     }
 
     function test_CreateBridgeAdapter_RevertWhen_CallerNotCaliberMailbox() public {

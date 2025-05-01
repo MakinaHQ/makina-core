@@ -152,8 +152,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
             abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, _applyBridgeFee(IBridgeAdapter.Bridge.ACROSS_V3, amount))
         );
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        // 2nd topic of 6th emitted event
-        bytes32 messageHash = entries[5].topics[2];
+        // 2nd topic of 5th emitted event
+        bytes32 messageHash = entries[4].topics[2];
 
         machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
 

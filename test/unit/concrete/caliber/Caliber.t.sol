@@ -36,7 +36,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         assertEq(caliber.isBaseToken(address(accountingToken)), true);
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
-        assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {
