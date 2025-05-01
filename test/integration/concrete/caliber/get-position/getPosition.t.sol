@@ -50,6 +50,8 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         assertEq(position.lastAccountingTime, block.timestamp);
         assertEq(position.value, PRICE_B_A * amount1);
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         // increase position value
         uint256 amount2 = 3e18;
         deal(address(baseToken), address(caliber), amount2, true);

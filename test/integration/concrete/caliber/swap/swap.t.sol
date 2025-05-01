@@ -49,6 +49,10 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
+    function test_RevertWhen_OngoingCooldown() public withTokenAsBT(address(baseToken)) {
+        _test_RevertWhen_OngoingCooldown(mechanic);
+    }
+
     function test_RevertGiven_SwapFromBTWithValueLossTooHigh() public withTokenAsBT(address(baseToken)) {
         _test_RevertGiven_SwapFromBTWithValueLossTooHigh(mechanic);
     }
@@ -135,6 +139,14 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
+    function test_RevertWhen_OngoingCooldown_WhileInRecoveryMode()
+        public
+        withTokenAsBT(address(baseToken))
+        whileInRecoveryMode
+    {
+        _test_RevertWhen_OngoingCooldown(securityCouncil);
+    }
+
     function test_RevertGiven_SwapFromBTWithValueLossTooHigh_WhileInRecoveryMode()
         public
         withTokenAsBT(address(baseToken))
@@ -172,7 +184,34 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     /// Helper functions
     ///
 
-    function _test_RevertGiven_SwapFromBTWithValueLossTooHigh(address sender) public {
+    function _test_RevertWhen_OngoingCooldown(address operator) internal {
+        // add liquidity to mock pool
+        uint256 amount1 = 1e30 * PRICE_B_A;
+        uint256 amount2 = 1e30;
+        _addLiquidityToMockPool(amount1, amount2);
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), 2 * inputAmount, true);
+
+        // swap baseToken to accountingToken
+        uint256 previewOutputAmount1 = pool.previewSwap(address(baseToken), inputAmount);
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapper: ISwapModule.Swapper.ZEROX,
+            data: abi.encodeCall(MockPool.swap, (address(baseToken), inputAmount)),
+            inputToken: address(baseToken),
+            outputToken: address(accountingToken),
+            inputAmount: inputAmount,
+            minOutputAmount: previewOutputAmount1
+        });
+        vm.prank(operator);
+        caliber.swap(order);
+
+        vm.expectRevert(ICaliber.OngoingCooldown.selector);
+        vm.prank(operator);
+        caliber.swap(order);
+    }
+
+    function _test_RevertGiven_SwapFromBTWithValueLossTooHigh(address operator) public {
         // add liquidity to mock pool
         uint256 amount1 = 1e30 * PRICE_B_A;
         uint256 amount2 = 1e30;
@@ -196,7 +235,7 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
             minOutputAmount: previewOutputAmount
         });
 
-        vm.prank(sender);
+        vm.prank(operator);
         vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
         caliber.swap(order);
     }

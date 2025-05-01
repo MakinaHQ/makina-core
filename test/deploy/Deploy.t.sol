@@ -151,6 +151,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(hubCaliber.maxPositionIncreaseLossBps(), cParams.initialMaxPositionIncreaseLossBps);
         assertEq(hubCaliber.maxPositionDecreaseLossBps(), cParams.initialMaxPositionDecreaseLossBps);
         assertEq(hubCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
+        assertEq(hubCaliber.cooldownDuration(), cParams.initialCooldownDuration);
         assertEq(hubCaliber.flashLoanModule(), cParams.initialFlashLoanModule);
 
         assertEq(machine.getSpokeCalibersLength(), 0);
@@ -230,6 +231,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(spokeCaliber.maxPositionIncreaseLossBps(), cParams.initialMaxPositionIncreaseLossBps);
         assertEq(spokeCaliber.maxPositionDecreaseLossBps(), cParams.initialMaxPositionDecreaseLossBps);
         assertEq(spokeCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
+        assertEq(spokeCaliber.cooldownDuration(), cParams.initialCooldownDuration);
         assertEq(spokeCaliber.flashLoanModule(), cParams.initialFlashLoanModule);
 
         ICaliberMailbox mailbox = ICaliberMailbox(spokeCaliber.hubMachineEndpoint());

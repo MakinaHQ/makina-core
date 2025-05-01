@@ -74,6 +74,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
                     initialFlashLoanModule: address(0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
@@ -133,6 +134,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
                     initialFlashLoanModule: address(0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({

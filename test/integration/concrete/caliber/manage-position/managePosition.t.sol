@@ -169,6 +169,9 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     }
 
     function test_RevertGiven_WrongRoot() public withTokenAsBT(address(baseToken)) {
+        vm.prank(riskManagerTimelock);
+        caliber.setCooldownDuration(0);
+
         uint256 inputAmount = 3e18;
 
         deal(address(baseToken), address(caliber), 3 * inputAmount, true);
@@ -291,6 +294,25 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         vm.prank(mechanic);
         vm.expectRevert(ICaliber.InvalidAffectedToken.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertWhen_OngoingCooldown() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 2 * inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // try to create position
+        vm.prank(mechanic);
+        vm.expectRevert(ICaliber.OngoingCooldown.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -637,6 +659,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 posLengthBefore = caliber.getPositionsLength();
         previewShares += vault.previewDeposit(inputAmount);
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         // increase position
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
@@ -667,6 +691,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         uint256 posLengthBefore = caliber.getPositionsLength();
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         // increase position
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
@@ -696,6 +722,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         uint256 posLengthBefore = caliber.getPositionsLength();
+
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
 
         // increase position
         vm.prank(mechanic);
@@ -959,6 +987,36 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
+    }
+
+    function test_RevertWhen_OngoingCooldown_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), 2 * inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // turn on recovery mode
+        _setRecoveryMode();
+
+        mgmtInstruction = WeirollUtils._build4626RedeemInstruction(
+            address(caliber), VAULT_POS_ID, address(vault), vault.balanceOf(address(caliber)) / 2
+        );
+
+        // decrease position
+        vm.prank(securityCouncil);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // try to decrease position again
+        vm.prank(securityCouncil);
+        vm.expectRevert(ICaliber.OngoingCooldown.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
     function test_RevertGiven_PositionIncrease_NonDebt_WhileInRecoveryMode()

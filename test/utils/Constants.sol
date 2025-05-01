@@ -16,6 +16,7 @@ contract Constants {
     uint256 public constant DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS = 100;
     uint256 public constant DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS = 1000;
     uint256 public constant DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS = 200;
+    uint256 public constant DEFAULT_CALIBER_COOLDOWN_DURATION = 60 seconds;
 
     uint256 public constant DEFAULT_MAX_BRIDGE_LOSS_BPS = 300;
 

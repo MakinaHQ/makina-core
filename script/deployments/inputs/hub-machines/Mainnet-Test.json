@@ -17,6 +17,7 @@
     "initialMaxPositionIncreaseLossBps": 300,
     "initialMaxPositionDecreaseLossBps": 3000,
     "initialMaxSwapLossBps": 200,
+    "initialCooldownDuration": 60,
     "initialFlashLoanModule": "0x0000000000000000000000000000000000000000"
   },
   "makinaGovernableInitParams": {

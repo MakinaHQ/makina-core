@@ -48,6 +48,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 _managedPositionId;
         bool _isManagedPositionDebt;
         bool _isManagingFlashloan;
+        uint256 _cooldownDuration;
+        uint256 _lastBTSwapTimestamp;
+        mapping(bytes32 => uint256) _lastExecutionTimestamp;
         mapping(uint256 posId => Position pos) _positionById;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
@@ -86,6 +89,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         $._maxPositionIncreaseLossBps = cParams.initialMaxPositionIncreaseLossBps;
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
+        $._cooldownDuration = cParams.initialCooldownDuration;
         $._flashLoanModule = cParams.initialFlashLoanModule;
         _addBaseToken(cParams.accountingToken);
 
@@ -188,6 +192,11 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     /// @inheritdoc ICaliber
     function maxSwapLossBps() external view override returns (uint256) {
         return _getCaliberStorage()._maxSwapLossBps;
+    }
+
+    /// @inheritdoc ICaliber
+    function cooldownDuration() external view returns (uint256) {
+        return _getCaliberStorage()._cooldownDuration;
     }
 
     /// @inheritdoc ICaliber
@@ -495,6 +504,13 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
+    function setCooldownDuration(uint256 newCooldownDuration) external override onlyRiskManagerTimelock {
+        CaliberStorage storage $ = _getCaliberStorage();
+        emit CooldownDurationChanged($._cooldownDuration, newCooldownDuration);
+        $._cooldownDuration = newCooldownDuration;
+    }
+
+    /// @inheritdoc ICaliber
     function addInstrRootGuardian(address newGuardian) external override restricted {
         CaliberStorage storage $ = _getCaliberStorage();
         IMachineEndpoint _hubMachineEndpoint = IMachineEndpoint($._hubMachineEndpoint);
@@ -593,6 +609,11 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert RecoveryMode();
         }
 
+        bytes32 executionHash = keccak256(abi.encodePacked(posId, mgmtInstruction.commands, isPositionIncrease));
+        if (block.timestamp - $._lastExecutionTimestamp[executionHash] < $._cooldownDuration) {
+            revert OngoingCooldown();
+        }
+
         if (isBaseTokenInflow) {
             if (mgmtInstruction.isDebt == isPositionIncrease) {
                 _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
@@ -604,6 +625,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
+        $._lastExecutionTimestamp[executionHash] = block.timestamp;
         $._managedPositionId = 0;
         $._isManagedPositionDebt = false;
 
@@ -814,6 +836,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 valBefore;
         bool isInputBaseToken = $._baseTokens.contains(order.inputToken);
         if (isInputBaseToken) {
+            if (block.timestamp - $._lastBTSwapTimestamp < $._cooldownDuration) {
+                revert OngoingCooldown();
+            }
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
@@ -827,6 +852,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
                 revert MaxValueLossExceeded();
             }
+            $._lastBTSwapTimestamp = block.timestamp;
         }
     }
 

@@ -75,6 +75,7 @@ contract DeployHubMachine is Script, SortedParams {
                 cParams.initialMaxPositionIncreaseLossBps,
                 cParams.initialMaxPositionDecreaseLossBps,
                 cParams.initialMaxSwapLossBps,
+                cParams.initialCooldownDuration,
                 cParams.initialFlashLoanModule
             ),
             IMakinaGovernable.MakinaGovernableInitParams(
