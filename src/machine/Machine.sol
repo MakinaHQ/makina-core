@@ -9,15 +9,10 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
-import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
-
-import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
-import {MachineUtils} from "../libraries/MachineUtils.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -30,6 +25,7 @@ import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
+import {MachineUtils} from "../libraries/MachineUtils.sol";
 
 contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeable, IMachine {
     using Math for uint256;
@@ -409,7 +405,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubRegistry(registry).oracleRegistry());
-        emit TotalAumUpdated($._lastTotalAum);
+        emit TotalAumUpdated(_lastTotalAum);
 
         uint256 _mintedFees = MachineUtils.manageFees($);
         if (_mintedFees != 0) {
@@ -482,44 +478,19 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
+    function updateSpokeCaliberAccountingData(bytes calldata response, IWormhole.Signature[] calldata signatures)
         external
         override
         nonReentrant
     {
-        MachineStorage storage $ = _getMachineStorage();
-
-        QueryResponse memory r = CaliberAccountingCCQ.parseAndVerifyQueryResponse(wormhole, response, signatures);
-        uint256 numResponses = r.responses.length;
-
-        for (uint256 i; i < numResponses;) {
-            uint16 _wmChainId = r.responses[i].chainId;
-            uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
-
-            SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
-
-            if (caliberData.mailbox == address(0)) {
-                revert InvalidChainId();
-            }
-
-            // Decode and update accounting data.
-            (ICaliberMailbox.SpokeCaliberAccountingData memory accountingData, uint256 responseTimestamp) =
-            CaliberAccountingCCQ.getAccountingData(
-                r.responses[i], caliberData.mailbox, caliberData.timestamp, $._caliberStaleThreshold
-            );
-
-            caliberData.netAum = accountingData.netAum;
-            caliberData.positions = accountingData.positions;
-            caliberData.baseTokens = accountingData.baseTokens;
-            caliberData.timestamp = responseTimestamp;
-
-            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn);
-            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut);
-
-            unchecked {
-                ++i;
-            }
-        }
+        MachineUtils.updateSpokeCaliberAccountingData(
+            _getMachineStorage(),
+            IHubRegistry(registry).tokenRegistry(),
+            IHubRegistry(registry).chainRegistry(),
+            wormhole,
+            response,
+            signatures
+        );
     }
 
     /// @inheritdoc IMachine
@@ -682,25 +653,6 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         caliberData.bridgeAdapters[bridgeId] = adapter;
 
         emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
-    }
-
-    /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
-    function _decodeAndMapBridgeAmounts(
-        uint256 chainId,
-        bytes[] memory data,
-        EnumerableMap.AddressToUintMap storage map
-    ) internal {
-        address tokenRegistry = IHubRegistry(registry).tokenRegistry();
-        uint256 len = data.length;
-        for (uint256 i; i < len;) {
-            (address foreignToken, uint256 amount) = abi.decode(data[i], (address, uint256));
-            address localToken = ITokenRegistry(tokenRegistry).getLocalToken(foreignToken, chainId);
-            map.set(localToken, amount);
-
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     /// @dev Checks token balance, and registers token if needed.

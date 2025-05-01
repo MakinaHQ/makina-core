@@ -12,6 +12,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {CaliberAccountingCCQ} from "src/libraries/CaliberAccountingCCQ.sol";
+import {MachineUtils} from "src/libraries/MachineUtils.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -130,7 +131,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
+        vm.expectRevert(MachineUtils.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // update data
@@ -149,7 +150,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
+        vm.expectRevert(MachineUtils.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 

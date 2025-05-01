@@ -203,7 +203,7 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Updates spoke caliber accounting data using Wormhole Cross-Chain Queries (CCQ).
     /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
-    /// @param response The Wormhole CCQ response payload containing the new spoke caliber accounting data.
+    /// @param response The Wormhole CCQ response payload containing the accounting data.
     /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
     function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
         external;
