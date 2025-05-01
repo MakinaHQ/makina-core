@@ -32,6 +32,7 @@ interface ICaliber {
     error PositionDoesNotExist();
     error ProtectedRootGuardian();
     error RecoveryMode();
+    error SameRoot();
     error TimelockDurationTooShort();
     error UnauthorizedCaller();
     error UnmatchingInstructions();

@@ -445,15 +445,18 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external override onlyRiskManager {
+    function scheduleAllowedInstrRootUpdate(bytes32 newAllowedInstrRoot) external override onlyRiskManager {
         CaliberStorage storage $ = _getCaliberStorage();
         _updateAllowedInstrRoot();
         if ($._pendingTimelockExpiry != 0) {
             revert ActiveUpdatePending();
         }
-        $._pendingAllowedInstrRoot = newMerkleRoot;
+        if (newAllowedInstrRoot == $._allowedInstrRoot) {
+            revert SameRoot();
+        }
+        $._pendingAllowedInstrRoot = newAllowedInstrRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
-        emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+        emit NewAllowedInstrRootScheduled(newAllowedInstrRoot, $._pendingTimelockExpiry);
     }
 
     /// @inheritdoc ICaliber
