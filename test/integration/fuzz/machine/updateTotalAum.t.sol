@@ -86,7 +86,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         oracleRegistry.setFeedRoute(address(baseToken), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
         vm.stopPrank();
 
-        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), address(0));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0));
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
 

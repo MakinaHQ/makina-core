@@ -117,10 +117,10 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
             keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff));
 
         // set _managedPositionId to LOOP_POS_ID
-        vm.store(address(caliber), bytes32(uint256(caliberStorageLocation) + 11), bytes32(LOOP_POS_ID));
+        vm.store(address(caliber), bytes32(uint256(caliberStorageLocation) + 10), bytes32(LOOP_POS_ID));
 
         // set _isManagedPositionDebt to true
-        vm.store(address(caliber), bytes32(uint256(caliberStorageLocation) + 12), bytes32(uint256(1)));
+        vm.store(address(caliber), bytes32(uint256(caliberStorageLocation) + 11), bytes32(uint256(1)));
 
         vm.expectRevert(ICaliber.InvalidDebtFlag.selector);
         vm.prank(address(flashLoanModule));

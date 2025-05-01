@@ -25,7 +25,6 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     function test_Getters() public view {
         assertEq(caliber.hubMachineEndpoint(), address(caliberMailbox));
         assertEq(caliber.accountingToken(), address(accountingToken));
-        assertEq(caliber.flashLoanModule(), address(0));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
         assertEq(caliber.allowedInstrRoot(), defaultRoot);
         assertEq(caliber.timelockDuration(), 1 hours);
@@ -38,20 +37,6 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
         assertEq(caliber.getBaseTokenAddress(0), address(accountingToken));
-    }
-
-    function test_SetFlashLoanModule_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliber.setFlashLoanModule(address(0x0));
-    }
-
-    function test_SetFlashLoanModule() public {
-        address newFlashLoanModule = makeAddr("NewFlashLoanModule");
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.FlashLoanModuleChanged(address(0), newFlashLoanModule);
-        vm.prank(dao);
-        caliber.setFlashLoanModule(newFlashLoanModule);
-        assertEq(caliber.flashLoanModule(), newFlashLoanModule);
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {

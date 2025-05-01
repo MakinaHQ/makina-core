@@ -11,6 +11,7 @@ interface IBaseMakinaRegistry {
     event CoreFactoryChange(address indexed oldCoreFactory, address indexed newCoreFactory);
     event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
     event SwapModuleChange(address indexed oldSwapModule, address indexed newSwapModule);
+    event FlashLoanModuleChange(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
     event TokenRegistryChange(address indexed oldTokenRegistry, address indexed newTokenRegistry);
 
     /// @notice Address of the core factory.
@@ -24,6 +25,9 @@ interface IBaseMakinaRegistry {
 
     /// @notice Address of the swapModule module.
     function swapModule() external view returns (address);
+
+    /// @notice Address of the flashLoan module.
+    function flashLoanModule() external view returns (address);
 
     /// @notice Address of the caliber beacon contract.
     function caliberBeacon() external view returns (address);
@@ -43,9 +47,13 @@ interface IBaseMakinaRegistry {
     /// @param _tokenRegistry The token registry address.
     function setTokenRegistry(address _tokenRegistry) external;
 
-    /// @notice Sets the swapModule address.
+    /// @notice Sets the swap module address.
     /// @param _swapModule The swapModule address.
     function setSwapModule(address _swapModule) external;
+
+    /// @notice Sets the flashLoan module address.
+    /// @param newFlashLoanModule The flashLoan module address.
+    function setFlashLoanModule(address newFlashLoanModule) external;
 
     /// @notice Sets the caliber beacon address.
     /// @param _caliberBeacon The caliber beacon address.

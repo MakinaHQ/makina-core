@@ -87,9 +87,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         vm.stopPrank();
 
         // deploy hub and spoke chain contracts
-        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), address(0));
-        (spokeCaliber, spokeCaliberMailbox) =
-            _deployCaliber(address(machine), address(accountingToken), bytes32(0), address(0));
+        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0));
+        (spokeCaliber, spokeCaliberMailbox) = _deployCaliber(address(machine), address(accountingToken), bytes32(0));
 
         // set up machine and spoke caliber
         vm.prank(riskManagerTimelock);

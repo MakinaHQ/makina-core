@@ -153,9 +153,12 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         Base_Hub_Test.setUp();
         Integration_Concrete_Test.setUp();
 
+        vm.prank(dao);
+        hubRegistry.setFlashLoanModule(address(flashLoanModule));
+
         feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
-        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0));
     }
 
     modifier whileInRecoveryMode() {
@@ -200,10 +203,12 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Base_Spoke_Test.setUp();
         Integration_Concrete_Test.setUp();
 
+        vm.prank(dao);
+        spokeRegistry.setFlashLoanModule(address(flashLoanModule));
+
         hubMachineAddr = makeAddr("hubMachine");
 
-        (caliber, caliberMailbox) =
-            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), address(flashLoanModule));
+        (caliber, caliberMailbox) = _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0));
     }
 
     modifier whileInRecoveryMode() {
@@ -228,40 +233,5 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         vm.prank(dao);
         caliberMailbox.setHubBridgeAdapter(bridgeId, foreignAdapter);
         _;
-    }
-}
-
-abstract contract Integration_Concrete_CrossChain_Test is Integration_Concrete_Test, Base_CrossChain_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-
-    Machine public machine;
-    Caliber public hubCaliber;
-    // AcrossV3BridgeAdapter public acrossV3Adapter;
-
-    Caliber public spokeCaliber;
-    CaliberMailbox public spokeCaliberMailbox;
-    address public spokeAcrossV3Adapter;
-
-    function setUp() public virtual override(Integration_Concrete_Test, Base_CrossChain_Test) {
-        Base_CrossChain_Test.setUp();
-        Integration_Concrete_Test.setUp();
-
-        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), address(flashLoanModule));
-
-        (spokeCaliber, spokeCaliberMailbox) =
-            _deployCaliber(address(machine), address(accountingToken), bytes32(0), address(flashLoanModule));
-
-        // address spokeAcrossV3Adapter = spokeCaliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, "");
-
-        // IBridgeAdapter.Bridge[] memory bridges = new IBridgeAdapter.Bridge[](1);
-        // bridges[0] = IBridgeAdapter.Bridge.ACROSS_V3;
-
-        // address[] memory adapters = new address[](1);
-        // adapters[0] = acrossV3Adapter;
-
-        // vm.startPrank(dao);
-        // machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailbox), bridges, adapters);
-        // machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(spokeCaliberMailbox), "");
-        // spokeCaliberMailbox.addHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, address(machine));
     }
 }

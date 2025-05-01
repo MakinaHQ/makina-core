@@ -42,7 +42,6 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
-    event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
     event InstrRootGuardianAdded(address indexed newGuardian);
     event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
@@ -76,7 +75,6 @@ interface ICaliber {
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
-    /// @param initialFlashLoanModule The address of the initial flashLoan module.
     struct CaliberInitParams {
         address accountingToken;
         uint256 initialPositionStaleThreshold;
@@ -86,7 +84,6 @@ interface ICaliber {
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         uint256 initialCooldownDuration;
-        address initialFlashLoanModule;
     }
 
     /// @notice Instruction parameters.
@@ -129,9 +126,6 @@ interface ICaliber {
 
     /// @notice Address of the hub machine endpoint.
     function hubMachineEndpoint() external view returns (address);
-
-    /// @notice Address of the flashLoan module.
-    function flashLoanModule() external view returns (address);
 
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
@@ -280,10 +274,6 @@ interface ICaliber {
     /// @param amount The amount of tokens to transfer.
     /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
-
-    /// @notice Sets a new flashLoan module.
-    /// @param newFlashLoanModule The address of the new flashLoan module.
-    function setFlashLoanModule(address newFlashLoanModule) external;
 
     /// @notice Sets the position accounting staleness threshold.
     /// @param newPositionStaleThreshold The new threshold in seconds.

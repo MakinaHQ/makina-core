@@ -20,6 +20,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(registry.oracleRegistry(), address(oracleRegistry));
         assertEq(registry.tokenRegistry(), address(tokenRegistry));
         assertEq(registry.swapModule(), address(swapModule));
+        assertEq(registry.flashLoanModule(), address(0));
     }
 
     function test_SetCoreFactory_RevertWhen_CallerWithoutRole() public {
@@ -76,6 +77,20 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         vm.prank(dao);
         registry.setSwapModule(newSwapModule);
         assertEq(registry.swapModule(), newSwapModule);
+    }
+
+    function test_SetFlashLoanModule_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        registry.setFlashLoanModule(address(0));
+    }
+
+    function test_SetFlashLoanModule() public {
+        address newFlashLoanModule = makeAddr("NewFlashLoanModule");
+        vm.expectEmit(true, true, false, true, address(registry));
+        emit IBaseMakinaRegistry.FlashLoanModuleChange(address(0), newFlashLoanModule);
+        vm.prank(dao);
+        registry.setFlashLoanModule(newFlashLoanModule);
+        assertEq(registry.flashLoanModule(), newFlashLoanModule);
     }
 
     function test_SetBridgeAdapterBeacon_RevertWhen_CallerWithoutRole() public {

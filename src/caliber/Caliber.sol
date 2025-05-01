@@ -36,7 +36,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     struct CaliberStorage {
         address _hubMachineEndpoint;
         address _accountingToken;
-        address _flashLoanModule;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
@@ -90,7 +89,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
-        $._flashLoanModule = cParams.initialFlashLoanModule;
         _addBaseToken(cParams.accountingToken);
 
         __ReentrancyGuard_init();
@@ -138,11 +136,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     /// @inheritdoc ICaliber
     function accountingToken() external view override returns (address) {
         return _getCaliberStorage()._accountingToken;
-    }
-
-    /// @inheritdoc ICaliber
-    function flashLoanModule() external view override returns (address) {
-        return _getCaliberStorage()._flashLoanModule;
     }
 
     /// @inheritdoc ICaliber
@@ -370,7 +363,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if ($._isManagingFlashloan) {
             revert ManageFlashLoanReentrantCall();
         }
-        if (msg.sender != $._flashLoanModule) {
+
+        address _flashLoanModule = IBaseMakinaRegistry(registry).flashLoanModule();
+        if (msg.sender != _flashLoanModule) {
             revert NotFlashLoanModule();
         }
         if ($._managedPositionId == 0) {
@@ -386,10 +381,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert InvalidDebtFlag();
         }
         $._isManagingFlashloan = true;
-        IERC20Metadata(token).safeTransferFrom($._flashLoanModule, address(this), amount);
+        IERC20Metadata(token).safeTransferFrom(_flashLoanModule, address(this), amount);
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
-        IERC20Metadata(token).safeTransfer($._flashLoanModule, amount);
+        IERC20Metadata(token).safeTransfer(_flashLoanModule, amount);
         $._isManagingFlashloan = false;
     }
 
@@ -421,13 +416,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         emit TransferToHubMachine(token, amount);
         IERC20Metadata(token).forceApprove($._hubMachineEndpoint, amount);
         IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
-    }
-
-    /// @inheritdoc ICaliber
-    function setFlashLoanModule(address newFlashLoanModule) external restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
-        $._flashLoanModule = newFlashLoanModule;
     }
 
     /// @inheritdoc ICaliber
