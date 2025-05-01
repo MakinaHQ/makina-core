@@ -633,7 +633,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @dev Computes the accounting value of a position. Depending on last and current value, the
-    /// position is then either created, closed or simply updated in storage.
+    ///      position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction, bool checks) internal returns (uint256, int256) {
         if (checks) {
             if (instruction.instructionType != InstructionType.ACCOUNTING) {
@@ -738,61 +738,39 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
     }
 
-    /// @dev Checks if the instruction is allowed for a given position.
+    /// @dev Checks if the given instruction is allowed by verifying its Merkle proof against the allowed instructions root.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
         bytes32 commandsHash = keccak256(abi.encodePacked(instruction.commands));
         bytes32 stateHash = _getStateHash(instruction.state, instruction.stateBitmap);
         bytes32 affectedTokensHash = keccak256(abi.encodePacked(instruction.affectedTokens));
-        if (
-            !_verifyInstructionProof(
-                instruction.merkleProof,
-                commandsHash,
-                stateHash,
-                instruction.stateBitmap,
-                instruction.positionId,
-                instruction.isDebt,
-                affectedTokensHash,
-                instruction.instructionType
+        bytes32 instructionLeaf = keccak256(
+            abi.encode(
+                keccak256(
+                    abi.encode(
+                        commandsHash,
+                        stateHash,
+                        instruction.stateBitmap,
+                        instruction.positionId,
+                        instruction.isDebt,
+                        affectedTokensHash,
+                        instruction.instructionType
+                    )
+                )
             )
-        ) {
+        );
+        if (!MerkleProof.verify(instruction.merkleProof, _updateAllowedInstrRoot(), instructionLeaf)) {
             revert InvalidInstructionProof();
         }
     }
 
-    /// @dev Checks if a given proof is valid for a given instruction.
-    /// @param proof The proof to check.
-    /// @param commandsHash The hash of the commands.
-    /// @param stateHash The hash of the state.
-    /// @param affectedTokensHash The hash of the affected tokens.
-    /// @param stateBitmap The bitmap of the state.
-    /// @param posId The position ID.
-    /// @param instructionType The type of the instruction.
-    /// @return isValid True if the proof is valid, false otherwise.
-    function _verifyInstructionProof(
-        bytes32[] memory proof,
-        bytes32 commandsHash,
-        bytes32 stateHash,
-        uint128 stateBitmap,
-        uint256 posId,
-        bool isDebt,
-        bytes32 affectedTokensHash,
-        InstructionType instructionType
-    ) internal returns (bool) {
-        // The state transition hash is the hash of the commands, state, bitmap, position ID, isDebt flag, affected tokens and instruction type.
-        bytes32 stateTransitionHash = keccak256(
-            abi.encode(commandsHash, stateHash, stateBitmap, posId, isDebt, affectedTokensHash, instructionType)
-        );
-        return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
-    }
-
-    /// @dev Utility method to get the hash of the state based on bitmap.
-    /// This allows a weiroll script to have both fixed and variable parameters.
-    /// @param state The state to hash.
-    /// @param stateBitmap The bitmap of the state.
-    /// @return hash The hash of the state.
-    function _getStateHash(bytes[] memory state, uint128 stateBitmap) internal pure returns (bytes32) {
-        if (stateBitmap == uint128(0)) {
+    /// @dev Computes a hash of the state array, selectively including elements as specified by a bitmap.
+    ///      This enables a weiroll script to have both fixed and variable parameters.
+    /// @param state The state array to hash.
+    /// @param bitmap The bitmap where each bit determines whether the corresponding element in state is included or ignored in the hash computation.
+    /// @return hash The hash of the state array.
+    function _getStateHash(bytes[] calldata state, uint128 bitmap) internal pure returns (bytes32) {
+        if (bitmap == uint128(0)) {
             return bytes32(0);
         }
 
@@ -802,7 +780,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         // Iterate through the state and hash values corresponding to indices marked in the bitmap.
         for (i; i < state.length;) {
             // If the bit is set as 1, hash the state value.
-            if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
+            if (bitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, state[i]);
             }
 
