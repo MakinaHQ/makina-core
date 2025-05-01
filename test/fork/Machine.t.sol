@@ -95,7 +95,7 @@ contract Machine_Fork_Test is Fork_Test {
         deal({token: ethForkData.usdc, to: machineDepositor, give: depositAmount});
         vm.startPrank(machineDepositor);
         IERC20(ethForkData.usdc).approve(address(machine), depositAmount);
-        uint256 receivedShares = machine.deposit(depositAmount, machineDepositor);
+        uint256 receivedShares = machine.deposit(depositAmount, machineDepositor, 0);
         vm.stopPrank();
 
         // mechanic transfers 2000 usdc to caliber
@@ -196,7 +196,7 @@ contract Machine_Fork_Test is Fork_Test {
 
         // machineRedeemer redeems shares
         vm.prank(machineRedeemer);
-        machine.redeem(sharesToRedeem, machineRedeemer);
+        machine.redeem(sharesToRedeem, machineRedeemer, 0);
         vm.stopPrank();
 
         assertEq(IERC20(ethForkData.usdc).balanceOf(machineRedeemer), expectedAssets);

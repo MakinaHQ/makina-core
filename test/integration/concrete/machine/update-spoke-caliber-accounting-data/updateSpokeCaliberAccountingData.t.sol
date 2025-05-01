@@ -40,7 +40,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
         vm.prank(machineDepositor);
-        machine.deposit(0, address(0));
+        machine.deposit(0, address(0), 0);
     }
 
     function test_RevertWhen_InvalidSignature() public {

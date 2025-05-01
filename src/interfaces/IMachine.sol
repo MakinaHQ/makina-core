@@ -19,6 +19,7 @@ interface IMachine is IMachineEndpoint {
     error MismatchedLength();
     error NotMailbox();
     error PreDepositVaultMismatch();
+    error SlippageProtection();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
@@ -186,17 +187,19 @@ interface IMachine is IMachineEndpoint {
     /// @return totalAum The updated total AUM.
     function updateTotalAum() external returns (uint256);
 
-    /// @notice Deposits accounting tokens into the machine and mints shares to the receiver
-    /// @param assets The amount of accounting tokens to deposit
-    /// @param receiver The receiver of minted shares
-    /// @return shares The amount of shares minted
-    function deposit(uint256 assets, address receiver) external returns (uint256);
+    /// @notice Deposits accounting tokens into the machine and mints shares to the receiver.
+    /// @param assets The amount of accounting tokens to deposit.
+    /// @param receiver The receiver of minted shares.
+    /// @param minShares The minimum amount of shares to be minted.
+    /// @return shares The amount of shares minted.
+    function deposit(uint256 assets, address receiver, uint256 minShares) external returns (uint256);
 
-    /// @notice Redeems shares from the machine and transfers accounting tokens to the receiver
-    /// @param shares The amount of shares to redeem
-    /// @param receiver The receiver of the accounting tokens
-    /// @return assets The amount of accounting tokens transferred
-    function redeem(uint256 shares, address receiver) external returns (uint256);
+    /// @notice Redeems shares from the machine and transfers accounting tokens to the receiver.
+    /// @param shares The amount of shares to redeem.
+    /// @param receiver The receiver of the accounting tokens.
+    /// @param minAssets The minimum amount of assets to be transferred.
+    /// @return assets The amount of accounting tokens transferred.
+    function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
 
     /// @notice Updates spoke caliber accounting data using Wormhole Cross-Chain Queries (CCQ).
     /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.

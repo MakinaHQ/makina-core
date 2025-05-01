@@ -420,7 +420,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function deposit(uint256 assets, address receiver) external nonReentrant notRecoveryMode returns (uint256) {
+    function deposit(uint256 assets, address receiver, uint256 minShares)
+        external
+        nonReentrant
+        notRecoveryMode
+        returns (uint256)
+    {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._depositor) {
@@ -432,6 +437,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         if (shares > _maxMint) {
             revert ExceededMaxMint(shares, _maxMint);
         }
+        if (shares < minShares) {
+            revert SlippageProtection();
+        }
 
         IERC20Metadata($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
@@ -442,7 +450,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function redeem(uint256 shares, address receiver)
+    function redeem(uint256 shares, address receiver, uint256 minAssets)
         external
         override
         nonReentrant
@@ -460,6 +468,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         uint256 _maxWithdraw = maxWithdraw();
         if (assets > _maxWithdraw) {
             revert ExceededMaxWithdraw(assets, _maxWithdraw);
+        }
+        if (assets < minAssets) {
+            revert SlippageProtection();
         }
 
         IERC20Metadata($._accountingToken).safeTransfer(receiver, assets);

@@ -13,22 +13,22 @@ import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     function test_RevertWhen_ReentrantCall() public {
         accountingToken.scheduleReenter(
-            MockERC20.Type.Before, address(machine), abi.encodeCall(IMachine.deposit, (0, address(0)))
+            MockERC20.Type.Before, address(machine), abi.encodeCall(IMachine.deposit, (0, address(0), 0))
         );
 
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
         vm.prank(machineDepositor);
-        machine.deposit(0, address(0));
+        machine.deposit(0, address(0), 0);
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
-        machine.deposit(1e18, address(this));
+        machine.deposit(1e18, address(this), 0);
     }
 
     function test_RevertWhen_CallerNotDepositor() public {
         vm.expectRevert(IMachine.UnauthorizedDepositor.selector);
-        machine.deposit(1e18, address(this));
+        machine.deposit(1e18, address(this), 0);
     }
 
     function test_RevertGiven_MaxMintExceeded() public {
@@ -45,7 +45,20 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         accountingToken.approve(address(machine), inputAmount);
         // as the share supply is zero, maxMint is equal to shareLimit
         vm.expectRevert(abi.encodeWithSelector(IMachine.ExceededMaxMint.selector, expectedShares, newShareLimit));
-        machine.deposit(inputAmount, address(this));
+        machine.deposit(inputAmount, address(this), 0);
+    }
+
+    function test_RevertWhen_SlippageProtectionTriggered() public {
+        uint256 inputAmount = 1e18;
+        uint256 expectedShares = machine.convertToShares(inputAmount);
+
+        deal(address(accountingToken), machineDepositor, inputAmount, true);
+
+        accountingToken.approve(address(machine), inputAmount);
+
+        vm.expectRevert(IMachine.SlippageProtection.selector);
+        vm.prank(machineDepositor);
+        machine.deposit(inputAmount, address(this), expectedShares + 1);
     }
 
     function test_Deposit() public {
@@ -58,7 +71,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         accountingToken.approve(address(machine), inputAmount);
         vm.expectEmit(true, true, false, true, address(machine));
         emit IMachine.Deposit(machineDepositor, address(this), inputAmount, expectedShares);
-        machine.deposit(inputAmount, address(this));
+        machine.deposit(inputAmount, address(this), expectedShares);
 
         assertEq(accountingToken.balanceOf(machineDepositor), 0);
         assertEq(accountingToken.balanceOf(address(machine)), inputAmount);
