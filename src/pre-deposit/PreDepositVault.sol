@@ -138,7 +138,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function maxDeposit() external view override returns (uint256) {
+    function maxDeposit() public view override returns (uint256) {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if ($._migrated) {
             return 0;
@@ -200,6 +200,10 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
 
         if ($._whitelistMode && !$._isWhitelistedUser[msg.sender]) {
             revert UnauthorizedCaller();
+        }
+
+        if (assets > maxDeposit()) {
+            revert ExceededMaxDeposit();
         }
 
         uint256 shares = previewDeposit(assets);
