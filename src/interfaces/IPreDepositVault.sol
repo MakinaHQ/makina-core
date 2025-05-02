@@ -20,8 +20,6 @@ interface IPreDepositVault {
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
 
     struct PreDepositVaultInitParams {
-        address depositToken;
-        address accountingToken;
         uint256 initialShareLimit;
         bool initialWhitelistMode;
         address initialRiskManager;
@@ -30,7 +28,15 @@ interface IPreDepositVault {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
-    function initialize(PreDepositVaultInitParams calldata params, address shareToken) external;
+    /// @param shareToken The address of the share token.
+    /// @param depositToken The address of the deposit token.
+    /// @param accountingToken The address of the accounting token.
+    function initialize(
+        PreDepositVaultInitParams calldata params,
+        address shareToken,
+        address depositToken,
+        address accountingToken
+    ) external;
 
     /// @notice Whether the vault has migrated to a machine instance.
     function migrated() external view returns (bool);

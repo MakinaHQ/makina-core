@@ -37,6 +37,8 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     /// @inheritdoc IMachineFactory
     function createPreDepositVault(
         IPreDepositVault.PreDepositVaultInitParams calldata params,
+        address depositToken,
+        address accountingToken,
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
@@ -44,7 +46,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         address preDepositVault = address(new BeaconProxy(IHubRegistry(registry).preDepositVaultBeacon(), ""));
         IOwnable2Step(shareToken).transferOwnership(preDepositVault);
 
-        IPreDepositVault(preDepositVault).initialize(params, shareToken);
+        IPreDepositVault(preDepositVault).initialize(params, shareToken, depositToken, accountingToken);
 
         isPreDepositVault[preDepositVault] = true;
 

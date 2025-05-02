@@ -39,13 +39,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
                     initialAuthority: address(accessManager)
                 }),
+                address(baseToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
