@@ -3,7 +3,7 @@ addBaseToken.t.sol
 │  └── it should revert with UnauthorizedCaller
 └── given sender is the risk manager timelock
    ├── given the base token is already registered in the Caliber
-   │  └── it should revert with BaseTokenAlreadyExists
+   │  └── it should revert with AlreadyBaseToken
    └── given the base token is not already registered in the Caliber
       ├── given the base token does not have corresponding registered feeds in oracle registry
       │  └── it should revert with PriceFeedRouteNotRegistered

@@ -15,7 +15,7 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
     }
 
     function test_RevertWhen_AlreadyExistingBaseToken() public withTokenAsBT(address(baseToken)) {
-        vm.expectRevert(ICaliber.BaseTokenAlreadyExists.selector);
+        vm.expectRevert(ICaliber.AlreadyBaseToken.selector);
         vm.prank(riskManagerTimelock);
         caliber.addBaseToken(address(baseToken));
     }

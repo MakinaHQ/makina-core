@@ -26,7 +26,17 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
 
         vm.warp(effectiveUpdateTime);
 
+        newRoot = keccak256(abi.encodePacked("newerRoot"));
+
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
+    }
+
+    function test_RevertWhen_SameRoot() public {
+        bytes32 currentRoot = caliber.allowedInstrRoot();
+
+        vm.expectRevert(ICaliber.SameRoot.selector);
+        vm.prank(riskManager);
+        caliber.scheduleAllowedInstrRootUpdate(currentRoot);
     }
 
     function test_ScheduleAllowedInstrRootUpdate() public {
@@ -70,6 +80,8 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         assertEq(caliber.allowedInstrRoot(), newRoot);
         assertEq(caliber.pendingAllowedInstrRoot(), bytes32(0));
         assertEq(caliber.pendingTimelockExpiry(), 0);
+
+        newRoot = keccak256(abi.encodePacked("newerRoot"));
 
         vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);

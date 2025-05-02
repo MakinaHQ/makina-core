@@ -96,7 +96,7 @@ abstract contract Base_Hub_Test is Base_Test {
         wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
-    function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, address _flashLoanModule)
+    function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot)
         public
         returns (Machine, Caliber)
     {
@@ -121,8 +121,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
-                    initialFlashLoanModule: _flashLoanModule
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -163,12 +162,10 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupAccessManager(accessManager, dao);
     }
 
-    function _deployCaliber(
-        address _hubMachine,
-        address _accountingToken,
-        bytes32 _allowedInstrMerkleRoot,
-        address _flashLoanModule
-    ) public returns (Caliber, CaliberMailbox) {
+    function _deployCaliber(address _hubMachine, address _accountingToken, bytes32 _allowedInstrMerkleRoot)
+        public
+        returns (Caliber, CaliberMailbox)
+    {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             caliberFactory.createCaliber(
@@ -180,8 +177,7 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
-                    initialFlashLoanModule: _flashLoanModule
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,

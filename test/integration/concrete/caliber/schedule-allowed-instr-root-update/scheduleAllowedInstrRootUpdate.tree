@@ -5,5 +5,8 @@ scheduleAllowedInstrRootUpdate.t.sol
    ├── given there is already a pending root update
    │  └── it should revert with ActiveUpdatePending
    └── given there is no pending root update
-      ├── it should set the timelock expiry and pending root in the Caliber
-      └── it should emit a NewAllowedInstrRootScheduled event
+      ├── given the provided root is identical to the current root
+      │  └── it should revert with SameRoot
+      └── given the provided root is different than the current root
+         ├── it should set the timelock expiry and pending root in the Caliber
+         └── it should emit a NewAllowedInstrRootScheduled event

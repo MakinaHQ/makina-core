@@ -6,14 +6,13 @@ import {ISwapModule} from "../interfaces/ISwapModule.sol";
 interface ICaliber {
     error AccountingToken();
     error ActiveUpdatePending();
+    error AlreadyBaseToken();
     error AlreadyRootGuardian();
-    error BaseTokenAlreadyExists();
     error DirectManageFlashLoanCall();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidDebtFlag();
     error InvalidPositionChangeDirection();
-    error InvalidInputLength();
     error InvalidInstructionsLength();
     error InvalidInstructionProof();
     error InvalidInstructionType();
@@ -28,10 +27,10 @@ interface ICaliber {
     error NotRootGuardian();
     error OngoingCooldown();
     error PositionAccountingStale(uint256 posId);
-    error PositionAlreadyExists();
     error PositionDoesNotExist();
     error ProtectedRootGuardian();
     error RecoveryMode();
+    error SameRoot();
     error TimelockDurationTooShort();
     error UnauthorizedCaller();
     error UnmatchingInstructions();
@@ -41,7 +40,6 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
-    event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
     event InstrRootGuardianAdded(address indexed newGuardian);
     event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
@@ -75,7 +73,6 @@ interface ICaliber {
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
-    /// @param initialFlashLoanModule The address of the initial flashLoan module.
     struct CaliberInitParams {
         address accountingToken;
         uint256 initialPositionStaleThreshold;
@@ -85,7 +82,6 @@ interface ICaliber {
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         uint256 initialCooldownDuration;
-        address initialFlashLoanModule;
     }
 
     /// @notice Instruction parameters.
@@ -128,9 +124,6 @@ interface ICaliber {
 
     /// @notice Address of the hub machine endpoint.
     function hubMachineEndpoint() external view returns (address);
-
-    /// @notice Address of the flashLoan module.
-    function flashLoanModule() external view returns (address);
 
     /// @notice Address of the accounting token.
     function accountingToken() external view returns (address);
@@ -182,10 +175,10 @@ interface ICaliber {
     /// @dev Base token index => Base token address
     /// @dev There are no guarantees on the ordering of values inside the base tokens list,
     ///      and it may change when values are added or removed.
-    function getBaseTokenAddress(uint256 idx) external view returns (address);
+    function getBaseToken(uint256 idx) external view returns (address);
 
     /// @dev User => Whether the user is a root guardian
-    ///      Guardians have veto power over the Merkle root update.
+    ///      Guardians have veto power over updates of the Merkle root.
     function isInstrRootGuardian(address user) external view returns (bool);
 
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
@@ -279,10 +272,6 @@ interface ICaliber {
     /// @param amount The amount of tokens to transfer.
     /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
-
-    /// @notice Sets a new flashLoan module.
-    /// @param newFlashLoanModule The address of the new flashLoan module.
-    function setFlashLoanModule(address newFlashLoanModule) external;
 
     /// @notice Sets the position accounting staleness threshold.
     /// @param newPositionStaleThreshold The new threshold in seconds.

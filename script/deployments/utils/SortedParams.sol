@@ -17,7 +17,6 @@ contract SortedParams {
         address accountingToken;
         bytes32 initialAllowedInstrRoot;
         uint256 initialCooldownDuration;
-        address initialFlashLoanModule;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxPositionIncreaseLossBps;
         uint256 initialMaxSwapLossBps;

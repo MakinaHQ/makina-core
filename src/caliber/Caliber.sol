@@ -26,8 +26,11 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     using EnumerableSet for EnumerableSet.UintSet;
     using SafeERC20 for IERC20Metadata;
 
-    /// @dev Full scale value in basis points
+    /// @dev Full scale value in basis points.
     uint256 private constant MAX_BPS = 10_000;
+
+    /// @dev Flag to indicate end of values in the accounting output state.
+    bytes32 private constant ACCOUNTING_OUTPUT_STATE_END = bytes32(type(uint256).max);
 
     /// @inheritdoc ICaliber
     address public immutable weirollVm;
@@ -36,7 +39,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     struct CaliberStorage {
         address _hubMachineEndpoint;
         address _accountingToken;
-        address _flashLoanModule;
         uint256 _positionStaleThreshold;
         bytes32 _allowedInstrRoot;
         uint256 _timelockDuration;
@@ -59,8 +61,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant CaliberStorageLocation = 0x32461bf02c7aa4aa351cd04411b6c7b9348073fbccf471c7b347bdaada044b00;
-
-    bytes32 private constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);
 
     function _getCaliberStorage() private pure returns (CaliberStorage storage $) {
         assembly {
@@ -90,7 +90,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
-        $._flashLoanModule = cParams.initialFlashLoanModule;
         _addBaseToken(cParams.accountingToken);
 
         __ReentrancyGuard_init();
@@ -138,11 +137,6 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     /// @inheritdoc ICaliber
     function accountingToken() external view override returns (address) {
         return _getCaliberStorage()._accountingToken;
-    }
-
-    /// @inheritdoc ICaliber
-    function flashLoanModule() external view override returns (address) {
-        return _getCaliberStorage()._flashLoanModule;
     }
 
     /// @inheritdoc ICaliber
@@ -225,7 +219,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function getBaseTokenAddress(uint256 idx) external view override returns (address) {
+    function getBaseToken(uint256 idx) external view override returns (address) {
         return _getCaliberStorage()._baseTokens.at(idx);
     }
 
@@ -370,7 +364,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if ($._isManagingFlashloan) {
             revert ManageFlashLoanReentrantCall();
         }
-        if (msg.sender != $._flashLoanModule) {
+
+        address _flashLoanModule = IBaseMakinaRegistry(registry).flashLoanModule();
+        if (msg.sender != _flashLoanModule) {
             revert NotFlashLoanModule();
         }
         if ($._managedPositionId == 0) {
@@ -386,10 +382,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert InvalidDebtFlag();
         }
         $._isManagingFlashloan = true;
-        IERC20Metadata(token).safeTransferFrom($._flashLoanModule, address(this), amount);
+        IERC20Metadata(token).safeTransferFrom(_flashLoanModule, address(this), amount);
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
-        IERC20Metadata(token).safeTransfer($._flashLoanModule, amount);
+        IERC20Metadata(token).safeTransfer(_flashLoanModule, amount);
         $._isManagingFlashloan = false;
     }
 
@@ -418,16 +414,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     /// @inheritdoc ICaliber
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
-        emit TransferToHubMachine(token, amount);
         IERC20Metadata(token).forceApprove($._hubMachineEndpoint, amount);
         IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
-    }
-
-    /// @inheritdoc ICaliber
-    function setFlashLoanModule(address newFlashLoanModule) external restricted {
-        CaliberStorage storage $ = _getCaliberStorage();
-        emit FlashLoanModuleChanged($._flashLoanModule, newFlashLoanModule);
-        $._flashLoanModule = newFlashLoanModule;
+        emit TransferToHubMachine(token, amount);
     }
 
     /// @inheritdoc ICaliber
@@ -445,15 +434,18 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external override onlyRiskManager {
+    function scheduleAllowedInstrRootUpdate(bytes32 newAllowedInstrRoot) external override onlyRiskManager {
         CaliberStorage storage $ = _getCaliberStorage();
         _updateAllowedInstrRoot();
         if ($._pendingTimelockExpiry != 0) {
             revert ActiveUpdatePending();
         }
-        $._pendingAllowedInstrRoot = newMerkleRoot;
+        if (newAllowedInstrRoot == $._allowedInstrRoot) {
+            revert SameRoot();
+        }
+        $._pendingAllowedInstrRoot = newAllowedInstrRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
-        emit NewAllowedInstrRootScheduled(newMerkleRoot, $._pendingTimelockExpiry);
+        emit NewAllowedInstrRootScheduled(newAllowedInstrRoot, $._pendingTimelockExpiry);
     }
 
     /// @inheritdoc ICaliber
@@ -544,7 +536,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert ZeroTokenAddress();
         }
         if (!$._baseTokens.add(token)) {
-            revert BaseTokenAlreadyExists();
+            revert AlreadyBaseToken();
         }
 
         emit BaseTokenAdded(token);
@@ -633,7 +625,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @dev Computes the accounting value of a position. Depending on last and current value, the
-    /// position is then either created, closed or simply updated in storage.
+    ///      position is then either created, closed or simply updated in storage.
     function _accountForPosition(Instruction calldata instruction, bool checks) internal returns (uint256, int256) {
         if (checks) {
             if (instruction.instructionType != InstructionType.ACCOUNTING) {
@@ -690,14 +682,14 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 count;
         for (uint256 i; i < state.length; i++) {
-            if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END_OF_ARGS) {
+            if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END) {
                 break;
             }
             amounts[i] = uint256(bytes32(state[i]));
             count++;
         }
 
-        // Resize the array to the actual number of amounts.
+        // Resize the array to the actual number of values.
         assembly {
             mstore(amounts, count)
         }
@@ -738,61 +730,39 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
     }
 
-    /// @dev Checks if the instruction is allowed for a given position.
+    /// @dev Checks if the given instruction is allowed by verifying its Merkle proof against the allowed instructions root.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
         bytes32 commandsHash = keccak256(abi.encodePacked(instruction.commands));
         bytes32 stateHash = _getStateHash(instruction.state, instruction.stateBitmap);
         bytes32 affectedTokensHash = keccak256(abi.encodePacked(instruction.affectedTokens));
-        if (
-            !_verifyInstructionProof(
-                instruction.merkleProof,
-                commandsHash,
-                stateHash,
-                instruction.stateBitmap,
-                instruction.positionId,
-                instruction.isDebt,
-                affectedTokensHash,
-                instruction.instructionType
+        bytes32 instructionLeaf = keccak256(
+            abi.encode(
+                keccak256(
+                    abi.encode(
+                        commandsHash,
+                        stateHash,
+                        instruction.stateBitmap,
+                        instruction.positionId,
+                        instruction.isDebt,
+                        affectedTokensHash,
+                        instruction.instructionType
+                    )
+                )
             )
-        ) {
+        );
+        if (!MerkleProof.verify(instruction.merkleProof, _updateAllowedInstrRoot(), instructionLeaf)) {
             revert InvalidInstructionProof();
         }
     }
 
-    /// @dev Checks if a given proof is valid for a given instruction.
-    /// @param proof The proof to check.
-    /// @param commandsHash The hash of the commands.
-    /// @param stateHash The hash of the state.
-    /// @param affectedTokensHash The hash of the affected tokens.
-    /// @param stateBitmap The bitmap of the state.
-    /// @param posId The position ID.
-    /// @param instructionType The type of the instruction.
-    /// @return isValid True if the proof is valid, false otherwise.
-    function _verifyInstructionProof(
-        bytes32[] memory proof,
-        bytes32 commandsHash,
-        bytes32 stateHash,
-        uint128 stateBitmap,
-        uint256 posId,
-        bool isDebt,
-        bytes32 affectedTokensHash,
-        InstructionType instructionType
-    ) internal returns (bool) {
-        // The state transition hash is the hash of the commands, state, bitmap, position ID, isDebt flag, affected tokens and instruction type.
-        bytes32 stateTransitionHash = keccak256(
-            abi.encode(commandsHash, stateHash, stateBitmap, posId, isDebt, affectedTokensHash, instructionType)
-        );
-        return MerkleProof.verify(proof, _updateAllowedInstrRoot(), keccak256(abi.encode(stateTransitionHash)));
-    }
-
-    /// @dev Utility method to get the hash of the state based on bitmap.
-    /// This allows a weiroll script to have both fixed and variable parameters.
-    /// @param state The state to hash.
-    /// @param stateBitmap The bitmap of the state.
-    /// @return hash The hash of the state.
-    function _getStateHash(bytes[] memory state, uint128 stateBitmap) internal pure returns (bytes32) {
-        if (stateBitmap == uint128(0)) {
+    /// @dev Computes a hash of the state array, selectively including elements as specified by a bitmap.
+    ///      This enables a weiroll script to have both fixed and variable parameters.
+    /// @param state The state array to hash.
+    /// @param bitmap The bitmap where each bit determines whether the corresponding element in state is included or ignored in the hash computation.
+    /// @return hash The hash of the state array.
+    function _getStateHash(bytes[] calldata state, uint128 bitmap) internal pure returns (bytes32) {
+        if (bitmap == uint128(0)) {
             return bytes32(0);
         }
 
@@ -802,7 +772,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         // Iterate through the state and hash values corresponding to indices marked in the bitmap.
         for (i; i < state.length;) {
             // If the bit is set as 1, hash the state value.
-            if (stateBitmap & (0x80000000000000000000000000000000 >> i) != 0) {
+            if (bitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, state[i]);
             }
 

@@ -12,6 +12,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         address _oracleRegistry;
         address _tokenRegistry;
         address _swapModule;
+        address _flashLoanModule;
         address _caliberBeacon;
         mapping(IBridgeAdapter.Bridge => address) _bridgeAdapters;
     }
@@ -64,6 +65,11 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
+    function flashLoanModule() external view override returns (address) {
+        return _getBaseMakinaRegistryStorage()._flashLoanModule;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
     function caliberBeacon() external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._caliberBeacon;
     }
@@ -99,6 +105,13 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit SwapModuleChange($._swapModule, _swapModule);
         $._swapModule = _swapModule;
+    }
+
+    /// @inheritdoc IBaseMakinaRegistry
+    function setFlashLoanModule(address _newFlashLoanModule) external restricted {
+        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        emit FlashLoanModuleChange($._flashLoanModule, _newFlashLoanModule);
+        $._flashLoanModule = _newFlashLoanModule;
     }
 
     /// @inheritdoc IBaseMakinaRegistry
