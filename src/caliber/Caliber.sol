@@ -11,6 +11,7 @@ import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProo
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
@@ -705,7 +706,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
         uint256 price =
             IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
-        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+        return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
     }
 
     /// @dev Checks that absolute position value change is greater than minimum value relative to affected token balance changes and loss tolerance.

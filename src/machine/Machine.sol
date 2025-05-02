@@ -87,15 +87,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
-        if (atDecimals < DecimalsUtils.MIN_DECIMALS || atDecimals > DecimalsUtils.MAX_DECIMALS) {
-            revert InvalidDecimals();
-        }
-
         address oracleRegistry = IHubRegistry(registry).oracleRegistry();
         if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(_accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
+
+        uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
 
         $._shareToken = _shareToken;
         $._accountingToken = _accountingToken;

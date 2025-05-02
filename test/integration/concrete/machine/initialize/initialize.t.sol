@@ -35,46 +35,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
     }
 
-    function test_RevertWhen_ProvidedATDecimalsTooLow() public {
-        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MIN_DECIMALS - 1);
-
-        vm.expectRevert(IMachine.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(machineBeacon),
-            abi.encodeCall(
-                IMachine.initialize,
-                (
-                    _getMachineInitParams(),
-                    _getMakinaGovernableInitParams(),
-                    address(0),
-                    address(shareToken),
-                    address(accountingToken2),
-                    hubCaliberAddr
-                )
-            )
-        );
-    }
-
-    function test_RevertWhen_ProvidedATDecimalsTooHigh() public {
-        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MAX_DECIMALS + 1);
-
-        vm.expectRevert(IMachine.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(machineBeacon),
-            abi.encodeCall(
-                IMachine.initialize,
-                (
-                    _getMachineInitParams(),
-                    _getMakinaGovernableInitParams(),
-                    address(0),
-                    address(shareToken),
-                    address(accountingToken2),
-                    hubCaliberAddr
-                )
-            )
-        );
-    }
-
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
 

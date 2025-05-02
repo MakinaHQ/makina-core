@@ -27,58 +27,6 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         );
     }
 
-    function test_RevertWhen_ProvidedATDecimalsTooLow() public {
-        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MIN_DECIMALS - 1);
-
-        vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(preDepositVaultBeacon),
-            abi.encodeCall(
-                IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken2))
-            )
-        );
-    }
-
-    function test_RevertWhen_ProvidedATDecimalsTooHigh() public {
-        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MAX_DECIMALS + 1);
-
-        vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(preDepositVaultBeacon),
-            abi.encodeCall(
-                IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken2))
-            )
-        );
-    }
-
-    function test_RevertWhen_ProvidedDTDecimalsTooLow() public {
-        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", DecimalsUtils.MIN_DECIMALS - 1);
-
-        vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(preDepositVaultBeacon),
-            abi.encodeCall(
-                IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken2), address(accountingToken))
-            )
-        );
-    }
-
-    function test_RevertWhen_ProvidedDTDecimalsTooHigh() public {
-        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", DecimalsUtils.MAX_DECIMALS + 1);
-
-        vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
-        new BeaconProxy(
-            address(preDepositVaultBeacon),
-            abi.encodeCall(
-                IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken2), address(accountingToken))
-            )
-        );
-    }
-
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
 

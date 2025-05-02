@@ -313,6 +313,6 @@ library MachineUtils {
             return amount;
         }
         uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, accountingToken);
-        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+        return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
     }
 }

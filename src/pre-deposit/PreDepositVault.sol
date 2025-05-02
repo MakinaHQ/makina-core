@@ -55,20 +55,14 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     ) external override initializer {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
-        uint256 dtDecimals = IERC20Metadata(_depositToken).decimals();
-        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
-        if (
-            dtDecimals < DecimalsUtils.MIN_DECIMALS || dtDecimals > DecimalsUtils.MAX_DECIMALS
-                || atDecimals < DecimalsUtils.MIN_DECIMALS || atDecimals > DecimalsUtils.MAX_DECIMALS
-        ) {
-            revert InvalidDecimals();
-        }
         if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_depositToken);
         }
         if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
+
+        uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
 
         $._shareToken = _shareToken;
         $._depositToken = _depositToken;
@@ -169,7 +163,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         address _depositToken = $._depositToken;
         uint256 price_d_a =
             IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
-        uint256 dtUnit = 10 ** IERC20Metadata(_depositToken).decimals();
+        uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20Metadata(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20Metadata($._shareToken).totalSupply();
 
@@ -184,7 +178,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         address _depositToken = $._depositToken;
         uint256 price_d_a =
             IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
-        uint256 dtUnit = 10 ** IERC20Metadata(_depositToken).decimals();
+        uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20Metadata(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20Metadata($._shareToken).totalSupply();
 
