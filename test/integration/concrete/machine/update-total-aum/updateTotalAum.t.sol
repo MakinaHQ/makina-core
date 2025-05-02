@@ -6,7 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
@@ -797,7 +797,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         _deposit(inputAmount);
 
         uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
-        uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+        uint256 sharePrice1 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
 
         // mint yield to machine
         uint256 yieldAmount = 1e16;
@@ -809,7 +809,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         uint256 adjustedSharePrice =
-            Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
         uint256 perfFee1 = feeManager.calculatePerformanceFee(
             shareSupply1, sharePrice1, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
         );
@@ -820,7 +820,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         emit IMachine.FeesMinted(fixedFee1 + perfFee1);
         machine.updateTotalAum();
         uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
-        uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+        uint256 sharePrice2 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
         assertEq(shareSupply2, shareSupply1 + fixedFee1 + perfFee1);
         assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1);
 
@@ -840,7 +840,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         adjustedSharePrice =
-            Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
         uint256 perfFee2 = feeManager.calculatePerformanceFee(
             shareSupply2, sharePrice2, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
         );
@@ -859,7 +859,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         _deposit(inputAmount);
 
         uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
-        uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+        uint256 sharePrice1 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
 
         // mint yield to machine
         uint256 yieldAmount = 1e16;
@@ -871,7 +871,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         uint256 adjustedSharePrice =
-            Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
         uint256 perfFee1 = feeManager.calculatePerformanceFee(
             shareSupply1, sharePrice1, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
         );
@@ -893,7 +893,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         emit IMachine.FeesMinted(fixedFee1 + perfFee1);
         machine.updateTotalAum();
         uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
-        uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+        uint256 sharePrice2 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
         assertEq(shareSupply2, shareSupply1 + fixedFee1 + perfFee1);
         assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1);
 
@@ -917,7 +917,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         adjustedSharePrice =
-            Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
         uint256 perfFee2 = feeManager.calculatePerformanceFee(
             shareSupply2, sharePrice2, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
         );
@@ -948,9 +948,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         uint256 perfFee1;
         {
-            uint256 sharePrice1 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
+            uint256 sharePrice1 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 1) / (shareSupply1 + 1);
             uint256 newAdjustedSharePrice =
-                Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+                DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
             perfFee1 = feeManager.calculatePerformanceFee(
                 shareSupply1, sharePrice1, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
             );
@@ -985,9 +985,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         uint256 perfFee2;
         {
-            uint256 sharePrice2 = Constants.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+            uint256 sharePrice2 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
             uint256 newAdjustedSharePrice =
-                Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+                DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
             perfFee2 = feeManager.calculatePerformanceFee(
                 shareSupply2, sharePrice2, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
             );
@@ -1018,9 +1018,10 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 fixedFee3 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         uint256 perfFee3;
         {
-            uint256 sharePrice3 = Constants.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + 1);
+            uint256 sharePrice3 =
+                DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + 1);
             uint256 newAdjustedSharePrice =
-                Constants.SHARE_TOKEN_UNIT * (inputAmount + 3 * yieldAmount + 1) / (shareSupply2 + fixedFee3 + 1);
+                DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 3 * yieldAmount + 1) / (shareSupply2 + fixedFee3 + 1);
             perfFee3 = feeManager.calculatePerformanceFee(
                 shareSupply2, sharePrice3, newAdjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
             );

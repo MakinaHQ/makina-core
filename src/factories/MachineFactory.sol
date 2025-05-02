@@ -16,7 +16,7 @@ import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
-import {Constants} from "../libraries/Constants.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 
 contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMachineFactory {
     /// @inheritdoc IMachineFactory
@@ -141,7 +141,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         internal
         returns (address)
     {
-        address _shareToken = address(new MachineShare(name, symbol, Constants.SHARE_TOKEN_DECIMALS, initialOwner));
+        address _shareToken = address(new MachineShare(name, symbol, DecimalsUtils.SHARE_TOKEN_DECIMALS, initialOwner));
         emit ShareTokenDeployed(_shareToken);
         return _shareToken;
     }

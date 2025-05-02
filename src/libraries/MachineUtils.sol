@@ -19,7 +19,7 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Machine} from "src/machine/Machine.sol";
 
 library MachineUtils {
@@ -147,7 +147,7 @@ library MachineUtils {
         pure
         returns (uint256)
     {
-        return Constants.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
+        return DecimalsUtils.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
     }
 
     /// @dev Handles a received Wormhole CCQ PerChainQueryResponse object and updates the corresponding caliber accounting data in the machine storage.

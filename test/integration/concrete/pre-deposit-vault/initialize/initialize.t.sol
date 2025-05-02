@@ -6,7 +6,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
@@ -22,14 +22,13 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         shareToken = new MachineShare(
             DEFAULT_MACHINE_SHARE_TOKEN_NAME,
             DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-            Constants.SHARE_TOKEN_DECIMALS,
+            DecimalsUtils.SHARE_TOKEN_DECIMALS,
             address(this)
         );
     }
 
     function test_RevertWhen_ProvidedATDecimalsTooLow() public {
-        MockERC20 accountingToken2 =
-            new MockERC20("Accounting Token 2", "AT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
+        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MIN_DECIMALS - 1);
 
         vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
         new BeaconProxy(
@@ -42,8 +41,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     }
 
     function test_RevertWhen_ProvidedATDecimalsTooHigh() public {
-        MockERC20 accountingToken2 =
-            new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
+        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MAX_DECIMALS + 1);
 
         vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
         new BeaconProxy(
@@ -56,7 +54,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     }
 
     function test_RevertWhen_ProvidedDTDecimalsTooLow() public {
-        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
+        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", DecimalsUtils.MIN_DECIMALS - 1);
 
         vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
         new BeaconProxy(
@@ -69,7 +67,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     }
 
     function test_RevertWhen_ProvidedDTDecimalsTooHigh() public {
-        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
+        MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", DecimalsUtils.MAX_DECIMALS + 1);
 
         vm.expectRevert(IPreDepositVault.InvalidDecimals.selector);
         new BeaconProxy(

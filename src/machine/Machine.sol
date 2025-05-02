@@ -22,7 +22,7 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
-import {Constants} from "../libraries/Constants.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 import {MachineUtils} from "../libraries/MachineUtils.sol";
@@ -88,9 +88,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubCaliber = _hubCaliber;
 
         uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
-        if (
-            atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
-        ) {
+        if (atDecimals < DecimalsUtils.MIN_DECIMALS || atDecimals > DecimalsUtils.MAX_DECIMALS) {
             revert InvalidDecimals();
         }
 
@@ -102,7 +100,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._shareToken = _shareToken;
         $._accountingToken = _accountingToken;
         $._idleTokens.add(_accountingToken);
-        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
+        $._shareTokenDecimalsOffset = DecimalsUtils.SHARE_TOKEN_DECIMALS - atDecimals;
 
         if (_preDepositVault != address(0)) {
             MachineUtils.migrateFromPreDeposit($, _preDepositVault, oracleRegistry);

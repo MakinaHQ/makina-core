@@ -11,7 +11,7 @@ import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "src/interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {Constants} from "../libraries/Constants.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDepositVault {
@@ -58,9 +58,8 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         uint256 dtDecimals = IERC20Metadata(_depositToken).decimals();
         uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
         if (
-            dtDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || dtDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
-                || atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS
-                || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
+            dtDecimals < DecimalsUtils.MIN_DECIMALS || dtDecimals > DecimalsUtils.MAX_DECIMALS
+                || atDecimals < DecimalsUtils.MIN_DECIMALS || atDecimals > DecimalsUtils.MAX_DECIMALS
         ) {
             revert InvalidDecimals();
         }
@@ -74,7 +73,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         $._shareToken = _shareToken;
         $._depositToken = _depositToken;
         $._accountingToken = _accountingToken;
-        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
+        $._shareTokenDecimalsOffset = DecimalsUtils.SHARE_TOKEN_DECIMALS - atDecimals;
         $._shareLimit = params.initialShareLimit;
         IOwnable2Step(_shareToken).acceptOwnership();
 

@@ -10,7 +10,7 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -30,14 +30,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         shareToken = new MachineShare(
             DEFAULT_MACHINE_SHARE_TOKEN_NAME,
             DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-            Constants.SHARE_TOKEN_DECIMALS,
+            DecimalsUtils.SHARE_TOKEN_DECIMALS,
             address(this)
         );
     }
 
     function test_RevertWhen_ProvidedATDecimalsTooLow() public {
-        MockERC20 accountingToken2 =
-            new MockERC20("Accounting Token 2", "AT2", Constants.MIN_ACCOUNTING_TOKEN_DECIMALS - 1);
+        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MIN_DECIMALS - 1);
 
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(
@@ -57,8 +56,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
     }
 
     function test_RevertWhen_ProvidedATDecimalsTooHigh() public {
-        MockERC20 accountingToken2 =
-            new MockERC20("Accounting Token 2", "AT2", Constants.MAX_ACCOUNTING_TOKEN_DECIMALS + 1);
+        MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", DecimalsUtils.MAX_DECIMALS + 1);
 
         vm.expectRevert(IMachine.InvalidDecimals.selector);
         new BeaconProxy(

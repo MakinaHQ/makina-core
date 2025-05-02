@@ -5,7 +5,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 
 import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGovernable.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
@@ -52,7 +52,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
     function test_ConvertToShares() public view {
         // should hold when no yield occurred
-        assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** Constants.SHARE_TOKEN_DECIMALS);
+        assertEq(machine.convertToShares(10 ** accountingToken.decimals()), 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS);
     }
 
     function test_SetDepositor_RevertWhen_CallerWithoutRole() public {
