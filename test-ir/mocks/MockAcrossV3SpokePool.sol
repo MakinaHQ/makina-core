@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from  "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -12,7 +12,7 @@ import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 /// @dev MockAcrossV3SpokePool contract for testing use only
 /// Simulates AcrossV3 SpokePool depositV3Now behaviour on a single chain
 contract MockAcrossV3SpokePool is IMockAcrossV3SpokePool {
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     uint256 public override numberOfDeposits;
 
@@ -45,7 +45,7 @@ contract MockAcrossV3SpokePool is IMockAcrossV3SpokePool {
         uint32 exclusivityParameter,
         bytes calldata message
     ) external payable override {
-        IERC20Metadata(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
+        IERC20(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
 
         _transfersParams[numberOfDeposits] = DepositV3Params({
             depositor: _addressToBytes32(depositor),
@@ -86,7 +86,7 @@ contract MockAcrossV3SpokePool is IMockAcrossV3SpokePool {
                 : params.outputAmount * (10_000 - outputAmountOffsetBps) / 10_000
             : params.outputAmount;
 
-        IERC20Metadata(_bytes32ToAddress(params.inputToken)).safeTransfer(
+        IERC20(_bytes32ToAddress(params.inputToken)).safeTransfer(
             _bytes32ToAddress(params.recipient), actualOutputAmount
         );
         if (params.message.length > 0) {
@@ -115,7 +115,7 @@ contract MockAcrossV3SpokePool is IMockAcrossV3SpokePool {
         delete _transfersParams[depositId];
 
         uint256 refundAmount = params.inputAmount * (10_000 - cancelFeeBps) / 10_000;
-        IERC20Metadata(_bytes32ToAddress(params.inputToken)).safeTransfer(_bytes32ToAddress(params.depositor), refundAmount);
+        IERC20(_bytes32ToAddress(params.inputToken)).safeTransfer(_bytes32ToAddress(params.depositor), refundAmount);
     }
 
     function setOutputOffset(uint256 offsetBps, bool offsetDirection) external override {

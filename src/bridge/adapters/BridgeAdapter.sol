@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -13,7 +13,7 @@ import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
 abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     /// @dev Full scale value in basis points
     uint256 private constant MAX_BPS = 10_000;
@@ -111,7 +111,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     ) external override nonReentrant onlyController returns (bytes32) {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
-        IERC20Metadata(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
+        IERC20(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
 
         uint256 id = $._nextOutTransferId++;
         bytes memory encodedMessage = abi.encode(
@@ -161,7 +161,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             revert InvalidTransferStatus();
         }
 
-        IERC20Metadata(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
+        IERC20(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
         IMachineEndpoint($._controller).manageTransfer(
             receipt.outputToken, receipt.outputAmount, abi.encode(receipt.originChainId, receipt.inputAmount, false)
         );
@@ -180,9 +180,9 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         _clearSet($._pendingInTransferIds[token]);
         $._reservedBalances[token] = 0;
 
-        uint256 amount = IERC20Metadata(token).balanceOf(address(this));
+        uint256 amount = IERC20(token).balanceOf(address(this));
         if (amount != 0) {
-            IERC20Metadata(token).safeTransfer($._controller, amount);
+            IERC20(token).safeTransfer($._controller, amount);
         }
 
         emit WithdrawPendingFunds(token, amount);
@@ -208,7 +208,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         if (_getSet($._sentOutTransferIds[receipt.inputToken]).remove(id)) {
             if (
-                IERC20Metadata(receipt.inputToken).balanceOf(address(this))
+                IERC20(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
             ) {
                 revert InsufficientBalance();
@@ -219,7 +219,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             revert InvalidTransferStatus();
         }
 
-        IERC20Metadata(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
+        IERC20(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
         IMachineEndpoint($._controller).manageTransfer(
             receipt.inputToken, receipt.inputAmount, abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
         );

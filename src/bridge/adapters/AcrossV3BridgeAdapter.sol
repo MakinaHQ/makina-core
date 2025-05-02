@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IAcrossV3MessageHandler} from "../../interfaces/IAcrossV3MessageHandler.sol";
@@ -11,7 +11,7 @@ import {IAcrossV3SpokePool} from "../../interfaces/IAcrossV3SpokePool.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
 
 contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
     constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {}
@@ -33,7 +33,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         (uint32 fillDeadlineOffset) = abi.decode(data, (uint32));
         OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
 
-        IERC20Metadata(receipt.inputToken).forceApprove(executionTarget, receipt.inputAmount);
+        IERC20(receipt.inputToken).forceApprove(executionTarget, receipt.inputAmount);
         IAcrossV3SpokePool(executionTarget).depositV3Now(
             address(this),
             receipt.recipient,
@@ -61,11 +61,11 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
 
         if (_getSet($._sentOutTransferIds[receipt.inputToken]).contains(transferId)) {
             if (
-                IERC20Metadata(receipt.inputToken).balanceOf(address(this))
+                IERC20(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
             ) {
                 return $._reservedBalances[receipt.inputToken] + receipt.inputAmount
-                    - IERC20Metadata(receipt.inputToken).balanceOf(address(this));
+                    - IERC20(receipt.inputToken).balanceOf(address(this));
             }
         } else if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).contains(transferId)) {
             revert InvalidTransferStatus();
