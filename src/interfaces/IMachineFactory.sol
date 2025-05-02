@@ -40,19 +40,20 @@ interface IMachineFactory is IBridgeAdapterFactory {
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
-    /// @param token The address of the share token.
+    /// @param preDepositVault The address of the PreDepositVault instance to migrate.
     /// @return machine The address of the deployed Machine instance.
     function createMachineFromPreDeposit(
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        address token
+        address preDepositVault
     ) external returns (address machine);
 
     /// @notice Deploys a new Machine instance.
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param accountingToken The address of the accounting token.
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
     /// @return machine The address of the deployed Machine instance.
@@ -60,6 +61,7 @@ interface IMachineFactory is IBridgeAdapterFactory {
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address accountingToken,
         string memory tokenName,
         string memory tokenSymbol
     ) external returns (address machine);

@@ -1,6 +1,5 @@
 {
   "caliberInitParams": {
-    "accountingToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
     "initialPosStaleThreshold": 10800,
     "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "initialTimelockDuration": 0,
@@ -16,5 +15,6 @@
     "initialRiskManagerTimelock": "0xad60446470333ad23bececceda26071bb245ef6f",
     "initialAuthority": "0x0000000000000000000000000000000000000000"
   },
+  "accountingToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "hubMachine": "0x0000000000000000000000000000000000000000"
 }

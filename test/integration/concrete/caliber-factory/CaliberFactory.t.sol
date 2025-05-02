@@ -17,7 +17,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.createCaliber(cParams, mgParams, address(0));
+        caliberFactory.createCaliber(cParams, mgParams, address(0), address(0));
     }
 
     function test_DeployCaliber() public {
@@ -30,7 +30,6 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
         caliber = Caliber(
             caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    accountingToken: address(accountingToken),
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -46,6 +45,7 @@ contract CaliberFactory_Integration_Concrete_Test is Integration_Concrete_Spoke_
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
+                address(accountingToken),
                 _hubMachine
             )
         );

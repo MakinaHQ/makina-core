@@ -48,6 +48,7 @@ contract DeployHubMachine is Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
         string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
 
@@ -58,7 +59,6 @@ contract DeployHubMachine is Script, SortedParams {
         vm.startBroadcast();
         deployedInstance = machineFactory.createMachine(
             IMachine.MachineInitParams(
-                mParams.accountingToken,
                 mParams.initialDepositor,
                 mParams.initialRedeemer,
                 mParams.initialFeeManager,
@@ -68,7 +68,6 @@ contract DeployHubMachine is Script, SortedParams {
                 mParams.initialShareLimit
             ),
             ICaliber.CaliberInitParams(
-                cParams.accountingToken,
                 cParams.initialPositionStaleThreshold,
                 cParams.initialAllowedInstrRoot,
                 cParams.initialTimelockDuration,
@@ -84,6 +83,7 @@ contract DeployHubMachine is Script, SortedParams {
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority
             ),
+            accountingToken,
             shareTokenName,
             shareTokenSymbol
         );

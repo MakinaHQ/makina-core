@@ -1,6 +1,5 @@
 {
   "machineInitParams": {
-    "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     "initialDepositor": "0x000000000000000000000000000000000DE20511",
     "initialRedeemer": "0x00000000000000000000000000000000002edee3",
     "initialFeeManager": "0x00000000000000000000000000000000000000f3",
@@ -10,7 +9,6 @@
     "initialShareLimit": 115792089237316195423570985008687907853269984665640564039457584007913129639935
   },
   "caliberInitParams": {
-    "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
     "initialPosStaleThreshold": 10800,
     "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "initialTimelockDuration": 0,
@@ -26,6 +24,7 @@
     "initialRiskManagerTimelock": "0xad60446470333ad23bececceda26071bb245ef6f",
     "initialAuthority": "0x0000000000000000000000000000000000000000"
   },
+  "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   "shareTokenName": "Makina Share (test)",
   "shareTokenSymbol": "MS"
 }

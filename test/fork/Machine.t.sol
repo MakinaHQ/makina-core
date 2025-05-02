@@ -57,7 +57,6 @@ contract Machine_Fork_Test is Fork_Test {
         machine = Machine(
             hubCore.machineFactory.createMachine(
                 IMachine.MachineInitParams({
-                    accountingToken: ethForkData.usdc,
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialFeeManager: address(feeManager),
@@ -67,7 +66,6 @@ contract Machine_Fork_Test is Fork_Test {
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({
-                    accountingToken: ethForkData.usdc,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -83,6 +81,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRiskManagerTimelock: address(0),
                     initialAuthority: address(hubCore.accessManager)
                 }),
+                ethForkData.usdc,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
@@ -126,7 +125,6 @@ contract Machine_Fork_Test is Fork_Test {
         spokeCaliber = Caliber(
             spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    accountingToken: baseForkData.usdc,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -142,6 +140,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRiskManagerTimelock: address(0),
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].accessManager)
                 }),
+                baseForkData.usdc,
                 address(machine)
             )
         );

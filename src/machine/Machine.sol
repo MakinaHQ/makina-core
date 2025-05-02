@@ -79,6 +79,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MakinaGovernableInitParams calldata mgParams,
         address _preDepositVault,
         address _shareToken,
+        address _accountingToken,
         address _hubCaliber
     ) external override initializer {
         MachineStorage storage $ = _getMachineStorage();
@@ -86,20 +87,22 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        uint256 atDecimals = IERC20Metadata(mParams.accountingToken).decimals();
+        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
         uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
         ) {
             revert InvalidDecimals();
         }
+
         address oracleRegistry = IHubRegistry(registry).oracleRegistry();
-        if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(mParams.accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(mParams.accountingToken);
+        if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(_accountingToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
-        $._accountingToken = mParams.accountingToken;
-        $._idleTokens.add(mParams.accountingToken);
+
         $._shareToken = _shareToken;
+        $._accountingToken = _accountingToken;
+        $._idleTokens.add(_accountingToken);
         $._shareTokenDecimalsOffset = stDecimals - atDecimals;
 
         if (_preDepositVault != address(0)) {

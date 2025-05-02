@@ -121,6 +121,7 @@ contract Deploy_Scripts_Test is Base_Test {
             vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams"),
             (SortedParams.MakinaGovernableInitParamsSorted)
         );
+        address accountingToken = abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".accountingToken"), (address));
         string memory shareTokenName =
             abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenName"), (string));
         string memory shareTokenSymbol =
@@ -133,7 +134,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
         assertEq(machine.depositor(), mParams.initialDepositor);
         assertEq(machine.redeemer(), mParams.initialRedeemer);
-        assertEq(machine.accountingToken(), mParams.accountingToken);
+        assertEq(machine.accountingToken(), accountingToken);
         assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
 
@@ -144,7 +145,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
 
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
-        assertEq(hubCaliber.accountingToken(), cParams.accountingToken);
+        assertEq(hubCaliber.accountingToken(), accountingToken);
         assertEq(hubCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
         assertEq(hubCaliber.allowedInstrRoot(), cParams.initialAllowedInstrRoot);
         assertEq(hubCaliber.timelockDuration(), cParams.initialTimelockDuration);
@@ -218,12 +219,14 @@ contract Deploy_Scripts_Test is Base_Test {
             vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams"),
             (SortedParams.MakinaGovernableInitParamsSorted)
         );
+        address accountingToken =
+            abi.decode(vm.parseJson(deploySpokeCaliber.inputJson(), ".accountingToken"), (address));
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
 
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
         assertTrue(spokeCoreDeployment.caliberFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
 
-        assertEq(spokeCaliber.accountingToken(), cParams.accountingToken);
+        assertEq(spokeCaliber.accountingToken(), accountingToken);
         assertEq(spokeCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
         assertEq(spokeCaliber.allowedInstrRoot(), cParams.initialAllowedInstrRoot);
         assertEq(spokeCaliber.timelockDuration(), cParams.initialTimelockDuration);

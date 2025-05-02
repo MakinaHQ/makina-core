@@ -45,6 +45,7 @@ contract DeploySpokeCaliber is Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
 
         ICaliberFactory caliberFactory =
@@ -54,7 +55,6 @@ contract DeploySpokeCaliber is Script, SortedParams {
         vm.startBroadcast();
         deployedInstance = caliberFactory.createCaliber(
             ICaliber.CaliberInitParams(
-                cParams.accountingToken,
                 cParams.initialPositionStaleThreshold,
                 cParams.initialAllowedInstrRoot,
                 cParams.initialTimelockDuration,
@@ -70,6 +70,7 @@ contract DeploySpokeCaliber is Script, SortedParams {
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority
             ),
+            accountingToken,
             hubMachine
         );
         vm.stopBroadcast();

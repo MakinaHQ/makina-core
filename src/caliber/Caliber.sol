@@ -74,15 +74,15 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function initialize(CaliberInitParams calldata cParams, address _hubMachineEndpoint)
+    function initialize(CaliberInitParams calldata cParams, address _accountingToken, address _hubMachineEndpoint)
         external
         override
         initializer
     {
         CaliberStorage storage $ = _getCaliberStorage();
 
+        $._accountingToken = _accountingToken;
         $._hubMachineEndpoint = _hubMachineEndpoint;
-        $._accountingToken = cParams.accountingToken;
         $._positionStaleThreshold = cParams.initialPositionStaleThreshold;
         $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
         $._timelockDuration = cParams.initialTimelockDuration;
@@ -90,7 +90,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
-        _addBaseToken(cParams.accountingToken);
+        _addBaseToken(_accountingToken);
 
         __ReentrancyGuard_init();
     }
