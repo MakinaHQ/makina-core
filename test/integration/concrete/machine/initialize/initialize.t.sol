@@ -99,68 +99,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         );
     }
 
-    function test_RevertWhen_ShareTokenMismatch() public {
-        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
-
-        vm.prank(dao);
-        preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
-                IPreDepositVault.PreDepositVaultInitParams({
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialWhitelistMode: false,
-                    initialRiskManager: address(0),
-                    initialAuthority: address(accessManager)
-                }),
-                address(baseToken),
-                address(accountingToken),
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-            )
-        );
-
-        vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            _getMakinaGovernableInitParams(),
-            address(preDepositVault),
-            address(shareToken),
-            address(accountingToken),
-            hubCaliberAddr
-        );
-    }
-
-    function test_RevertWhen_AccountingTokenMismatch() public {
-        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
-
-        vm.prank(dao);
-        preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
-                IPreDepositVault.PreDepositVaultInitParams({
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialWhitelistMode: false,
-                    initialRiskManager: address(0),
-                    initialAuthority: address(accessManager)
-                }),
-                address(baseToken),
-                address(accountingToken),
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-            )
-        );
-
-        shareToken = MachineShare(preDepositVault.shareToken());
-
-        vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            _getMakinaGovernableInitParams(),
-            address(preDepositVault),
-            address(shareToken),
-            address(baseToken),
-            hubCaliberAddr
-        );
-    }
-
     function test_RevertWhen_ShareTokenOwnershipNonTransferred() public {
         machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
 

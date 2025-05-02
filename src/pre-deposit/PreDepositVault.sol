@@ -55,7 +55,6 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     ) external override initializer {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
-        uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         uint256 dtDecimals = IERC20Metadata(_depositToken).decimals();
         uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
         if (
@@ -75,7 +74,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         $._shareToken = _shareToken;
         $._depositToken = _depositToken;
         $._accountingToken = _accountingToken;
-        $._shareTokenDecimalsOffset = stDecimals - atDecimals;
+        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
         $._shareLimit = params.initialShareLimit;
         IOwnable2Step(_shareToken).acceptOwnership();
 

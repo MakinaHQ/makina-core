@@ -88,7 +88,6 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubCaliber = _hubCaliber;
 
         uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
-        uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
         if (
             atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
         ) {
@@ -103,7 +102,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._shareToken = _shareToken;
         $._accountingToken = _accountingToken;
         $._idleTokens.add(_accountingToken);
-        $._shareTokenDecimalsOffset = stDecimals - atDecimals;
+        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
 
         if (_preDepositVault != address(0)) {
             MachineUtils.migrateFromPreDeposit($, _preDepositVault, oracleRegistry);

@@ -18,7 +18,6 @@ interface IMachine is IMachineEndpoint {
     error MachineMailboxDoesNotExist();
     error MismatchedLength();
     error NotMailbox();
-    error PreDepositVaultMismatch();
     error SlippageProtection();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
