@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
@@ -12,6 +13,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -26,6 +28,16 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
         tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
         vm.stopPrank();
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before, address(machine), abi.encodeCall(IMachine.updateTotalAum, ())
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.prank(address(caliber));
+        machine.manageTransfer(address(accountingToken), 0, "");
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -300,7 +312,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(address(machineDepositor));
         accountingToken.approve(address(machine), inputAmount);
-        machine.deposit(inputAmount, address(this));
+        machine.deposit(inputAmount, address(this), 0);
         vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -1100,7 +1112,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(machineDepositor), inputAmount, true);
         vm.startPrank(address(machineDepositor));
         accountingToken.approve(address(machine), inputAmount);
-        machine.deposit(inputAmount, address(this));
+        machine.deposit(inputAmount, address(this), 0);
         vm.stopPrank();
     }
 }

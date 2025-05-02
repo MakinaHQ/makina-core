@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 interface IPreDepositVault {
+    error ExceededMaxDeposit();
     error InvalidDecimals();
     error NotFactory();
     error NotPendingMachine();

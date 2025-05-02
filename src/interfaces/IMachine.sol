@@ -2,6 +2,9 @@
 pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
+
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+
 import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
@@ -16,6 +19,7 @@ interface IMachine is IMachineEndpoint {
     error MismatchedLength();
     error NotMailbox();
     error PreDepositVaultMismatch();
+    error SlippageProtection();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
@@ -183,11 +187,26 @@ interface IMachine is IMachineEndpoint {
     /// @return totalAum The updated total AUM.
     function updateTotalAum() external returns (uint256);
 
-    /// @notice Deposits accounting tokens into the machine and mints shares to the receiver
-    /// @param assets The amount of accounting tokens to deposit
-    /// @param receiver The receiver of minted shares
-    /// @return shares The amount of shares minted
-    function deposit(uint256 assets, address receiver) external returns (uint256);
+    /// @notice Deposits accounting tokens into the machine and mints shares to the receiver.
+    /// @param assets The amount of accounting tokens to deposit.
+    /// @param receiver The receiver of minted shares.
+    /// @param minShares The minimum amount of shares to be minted.
+    /// @return shares The amount of shares minted.
+    function deposit(uint256 assets, address receiver, uint256 minShares) external returns (uint256);
+
+    /// @notice Redeems shares from the machine and transfers accounting tokens to the receiver.
+    /// @param shares The amount of shares to redeem.
+    /// @param receiver The receiver of the accounting tokens.
+    /// @param minAssets The minimum amount of assets to be transferred.
+    /// @return assets The amount of accounting tokens transferred.
+    function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
+
+    /// @notice Updates spoke caliber accounting data using Wormhole Cross-Chain Queries (CCQ).
+    /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
+    /// @param response The Wormhole CCQ response payload containing the accounting data.
+    /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
+    function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
+        external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The foreign EVM chain ID of the spoke caliber.

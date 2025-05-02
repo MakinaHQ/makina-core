@@ -3,20 +3,16 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
-import {QueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
-
-import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
-import {MachineUtils} from "../libraries/MachineUtils.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -29,8 +25,9 @@ import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Constants} from "../libraries/Constants.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
+import {MachineUtils} from "../libraries/MachineUtils.sol";
 
-contract Machine is MakinaGovernable, BridgeController, IMachine {
+contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeable, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -271,7 +268,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachineEndpoint
-    function manageTransfer(address token, uint256 amount, bytes calldata data) external override {
+    function manageTransfer(address token, uint256 amount, bytes calldata data) external override nonReentrant {
         MachineStorage storage $ = _getMachineStorage();
 
         if (_isBridgeAdapter(msg.sender)) {
@@ -335,7 +332,7 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         address token,
         uint256 amount,
         uint256 minOutputAmount
-    ) external override notRecoveryMode {
+    ) external override notRecoveryMode nonReentrant {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != mechanic()) {
@@ -404,11 +401,11 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function updateTotalAum() public override notRecoveryMode returns (uint256) {
+    function updateTotalAum() public override nonReentrant notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubRegistry(registry).oracleRegistry());
-        emit TotalAumUpdated($._lastTotalAum);
+        emit TotalAumUpdated(_lastTotalAum);
 
         uint256 _mintedFees = MachineUtils.manageFees($);
         if (_mintedFees != 0) {
@@ -419,7 +416,12 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
     }
 
     /// @inheritdoc IMachine
-    function deposit(uint256 assets, address receiver) external notRecoveryMode returns (uint256) {
+    function deposit(uint256 assets, address receiver, uint256 minShares)
+        external
+        nonReentrant
+        notRecoveryMode
+        returns (uint256)
+    {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._depositor) {
@@ -431,6 +433,9 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         if (shares > _maxMint) {
             revert ExceededMaxMint(shares, _maxMint);
         }
+        if (shares < minShares) {
+            revert SlippageProtection();
+        }
 
         IERC20Metadata($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
@@ -440,7 +445,14 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         return shares;
     }
 
-    function redeem(uint256 shares, address receiver) external notRecoveryMode returns (uint256) {
+    /// @inheritdoc IMachine
+    function redeem(uint256 shares, address receiver, uint256 minAssets)
+        external
+        override
+        nonReentrant
+        notRecoveryMode
+        returns (uint256)
+    {
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._redeemer) {
@@ -453,6 +465,9 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         if (assets > _maxWithdraw) {
             revert ExceededMaxWithdraw(assets, _maxWithdraw);
         }
+        if (assets < minAssets) {
+            revert SlippageProtection();
+        }
 
         IERC20Metadata($._accountingToken).safeTransfer(receiver, assets);
         IMachineShare($._shareToken).burn(msg.sender, shares);
@@ -462,42 +477,20 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         return assets;
     }
 
-    function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
+    /// @inheritdoc IMachine
+    function updateSpokeCaliberAccountingData(bytes calldata response, IWormhole.Signature[] calldata signatures)
         external
+        override
+        nonReentrant
     {
-        MachineStorage storage $ = _getMachineStorage();
-
-        QueryResponse memory r = CaliberAccountingCCQ.parseAndVerifyQueryResponse(wormhole, response, signatures);
-        uint256 numResponses = r.responses.length;
-
-        for (uint256 i; i < numResponses;) {
-            uint16 _wmChainId = r.responses[i].chainId;
-            uint256 _evmChainId = IChainRegistry(IHubRegistry(registry).chainRegistry()).whToEvmChainId(_wmChainId);
-
-            SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
-
-            if (caliberData.mailbox == address(0)) {
-                revert InvalidChainId();
-            }
-
-            // Decode and update accounting data.
-            (ICaliberMailbox.SpokeCaliberAccountingData memory accountingData, uint256 responseTimestamp) =
-            CaliberAccountingCCQ.getAccountingData(
-                r.responses[i], caliberData.mailbox, caliberData.timestamp, $._caliberStaleThreshold
-            );
-
-            caliberData.netAum = accountingData.netAum;
-            caliberData.positions = accountingData.positions;
-            caliberData.baseTokens = accountingData.baseTokens;
-            caliberData.timestamp = responseTimestamp;
-
-            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn);
-            _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut);
-
-            unchecked {
-                ++i;
-            }
-        }
+        MachineUtils.updateSpokeCaliberAccountingData(
+            _getMachineStorage(),
+            IHubRegistry(registry).tokenRegistry(),
+            IHubRegistry(registry).chainRegistry(),
+            wormhole,
+            response,
+            signatures
+        );
     }
 
     /// @inheritdoc IMachine
@@ -660,25 +653,6 @@ contract Machine is MakinaGovernable, BridgeController, IMachine {
         caliberData.bridgeAdapters[bridgeId] = adapter;
 
         emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
-    }
-
-    /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
-    function _decodeAndMapBridgeAmounts(
-        uint256 chainId,
-        bytes[] memory data,
-        EnumerableMap.AddressToUintMap storage map
-    ) internal {
-        address tokenRegistry = IHubRegistry(registry).tokenRegistry();
-        uint256 len = data.length;
-        for (uint256 i; i < len;) {
-            (address foreignToken, uint256 amount) = abi.decode(data[i], (address, uint256));
-            address localToken = ITokenRegistry(tokenRegistry).getLocalToken(foreignToken, chainId);
-            map.set(localToken, amount);
-
-            unchecked {
-                ++i;
-            }
-        }
     }
 
     /// @dev Checks token balance, and registers token if needed.

@@ -6,12 +6,19 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
+import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {PerChainQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
+
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IFeeManager} from "src/interfaces/IFeeManager.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
+import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
 import {Constants} from "src/libraries/Constants.sol";
 import {Machine} from "src/machine/Machine.sol";
 
@@ -19,6 +26,8 @@ library MachineUtils {
     using Math for uint256;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using EnumerableSet for EnumerableSet.AddressSet;
+
+    error StaleData();
 
     function updateTotalAum(Machine.MachineStorage storage $, address oracleRegistry) external returns (uint256) {
         $._lastTotalAum = _getTotalAum($, oracleRegistry);
@@ -79,6 +88,34 @@ library MachineUtils {
         return 0;
     }
 
+    /// @dev Updates the spoke caliber accounting data in the machine storage.
+    /// @param $ The machine storage struct.
+    /// @param tokenRegistry The address of the token registry.
+    /// @param chainRegistry The address of the chain registry.
+    /// @param wormhole The address of the Core Wormhole contract.
+    /// @param response The Wormhole CCQ response payload containing the accounting data.
+    /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
+    function updateSpokeCaliberAccountingData(
+        Machine.MachineStorage storage $,
+        address tokenRegistry,
+        address chainRegistry,
+        address wormhole,
+        bytes calldata response,
+        IWormhole.Signature[] calldata signatures
+    ) external {
+        PerChainQueryResponse[] memory responses =
+            CaliberAccountingCCQ.parseAndVerifyQueryResponse(wormhole, response, signatures).responses;
+
+        uint256 len = responses.length;
+        for (uint256 i; i < len;) {
+            _handlePerChainQueryResponse($, tokenRegistry, chainRegistry, responses[i]);
+
+            unchecked {
+                ++i;
+            }
+        }
+    }
+
     /// @dev Manages the migration from a pre-deposit vault to a machine, and initializes the machine's accounting state.
     /// @param $ The machine storage struct.
     /// @param preDepositVault The address of the pre-deposit vault.
@@ -107,12 +144,75 @@ library MachineUtils {
     }
 
     /// @dev Calculates the share price based on given AUM, share supply and share token decimals offset.
+    /// @param aum The AUM of the machine.
+    /// @param supply The supply of the share token.
+    /// @param shareTokenDecimalsOffset The decimals offset between share token and accounting token.
+    /// @return The calculated share price.
     function getSharePrice(uint256 aum, uint256 supply, uint256 shareTokenDecimalsOffset)
         public
         pure
         returns (uint256)
     {
         return Constants.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
+    }
+
+    /// @dev Handles a received Wormhole CCQ PerChainQueryResponse object and updates the corresponding caliber accounting data in the machine storage.
+    /// @param $ The machine storage struct.
+    /// @param tokenRegistry The address of the token registry.
+    /// @param chainRegistry The address of the chain registry.
+    /// @param pcr The PerChainQueryResponse object containing the accounting data.
+    function _handlePerChainQueryResponse(
+        Machine.MachineStorage storage $,
+        address tokenRegistry,
+        address chainRegistry,
+        PerChainQueryResponse memory pcr
+    ) private {
+        uint256 _evmChainId = IChainRegistry(chainRegistry).whToEvmChainId(pcr.chainId);
+
+        IMachine.SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
+
+        if (caliberData.mailbox == address(0)) {
+            revert IMachine.InvalidChainId();
+        }
+
+        // Decode and validate accounting data.
+        (ICaliberMailbox.SpokeCaliberAccountingData memory accountingData, uint256 responseTimestamp) =
+            CaliberAccountingCCQ.getAccountingData(pcr, caliberData.mailbox);
+
+        // Validate that update is not older than current chain last update, nor stale.
+        if (
+            responseTimestamp < caliberData.timestamp
+                || (block.timestamp > responseTimestamp && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
+        ) {
+            revert StaleData();
+        }
+
+        // Update the spoke caliber data in the machine storage.
+        caliberData.netAum = accountingData.netAum;
+        caliberData.positions = accountingData.positions;
+        caliberData.baseTokens = accountingData.baseTokens;
+        caliberData.timestamp = responseTimestamp;
+        _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn, tokenRegistry);
+        _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut, tokenRegistry);
+    }
+
+    /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.
+    function _decodeAndMapBridgeAmounts(
+        uint256 chainId,
+        bytes[] memory data,
+        EnumerableMap.AddressToUintMap storage map,
+        address tokenRegistry
+    ) private {
+        uint256 len = data.length;
+        for (uint256 i; i < len;) {
+            (address foreignToken, uint256 amount) = abi.decode(data[i], (address, uint256));
+            address localToken = ITokenRegistry(tokenRegistry).getLocalToken(foreignToken, chainId);
+            map.set(localToken, amount);
+
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @dev Computes the total AUM of the machine.

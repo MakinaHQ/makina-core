@@ -12,7 +12,6 @@ import {
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 
 library CaliberAccountingCCQ {
-    error StaleData();
     error UnexpectedResultLength();
 
     function parseAndVerifyQueryResponse(
@@ -23,29 +22,17 @@ library CaliberAccountingCCQ {
         return QueryResponseLib.parseAndVerifyQueryResponse(wormhole, response, signatures);
     }
 
-    /// @dev Parses the PerChainQueryResponse and retrieves the accounting data for the specified caliber mailbox.
+    /// @dev Parses the PerChainQueryResponse and retrieves the accounting data for the given caliber mailbox.
     /// @param pcr The PerChainQueryResponse containing the query results.
-    /// @param caliberMailbox The address of the caliber mailbox to retrieve data for.
-    /// @param lastTimestamp The timestamp of the last accounting data update.
-    /// @param staleThreshold The accounting data staleness threshold.
-    /// @return data The accounting data for the specified caliber mailbox
+    /// @param caliberMailbox The address of the queried caliber mailbox.
+    /// @return data The accounting data for the given caliber mailbox
     /// @return responseTimestamp The timestamp of the response.
-    function getAccountingData(
-        PerChainQueryResponse memory pcr,
-        address caliberMailbox,
-        uint256 lastTimestamp,
-        uint256 staleThreshold
-    ) external view returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256) {
+    function getAccountingData(PerChainQueryResponse memory pcr, address caliberMailbox)
+        external
+        pure
+        returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256)
+    {
         EthCallQueryResponse memory eqr = QueryResponseLib.parseEthCallQueryResponse(pcr);
-
-        // Validate that update is not older than current chain last update, nor stale.
-        uint256 responseTimestamp = eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND;
-        if (
-            responseTimestamp < lastTimestamp
-                || (block.timestamp > responseTimestamp && block.timestamp - responseTimestamp >= staleThreshold)
-        ) {
-            revert StaleData();
-        }
 
         // Validate that only one result is returned.
         if (eqr.results.length != 1) {
@@ -59,6 +46,9 @@ library CaliberAccountingCCQ {
         validFunctionSignatures[0] = ICaliberMailbox.getSpokeCaliberAccountingData.selector;
         QueryResponseLib.validateEthCallRecord(eqr.results[0], validAddresses, validFunctionSignatures);
 
-        return (abi.decode(eqr.results[0].result, (ICaliberMailbox.SpokeCaliberAccountingData)), responseTimestamp);
+        return (
+            abi.decode(eqr.results[0].result, (ICaliberMailbox.SpokeCaliberAccountingData)),
+            eqr.blockTime / QueryResponseLib.MICROSECONDS_PER_SECOND
+        );
     }
 }

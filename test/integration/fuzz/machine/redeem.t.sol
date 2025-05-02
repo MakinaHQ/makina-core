@@ -52,7 +52,7 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
         // deposit
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), data.assetsToDeposit);
-        uint256 mintedShares = machine.deposit(data.assetsToDeposit, machineRedeemer);
+        uint256 mintedShares = machine.deposit(data.assetsToDeposit, machineRedeemer, 0);
         vm.stopPrank();
 
         uint256 expectedTotalAssets = data.assetsToDeposit;
@@ -79,12 +79,12 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
                 abi.encodeWithSelector(IMachine.ExceededMaxWithdraw.selector, expectedAssets1, expectedTotalAssets)
             );
             vm.prank(machineRedeemer);
-            machine.redeem(data.sharesToRedeem1, address(this));
+            machine.redeem(data.sharesToRedeem1, address(this), expectedAssets1);
         } else {
             vm.expectEmit(true, true, true, true, address(machine));
             emit IMachine.Redeem(machineRedeemer, address(this), expectedAssets1, data.sharesToRedeem1);
             vm.prank(machineRedeemer);
-            uint256 receivedAssets1 = machine.redeem(data.sharesToRedeem1, address(this));
+            uint256 receivedAssets1 = machine.redeem(data.sharesToRedeem1, address(this), expectedAssets1);
             assertEq(receivedAssets1, expectedAssets1);
 
             redeemedShares += data.sharesToRedeem1;
@@ -118,12 +118,12 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
                 abi.encodeWithSelector(IMachine.ExceededMaxWithdraw.selector, expectedAssets2, expectedTotalAssets)
             );
             vm.prank(machineRedeemer);
-            machine.redeem(data.sharesToRedeem2, address(this));
+            machine.redeem(data.sharesToRedeem2, address(this), expectedAssets2);
         } else {
             vm.expectEmit(true, true, true, true, address(machine));
             emit IMachine.Redeem(machineRedeemer, address(this), expectedAssets2, data.sharesToRedeem2);
             vm.prank(machineRedeemer);
-            uint256 receivedAssets2 = machine.redeem(data.sharesToRedeem2, address(this));
+            uint256 receivedAssets2 = machine.redeem(data.sharesToRedeem2, address(this), expectedAssets2);
             assertEq(receivedAssets2, expectedAssets2);
 
             redeemedShares += data.sharesToRedeem2;

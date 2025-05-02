@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {VerificationFailed} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
@@ -10,6 +12,8 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {CaliberAccountingCCQ} from "src/libraries/CaliberAccountingCCQ.sol";
+import {MachineUtils} from "src/libraries/MachineUtils.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
@@ -23,6 +27,21 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         machine.setSpokeCaliber(
             SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
         );
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        bytes memory response;
+        IWormhole.Signature[] memory signatures;
+
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(machine),
+            abi.encodeCall(IMachine.updateSpokeCaliberAccountingData, (response, signatures))
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.prank(machineDepositor);
+        machine.deposit(0, address(0), 0);
     }
 
     function test_RevertWhen_InvalidSignature() public {
@@ -112,7 +131,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
+        vm.expectRevert(MachineUtils.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // update data
@@ -131,7 +150,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(CaliberAccountingCCQ.StaleData.selector);
+        vm.expectRevert(MachineUtils.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 

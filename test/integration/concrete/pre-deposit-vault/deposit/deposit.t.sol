@@ -17,6 +17,21 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         _test_Deposit();
     }
 
+    function test_RevertGiven_MaxDepositExceeded() public {
+        uint256 inputAmount = 1e18;
+        uint256 expectedShares = preDepositVault.previewDeposit(inputAmount);
+        uint256 newShareLimit = expectedShares - 1;
+
+        vm.prank(riskManager);
+        preDepositVault.setShareLimit(newShareLimit);
+
+        deal(address(accountingToken), address(this), inputAmount, true);
+
+        accountingToken.approve(address(preDepositVault), inputAmount);
+        vm.expectRevert(IPreDepositVault.ExceededMaxDeposit.selector);
+        preDepositVault.deposit(inputAmount, address(this), 0);
+    }
+
     function test_RevertWhen_SlippageProtectionTriggered() public {
         _test_RevertWhen_SlippageProtectionTriggered();
     }
