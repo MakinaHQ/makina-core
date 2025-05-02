@@ -47,12 +47,16 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function initialize(PreDepositVaultInitParams calldata params, address _shareToken) external override initializer {
+    function initialize(
+        PreDepositVaultInitParams calldata params,
+        address _shareToken,
+        address _depositToken,
+        address _accountingToken
+    ) external override initializer {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
-        uint256 dtDecimals = IERC20Metadata(params.depositToken).decimals();
-        uint256 atDecimals = IERC20Metadata(params.accountingToken).decimals();
-        uint256 stDecimals = IERC20Metadata(_shareToken).decimals();
+        uint256 dtDecimals = IERC20Metadata(_depositToken).decimals();
+        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
         if (
             dtDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || dtDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
                 || atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS
@@ -60,17 +64,17 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         ) {
             revert InvalidDecimals();
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(params.depositToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(params.depositToken);
+        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(_depositToken);
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(params.accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(params.accountingToken);
+        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
+            revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
-        $._depositToken = params.depositToken;
-        $._accountingToken = params.accountingToken;
         $._shareToken = _shareToken;
-        $._shareTokenDecimalsOffset = stDecimals - atDecimals;
+        $._depositToken = _depositToken;
+        $._accountingToken = _accountingToken;
+        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
         $._shareLimit = params.initialShareLimit;
         IOwnable2Step(_shareToken).acceptOwnership();
 

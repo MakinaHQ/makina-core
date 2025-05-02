@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 contract SortedParams {
     struct MachineInitParamsSorted {
-        address accountingToken;
         uint256 initialCaliberStaleThreshold;
         address initialDepositor;
         address initialFeeManager;
@@ -14,7 +13,6 @@ contract SortedParams {
     }
 
     struct CaliberInitParamsSorted {
-        address accountingToken;
         bytes32 initialAllowedInstrRoot;
         uint256 initialCooldownDuration;
         uint256 initialMaxPositionDecreaseLossBps;

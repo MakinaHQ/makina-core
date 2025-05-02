@@ -66,13 +66,13 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(depositToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
                     initialAuthority: address(accessManager)
                 }),
+                address(depositToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )

@@ -45,10 +45,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             abi.encodeCall(
                 IMachine.initialize,
                 (
-                    _getMachineInitParams(address(accountingToken2)),
+                    _getMachineInitParams(),
                     _getMakinaGovernableInitParams(),
                     address(0),
                     address(shareToken),
+                    address(accountingToken2),
                     hubCaliberAddr
                 )
             )
@@ -65,10 +66,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             abi.encodeCall(
                 IMachine.initialize,
                 (
-                    _getMachineInitParams(address(accountingToken2)),
+                    _getMachineInitParams(),
                     _getMakinaGovernableInitParams(),
                     address(0),
                     address(shareToken),
+                    address(accountingToken2),
                     hubCaliberAddr
                 )
             )
@@ -86,73 +88,14 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             abi.encodeCall(
                 IMachine.initialize,
                 (
-                    _getMachineInitParams(address(accountingToken2)),
+                    _getMachineInitParams(),
                     _getMakinaGovernableInitParams(),
                     address(0),
                     address(shareToken),
+                    address(accountingToken2),
                     hubCaliberAddr
                 )
             )
-        );
-    }
-
-    function test_RevertWhen_ShareTokenMismatch() public {
-        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
-
-        vm.prank(dao);
-        preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
-                IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialWhitelistMode: false,
-                    initialRiskManager: address(0),
-                    initialAuthority: address(accessManager)
-                }),
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-            )
-        );
-
-        vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
-        IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)),
-            _getMakinaGovernableInitParams(),
-            address(preDepositVault),
-            address(shareToken),
-            hubCaliberAddr
-        );
-    }
-
-    function test_RevertWhen_AccountingTokenMismatch() public {
-        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
-
-        vm.prank(dao);
-        preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
-                IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialWhitelistMode: false,
-                    initialRiskManager: address(0),
-                    initialAuthority: address(accessManager)
-                }),
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-            )
-        );
-
-        shareToken = MachineShare(preDepositVault.shareToken());
-
-        vm.expectRevert(IMachine.PreDepositVaultMismatch.selector);
-        IMachine(machine).initialize(
-            _getMachineInitParams(address(baseToken)),
-            _getMakinaGovernableInitParams(),
-            address(preDepositVault),
-            address(shareToken),
-            hubCaliberAddr
         );
     }
 
@@ -163,10 +106,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(machine))
         );
         IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)),
+            _getMachineInitParams(),
             _getMakinaGovernableInitParams(),
             address(0),
             address(shareToken),
+            address(accountingToken),
             hubCaliberAddr
         );
     }
@@ -176,10 +120,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         shareToken.transferOwnership(address(machine));
 
         IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)),
+            _getMachineInitParams(),
             _getMakinaGovernableInitParams(),
             address(0),
             address(shareToken),
+            address(accountingToken),
             hubCaliberAddr
         );
 
@@ -201,12 +146,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         // deploy caliber to be called in machine initializer
         ICaliber.CaliberInitParams memory cParams;
-        cParams.accountingToken = address(accountingToken);
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
         hubCaliberAddr = address(
             new BeaconProxy(
                 IHubRegistry(hubRegistry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, address(machine)))
+                abi.encodeCall(ICaliber.initialize, (cParams, address(accountingToken), address(machine)))
             )
         );
 
@@ -214,13 +158,13 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
                     initialAuthority: address(accessManager)
                 }),
+                address(baseToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
@@ -240,10 +184,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         shareToken.transferOwnership(address(machine));
 
         IMachine(machine).initialize(
-            _getMachineInitParams(address(accountingToken)),
+            _getMachineInitParams(),
             mgParams,
             address(preDepositVault),
             address(shareToken),
+            address(accountingToken),
             hubCaliberAddr
         );
 
@@ -272,9 +217,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(baseToken.balanceOf(address(machine)), preDepositAmount);
     }
 
-    function _getMachineInitParams(address accountingToken) internal view returns (IMachine.MachineInitParams memory) {
+    function _getMachineInitParams() internal view returns (IMachine.MachineInitParams memory) {
         return IMachine.MachineInitParams({
-            accountingToken: accountingToken,
             initialDepositor: machineDepositor,
             initialRedeemer: machineRedeemer,
             initialFeeManager: address(feeManager),

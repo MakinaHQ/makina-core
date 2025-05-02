@@ -36,7 +36,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken), address(accountingToken2)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken2))
             )
         );
     }
@@ -50,7 +50,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken), address(accountingToken2)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken2))
             )
         );
     }
@@ -63,7 +63,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken2), address(accountingToken)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken2), address(accountingToken))
             )
         );
     }
@@ -76,7 +76,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken2), address(accountingToken)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken2), address(accountingToken))
             )
         );
     }
@@ -91,7 +91,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken), address(accountingToken2)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken2))
             )
         );
     }
@@ -106,7 +106,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             address(preDepositVaultBeacon),
             abi.encodeCall(
                 IPreDepositVault.initialize,
-                (_getPreDepositVaultInitParams(address(baseToken2), address(accountingToken)), address(shareToken))
+                (_getPreDepositVaultInitParams(), address(shareToken), address(baseToken2), address(accountingToken))
             )
         );
     }
@@ -118,7 +118,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(preDepositVault))
         );
         IPreDepositVault(preDepositVault).initialize(
-            _getPreDepositVaultInitParams(address(baseToken), address(accountingToken)), address(shareToken)
+            _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
         );
     }
 
@@ -128,7 +128,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         shareToken.transferOwnership(address(preDepositVault));
 
         IPreDepositVault(preDepositVault).initialize(
-            _getPreDepositVaultInitParams(address(baseToken), address(accountingToken)), address(shareToken)
+            _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
         );
 
         assertFalse(preDepositVault.migrated());
@@ -143,14 +143,12 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         assertEq(shareToken.owner(), address(preDepositVault));
     }
 
-    function _getPreDepositVaultInitParams(address depositToken, address accountingToken)
+    function _getPreDepositVaultInitParams()
         internal
         view
         returns (IPreDepositVault.PreDepositVaultInitParams memory)
     {
         return IPreDepositVault.PreDepositVaultInitParams({
-            depositToken: depositToken,
-            accountingToken: accountingToken,
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
             initialWhitelistMode: false,
             initialRiskManager: address(0),

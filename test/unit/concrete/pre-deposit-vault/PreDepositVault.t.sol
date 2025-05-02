@@ -18,13 +18,13 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: riskManager,
                     initialAuthority: address(accessManager)
                 }),
+                address(baseToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )

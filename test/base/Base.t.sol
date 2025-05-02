@@ -104,7 +104,6 @@ abstract contract Base_Hub_Test is Base_Test {
         Machine _machine = Machine(
             machineFactory.createMachine(
                 IMachine.MachineInitParams({
-                    accountingToken: _accountingToken,
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialFeeManager: address(feeManager),
@@ -114,7 +113,6 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({
-                    accountingToken: _accountingToken,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: _allowedInstrMerkleRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -130,6 +128,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
+                _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
@@ -170,7 +169,6 @@ abstract contract Base_Spoke_Test is Base_Test {
         Caliber _caliber = Caliber(
             caliberFactory.createCaliber(
                 ICaliber.CaliberInitParams({
-                    accountingToken: _accountingToken,
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: _allowedInstrMerkleRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -186,6 +184,7 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
+                _accountingToken,
                 _hubMachine
             )
         );

@@ -18,7 +18,7 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.createMachine(mParams, cParams, mgParams, "", "");
+        machineFactory.createMachine(mParams, cParams, mgParams, address(0), "", "");
     }
 
     function test_CreateMachine() public {
@@ -34,7 +34,6 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
         machine = Machine(
             machineFactory.createMachine(
                 IMachine.MachineInitParams({
-                    accountingToken: address(accountingToken),
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialFeeManager: address(feeManager),
@@ -44,7 +43,6 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({
-                    accountingToken: address(accountingToken),
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
@@ -60,6 +58,7 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )

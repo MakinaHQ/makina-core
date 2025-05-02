@@ -14,7 +14,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is MachineFactory_Integ
     function test_RevertWhen_CallerWithoutRole() public {
         IPreDepositVault.PreDepositVaultInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.createPreDepositVault(params, "", "");
+        machineFactory.createPreDepositVault(params, address(0), address(0), "", "");
     }
 
     function test_CreatePreDepositVault() public {
@@ -25,13 +25,13 @@ contract CreatePreDepositVault_Integration_Concrete_Test is MachineFactory_Integ
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
                     initialAuthority: address(accessManager)
                 }),
+                address(baseToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )

@@ -39,13 +39,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
         preDepositVault = PreDepositVault(
             machineFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
-                    depositToken: address(baseToken),
-                    accountingToken: address(accountingToken),
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
                     initialAuthority: address(accessManager)
                 }),
+                address(baseToken),
+                address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
             )
@@ -69,7 +69,6 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
         machine = Machine(
             machineFactory.createMachineFromPreDeposit(
                 IMachine.MachineInitParams({
-                    accountingToken: address(accountingToken),
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
                     initialFeeManager: address(feeManager),
@@ -79,7 +78,6 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
                 ICaliber.CaliberInitParams({
-                    accountingToken: address(accountingToken),
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
                     initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,

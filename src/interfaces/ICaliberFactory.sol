@@ -19,11 +19,13 @@ interface ICaliberFactory is IBridgeAdapterFactory {
     /// @notice Deploys a new Caliber instance.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param accountingToken The address of the accounting token.
     /// @param hubMachine The address of the hub machine.
     /// @return caliber The address of the deployed Caliber instance.
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address accountingToken,
         address hubMachine
     ) external returns (address caliber);
 }

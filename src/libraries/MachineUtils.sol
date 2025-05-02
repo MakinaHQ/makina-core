@@ -123,12 +123,6 @@ library MachineUtils {
     function migrateFromPreDeposit(Machine.MachineStorage storage $, address preDepositVault, address oracleRegistry)
         external
     {
-        if (
-            IPreDepositVault(preDepositVault).shareToken() != $._shareToken
-                || IPreDepositVault(preDepositVault).accountingToken() != $._accountingToken
-        ) {
-            revert IMachine.PreDepositVaultMismatch();
-        }
         IPreDepositVault(preDepositVault).migrateToMachine();
 
         address preDepositToken = IPreDepositVault(preDepositVault).depositToken();

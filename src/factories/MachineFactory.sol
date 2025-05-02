@@ -37,6 +37,8 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     /// @inheritdoc IMachineFactory
     function createPreDepositVault(
         IPreDepositVault.PreDepositVaultInitParams calldata params,
+        address depositToken,
+        address accountingToken,
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
@@ -44,7 +46,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         address preDepositVault = address(new BeaconProxy(IHubRegistry(registry).preDepositVaultBeacon(), ""));
         IOwnable2Step(shareToken).transferOwnership(preDepositVault);
 
-        IPreDepositVault(preDepositVault).initialize(params, shareToken);
+        IPreDepositVault(preDepositVault).initialize(params, shareToken, depositToken, accountingToken);
 
         isPreDepositVault[preDepositVault] = true;
 
@@ -63,19 +65,20 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         if (!isPreDepositVault[preDepositVault]) {
             revert NotPreDepositVault();
         }
+        address accountingToken = IPreDepositVault(preDepositVault).accountingToken();
+        address shareToken = IPreDepositVault(preDepositVault).shareToken();
 
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, machine);
+        address caliber = _createCaliber(cParams, accountingToken, machine);
 
         IPreDepositVault(preDepositVault).setPendingMachine(machine);
-        address token = IPreDepositVault(preDepositVault).shareToken();
 
-        IMachine(machine).initialize(mParams, mgParams, preDepositVault, token, caliber);
+        IMachine(machine).initialize(mParams, mgParams, preDepositVault, shareToken, accountingToken, caliber);
 
         isMachine[machine] = true;
         isCaliber[caliber] = true;
 
-        emit MachineDeployed(machine, token, caliber);
+        emit MachineDeployed(machine, shareToken, caliber);
 
         return machine;
     }
@@ -85,16 +88,17 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address accountingToken,
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, machine);
+        address caliber = _createCaliber(cParams, accountingToken, machine);
 
         IOwnable2Step(token).transferOwnership(machine);
 
-        IMachine(machine).initialize(mParams, mgParams, address(0), token, caliber);
+        IMachine(machine).initialize(mParams, mgParams, address(0), token, accountingToken, caliber);
 
         isMachine[machine] = true;
         isCaliber[caliber] = true;
@@ -116,10 +120,14 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @dev Deploys a caliber.
-    function _createCaliber(ICaliber.CaliberInitParams calldata cParams, address machine) internal returns (address) {
+    function _createCaliber(ICaliber.CaliberInitParams calldata cParams, address accountingToken, address machine)
+        internal
+        returns (address)
+    {
         address caliber = address(
             new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (cParams, machine))
+                IHubRegistry(registry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, machine))
             )
         );
 

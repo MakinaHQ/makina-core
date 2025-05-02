@@ -65,7 +65,6 @@ interface ICaliber {
     }
 
     /// @notice Initialization parameters.
-    /// @param accountingToken The address of the accounting token.
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
@@ -74,7 +73,6 @@ interface ICaliber {
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
     struct CaliberInitParams {
-        address accountingToken;
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
         uint256 initialTimelockDuration;
@@ -116,8 +114,10 @@ interface ICaliber {
 
     /// @notice Initializer of the contract.
     /// @param cParams The caliber initialization parameters.
-    /// @param hubMachineEndpoint The address of the hub machine endpoints.
-    function initialize(CaliberInitParams calldata cParams, address hubMachineEndpoint) external;
+    /// @param _accountingToken The address of the accounting token.
+    /// @param _hubMachineEndpoint The address of the hub machine endpoints.
+    function initialize(CaliberInitParams calldata cParams, address _accountingToken, address _hubMachineEndpoint)
+        external;
 
     /// @notice Address of the Weiroll VM.
     function weirollVm() external view returns (address);

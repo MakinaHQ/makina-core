@@ -32,6 +32,7 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        address accountingToken,
         address hubMachine
     ) external override restricted returns (address) {
         address mailbox = address(
@@ -42,7 +43,8 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
         );
         address caliber = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberBeacon(), abi.encodeCall(ICaliber.initialize, (cParams, mailbox))
+                ISpokeRegistry(registry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, mailbox))
             )
         );
         ICaliberMailbox(mailbox).setCaliber(caliber);

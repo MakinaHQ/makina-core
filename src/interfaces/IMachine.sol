@@ -18,7 +18,6 @@ interface IMachine is IMachineEndpoint {
     error MachineMailboxDoesNotExist();
     error MismatchedLength();
     error NotMailbox();
-    error PreDepositVaultMismatch();
     error SlippageProtection();
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
@@ -44,14 +43,12 @@ interface IMachine is IMachineEndpoint {
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
 
     /// @notice Initialization parameters.
-    /// @param accountingToken The address of the accounting token.
     /// @param initialDepositor The address of the initial depositor.
     /// @param initialRedeemer The address of the initial redeemer.
     /// @param initialFeeManager The address of the initial fee manager.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialShareLimit The share cap value.
     struct MachineInitParams {
-        address accountingToken;
         address initialDepositor;
         address initialRedeemer;
         address initialFeeManager;
@@ -79,12 +76,14 @@ interface IMachine is IMachineEndpoint {
     /// @param mgParams The makina governable initialization parameters.
     /// @param _preDepositVault The address of the pre-deposit vault.
     /// @param _shareToken The address of the share token.
+    /// @param _accountingToken The address of the accounting token.
     /// @param _hubCaliber The address of the hub caliber.
     function initialize(
         MachineInitParams calldata mParams,
         MakinaGovernableInitParams calldata mgParams,
         address _preDepositVault,
         address _shareToken,
+        address _accountingToken,
         address _hubCaliber
     ) external;
 
