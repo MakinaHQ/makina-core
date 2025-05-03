@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
@@ -19,7 +19,7 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Machine} from "src/machine/Machine.sol";
 
 library MachineUtils {
@@ -42,7 +42,7 @@ library MachineUtils {
         if (elapsedTime >= $._feeMintCooldown) {
             address _feeManager = $._feeManager;
             address _shareToken = $._shareToken;
-            uint256 currentShareSupply = IERC20Metadata(_shareToken).totalSupply();
+            uint256 currentShareSupply = IERC20(_shareToken).totalSupply();
 
             uint256 fixedFee = IFeeManager(_feeManager).calculateFixedFee(currentShareSupply, elapsedTime);
 
@@ -79,9 +79,8 @@ library MachineUtils {
                     }
                 }
                 $._lastMintedFeesTime = currentTimestamp;
-                $._lastMintedFeesSharePrice = getSharePrice(
-                    $._lastTotalAum, IERC20Metadata(_shareToken).totalSupply(), $._shareTokenDecimalsOffset
-                );
+                $._lastMintedFeesSharePrice =
+                    getSharePrice($._lastTotalAum, IERC20(_shareToken).totalSupply(), $._shareTokenDecimalsOffset);
             }
             return totalFee;
         }
@@ -129,10 +128,7 @@ library MachineUtils {
         $._idleTokens.add(preDepositToken);
 
         $._lastTotalAum = _accountingValueOf(
-            oracleRegistry,
-            $._accountingToken,
-            preDepositToken,
-            IERC20Metadata(preDepositToken).balanceOf(address(this))
+            oracleRegistry, $._accountingToken, preDepositToken, IERC20(preDepositToken).balanceOf(address(this))
         );
         $._lastGlobalAccountingTime = block.timestamp;
     }
@@ -147,7 +143,7 @@ library MachineUtils {
         pure
         returns (uint256)
     {
-        return Constants.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
+        return DecimalsUtils.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
     }
 
     /// @dev Handles a received Wormhole CCQ PerChainQueryResponse object and updates the corresponding caliber accounting data in the machine storage.
@@ -274,9 +270,8 @@ library MachineUtils {
         len = $._idleTokens.length();
         for (uint256 i; i < len;) {
             address token = $._idleTokens.at(i);
-            totalAum += _accountingValueOf(
-                oracleRegistry, $._accountingToken, token, IERC20Metadata(token).balanceOf(address(this))
-            );
+            totalAum +=
+                _accountingValueOf(oracleRegistry, $._accountingToken, token, IERC20(token).balanceOf(address(this)));
             unchecked {
                 ++i;
             }
@@ -313,6 +308,6 @@ library MachineUtils {
             return amount;
         }
         uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, accountingToken);
-        return amount.mulDiv(price, (10 ** IERC20Metadata(token).decimals()));
+        return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
     }
 }

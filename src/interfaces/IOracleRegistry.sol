@@ -13,6 +13,7 @@ pragma solidity 0.8.28;
 ///
 interface IOracleRegistry {
     error PriceFeedRouteNotRegistered(address token);
+    error InvalidDecimals();
     error InvalidFeedRoute();
     error NegativeTokenPrice(address priceFeed);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);

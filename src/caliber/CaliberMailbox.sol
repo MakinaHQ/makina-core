@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -20,7 +20,7 @@ import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
 contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     uint256 public immutable hubChainId;
 
@@ -116,7 +116,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 revert HubBridgeAdapterNotSet();
             }
 
-            IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+            IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
 
             (bool exists, uint256 bridgeOut) = $._bridgesOut.tryGet(token);
             $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
@@ -137,7 +137,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
             }
 
-            IERC20Metadata(token).safeTransferFrom(msg.sender, $._caliber, amount);
+            IERC20(token).safeTransferFrom(msg.sender, $._caliber, amount);
         } else {
             revert UnauthorizedCaller();
         }
@@ -233,7 +233,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 ++i;
             }
         }
-        IERC20Metadata(token).safeTransfer($._caliber, IERC20Metadata(token).balanceOf(address(this)));
+        IERC20(token).safeTransfer($._caliber, IERC20(token).balanceOf(address(this)));
 
         emit ResetBridgingState(token);
     }

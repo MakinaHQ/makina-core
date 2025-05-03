@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -22,14 +22,14 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
-import {Constants} from "../libraries/Constants.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 import {MachineUtils} from "../libraries/MachineUtils.sol";
 
 contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeable, IMachine {
     using Math for uint256;
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -87,26 +87,21 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
-        if (
-            atDecimals < Constants.MIN_ACCOUNTING_TOKEN_DECIMALS || atDecimals > Constants.MAX_ACCOUNTING_TOKEN_DECIMALS
-        ) {
-            revert InvalidDecimals();
-        }
-
         address oracleRegistry = IHubRegistry(registry).oracleRegistry();
         if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(_accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
+        uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
+
         $._shareToken = _shareToken;
         $._accountingToken = _accountingToken;
         $._idleTokens.add(_accountingToken);
-        $._shareTokenDecimalsOffset = Constants.SHARE_TOKEN_DECIMALS - atDecimals;
+        $._shareTokenDecimalsOffset = DecimalsUtils.SHARE_TOKEN_DECIMALS - atDecimals;
 
         if (_preDepositVault != address(0)) {
             MachineUtils.migrateFromPreDeposit($, _preDepositVault, oracleRegistry);
-            uint256 currentShareSupply = IERC20Metadata($._shareToken).totalSupply();
+            uint256 currentShareSupply = IERC20($._shareToken).totalSupply();
             $._lastMintedFeesSharePrice =
                 MachineUtils.getSharePrice($._lastTotalAum, currentShareSupply, $._shareTokenDecimalsOffset);
         } else {
@@ -182,14 +177,14 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         if ($._shareLimit == type(uint256).max) {
             return type(uint256).max;
         }
-        uint256 totalSupply = IERC20Metadata($._shareToken).totalSupply();
+        uint256 totalSupply = IERC20($._shareToken).totalSupply();
         return totalSupply < $._shareLimit ? $._shareLimit - totalSupply : 0;
     }
 
     /// @inheritdoc IMachine
     function maxWithdraw() public view override returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        return IERC20Metadata($._accountingToken).balanceOf(address(this));
+        return IERC20($._accountingToken).balanceOf(address(this));
     }
 
     /// @inheritdoc IMachine
@@ -256,17 +251,15 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     /// @inheritdoc IMachine
     function convertToShares(uint256 assets) public view override returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        return assets.mulDiv(
-            IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset, $._lastTotalAum + 1
-        );
+        return
+            assets.mulDiv(IERC20($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset, $._lastTotalAum + 1);
     }
 
     /// @inheritdoc IMachine
     function convertToAssets(uint256 shares) public view override returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
-        return shares.mulDiv(
-            $._lastTotalAum + 1, IERC20Metadata($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset
-        );
+        return
+            shares.mulDiv($._lastTotalAum + 1, IERC20($._shareToken).totalSupply() + 10 ** $._shareTokenDecimalsOffset);
     }
 
     /// @inheritdoc IMachineEndpoint
@@ -303,7 +296,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             revert UnauthorizedSender();
         }
 
-        IERC20Metadata(token).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
         _notifyIdleToken(token);
     }
 
@@ -318,11 +311,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         if (!ICaliber($._hubCaliber).isBaseToken(token)) {
             revert ICaliber.NotBaseToken();
         }
-        IERC20Metadata(token).safeTransfer($._hubCaliber, amount);
+        IERC20(token).safeTransfer($._hubCaliber, amount);
 
         emit TransferToCaliber($._hubChainId, token, amount);
 
-        if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
+        if (IERC20(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
         }
     }
@@ -361,7 +354,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
         emit TransferToCaliber(chainId, token, amount);
 
-        if (IERC20Metadata(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
+        if (IERC20(token).balanceOf(address(this)) == 0 && token != $._accountingToken) {
             $._idleTokens.remove(token);
         }
     }
@@ -439,7 +432,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             revert SlippageProtection();
         }
 
-        IERC20Metadata($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
+        IERC20($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
         $._lastTotalAum += assets;
         emit Deposit(msg.sender, receiver, assets, shares);
@@ -471,7 +464,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             revert SlippageProtection();
         }
 
-        IERC20Metadata($._accountingToken).safeTransfer(receiver, assets);
+        IERC20($._accountingToken).safeTransfer(receiver, assets);
         IMachineShare($._shareToken).burn(msg.sender, shares);
         $._lastTotalAum -= assets;
         emit Redeem(msg.sender, receiver, assets, shares);
@@ -659,7 +652,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
     /// @dev Checks token balance, and registers token if needed.
     function _notifyIdleToken(address token) internal {
-        if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
+        if (IERC20(token).balanceOf(address(this)) > 0) {
             bool newlyAdded = _getMachineStorage()._idleTokens.add(token);
             if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
                 revert IOracleRegistry.PriceFeedRouteNotRegistered(token);

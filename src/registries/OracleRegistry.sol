@@ -3,9 +3,11 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+
 import {AggregatorV2V3Interface} from "../interfaces/AggregatorV2V3Interface.sol";
+import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 
 contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
@@ -48,7 +50,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
         uint8 baseFRDecimalsSum = _getFeedDecimals(baseFR.feed1) + _getFeedDecimals(baseFR.feed2);
         uint8 quoteFRDecimalsSum = _getFeedDecimals(quoteFR.feed1) + _getFeedDecimals(quoteFR.feed2);
-        uint8 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
+        uint8 quoteTokenDecimals = DecimalsUtils._getDecimals(quoteToken);
 
         // price = 10^(quoteTokenDecimals + quoteFeedsDecimalsSum - baseFeedsDecimalsSum) *
         //  (baseFeedPrice1 * baseFeedPrice2) / (quoteFeedPrice1 * quoteFeedPrice2)
@@ -78,6 +80,12 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (feed1 == address(0)) {
             revert InvalidFeedRoute();
         }
+
+        uint8 tokenDecimals = DecimalsUtils._getDecimals(token);
+        if (tokenDecimals < DecimalsUtils.MIN_DECIMALS || tokenDecimals > DecimalsUtils.MAX_DECIMALS) {
+            revert InvalidDecimals();
+        }
+
         _feedRoutes[token] = FeedRoute({feed1: feed1, feed2: feed2});
 
         feedStaleThreshold[feed1] = stalenessThreshold1;

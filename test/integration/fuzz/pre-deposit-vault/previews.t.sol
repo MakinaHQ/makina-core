@@ -5,7 +5,7 @@ import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
-import {Constants} from "src/libraries/Constants.sol";
+import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 
 import {Base_Hub_Test} from "test/base/Base.t.sol";
@@ -19,7 +19,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
 
     uint256 public depositTokenUnit;
     uint256 public accountingTokenUnit;
-    uint256 public constant shareTokenUnit = 10 ** Constants.SHARE_TOKEN_DECIMALS;
+    uint256 public constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
 
     struct Data {
         uint8 dtDecimals;
@@ -31,12 +31,8 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
-        data.dtDecimals = uint8(
-            bound(data.dtDecimals, Constants.MIN_ACCOUNTING_TOKEN_DECIMALS, Constants.MAX_ACCOUNTING_TOKEN_DECIMALS)
-        );
-        data.atDecimals = uint8(
-            bound(data.atDecimals, Constants.MIN_ACCOUNTING_TOKEN_DECIMALS, Constants.MAX_ACCOUNTING_TOKEN_DECIMALS)
-        );
+        data.dtDecimals = uint8(bound(data.dtDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
+        data.atDecimals = uint8(bound(data.atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
         data.dfDecimals = uint8(bound(data.dfDecimals, 6, 18));
         data.afDecimals = uint8(bound(data.afDecimals, 6, 18));
         data.price_a_e = uint32(bound(data.price_a_e, 1, 1e4));

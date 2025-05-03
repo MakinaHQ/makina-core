@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
+import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -14,7 +14,7 @@ import {MakinaContext} from "../../utils/MakinaContext.sol";
 
 abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
     using Math for uint256;
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     /// @dev Full scale value in basis points
     uint256 private constant MAX_BPS = 10_000;
@@ -134,7 +134,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if (minOutputAmount > inputAmount) {
             revert MinOutputAmountExceedsInputAmount();
         }
-        IERC20Metadata(inputToken).forceApprove(adapter, inputAmount);
+        IERC20(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
             destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
         );
