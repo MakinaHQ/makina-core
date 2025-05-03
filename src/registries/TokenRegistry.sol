@@ -10,6 +10,10 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) private
         _foreignToLocalTokens;
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address _accessManager) external initializer {
         __AccessManaged_init(_accessManager);
     }

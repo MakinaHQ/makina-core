@@ -62,7 +62,6 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         approvalTarget = _approvalTarget;
         executionTarget = _executionTarget;
         receiveSource = _receiveSource;
-        _disableInitializers();
     }
 
     function __BridgeAdapter_init(address _controller) internal onlyInitializing {

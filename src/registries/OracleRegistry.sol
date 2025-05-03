@@ -18,6 +18,10 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @inheritdoc IOracleRegistry
     mapping(address feed => uint256 stalenessThreshold) public feedStaleThreshold;
 
+constructor() {
+        _disableInitializers();
+    }
+
     function initialize(address initialAuthority_) external initializer {
         __AccessManaged_init(initialAuthority_);
     }

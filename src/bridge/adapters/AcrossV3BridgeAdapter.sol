@@ -14,7 +14,9 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {}
+    constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {
+        _disableInitializers();
+    }
 
     /// @inheritdoc IBridgeAdapter
     function initialize(address _controller, bytes calldata) external override initializer {

@@ -27,10 +27,6 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         }
     }
 
-    constructor() {
-        _disableInitializers();
-    }
-
     function __BaseMakinaRegistry_init(
         address _oracleRegistry,
         address _tokenRegistry,
