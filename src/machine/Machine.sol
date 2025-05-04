@@ -14,7 +14,7 @@ import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
-import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
@@ -87,7 +87,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._hubChainId = block.chainid;
         $._hubCaliber = _hubCaliber;
 
-        address oracleRegistry = IHubRegistry(registry).oracleRegistry();
+        address oracleRegistry = IHubCoreRegistry(registry).oracleRegistry();
         if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(_accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
@@ -334,7 +334,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             revert UnauthorizedCaller();
         }
 
-        address outputToken = ITokenRegistry(IHubRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
+        address outputToken = ITokenRegistry(IHubCoreRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
 
         SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
@@ -391,7 +391,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function updateTotalAum() public override nonReentrant notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
-        uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubRegistry(registry).oracleRegistry());
+        uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry());
         emit TotalAumUpdated(_lastTotalAum);
 
         uint256 _mintedFees = MachineUtils.manageFees($);
@@ -472,8 +472,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     {
         MachineUtils.updateSpokeCaliberAccountingData(
             _getMachineStorage(),
-            IHubRegistry(registry).tokenRegistry(),
-            IHubRegistry(registry).chainRegistry(),
+            IHubCoreRegistry(registry).tokenRegistry(),
+            IHubCoreRegistry(registry).chainRegistry(),
             wormhole,
             response,
             signatures
@@ -487,7 +487,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         uint16[] calldata bridges,
         address[] calldata adapters
     ) external restricted {
-        if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
+        if (!IChainRegistry(IHubCoreRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
             revert IChainRegistry.EvmChainIdNotRegistered(foreignChainId);
         }
 
@@ -639,7 +639,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function _notifyIdleToken(address token) internal {
         if (IERC20(token).balanceOf(address(this)) > 0) {
             bool newlyAdded = _getMachineStorage()._idleTokens.add(token);
-            if (newlyAdded && !IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+            if (
+                newlyAdded && !IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)
+            ) {
                 revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
             }
         }

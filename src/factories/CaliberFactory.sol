@@ -10,7 +10,7 @@ import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
-import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
+import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICaliberFactory {
@@ -58,13 +58,13 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
         CaliberFactoryStorage storage $ = _getCaliberFactoryStorage();
         address mailbox = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberMailboxBeacon(),
+                ISpokeCoreRegistry(registry).caliberMailboxBeacon(),
                 abi.encodeCall(ICaliberMailbox.initialize, (mgParams, hubMachine))
             )
         );
         address caliber = address(
             new BeaconProxy(
-                ISpokeRegistry(registry).caliberBeacon(),
+                ISpokeCoreRegistry(registry).caliberBeacon(),
                 abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, mailbox))
             )
         );

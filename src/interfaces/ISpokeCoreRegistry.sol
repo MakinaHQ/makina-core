@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {ICoreRegistry} from "./ICoreRegistry.sol";
 
-interface ISpokeRegistry is ICoreRegistry {
+interface ISpokeCoreRegistry is ICoreRegistry {
     event CaliberMailboxBeaconChange(address indexed oldCaliberMailboxBeacon, address indexed newCaliberMailboxBeacon);
 
     /// @notice Address of the caliber mailbox beacon.

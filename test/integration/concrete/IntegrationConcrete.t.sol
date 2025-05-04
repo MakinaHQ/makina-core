@@ -152,7 +152,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        hubRegistry.setFlashLoanModule(address(flashLoanModule));
+        hubCoreRegistry.setFlashLoanModule(address(flashLoanModule));
 
         feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
@@ -202,7 +202,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        spokeRegistry.setFlashLoanModule(address(flashLoanModule));
+        spokeCoreRegistry.setFlashLoanModule(address(flashLoanModule));
 
         hubMachineAddr = makeAddr("hubMachine");
 

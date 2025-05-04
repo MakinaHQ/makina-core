@@ -4,7 +4,7 @@
 
 This is a list of role permissions in Makina Core contracts. These roles must be assigned to respective contracts at deployment.
 
-### HubRegistry
+### HubCoreRegistry
 
 - `ADMIN_ROLE` (roleId `0`)
   - Can set address of OracleRegistry.

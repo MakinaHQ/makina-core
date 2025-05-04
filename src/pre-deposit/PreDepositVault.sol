@@ -6,7 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "src/interfaces/IOwnable2Step.sol";
@@ -55,10 +55,10 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     ) external override initializer {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
+        if (!IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_depositToken);
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
+        if (!IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
@@ -162,7 +162,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
 
         address _depositToken = $._depositToken;
         uint256 price_d_a =
-            IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
+            IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
         uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20($._shareToken).totalSupply();
@@ -177,7 +177,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
 
         address _depositToken = $._depositToken;
         uint256 price_d_a =
-            IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
+            IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
         uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20($._shareToken).totalSupply();
@@ -260,7 +260,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     /// @inheritdoc IPreDepositVault
     function setPendingMachine(address _machine) external override notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
-        if (msg.sender != IHubRegistry(registry).coreFactory()) {
+        if (msg.sender != IHubCoreRegistry(registry).coreFactory()) {
             revert NotFactory();
         }
         $._machine = _machine;

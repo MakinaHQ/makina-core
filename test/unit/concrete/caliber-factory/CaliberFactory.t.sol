@@ -5,7 +5,7 @@ import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
 contract Getters_CaliberFactory_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_Getters() public view {
-        assertEq(caliberFactory.registry(), address(spokeRegistry));
+        assertEq(caliberFactory.registry(), address(spokeCoreRegistry));
         assertTrue(caliberFactory.isCaliber(address(caliber)));
         assertTrue(caliberFactory.isCaliberMailbox(address(caliberMailbox)));
         assertFalse(caliberFactory.isCaliber(address(0)));

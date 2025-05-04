@@ -54,7 +54,7 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
 
         vm.startPrank(address(dao));
-        hubRegistry.setBridgeAdapterBeacon(
+        hubCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
@@ -142,7 +142,7 @@ abstract contract BridgeController_Machine_Integration_Concrete_Test is
     {
         Machine_Integration_Concrete_Test.setUp();
 
-        registry = ICoreRegistry(address(hubRegistry));
+        registry = ICoreRegistry(address(hubCoreRegistry));
         bridgeController = IBridgeController(address(machine));
         bridgeAdapterFactory = IBridgeAdapterFactory(address(machineFactory));
     }

@@ -30,7 +30,7 @@ abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concre
         Integration_Concrete_Spoke_Test.setUp();
 
         vm.startPrank(address(dao));
-        spokeRegistry.setBridgeAdapterBeacon(
+        spokeCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
@@ -51,7 +51,7 @@ abstract contract BridgeController_CaliberMailbox_Integration_Concrete_Test is
     {
         CaliberMailbox_Integration_Concrete_Test.setUp();
 
-        registry = ICoreRegistry(address(spokeRegistry));
+        registry = ICoreRegistry(address(spokeCoreRegistry));
         bridgeController = IBridgeController(address(caliberMailbox));
         bridgeAdapterFactory = IBridgeAdapterFactory(address(caliberFactory));
     }

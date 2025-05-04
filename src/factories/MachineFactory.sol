@@ -7,7 +7,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
@@ -69,7 +69,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         MachineFactoryStorage storage $ = _getMachineFactoryStorage();
 
         address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
-        address preDepositVault = address(new BeaconProxy(IHubRegistry(registry).preDepositVaultBeacon(), ""));
+        address preDepositVault = address(new BeaconProxy(IHubCoreRegistry(registry).preDepositVaultBeacon(), ""));
         IOwnable2Step(shareToken).transferOwnership(preDepositVault);
 
         IPreDepositVault(preDepositVault).initialize(params, shareToken, depositToken, accountingToken);
@@ -96,7 +96,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         address accountingToken = IPreDepositVault(preDepositVault).accountingToken();
         address shareToken = IPreDepositVault(preDepositVault).shareToken();
 
-        address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
+        address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
         address caliber = _createCaliber(cParams, accountingToken, machine);
 
         IPreDepositVault(preDepositVault).setPendingMachine(machine);
@@ -123,7 +123,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         MachineFactoryStorage storage $ = _getMachineFactoryStorage();
 
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
-        address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
+        address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
         address caliber = _createCaliber(cParams, accountingToken, machine);
 
         IOwnable2Step(token).transferOwnership(machine);
@@ -153,7 +153,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     {
         address caliber = address(
             new BeaconProxy(
-                IHubRegistry(registry).caliberBeacon(),
+                IHubCoreRegistry(registry).caliberBeacon(),
                 abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, machine))
             )
         );

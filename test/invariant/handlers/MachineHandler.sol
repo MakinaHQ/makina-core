@@ -10,7 +10,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
@@ -308,8 +308,9 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
 
     /// @dev Notifies machine of the current state of the spoke caliber accounting
     function notifySpokeCaliberAccounting() public {
-        uint16 whChainId =
-            IChainRegistry(IHubRegistry(machine.registry()).chainRegistry()).evmToWhChainId(machineStore.spokeChainId());
+        uint16 whChainId = IChainRegistry(IHubCoreRegistry(machine.registry()).chainRegistry()).evmToWhChainId(
+            machineStore.spokeChainId()
+        );
 
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
             spokeCaliberMailbox.getSpokeCaliberAccountingData();

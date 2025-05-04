@@ -6,8 +6,8 @@ This repository contains the core smart contracts of Makina.
 
 | Filename                     | Deployment chain | Description                                                                                                                                                        |
 | ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `HubRegistry.sol`            | Hub              | Stores hub chain factories, oracle registry, swapModule module and beacons for machines, calibers and mailboxes.                                                   |
-| `SpokeRegistry.sol`          | Spoke            | Stores spoke chain factories, oracle registry, swapModule module, and beacons for calibers and mailboxes.                                                          |
+| `HubCoreRegistry.sol`            | Hub              | Stores hub chain factories, oracle registry, swapModule module and beacons for machines, calibers and mailboxes.                                                   |
+| `SpokeCoreRegistry.sol`          | Spoke            | Stores spoke chain factories, oracle registry, swapModule module, and beacons for calibers and mailboxes.                                                          |
 | `OracleRegistry.sol`         | Hub + Spoke      | Aggregates price feeds in order to price base tokens against accounting tokens used in machines and calibers.                                                      |
 | `TokenRegistry.sol`          | Hub + Spoke      | Maps token addresses accross different chains.                                                                                                                     |
 | `ChainRegistry.sol`          | Hub              | Maps EVM chain IDs to Wormhole chain IDs.                                                                                                                          |

@@ -34,7 +34,7 @@ contract DeploySpokeCore is DeployCore {
         uint256 hubChainId = abi.decode(vm.parseJson(inputJson, ".hubChainId"), (uint256));
         _deployment = deploySpokeCore(deployer, dao, hubChainId);
 
-        setupSpokeRegistry(_deployment);
+        setupSpokeCoreRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_deployment.tokenRegistry, tokensToRegister);
         setupSwapModule(_deployment.swapModule, swappersData);
@@ -53,7 +53,7 @@ contract DeploySpokeCore is DeployCore {
         vm.serializeAddress(key, "CaliberBeacon", address(_deployment.caliberBeacon));
         vm.serializeAddress(key, "CaliberFactory", address(_deployment.caliberFactory));
         vm.serializeAddress(key, "CaliberMailboxBeacon", address(_deployment.caliberMailboxBeacon));
-        vm.serializeAddress(key, "SpokeRegistry", address(_deployment.spokeRegistry));
+        vm.serializeAddress(key, "SpokeCoreRegistry", address(_deployment.spokeCoreRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
         vm.serializeAddress(key, "TokenRegistry", address(_deployment.tokenRegistry));
         vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);

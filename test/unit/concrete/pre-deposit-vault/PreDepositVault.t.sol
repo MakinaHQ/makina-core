@@ -46,7 +46,7 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
 contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_Unit_Concrete_Test {
     function test_Getters() public view {
-        assertEq(preDepositVault.registry(), address(hubRegistry));
+        assertEq(preDepositVault.registry(), address(hubCoreRegistry));
         assertEq(preDepositVault.totalAssets(), 0);
         assertEq(preDepositVault.depositToken(), address(baseToken));
         assertEq(preDepositVault.accountingToken(), address(accountingToken));

@@ -13,7 +13,7 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
-import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
+import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
@@ -60,7 +60,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     modifier onlyFactory() {
-        if (msg.sender != ISpokeRegistry(registry).coreFactory()) {
+        if (msg.sender != ISpokeCoreRegistry(registry).coreFactory()) {
             revert NotFactory();
         }
         _;
@@ -112,7 +112,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
         if (msg.sender == $._caliber) {
             address outputToken =
-                ITokenRegistry(ISpokeRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
+                ITokenRegistry(ISpokeCoreRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
 
             (uint16 bridgeId, uint256 minOutputAmount) = abi.decode(data, (uint16, uint256));
 

@@ -5,7 +5,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
@@ -107,7 +107,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
         hubCaliberAddr = address(
             new BeaconProxy(
-                IHubRegistry(hubRegistry).caliberBeacon(),
+                IHubCoreRegistry(hubCoreRegistry).caliberBeacon(),
                 abi.encodeCall(ICaliber.initialize, (cParams, address(accountingToken), address(machine)))
             )
         );

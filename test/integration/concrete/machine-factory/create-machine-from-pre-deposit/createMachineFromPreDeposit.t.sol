@@ -106,7 +106,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
 
         assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 
-        assertEq(machine.registry(), address(hubRegistry));
+        assertEq(machine.registry(), address(hubCoreRegistry));
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
         assertEq(machine.depositor(), machineDepositor);

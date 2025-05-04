@@ -75,10 +75,10 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         oracleRegistry.setFeedRoute(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        hubRegistry.setBridgeAdapterBeacon(
+        hubCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
-        spokeRegistry.setBridgeAdapterBeacon(
+        spokeCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();

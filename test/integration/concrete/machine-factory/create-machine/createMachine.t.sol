@@ -70,7 +70,7 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
 
         assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 
-        assertEq(machine.registry(), address(hubRegistry));
+        assertEq(machine.registry(), address(hubCoreRegistry));
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
         assertEq(machine.depositor(), machineDepositor);
