@@ -7,7 +7,7 @@ managePosition.t.sol
    │  │  └── it should revert with UnauthorizedCaller
    │  └── when sender is the Mechanic
    │     ├── when the 2 instructions position IDs or isDebt flags do not match
-   │     │  └── it should revert with UnmatchingInstructions
+   │     │  └── it should revert with InstructionsMismatch
    │     └── when the 2 instructions position IDs and isDebt flags match
    │        ├── when the first instruction is not of type management
    │        │  └── it should revert with InvalidInstructionType

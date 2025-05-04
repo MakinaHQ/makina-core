@@ -12,7 +12,7 @@ manageFlashloan.t.sol
          │  └── it should revert with InvalidInstructionType
          └── when the instruction is of the FLASHLOAN_MANAGEMENT type
             ├── when the outter MANAGEMENT instruction and the inner FLASHLOAN_MANAGEMENT position IDs or isDebt flags do not match
-            │  └── it should revert with UnmatchingInstructions
+            │  └── it should revert with InstructionsMismatch
             └── when the 2 instructions position IDs and isDebt flags match
                ├── when the instruction is a debt position
                │  └── it should revert with InvalidDebtFlag

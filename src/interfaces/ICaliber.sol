@@ -33,7 +33,7 @@ interface ICaliber {
     error SameRoot();
     error TimelockDurationTooShort();
     error UnauthorizedCaller();
-    error UnmatchingInstructions();
+    error InstructionsMismatch();
     error ZeroTokenAddress();
     error ZeroPositionId();
 

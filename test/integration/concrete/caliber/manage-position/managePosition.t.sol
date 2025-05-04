@@ -58,7 +58,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
-    function test_RevertWhen_ProvidedInstructionsUnmatching() public {
+    function test_RevertWhen_ProvidedInstructionsMismatch() public {
         uint256 inputAmount = 3e18;
 
         vm.startPrank(mechanic);
@@ -68,13 +68,13 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), POOL_POS_ID, address(vault));
-        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        vm.expectRevert(ICaliber.InstructionsMismatch.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // instructions have different isDebt flags
         acctInstruction.positionId = VAULT_POS_ID;
         acctInstruction.isDebt = true;
-        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        vm.expectRevert(ICaliber.InstructionsMismatch.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 

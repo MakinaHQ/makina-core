@@ -389,7 +389,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert InvalidInstructionType();
         }
         if ($._managedPositionId != instruction.positionId || $._isManagedPositionDebt != instruction.isDebt) {
-            revert UnmatchingInstructions();
+            revert InstructionsMismatch();
         }
         if (instruction.isDebt) {
             revert InvalidDebtFlag();
@@ -575,7 +575,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert ZeroPositionId();
         }
         if (posId != acctInstruction.positionId || mgmtInstruction.isDebt != acctInstruction.isDebt) {
-            revert UnmatchingInstructions();
+            revert InstructionsMismatch();
         }
         if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
             revert InvalidInstructionType();

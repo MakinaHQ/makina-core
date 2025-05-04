@@ -75,7 +75,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
-    function test_RevertWhen_ProvidedInstructionsUnmatching() public {
+    function test_RevertWhen_ProvidedInstructionsMismatch() public {
         MockERC20 token = new MockERC20("TOKEN", "TKN", 18);
 
         uint256 flashLoanAmount = 1e18;
@@ -85,7 +85,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
             VM.ExecutionFailed.selector,
             0,
             address(flashLoanModule),
-            string(abi.encodePacked(ICaliber.UnmatchingInstructions.selector))
+            string(abi.encodePacked(ICaliber.InstructionsMismatch.selector))
         );
 
         // instructions have different positionId
