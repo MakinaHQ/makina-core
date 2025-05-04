@@ -6,27 +6,27 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
-import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
+import {ISpokeCoreFactory} from "../interfaces/ISpokeCoreFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICaliberFactory {
-    /// @custom:storage-location erc7201:makina.storage.CaliberFactory
-    struct CaliberFactoryStorage {
+contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISpokeCoreFactory {
+    /// @custom:storage-location erc7201:makina.storage.SpokeCoreFactory
+    struct SpokeCoreFactoryStorage {
         mapping(address caliber => bool isCaliber) _isCaliber;
         mapping(address caliber => bool isCaliber) _isCaliberMailbox;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberFactory")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant CaliberFactoryStorageLocation =
-        0x092f83b0a9c245bf0116fc4aaf5564ab048ff47d6596f1c61801f18d9dfbea00;
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.SpokeCoreFactory")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant SpokeCoreFactoryStorageLocation =
+        0xcb1a6cd67f0aa55e138668b826a3a98a6a6ef973cbafe7a0845e7a69c97a6000;
 
-    function _getCaliberFactoryStorage() internal pure returns (CaliberFactoryStorage storage $) {
+    function _getSpokeCoreFactoryStorage() internal pure returns (SpokeCoreFactoryStorage storage $) {
         assembly {
-            $.slot := CaliberFactoryStorageLocation
+            $.slot := SpokeCoreFactoryStorageLocation
         }
     }
 
@@ -38,24 +38,24 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
         __AccessManaged_init(_initialAuthority);
     }
 
-    /// @inheritdoc ICaliberFactory
+    /// @inheritdoc ISpokeCoreFactory
     function isCaliber(address caliber) external view override returns (bool) {
-        return _getCaliberFactoryStorage()._isCaliber[caliber];
+        return _getSpokeCoreFactoryStorage()._isCaliber[caliber];
     }
 
-    /// @inheritdoc ICaliberFactory
+    /// @inheritdoc ISpokeCoreFactory
     function isCaliberMailbox(address caliberMailbox) external view override returns (bool) {
-        return _getCaliberFactoryStorage()._isCaliberMailbox[caliberMailbox];
+        return _getSpokeCoreFactoryStorage()._isCaliberMailbox[caliberMailbox];
     }
 
-    /// @inheritdoc ICaliberFactory
+    /// @inheritdoc ISpokeCoreFactory
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address accountingToken,
         address hubMachine
     ) external override restricted returns (address) {
-        CaliberFactoryStorage storage $ = _getCaliberFactoryStorage();
+        SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
         address mailbox = address(
             new BeaconProxy(
                 ISpokeCoreRegistry(registry).caliberMailboxBeacon(),
@@ -77,7 +77,7 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
 
     /// @inheritdoc IBridgeAdapterFactory
     function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
-        if (!_getCaliberFactoryStorage()._isCaliberMailbox[msg.sender]) {
+        if (!_getSpokeCoreFactoryStorage()._isCaliberMailbox[msg.sender]) {
             revert NotCaliberMailbox();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);

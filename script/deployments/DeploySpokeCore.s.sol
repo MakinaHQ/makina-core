@@ -51,7 +51,7 @@ contract DeploySpokeCore is DeployCore {
         // write to file;
         vm.serializeAddress(key, "AccessManager", address(_deployment.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_deployment.caliberBeacon));
-        vm.serializeAddress(key, "CaliberFactory", address(_deployment.caliberFactory));
+        vm.serializeAddress(key, "SpokeCoreFactory", address(_deployment.spokeCoreFactory));
         vm.serializeAddress(key, "CaliberMailboxBeacon", address(_deployment.caliberMailboxBeacon));
         vm.serializeAddress(key, "SpokeCoreRegistry", address(_deployment.spokeCoreRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));

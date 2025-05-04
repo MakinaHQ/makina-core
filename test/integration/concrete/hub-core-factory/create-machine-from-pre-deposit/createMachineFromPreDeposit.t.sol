@@ -5,31 +5,31 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
+import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 
-import {MachineFactory_Integration_Concrete_Test} from "../MachineFactory.t.sol";
+import {HubCoreFactory_Integration_Concrete_Test} from "../HubCoreFactory.t.sol";
 
-contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory_Integration_Concrete_Test {
+contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory_Integration_Concrete_Test {
     function test_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
     }
 
     function test_RevertWhen_InvalidPreDepositVault() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
-        vm.expectRevert(IMachineFactory.NotPreDepositVault.selector);
+        vm.expectRevert(IHubCoreFactory.NotPreDepositVault.selector);
         vm.prank(dao);
-        machineFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
     }
 
     function test_CreateMachineFromPreDeposit() public {
@@ -37,7 +37,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
+            hubCoreFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
@@ -56,18 +56,18 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
         baseToken.approve(address(preDepositVault), preDepositAmount);
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
 
-        vm.expectEmit(false, false, false, false, address(machineFactory));
-        emit IMachineFactory.HubCaliberDeployed(address(0));
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit IHubCoreFactory.HubCaliberDeployed(address(0));
 
         vm.expectEmit(false, false, false, false, address(preDepositVault));
         emit IPreDepositVault.MigrateToMachine(address(0));
 
-        vm.expectEmit(false, false, false, false, address(machineFactory));
-        emit IMachineFactory.MachineDeployed(address(0), address(0), address(0));
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit IHubCoreFactory.MachineDeployed(address(0), address(0), address(0));
 
         vm.prank(dao);
         machine = Machine(
-            machineFactory.createMachineFromPreDeposit(
+            hubCoreFactory.createMachineFromPreDeposit(
                 IMachine.MachineInitParams({
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
@@ -101,8 +101,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is MachineFactory
 
         address caliber = machine.hubCaliber();
 
-        assertTrue(machineFactory.isMachine(address(machine)));
-        assertTrue(machineFactory.isCaliber(address(caliber)));
+        assertTrue(hubCoreFactory.isMachine(address(machine)));
+        assertTrue(hubCoreFactory.isCaliber(address(caliber)));
 
         assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 

@@ -4,30 +4,30 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {ISpokeCoreFactory} from "src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 
-import {CaliberFactory_Integration_Concrete_Test} from "../CaliberFactory.t.sol";
+import {SpokeCoreFactory_Integration_Concrete_Test} from "../SpokeCoreFactory.t.sol";
 
-contract CreateCaliber_Integration_Concrete_Test is CaliberFactory_Integration_Concrete_Test {
+contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration_Concrete_Test {
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        caliberFactory.createCaliber(cParams, mgParams, address(0), address(0));
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0));
     }
 
     function test_CreateCaliber() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
-        vm.expectEmit(true, false, false, false, address(caliberFactory));
-        emit ICaliberFactory.SpokeCaliberCreated(_hubMachine, address(0), address(0));
+        vm.expectEmit(true, false, false, false, address(spokeCoreFactory));
+        emit ISpokeCoreFactory.SpokeCaliberCreated(_hubMachine, address(0), address(0));
         vm.prank(dao);
         caliber = Caliber(
-            caliberFactory.createCaliber(
+            spokeCoreFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: initialAllowedInstrRoot,
@@ -48,8 +48,8 @@ contract CreateCaliber_Integration_Concrete_Test is CaliberFactory_Integration_C
                 _hubMachine
             )
         );
-        assertTrue(caliberFactory.isCaliber(address(caliber)));
-        assertTrue(caliberFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
+        assertTrue(spokeCoreFactory.isCaliber(address(caliber)));
+        assertTrue(spokeCoreFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
 
         assertEq(caliber.accountingToken(), address(accountingToken));
         assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);

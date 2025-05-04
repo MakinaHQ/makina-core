@@ -18,7 +18,7 @@ contract SetPendingMachine_Integration_Concrete_Test is PreDepositVault_Integrat
 
     function test_SetPendingMachine() public {
         address pendingMachineAddr = makeAddr("pendingMachine");
-        vm.prank(address(machineFactory));
+        vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(pendingMachineAddr);
 
         vm.prank(pendingMachineAddr);

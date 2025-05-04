@@ -23,7 +23,7 @@ contract MigrateToMachine_Integration_Concrete_Test is PreDepositVault_Integrati
         deal(address(baseToken), address(preDepositVault), preDepositAmount);
 
         newMachineAddr = makeAddr("newMachine");
-        vm.prank(address(machineFactory));
+        vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(newMachineAddr);
 
         vm.expectEmit(true, false, false, false);

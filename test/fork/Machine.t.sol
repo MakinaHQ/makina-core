@@ -54,7 +54,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy machine
         vm.prank(ethForkData.dao);
         machine = Machine(
-            hubCore.machineFactory.createMachine(
+            hubCore.hubCoreFactory.createMachine(
                 IMachine.MachineInitParams({
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
@@ -122,7 +122,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy spoke caliber
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
-            spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].caliberFactory.createCaliber(
+            spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].spokeCoreFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),

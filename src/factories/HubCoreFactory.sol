@@ -8,7 +8,7 @@ import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
-import {IMachineFactory} from "../interfaces/IMachineFactory.sol";
+import {IHubCoreFactory} from "../interfaces/IHubCoreFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
@@ -17,21 +17,21 @@ import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 
-contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMachineFactory {
-    /// @custom:storage-location erc7201:makina.storage.MachineFactory
-    struct MachineFactoryStorage {
+contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubCoreFactory {
+    /// @custom:storage-location erc7201:makina.storage.HubCoreFactory
+    struct HubCoreFactoryStorage {
         mapping(address preDepositVault => bool isPreDepositVault) _isPreDepositVault;
         mapping(address machine => bool isMachine) _isMachine;
         mapping(address machine => bool isCaliber) _isCaliber;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberMachineFactoryFactory")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant MachineFactoryStorageLocation =
-        0x092f83b0a9c245bf0116fc4aaf5564ab048ff47d6596f1c61801f18d9dfbea00;
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.HubCoreFactory")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant HubCoreFactoryStorageLocation =
+        0xa73526acc519facb543e3fac63cbe361155292db6c01a81eec358613ec9ee100;
 
-    function _getMachineFactoryStorage() internal pure returns (MachineFactoryStorage storage $) {
+    function _getHubCoreFactoryStorage() internal pure returns (HubCoreFactoryStorage storage $) {
         assembly {
-            $.slot := MachineFactoryStorageLocation
+            $.slot := HubCoreFactoryStorageLocation
         }
     }
 
@@ -43,22 +43,22 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         __AccessManaged_init(_initialAuthority);
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function isCaliber(address caliber) external view override returns (bool) {
-        return _getMachineFactoryStorage()._isCaliber[caliber];
+        return _getHubCoreFactoryStorage()._isCaliber[caliber];
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function isMachine(address machine) external view override returns (bool) {
-        return _getMachineFactoryStorage()._isMachine[machine];
+        return _getHubCoreFactoryStorage()._isMachine[machine];
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function isPreDepositVault(address preDepositVault) external view override returns (bool) {
-        return _getMachineFactoryStorage()._isPreDepositVault[preDepositVault];
+        return _getHubCoreFactoryStorage()._isPreDepositVault[preDepositVault];
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function createPreDepositVault(
         IPreDepositVault.PreDepositVaultInitParams calldata params,
         address depositToken,
@@ -66,7 +66,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
-        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+        HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
         address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
         address preDepositVault = address(new BeaconProxy(IHubCoreRegistry(registry).preDepositVaultBeacon(), ""));
@@ -81,14 +81,14 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         return preDepositVault;
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function createMachineFromPreDeposit(
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address preDepositVault
     ) external override restricted returns (address) {
-        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+        HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
         if (!$._isPreDepositVault[preDepositVault]) {
             revert NotPreDepositVault();
@@ -111,7 +111,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         return machine;
     }
 
-    /// @inheritdoc IMachineFactory
+    /// @inheritdoc IHubCoreFactory
     function createMachine(
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
@@ -120,7 +120,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
-        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+        HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
@@ -140,7 +140,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
 
     /// @inheritdoc IBridgeAdapterFactory
     function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
-        if (!_getMachineFactoryStorage()._isMachine[msg.sender]) {
+        if (!_getHubCoreFactoryStorage()._isMachine[msg.sender]) {
             revert NotMachine();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);

@@ -9,7 +9,7 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {Caliber} from "src/caliber/Caliber.sol";
-import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {SpokeCoreFactory} from "src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
@@ -19,7 +19,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {MachineFactory} from "src/factories/MachineFactory.sol";
+import {HubCoreFactory} from "src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
@@ -60,7 +60,7 @@ abstract contract Base_Test is Base, Constants, Test {
 abstract contract Base_Hub_Test is Base_Test {
     HubCoreRegistry public hubCoreRegistry;
     ChainRegistry public chainRegistry;
-    MachineFactory public machineFactory;
+    HubCoreFactory public hubCoreFactory;
     UpgradeableBeacon public machineBeacon;
     UpgradeableBeacon public preDepositVaultBeacon;
 
@@ -83,7 +83,7 @@ abstract contract Base_Hub_Test is Base_Test {
         hubCoreRegistry = deployment.hubCoreRegistry;
         tokenRegistry = deployment.tokenRegistry;
         chainRegistry = deployment.chainRegistry;
-        machineFactory = deployment.machineFactory;
+        hubCoreFactory = deployment.hubCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         machineBeacon = deployment.machineBeacon;
         preDepositVaultBeacon = deployment.preDepositVaultBeacon;
@@ -102,7 +102,7 @@ abstract contract Base_Hub_Test is Base_Test {
     {
         vm.prank(dao);
         Machine _machine = Machine(
-            machineFactory.createMachine(
+            hubCoreFactory.createMachine(
                 IMachine.MachineInitParams({
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
@@ -140,7 +140,7 @@ abstract contract Base_Hub_Test is Base_Test {
 
 abstract contract Base_Spoke_Test is Base_Test {
     SpokeCoreRegistry public spokeCoreRegistry;
-    CaliberFactory public caliberFactory;
+    SpokeCoreFactory public spokeCoreFactory;
     UpgradeableBeacon public caliberMailboxBeacon;
 
     function setUp() public virtual override {
@@ -153,7 +153,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         tokenRegistry = deployment.tokenRegistry;
         swapModule = deployment.swapModule;
         spokeCoreRegistry = deployment.spokeCoreRegistry;
-        caliberFactory = deployment.caliberFactory;
+        spokeCoreFactory = deployment.spokeCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
@@ -167,7 +167,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     {
         vm.prank(dao);
         Caliber _caliber = Caliber(
-            caliberFactory.createCaliber(
+            spokeCoreFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: _allowedInstrMerkleRoot,
@@ -202,7 +202,7 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
             dao, address(oracleRegistry), address(tokenRegistry), address(swapModule), address(accessManager)
         );
 
-        caliberFactory = _deployCaliberFactory(dao, address(spokeCoreRegistry), address(accessManager));
+        spokeCoreFactory = _deploySpokeCoreFactory(dao, address(spokeCoreRegistry), address(accessManager));
 
         caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeCoreRegistry), hubChainId);
 
@@ -215,7 +215,7 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
                 spokeCoreRegistry: spokeCoreRegistry,
                 tokenRegistry: tokenRegistry,
                 caliberBeacon: caliberBeacon,
-                caliberFactory: caliberFactory,
+                spokeCoreFactory: spokeCoreFactory,
                 caliberMailboxBeacon: caliberMailboxBeacon
             })
         );

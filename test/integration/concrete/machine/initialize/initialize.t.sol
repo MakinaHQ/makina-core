@@ -114,7 +114,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
+            hubCoreFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
@@ -133,7 +133,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         baseToken.approve(address(preDepositVault), preDepositAmount);
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
 
-        vm.prank(address(machineFactory));
+        vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(address(machine));
 
         shareToken = MachineShare(preDepositVault.shareToken());

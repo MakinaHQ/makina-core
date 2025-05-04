@@ -16,7 +16,7 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
+            hubCoreFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
@@ -50,7 +50,7 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
     modifier migrated() {
         newMachineAddr = makeAddr("newMachine");
 
-        vm.prank(address(machineFactory));
+        vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(newMachineAddr);
 
         vm.prank(newMachineAddr);

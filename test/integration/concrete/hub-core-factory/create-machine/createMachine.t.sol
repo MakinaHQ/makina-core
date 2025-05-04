@@ -5,34 +5,34 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
+import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
 
-import {MachineFactory_Integration_Concrete_Test} from "../MachineFactory.t.sol";
+import {HubCoreFactory_Integration_Concrete_Test} from "../HubCoreFactory.t.sol";
 
-contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_Concrete_Test {
+contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_Concrete_Test {
     function test_RevertWhen_CallerWithoutRole() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machineFactory.createMachine(mParams, cParams, mgParams, address(0), "", "");
+        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "");
     }
 
     function test_CreateMachine() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
-        vm.expectEmit(false, false, false, false, address(machineFactory));
-        emit IMachineFactory.HubCaliberDeployed(address(0));
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit IHubCoreFactory.HubCaliberDeployed(address(0));
 
-        vm.expectEmit(false, false, false, false, address(machineFactory));
-        emit IMachineFactory.MachineDeployed(address(0), address(0), address(0));
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit IHubCoreFactory.MachineDeployed(address(0), address(0), address(0));
 
         vm.prank(dao);
         machine = Machine(
-            machineFactory.createMachine(
+            hubCoreFactory.createMachine(
                 IMachine.MachineInitParams({
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
@@ -65,8 +65,8 @@ contract CreateMachine_Integration_Concrete_Test is MachineFactory_Integration_C
         );
         address caliber = machine.hubCaliber();
 
-        assertTrue(machineFactory.isMachine(address(machine)));
-        assertTrue(machineFactory.isCaliber(address(caliber)));
+        assertTrue(hubCoreFactory.isMachine(address(machine)));
+        assertTrue(hubCoreFactory.isCaliber(address(caliber)));
 
         assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 

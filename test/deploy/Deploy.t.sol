@@ -130,8 +130,8 @@ contract Deploy_Scripts_Test is Base_Test {
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
 
-        assertTrue(hubCoreDeployment.machineFactory.isMachine(address(machine)));
-        assertTrue(hubCoreDeployment.machineFactory.isCaliber(address(hubCaliber)));
+        assertTrue(hubCoreDeployment.hubCoreFactory.isMachine(address(machine)));
+        assertTrue(hubCoreDeployment.hubCoreFactory.isCaliber(address(hubCaliber)));
         assertEq(machine.depositor(), mParams.initialDepositor);
         assertEq(machine.redeemer(), mParams.initialRedeemer);
         assertEq(machine.accountingToken(), accountingToken);
@@ -223,8 +223,8 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deploySpokeCaliber.inputJson(), ".accountingToken"), (address));
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
 
-        assertTrue(spokeCoreDeployment.caliberFactory.isCaliber(address(spokeCaliber)));
-        assertTrue(spokeCoreDeployment.caliberFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
+        assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliber(address(spokeCaliber)));
+        assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
 
         assertEq(spokeCaliber.accountingToken(), accountingToken);
         assertEq(spokeCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);

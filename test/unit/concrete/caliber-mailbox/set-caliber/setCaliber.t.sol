@@ -31,15 +31,15 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     }
 
     function test_RevertGiven_CaliberAlreadySet() public {
-        vm.prank(address(caliberFactory));
+        vm.prank(address(spokeCoreFactory));
         caliberMailbox2.setCaliber(address(1));
 
         vm.expectRevert(ICaliberMailbox.CaliberAlreadySet.selector);
-        vm.prank(address(caliberFactory));
+        vm.prank(address(spokeCoreFactory));
         caliberMailbox2.setCaliber(address(1));
 
         vm.expectRevert(ICaliberMailbox.CaliberAlreadySet.selector);
-        vm.prank(address(caliberFactory));
+        vm.prank(address(spokeCoreFactory));
         caliberMailbox2.setCaliber(address(2));
     }
 
@@ -48,7 +48,7 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
         vm.expectEmit(true, false, false, false, address(caliberMailbox2));
         emit ICaliberMailbox.CaliberSet(address(1));
-        vm.prank(address(caliberFactory));
+        vm.prank(address(spokeCoreFactory));
         caliberMailbox2.setCaliber(address(1));
 
         assertEq(caliberMailbox2.caliber(), address(1));

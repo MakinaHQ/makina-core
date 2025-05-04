@@ -60,7 +60,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
+            hubCoreFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,

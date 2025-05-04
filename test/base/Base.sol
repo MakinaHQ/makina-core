@@ -8,14 +8,14 @@ import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transpa
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {SpokeCoreFactory} from "src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubCoreRegistry} from "src/registries/HubCoreRegistry.sol";
 import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {MachineFactory} from "src/factories/MachineFactory.sol";
+import {HubCoreFactory} from "src/factories/HubCoreFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {SpokeCoreRegistry} from "src/registries/SpokeCoreRegistry.sol";
@@ -33,7 +33,7 @@ abstract contract Base is DeployViaIr {
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
         UpgradeableBeacon preDepositVaultBeacon;
-        MachineFactory machineFactory;
+        HubCoreFactory hubCoreFactory;
     }
 
     struct SpokeCore {
@@ -43,7 +43,7 @@ abstract contract Base is DeployViaIr {
         SpokeCoreRegistry spokeCoreRegistry;
         TokenRegistry tokenRegistry;
         UpgradeableBeacon caliberBeacon;
-        CaliberFactory caliberFactory;
+        SpokeCoreFactory spokeCoreFactory;
         UpgradeableBeacon caliberMailboxBeacon;
     }
 
@@ -165,13 +165,13 @@ abstract contract Base is DeployViaIr {
         address preDepositVaultImplemAddr = address(new PreDepositVault(address(deployment.hubCoreRegistry)));
         deployment.preDepositVaultBeacon = new UpgradeableBeacon(preDepositVaultImplemAddr, dao);
 
-        address machineFactoryImplemAddr = address(new MachineFactory(address(deployment.hubCoreRegistry)));
-        deployment.machineFactory = MachineFactory(
+        address hubCoreFactoryImplemAddr = address(new HubCoreFactory(address(deployment.hubCoreRegistry)));
+        deployment.hubCoreFactory = HubCoreFactory(
             address(
                 new TransparentUpgradeableProxy(
-                    machineFactoryImplemAddr,
+                    hubCoreFactoryImplemAddr,
                     dao,
-                    abi.encodeCall(MachineFactory.initialize, (address(deployment.accessManager)))
+                    abi.encodeCall(HubCoreFactory.initialize, (address(deployment.accessManager)))
                 )
             )
         );
@@ -196,8 +196,8 @@ abstract contract Base is DeployViaIr {
         address caliberImplemAddr = address(new Caliber(address(deployment.spokeCoreRegistry), weirollVMImplemAddr));
         deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
-        deployment.caliberFactory =
-            _deployCaliberFactory(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
+        deployment.spokeCoreFactory =
+            _deploySpokeCoreFactory(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
 
         deployment.caliberMailboxBeacon =
             _deployCaliberMailboxBeacon(dao, address(deployment.spokeCoreRegistry), hubChainId);
@@ -210,7 +210,7 @@ abstract contract Base is DeployViaIr {
     function setupHubCoreRegistry(HubCore memory deployment) public {
         deployment.hubCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
         deployment.hubCoreRegistry.setChainRegistry(address(deployment.chainRegistry));
-        deployment.hubCoreRegistry.setCoreFactory(address(deployment.machineFactory));
+        deployment.hubCoreRegistry.setCoreFactory(address(deployment.hubCoreFactory));
         deployment.hubCoreRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.hubCoreRegistry.setMachineBeacon(address(deployment.machineBeacon));
         deployment.hubCoreRegistry.setPreDepositVaultBeacon(address(deployment.preDepositVaultBeacon));
@@ -218,7 +218,7 @@ abstract contract Base is DeployViaIr {
 
     function setupSpokeCoreRegistry(SpokeCore memory deployment) public {
         deployment.spokeCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
-        deployment.spokeCoreRegistry.setCoreFactory(address(deployment.caliberFactory));
+        deployment.spokeCoreRegistry.setCoreFactory(address(deployment.spokeCoreFactory));
         deployment.spokeCoreRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.spokeCoreRegistry.setCaliberMailboxBeacon(address(deployment.caliberMailboxBeacon));
     }
@@ -317,15 +317,15 @@ abstract contract Base is DeployViaIr {
         );
     }
 
-    function _deployCaliberFactory(address _dao, address _spokeCoreRegistry, address _accessManager)
+    function _deploySpokeCoreFactory(address _dao, address _spokeCoreRegistry, address _accessManager)
         internal
-        returns (CaliberFactory caliberFactory)
+        returns (SpokeCoreFactory spokeCoreFactory)
     {
-        address caliberFactoryImplemAddr = address(new CaliberFactory(_spokeCoreRegistry));
-        return CaliberFactory(
+        address spokeCoreFactoryImplemAddr = address(new SpokeCoreFactory(_spokeCoreRegistry));
+        return SpokeCoreFactory(
             address(
                 new TransparentUpgradeableProxy(
-                    caliberFactoryImplemAddr, _dao, abi.encodeCall(CaliberFactory.initialize, (_accessManager))
+                    spokeCoreFactoryImplemAddr, _dao, abi.encodeCall(SpokeCoreFactory.initialize, (_accessManager))
                 )
             )
         );

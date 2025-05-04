@@ -13,7 +13,7 @@ contract SpokeCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test
     function setUp() public override(CoreRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test) {
         Unit_Concrete_Spoke_Test.setUp();
         registry = spokeCoreRegistry;
-        coreFactoryAddr = address(caliberFactory);
+        coreFactoryAddr = address(spokeCoreFactory);
     }
 
     function test_SpokeCoreRegistryGetters() public view {

@@ -5,7 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
+import {ISpokeCoreFactory} from "src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
@@ -48,12 +48,12 @@ contract DeploySpokeCaliber is Script, SortedParams {
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
 
-        ICaliberFactory caliberFactory =
-            ICaliberFactory(abi.decode(vm.parseJson(coreOutputJson, ".CaliberFactory"), (address)));
+        ISpokeCoreFactory spokeCoreFactory =
+            ISpokeCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".SpokeCoreFactory"), (address)));
 
         // Deploy caliber
         vm.startBroadcast();
-        deployedInstance = caliberFactory.createCaliber(
+        deployedInstance = spokeCoreFactory.createCaliber(
             ICaliber.CaliberInitParams(
                 cParams.initialPositionStaleThreshold,
                 cParams.initialAllowedInstrRoot,

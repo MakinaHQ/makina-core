@@ -144,7 +144,7 @@ abstract contract BridgeController_Machine_Integration_Concrete_Test is
 
         registry = ICoreRegistry(address(hubCoreRegistry));
         bridgeController = IBridgeController(address(machine));
-        bridgeAdapterFactory = IBridgeAdapterFactory(address(machineFactory));
+        bridgeAdapterFactory = IBridgeAdapterFactory(address(hubCoreFactory));
     }
 }
 

@@ -5,7 +5,7 @@ import {ICaliber} from "./ICaliber.sol";
 import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
-interface ICaliberFactory is IBridgeAdapterFactory {
+interface ISpokeCoreFactory is IBridgeAdapterFactory {
     error NotCaliberMailbox();
 
     event SpokeCaliberCreated(address indexed machine, address indexed caliber, address indexed mailbox);

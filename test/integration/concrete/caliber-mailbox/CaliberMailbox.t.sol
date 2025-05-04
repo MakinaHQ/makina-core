@@ -53,7 +53,7 @@ abstract contract BridgeController_CaliberMailbox_Integration_Concrete_Test is
 
         registry = ICoreRegistry(address(spokeCoreRegistry));
         bridgeController = IBridgeController(address(caliberMailbox));
-        bridgeAdapterFactory = IBridgeAdapterFactory(address(caliberFactory));
+        bridgeAdapterFactory = IBridgeAdapterFactory(address(spokeCoreFactory));
     }
 }
 

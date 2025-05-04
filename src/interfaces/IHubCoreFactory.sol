@@ -7,7 +7,7 @@ import {IPreDepositVault} from "./IPreDepositVault.sol";
 import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
-interface IMachineFactory is IBridgeAdapterFactory {
+interface IHubCoreFactory is IBridgeAdapterFactory {
     error NotMachine();
     error NotPreDepositVault();
 
