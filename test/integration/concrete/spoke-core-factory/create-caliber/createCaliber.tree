@@ -3,4 +3,5 @@ createCaliber.t.sol
 │  └── it should revert with AccessManagedUnauthorized
 └── given sender has the relevant role
    ├── it should deploy a caliber instance, along with a caliber mailbox instance, and initialize them with provided parameters
-   └── it should emit a SpokeCaliberCreated event
+   ├── it should emit a CaliberCreated event
+   └── it should emit a CaliberMailboxCreated event

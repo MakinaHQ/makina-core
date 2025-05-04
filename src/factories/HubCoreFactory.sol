@@ -5,6 +5,7 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
+import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
@@ -18,12 +19,11 @@ import {MakinaContext} from "../utils/MakinaContext.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 
-contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubCoreFactory {
+contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapterFactory, IHubCoreFactory {
     /// @custom:storage-location erc7201:makina.storage.HubCoreFactory
     struct HubCoreFactoryStorage {
         mapping(address preDepositVault => bool isPreDepositVault) _isPreDepositVault;
         mapping(address machine => bool isMachine) _isMachine;
-        mapping(address machine => bool isCaliber) _isCaliber;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.HubCoreFactory")) - 1)) & ~bytes32(uint256(0xff))
@@ -42,11 +42,6 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
 
     function initialize(address _initialAuthority) external initializer {
         __AccessManaged_init(_initialAuthority);
-    }
-
-    /// @inheritdoc IHubCoreFactory
-    function isCaliber(address caliber) external view override returns (bool) {
-        return _getHubCoreFactoryStorage()._isCaliber[caliber];
     }
 
     /// @inheritdoc IHubCoreFactory
@@ -105,9 +100,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         IMachine(machine).initialize(mParams, mgParams, preDepositVault, shareToken, accountingToken, caliber);
 
         $._isMachine[machine] = true;
-        $._isCaliber[caliber] = true;
 
-        emit MachineCreated(machine, shareToken, caliber);
+        emit MachineCreated(machine, shareToken);
 
         return machine;
     }
@@ -132,9 +126,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         IMachine(machine).initialize(mParams, mgParams, address(0), token, accountingToken, caliber);
 
         $._isMachine[machine] = true;
-        $._isCaliber[caliber] = true;
 
-        emit MachineCreated(machine, token, caliber);
+        emit MachineCreated(machine, token);
 
         return machine;
     }
@@ -145,23 +138,6 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
             revert Errors.NotMachine();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);
-    }
-
-    /// @dev Deploys a caliber.
-    function _createCaliber(ICaliber.CaliberInitParams calldata cParams, address accountingToken, address machine)
-        internal
-        returns (address)
-    {
-        address caliber = address(
-            new BeaconProxy(
-                IHubCoreRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, machine))
-            )
-        );
-
-        emit HubCaliberCreated(caliber);
-
-        return caliber;
     }
 
     /// @dev Deploys a machine share token.

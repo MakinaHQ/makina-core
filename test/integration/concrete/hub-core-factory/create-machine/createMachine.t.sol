@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
@@ -25,10 +26,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.HubCaliberCreated(address(0));
+        emit ICaliberFactory.CaliberCreated(address(0), address(0));
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.MachineCreated(address(0), address(0), address(0));
+        emit IHubCoreFactory.MachineCreated(address(0), address(0));
 
         vm.prank(dao);
         machine = Machine(

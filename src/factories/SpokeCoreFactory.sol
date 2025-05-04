@@ -5,6 +5,7 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
+import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ISpokeCoreFactory} from "../interfaces/ISpokeCoreFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
@@ -14,10 +15,9 @@ import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISpokeCoreFactory {
+contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapterFactory, ISpokeCoreFactory {
     /// @custom:storage-location erc7201:makina.storage.SpokeCoreFactory
     struct SpokeCoreFactoryStorage {
-        mapping(address caliber => bool isCaliber) _isCaliber;
         mapping(address caliber => bool isCaliber) _isCaliberMailbox;
     }
 
@@ -40,11 +40,6 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISp
     }
 
     /// @inheritdoc ISpokeCoreFactory
-    function isCaliber(address caliber) external view override returns (bool) {
-        return _getSpokeCoreFactoryStorage()._isCaliber[caliber];
-    }
-
-    /// @inheritdoc ISpokeCoreFactory
     function isCaliberMailbox(address caliberMailbox) external view override returns (bool) {
         return _getSpokeCoreFactoryStorage()._isCaliberMailbox[caliberMailbox];
     }
@@ -57,22 +52,20 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISp
         address hubMachine
     ) external override restricted returns (address) {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
+
         address mailbox = address(
             new BeaconProxy(
                 ISpokeCoreRegistry(registry).caliberMailboxBeacon(),
                 abi.encodeCall(ICaliberMailbox.initialize, (mgParams, hubMachine))
             )
         );
-        address caliber = address(
-            new BeaconProxy(
-                ISpokeCoreRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, mailbox))
-            )
-        );
+        address caliber = _createCaliber(cParams, accountingToken, mailbox);
+
         ICaliberMailbox(mailbox).setCaliber(caliber);
-        $._isCaliber[caliber] = true;
         $._isCaliberMailbox[mailbox] = true;
-        emit SpokeCaliberCreated(hubMachine, caliber, mailbox);
+
+        emit CaliberMailboxCreated(mailbox, caliber, hubMachine);
+
         return caliber;
     }
 

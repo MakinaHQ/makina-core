@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 interface IBridgeAdapterFactory {
     event BridgeAdapterCreated(address indexed controller, uint256 indexed bridgeId, address indexed adapter);
 
-    /// @notice BridgeAdapter => Is a bridge adapter deployed by this factory.
+    /// @notice Address => Whether this is a BridgeAdapter instance deployed by this factory.
     function isBridgeAdapter(address adapter) external view returns (bool);
 
     /// @notice Deploys a bridge adapter instance.
