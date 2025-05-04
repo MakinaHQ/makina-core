@@ -31,6 +31,8 @@ abstract contract Constants {
     uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e9;
     uint256 public constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 1e10;
 
+    uint16 public constant ZEROX_SWAPPER_ID = 1;
+
     uint16 public constant ACROSS_V3_BRIDGE_ID = 1;
     uint16 public constant CIRCLE_CCTP_BRIDGE_ID = 2;
 }

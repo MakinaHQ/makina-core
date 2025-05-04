@@ -16,7 +16,6 @@ import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
-import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
@@ -65,7 +64,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         oracleRegistry.setFeedRoute(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));
+        swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
         vm.stopPrank();
     }
 

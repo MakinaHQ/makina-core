@@ -10,7 +10,7 @@ contract SwapModule is AccessManagedUpgradeable, ISwapModule {
     using SafeERC20 for IERC20;
 
     /// @inheritdoc ISwapModule
-    mapping(Swapper swapper => SwapperTargets targets) public swapperTargets;
+    mapping(uint16 swapperId => SwapperTargets targets) public swapperTargets;
 
     function initialize(address _initialAuthority) external initializer {
         __AccessManaged_init(_initialAuthority);
@@ -18,9 +18,9 @@ contract SwapModule is AccessManagedUpgradeable, ISwapModule {
 
     /// @inheritdoc ISwapModule
     function swap(SwapOrder calldata order) external override returns (uint256) {
-        SwapperTargets storage targets = swapperTargets[order.swapper];
+        SwapperTargets storage targets = swapperTargets[order.swapperId];
         if (targets.approvalTarget == address(0) || targets.executionTarget == address(0)) {
-            revert SwapperNotSet();
+            revert SwapperTargetsNotSet();
         }
 
         address caller = msg.sender;
@@ -43,18 +43,18 @@ contract SwapModule is AccessManagedUpgradeable, ISwapModule {
         }
         IERC20(order.outputToken).safeTransfer(caller, outputAmount);
 
-        emit Swapped(caller, order.swapper, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
+        emit Swapped(caller, order.swapperId, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
 
         return outputAmount;
     }
 
     /// @inheritdoc ISwapModule
-    function setSwapperTargets(Swapper swapper, address approvalTarget, address executionTarget)
+    function setSwapperTargets(uint16 swapperId, address approvalTarget, address executionTarget)
         external
         override
         restricted
     {
-        swapperTargets[swapper] = SwapperTargets(approvalTarget, executionTarget);
-        emit SwapperTargetsSet(swapper, approvalTarget, executionTarget);
+        swapperTargets[swapperId] = SwapperTargets(approvalTarget, executionTarget);
+        emit SwapperTargetsSet(swapperId, approvalTarget, executionTarget);
     }
 }

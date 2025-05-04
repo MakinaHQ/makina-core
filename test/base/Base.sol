@@ -14,7 +14,6 @@ import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
-import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
@@ -65,7 +64,7 @@ abstract contract Base is DeployViaIr {
     struct SwapperData {
         address approvalTarget;
         address executionTarget;
-        ISwapModule.Swapper swapperId;
+        uint16 swapperId;
     }
 
     struct BridgeData {
