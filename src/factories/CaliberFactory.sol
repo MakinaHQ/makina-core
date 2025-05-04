@@ -15,10 +15,21 @@ import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICaliberFactory {
-    /// @inheritdoc ICaliberFactory
-    mapping(address caliber => bool isCaliber) public isCaliber;
-    /// @inheritdoc ICaliberFactory
-    mapping(address caliber => bool isCaliber) public isCaliberMailbox;
+    /// @custom:storage-location erc7201:makina.storage.CaliberFactory
+    struct CaliberFactoryStorage {
+        mapping(address caliber => bool isCaliber) _isCaliber;
+        mapping(address caliber => bool isCaliber) _isCaliberMailbox;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberFactory")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant CaliberFactoryStorageLocation =
+        0x092f83b0a9c245bf0116fc4aaf5564ab048ff47d6596f1c61801f18d9dfbea00;
+
+    function _getCaliberFactoryStorage() internal pure returns (CaliberFactoryStorage storage $) {
+        assembly {
+            $.slot := CaliberFactoryStorageLocation
+        }
+    }
 
     constructor(address _registry) MakinaContext(_registry) {
         _disableInitializers();
@@ -29,12 +40,23 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
     }
 
     /// @inheritdoc ICaliberFactory
+    function isCaliber(address caliber) external view override returns (bool) {
+        return _getCaliberFactoryStorage()._isCaliber[caliber];
+    }
+
+    /// @inheritdoc ICaliberFactory
+    function isCaliberMailbox(address caliberMailbox) external view override returns (bool) {
+        return _getCaliberFactoryStorage()._isCaliberMailbox[caliberMailbox];
+    }
+
+    /// @inheritdoc ICaliberFactory
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address accountingToken,
         address hubMachine
     ) external override restricted returns (address) {
+        CaliberFactoryStorage storage $ = _getCaliberFactoryStorage();
         address mailbox = address(
             new BeaconProxy(
                 ISpokeRegistry(registry).caliberMailboxBeacon(),
@@ -48,8 +70,8 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
             )
         );
         ICaliberMailbox(mailbox).setCaliber(caliber);
-        isCaliber[caliber] = true;
-        isCaliberMailbox[mailbox] = true;
+        $._isCaliber[caliber] = true;
+        $._isCaliberMailbox[mailbox] = true;
         emit SpokeCaliberCreated(hubMachine, caliber, mailbox);
         return caliber;
     }
@@ -59,7 +81,7 @@ contract CaliberFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ICali
         external
         returns (address adapter)
     {
-        if (!isCaliberMailbox[msg.sender]) {
+        if (!_getCaliberFactoryStorage()._isCaliberMailbox[msg.sender]) {
             revert NotCaliberMailbox();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);

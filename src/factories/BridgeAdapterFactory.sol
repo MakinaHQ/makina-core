@@ -9,8 +9,25 @@ import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
+    /// @custom:storage-location erc7201:makina.storage.BridgeAdapterFactory
+    struct BridgeAdapterFactoryStorage {
+        mapping(address adapter => bool isBridgeAdapter) _isBridgeAdapter;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.BridgeAdapterFactory")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant BridgeAdapterFactoryStorageLocation =
+        0xe2760819b7b5a09214c04233e2d29582188ee1a80d8fe8c82676ab96abf81c00;
+
+    function _getBridgeAdapterFactoryStorage() internal pure returns (BridgeAdapterFactoryStorage storage $) {
+        assembly {
+            $.slot := BridgeAdapterFactoryStorageLocation
+        }
+    }
+
     /// @inheritdoc IBridgeAdapterFactory
-    mapping(address adapter => bool isBridgeAdapter) public isBridgeAdapter;
+    function isBridgeAdapter(address adapter) external view returns (bool) {
+        return _getBridgeAdapterFactoryStorage()._isBridgeAdapter[adapter];
+    }
 
     /// @dev Internal logic for bridge adapter deployment.
     function _createBridgeAdapter(address controller, IBridgeAdapter.Bridge bridgeId, bytes calldata initData)
@@ -21,7 +38,7 @@ abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
         address bridgeAdapter = address(
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (controller, initData)))
         );
-        isBridgeAdapter[bridgeAdapter] = true;
+        _getBridgeAdapterFactoryStorage()._isBridgeAdapter[bridgeAdapter] = true;
 
         emit BridgeAdapterCreated(controller, uint256(bridgeId), bridgeAdapter);
 

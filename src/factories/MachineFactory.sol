@@ -19,12 +19,22 @@ import {MakinaContext} from "../utils/MakinaContext.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 
 contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMachineFactory {
-    /// @inheritdoc IMachineFactory
-    mapping(address preDepositVault => bool isPreDepositVault) public isPreDepositVault;
-    /// @inheritdoc IMachineFactory
-    mapping(address machine => bool isMachine) public isMachine;
-    /// @inheritdoc IMachineFactory
-    mapping(address machine => bool isCaliber) public isCaliber;
+    /// @custom:storage-location erc7201:makina.storage.MachineFactory
+    struct MachineFactoryStorage {
+        mapping(address preDepositVault => bool isPreDepositVault) _isPreDepositVault;
+        mapping(address machine => bool isMachine) _isMachine;
+        mapping(address machine => bool isCaliber) _isCaliber;
+    }
+
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberMachineFactoryFactory")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant MachineFactoryStorageLocation =
+        0x092f83b0a9c245bf0116fc4aaf5564ab048ff47d6596f1c61801f18d9dfbea00;
+
+    function _getMachineFactoryStorage() internal pure returns (MachineFactoryStorage storage $) {
+        assembly {
+            $.slot := MachineFactoryStorageLocation
+        }
+    }
 
     constructor(address _registry) MakinaContext(_registry) {
         _disableInitializers();
@@ -35,6 +45,21 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @inheritdoc IMachineFactory
+    function isCaliber(address caliber) external view override returns (bool) {
+        return _getMachineFactoryStorage()._isCaliber[caliber];
+    }
+
+    /// @inheritdoc IMachineFactory
+    function isMachine(address machine) external view override returns (bool) {
+        return _getMachineFactoryStorage()._isMachine[machine];
+    }
+
+    /// @inheritdoc IMachineFactory
+    function isPreDepositVault(address preDepositVault) external view override returns (bool) {
+        return _getMachineFactoryStorage()._isPreDepositVault[preDepositVault];
+    }
+
+    /// @inheritdoc IMachineFactory
     function createPreDepositVault(
         IPreDepositVault.PreDepositVaultInitParams calldata params,
         address depositToken,
@@ -42,13 +67,15 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
+        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+
         address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
         address preDepositVault = address(new BeaconProxy(IHubRegistry(registry).preDepositVaultBeacon(), ""));
         IOwnable2Step(shareToken).transferOwnership(preDepositVault);
 
         IPreDepositVault(preDepositVault).initialize(params, shareToken, depositToken, accountingToken);
 
-        isPreDepositVault[preDepositVault] = true;
+        $._isPreDepositVault[preDepositVault] = true;
 
         emit PreDepositVaultDeployed(preDepositVault, shareToken);
 
@@ -62,7 +89,9 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address preDepositVault
     ) external override restricted returns (address) {
-        if (!isPreDepositVault[preDepositVault]) {
+        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+
+        if (!$._isPreDepositVault[preDepositVault]) {
             revert NotPreDepositVault();
         }
         address accountingToken = IPreDepositVault(preDepositVault).accountingToken();
@@ -75,8 +104,8 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
 
         IMachine(machine).initialize(mParams, mgParams, preDepositVault, shareToken, accountingToken, caliber);
 
-        isMachine[machine] = true;
-        isCaliber[caliber] = true;
+        $._isMachine[machine] = true;
+        $._isCaliber[caliber] = true;
 
         emit MachineDeployed(machine, shareToken, caliber);
 
@@ -92,6 +121,8 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         string memory tokenName,
         string memory tokenSymbol
     ) external override restricted returns (address) {
+        MachineFactoryStorage storage $ = _getMachineFactoryStorage();
+
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubRegistry(registry).machineBeacon(), ""));
         address caliber = _createCaliber(cParams, accountingToken, machine);
@@ -100,8 +131,8 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
 
         IMachine(machine).initialize(mParams, mgParams, address(0), token, accountingToken, caliber);
 
-        isMachine[machine] = true;
-        isCaliber[caliber] = true;
+        $._isMachine[machine] = true;
+        $._isCaliber[caliber] = true;
 
         emit MachineDeployed(machine, token, caliber);
 
@@ -113,7 +144,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
         external
         returns (address adapter)
     {
-        if (!isMachine[msg.sender]) {
+        if (!_getMachineFactoryStorage()._isMachine[msg.sender]) {
             revert NotMachine();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);

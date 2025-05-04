@@ -21,18 +21,18 @@ contract SetFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concret
         baseToken = new MockERC20("Base Token", "BT", 18);
         priceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 0);
+        assertEq(oracleRegistry.getFeedStaleThreshold(address(priceFeed1)), 0);
 
         vm.prank(dao);
         oracleRegistry.setFeedRoute(address(baseToken), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), DEFAULT_PF_STALE_THRSHLD);
+        assertEq(oracleRegistry.getFeedStaleThreshold(address(priceFeed1)), DEFAULT_PF_STALE_THRSHLD);
 
         vm.expectEmit(true, true, true, true, address(oracleRegistry));
         emit IOracleRegistry.FeedStaleThresholdChange(address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
         vm.prank(dao);
         oracleRegistry.setFeedStaleThreshold(address(priceFeed1), 1 days);
 
-        assertEq(oracleRegistry.feedStaleThreshold(address(priceFeed1)), 1 days);
+        assertEq(oracleRegistry.getFeedStaleThreshold(address(priceFeed1)), 1 days);
     }
 }

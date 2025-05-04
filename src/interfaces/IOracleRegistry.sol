@@ -27,7 +27,7 @@ interface IOracleRegistry {
     }
 
     /// @notice Feed => Staleness threshold in seconds
-    function feedStaleThreshold(address feed) external view returns (uint256);
+    function getFeedStaleThreshold(address feed) external view returns (uint256);
 
     /// @notice Token => Is feed route registered for the token
     function isFeedRouteRegistered(address token) external view returns (bool);
