@@ -4,13 +4,13 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 
-import {BaseMakinaRegistry_Util_Concrete_Test} from "../base-makina-registry/BaseMakinaRegistry.t.sol";
+import {CoreRegistry_Util_Concrete_Test} from "../core-registry/CoreRegistry.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
-contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test {
-    function setUp() public override(BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test) {
+contract HubRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test {
+    function setUp() public override(CoreRegistry_Util_Concrete_Test, Unit_Concrete_Hub_Test) {
         Unit_Concrete_Hub_Test.setUp();
         registry = hubRegistry;
         coreFactoryAddr = address(machineFactory);
@@ -31,7 +31,7 @@ contract HubRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(true, true, false, false, address(hubRegistry));
-        emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
+        emit ICoreRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         hubRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(hubRegistry.caliberBeacon(), newCaliberBeacon);

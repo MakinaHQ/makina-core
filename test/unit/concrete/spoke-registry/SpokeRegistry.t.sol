@@ -4,13 +4,13 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ISpokeRegistry} from "src/interfaces/ISpokeRegistry.sol";
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 
-import {BaseMakinaRegistry_Util_Concrete_Test} from "../base-makina-registry/BaseMakinaRegistry.t.sol";
+import {CoreRegistry_Util_Concrete_Test} from "../core-registry/CoreRegistry.t.sol";
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
-contract SpokeRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test {
-    function setUp() public override(BaseMakinaRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test) {
+contract SpokeRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test {
+    function setUp() public override(CoreRegistry_Util_Concrete_Test, Unit_Concrete_Spoke_Test) {
         Unit_Concrete_Spoke_Test.setUp();
         registry = spokeRegistry;
         coreFactoryAddr = address(caliberFactory);
@@ -30,7 +30,7 @@ contract SpokeRegistry_Util_Concrete_Test is BaseMakinaRegistry_Util_Concrete_Te
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(true, true, false, false, address(spokeRegistry));
-        emit IBaseMakinaRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
+        emit ICoreRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         spokeRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(spokeRegistry.caliberBeacon(), newCaliberBeacon);

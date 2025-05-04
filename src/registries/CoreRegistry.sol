@@ -2,11 +2,11 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
-import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 
-abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaRegistry {
-    /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
-    struct BaseMakinaRegistryStorage {
+abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
+    /// @custom:storage-location erc7201:makina.storage.CoreRegistry
+    struct CoreRegistryStorage {
         address _coreFactory;
         address _oracleRegistry;
         address _tokenRegistry;
@@ -16,109 +16,109 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         mapping(uint16 => address) _bridgeAdapters;
     }
 
-    // keccak256(abi.encode(uint256(keccak256("makina.storage.BaseMakinaRegistry")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant BaseMakinaRegistryStorageLocation =
-        0xf387cf56e96c92822f28ada2ef15bdd9e8f7ecfa43049586d78424bf258c8000;
+    // keccak256(abi.encode(uint256(keccak256("makina.storage.CoreRegistry")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant CoreRegistryStorageLocation =
+        0x12dc8e8f7173ac8c2e47b3781b91f41f03f310bb59e154cde6d484a5b5f20300;
 
-    function _getBaseMakinaRegistryStorage() private pure returns (BaseMakinaRegistryStorage storage $) {
+    function _getCoreRegistryStorage() private pure returns (CoreRegistryStorage storage $) {
         assembly {
-            $.slot := BaseMakinaRegistryStorageLocation
+            $.slot := CoreRegistryStorageLocation
         }
     }
 
-    function __BaseMakinaRegistry_init(
+    function __CoreRegistry_init(
         address _oracleRegistry,
         address _tokenRegistry,
         address _swapModule,
         address _initialAuthority
     ) internal onlyInitializing {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         $._oracleRegistry = _oracleRegistry;
         $._tokenRegistry = _tokenRegistry;
         $._swapModule = _swapModule;
         __AccessManaged_init(_initialAuthority);
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function coreFactory() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._coreFactory;
+        return _getCoreRegistryStorage()._coreFactory;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function oracleRegistry() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._oracleRegistry;
+        return _getCoreRegistryStorage()._oracleRegistry;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function tokenRegistry() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._tokenRegistry;
+        return _getCoreRegistryStorage()._tokenRegistry;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function swapModule() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._swapModule;
+        return _getCoreRegistryStorage()._swapModule;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function flashLoanModule() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._flashLoanModule;
+        return _getCoreRegistryStorage()._flashLoanModule;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function caliberBeacon() external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._caliberBeacon;
+        return _getCoreRegistryStorage()._caliberBeacon;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function bridgeAdapterBeacon(uint16 bridgeId) external view override returns (address) {
-        return _getBaseMakinaRegistryStorage()._bridgeAdapters[bridgeId];
+        return _getCoreRegistryStorage()._bridgeAdapters[bridgeId];
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setCoreFactory(address _coreFactory) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit CoreFactoryChange($._coreFactory, _coreFactory);
         $._coreFactory = _coreFactory;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setOracleRegistry(address _oracleRegistry) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit OracleRegistryChange($._oracleRegistry, _oracleRegistry);
         $._oracleRegistry = _oracleRegistry;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setTokenRegistry(address _tokenRegistry) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit TokenRegistryChange($._tokenRegistry, _tokenRegistry);
         $._tokenRegistry = _tokenRegistry;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setSwapModule(address _swapModule) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit SwapModuleChange($._swapModule, _swapModule);
         $._swapModule = _swapModule;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setFlashLoanModule(address _newFlashLoanModule) external restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit FlashLoanModuleChange($._flashLoanModule, _newFlashLoanModule);
         $._flashLoanModule = _newFlashLoanModule;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setCaliberBeacon(address _caliberBeacon) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit CaliberBeaconChange($._caliberBeacon, _caliberBeacon);
         $._caliberBeacon = _caliberBeacon;
     }
 
-    /// @inheritdoc IBaseMakinaRegistry
+    /// @inheritdoc ICoreRegistry
     function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external override restricted {
-        BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit BridgeAdapterBeaconChange(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
         $._bridgeAdapters[bridgeId] = _bridgeAdapter;
     }

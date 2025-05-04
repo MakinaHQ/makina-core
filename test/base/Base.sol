@@ -13,7 +13,7 @@ import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
@@ -267,7 +267,7 @@ abstract contract Base is DeployViaIr {
     ///
 
     function deployAndSetupBridgeAdapterBeacon(
-        IBaseMakinaRegistry makinaRegistry,
+        ICoreRegistry makinaRegistry,
         BridgeData[] memory bridgesData,
         address dao
     ) public {

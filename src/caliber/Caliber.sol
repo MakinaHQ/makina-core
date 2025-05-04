@@ -13,7 +13,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
-import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
@@ -378,7 +378,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert ManageFlashLoanReentrantCall();
         }
 
-        address _flashLoanModule = IBaseMakinaRegistry(registry).flashLoanModule();
+        address _flashLoanModule = ICoreRegistry(registry).flashLoanModule();
         if (msg.sender != _flashLoanModule) {
             revert NotFlashLoanModule();
         }
@@ -558,7 +558,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         emit BaseTokenAdded(token);
 
-        if (!IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+        if (!IOracleRegistry(ICoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
             revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
         }
     }
@@ -733,8 +733,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (token == $._accountingToken) {
             return amount;
         }
-        uint256 price =
-            IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
+        uint256 price = IOracleRegistry(ICoreRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
     }
 
@@ -842,7 +841,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        address _swapModule = IBaseMakinaRegistry(registry).swapModule();
+        address _swapModule = ICoreRegistry(registry).swapModule();
         IERC20(order.inputToken).forceApprove(_swapModule, order.inputAmount);
         uint256 amountOut = ISwapModule(_swapModule).swap(order);
         IERC20(order.inputToken).forceApprove(_swapModule, 0);

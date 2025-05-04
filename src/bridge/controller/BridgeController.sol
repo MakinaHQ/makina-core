@@ -6,7 +6,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IBaseMakinaRegistry} from "../../interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {IBridgeAdapterFactory} from "../../interfaces/IBridgeAdapterFactory.sol";
@@ -79,7 +79,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         }
 
         address bridgeAdapter =
-            IBridgeAdapterFactory(IBaseMakinaRegistry(registry).coreFactory()).createBridgeAdapter(bridgeId, initData);
+            IBridgeAdapterFactory(ICoreRegistry(registry).coreFactory()).createBridgeAdapter(bridgeId, initData);
 
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
         $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {BaseMakinaRegistry} from "./BaseMakinaRegistry.sol";
+import {CoreRegistry} from "./CoreRegistry.sol";
 import {ISpokeRegistry} from "../interfaces/ISpokeRegistry.sol";
 
-contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
+contract SpokeRegistry is CoreRegistry, ISpokeRegistry {
     /// @custom:storage-location erc7201:makina.storage.SpokeRegistry
     struct SpokeRegistryStorage {
         address _caliberMailboxBeacon;
@@ -28,7 +28,7 @@ contract SpokeRegistry is BaseMakinaRegistry, ISpokeRegistry {
         external
         initializer
     {
-        __BaseMakinaRegistry_init(_oracleRegistry, _tokenRegistry, _swapModule, _initialAuthority);
+        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, _swapModule, _initialAuthority);
     }
 
     /// @inheritdoc ISpokeRegistry

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-interface IBaseMakinaRegistry {
+interface ICoreRegistry {
     event BridgeAdapterBeaconChange(
         uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
     );

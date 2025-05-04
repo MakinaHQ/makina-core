@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {BaseMakinaRegistry} from "./BaseMakinaRegistry.sol";
+import {CoreRegistry} from "./CoreRegistry.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
 
-contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
+contract HubRegistry is CoreRegistry, IHubRegistry {
     /// @custom:storage-location erc7201:makina.storage.HubRegistry
     struct HubRegistryStorage {
         address _chainRegistry;
@@ -34,7 +34,7 @@ contract HubRegistry is BaseMakinaRegistry, IHubRegistry {
         address _initialAuthority
     ) external initializer {
         _getHubRegistryStorage()._chainRegistry = _chainRegistry;
-        __BaseMakinaRegistry_init(_oracleRegistry, _tokenRegistry, _swapModule, _initialAuthority);
+        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, _swapModule, _initialAuthority);
     }
 
     /// @inheritdoc IHubRegistry

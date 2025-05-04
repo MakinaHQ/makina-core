@@ -3,18 +3,18 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 
 import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
-abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
-    IBaseMakinaRegistry internal registry;
+abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
+    ICoreRegistry internal registry;
 
     address internal coreFactoryAddr;
 
     function setUp() public virtual override {}
 
-    function test_BaseMakinaRegistryGetters() public view {
+    function test_CoreRegistryGetters() public view {
         assertEq(registry.coreFactory(), coreFactoryAddr);
         assertEq(registry.oracleRegistry(), address(oracleRegistry));
         assertEq(registry.tokenRegistry(), address(tokenRegistry));
@@ -30,7 +30,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetCoreFactory() public {
         address newCoreFactory = makeAddr("newCoreFactory");
         vm.expectEmit(true, true, true, true, address(registry));
-        emit IBaseMakinaRegistry.CoreFactoryChange(coreFactoryAddr, newCoreFactory);
+        emit ICoreRegistry.CoreFactoryChange(coreFactoryAddr, newCoreFactory);
         vm.prank(dao);
         registry.setCoreFactory(newCoreFactory);
         assertEq(registry.coreFactory(), newCoreFactory);
@@ -44,7 +44,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetOracleRegistry() public {
         address newOracleRegistry = makeAddr("newOracleRegistry");
         vm.expectEmit(true, true, true, true, address(registry));
-        emit IBaseMakinaRegistry.OracleRegistryChange(address(oracleRegistry), newOracleRegistry);
+        emit ICoreRegistry.OracleRegistryChange(address(oracleRegistry), newOracleRegistry);
         vm.prank(dao);
         registry.setOracleRegistry(newOracleRegistry);
         assertEq(registry.oracleRegistry(), newOracleRegistry);
@@ -58,7 +58,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetTokenRegistry() public {
         address newTokenRegistry = makeAddr("newTokenRegistry");
         vm.expectEmit(true, true, true, true, address(registry));
-        emit IBaseMakinaRegistry.TokenRegistryChange(address(tokenRegistry), newTokenRegistry);
+        emit ICoreRegistry.TokenRegistryChange(address(tokenRegistry), newTokenRegistry);
         vm.prank(dao);
         registry.setTokenRegistry(newTokenRegistry);
         assertEq(registry.tokenRegistry(), newTokenRegistry);
@@ -72,7 +72,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetSwapModule() public {
         address newSwapModule = makeAddr("newSwapModule");
         vm.expectEmit(true, true, true, true, address(registry));
-        emit IBaseMakinaRegistry.SwapModuleChange(address(swapModule), newSwapModule);
+        emit ICoreRegistry.SwapModuleChange(address(swapModule), newSwapModule);
         vm.prank(dao);
         registry.setSwapModule(newSwapModule);
         assertEq(registry.swapModule(), newSwapModule);
@@ -86,7 +86,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetFlashLoanModule() public {
         address newFlashLoanModule = makeAddr("NewFlashLoanModule");
         vm.expectEmit(true, true, false, true, address(registry));
-        emit IBaseMakinaRegistry.FlashLoanModuleChange(address(0), newFlashLoanModule);
+        emit ICoreRegistry.FlashLoanModuleChange(address(0), newFlashLoanModule);
         vm.prank(dao);
         registry.setFlashLoanModule(newFlashLoanModule);
         assertEq(registry.flashLoanModule(), newFlashLoanModule);
@@ -100,7 +100,7 @@ abstract contract BaseMakinaRegistry_Util_Concrete_Test is Unit_Concrete_Test {
     function test_SetBridgeAdapterBeacon() public {
         address newBridgeAdapterBeacon = makeAddr("newBridgeAdapterBeacon");
         vm.expectEmit(false, true, false, false, address(registry));
-        emit IBaseMakinaRegistry.BridgeAdapterBeaconChange(ACROSS_V3_BRIDGE_ID, address(0), newBridgeAdapterBeacon);
+        emit ICoreRegistry.BridgeAdapterBeaconChange(ACROSS_V3_BRIDGE_ID, address(0), newBridgeAdapterBeacon);
         vm.prank(dao);
         registry.setBridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID, newBridgeAdapterBeacon);
         assertEq(registry.bridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID), newBridgeAdapterBeacon);

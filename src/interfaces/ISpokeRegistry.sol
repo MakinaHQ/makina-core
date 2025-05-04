@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBaseMakinaRegistry} from "./IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "./ICoreRegistry.sol";
 
-interface ISpokeRegistry is IBaseMakinaRegistry {
+interface ISpokeRegistry is ICoreRegistry {
     event CaliberMailboxBeaconChange(address indexed oldCaliberMailboxBeacon, address indexed newCaliberMailboxBeacon);
 
     /// @notice Address of the caliber mailbox beacon.

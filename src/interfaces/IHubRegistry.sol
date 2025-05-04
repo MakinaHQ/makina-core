@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBaseMakinaRegistry} from "./IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "./ICoreRegistry.sol";
 
-interface IHubRegistry is IBaseMakinaRegistry {
+interface IHubRegistry is ICoreRegistry {
     event ChainRegistryChange(address indexed oldChainRegistry, address indexed newChainRegistry);
     event MachineBeaconChange(address indexed oldMachineBeacon, address indexed newMachineBeacon);
     event PreDepositVaultBeaconChange(

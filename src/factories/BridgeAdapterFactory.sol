@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
-import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -34,7 +34,7 @@ abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
         internal
         returns (address)
     {
-        address bridgeAdapterBeacon = IBaseMakinaRegistry(registry).bridgeAdapterBeacon(bridgeId);
+        address bridgeAdapterBeacon = ICoreRegistry(registry).bridgeAdapterBeacon(bridgeId);
         address bridgeAdapter = address(
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (controller, initData)))
         );

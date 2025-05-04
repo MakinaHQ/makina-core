@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
@@ -51,7 +51,7 @@ abstract contract BridgeController_CaliberMailbox_Integration_Concrete_Test is
     {
         CaliberMailbox_Integration_Concrete_Test.setUp();
 
-        registry = IBaseMakinaRegistry(address(spokeRegistry));
+        registry = ICoreRegistry(address(spokeRegistry));
         bridgeController = IBridgeController(address(caliberMailbox));
         bridgeAdapterFactory = IBridgeAdapterFactory(address(caliberFactory));
     }
