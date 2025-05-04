@@ -46,7 +46,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertWhen_CallerNotAuthorized() public {
-        vm.expectRevert(IMachine.UnauthorizedSender.selector);
+        vm.expectRevert(IMachine.UnauthorizedCaller.selector);
         machine.manageTransfer(address(0), 0, "");
     }
 

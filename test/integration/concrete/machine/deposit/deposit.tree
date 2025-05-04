@@ -6,7 +6,7 @@ deposit.t.sol
    │  └── it should revert with RecoveryMode
    └── given recovery mode is off
       ├── when sender is not depositor
-      │  └── it should revert with UnauthorizedDepositor
+      │  └── it should revert with UnauthorizedCaller
       └── when sender is depositor
          ├── given that the minted shares exceed the maximum allowed minting amount
          │  └── it should revert with ExceededMaxMint

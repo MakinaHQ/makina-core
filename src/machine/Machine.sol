@@ -293,7 +293,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
                 }
             }
         } else if (msg.sender != $._hubCaliber) {
-            revert UnauthorizedSender();
+            revert UnauthorizedCaller();
         }
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -412,7 +412,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._depositor) {
-            revert UnauthorizedDepositor();
+            revert UnauthorizedCaller();
         }
 
         uint256 shares = convertToShares(assets);
@@ -443,7 +443,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._redeemer) {
-            revert UnauthorizedRedeemer();
+            revert UnauthorizedCaller();
         }
 
         uint256 assets = convertToAssets(shares);

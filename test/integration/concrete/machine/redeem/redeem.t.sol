@@ -27,7 +27,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     }
 
     function test_RevertWhen_CallerNotRedeemer() public {
-        vm.expectRevert(IMachine.UnauthorizedRedeemer.selector);
+        vm.expectRevert(IMachine.UnauthorizedCaller.selector);
         machine.redeem(1e18, address(this), 0);
     }
 

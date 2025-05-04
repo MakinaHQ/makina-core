@@ -4,7 +4,7 @@ manageTransfer.t.sol
 └── when call is not reentrant
    ├── when sender is not a machine's bridge adapter
    │  ├── when sender is not the machine's hub caliber
-   │  │  └── it should revert with UnauthorizedSender
+   │  │  └── it should revert with UnauthorizedCaller
    │  └── when sender is the machine's hub caliber
    │     ├── given the machine has a resulting null token balance
    │     │  └── it should not change any state

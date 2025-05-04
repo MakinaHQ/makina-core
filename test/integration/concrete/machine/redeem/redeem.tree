@@ -6,7 +6,7 @@ redeem.t.sol
    │  └── it should revert with RecoveryMode
    └── given recovery mode is off
       ├── when sender is not redeemer
-      │  └── it should revert with UnauthorizedRedeemer
+      │  └── it should revert with UnauthorizedCaller
       └── when sender is redeemer
          ├── given that the asset amount to withdraw exceeds the maximum allowed withdrawal amount
          │  └── it should revert with ExceededMaxWithdraw

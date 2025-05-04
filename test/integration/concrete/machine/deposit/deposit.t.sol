@@ -27,7 +27,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
     }
 
     function test_RevertWhen_CallerNotDepositor() public {
-        vm.expectRevert(IMachine.UnauthorizedDepositor.selector);
+        vm.expectRevert(IMachine.UnauthorizedCaller.selector);
         machine.deposit(1e18, address(this), 0);
     }
 
