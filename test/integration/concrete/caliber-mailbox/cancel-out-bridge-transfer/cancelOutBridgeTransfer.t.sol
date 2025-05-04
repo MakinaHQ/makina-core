@@ -21,10 +21,9 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(
-            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
-        );
-        caliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr);
+        bridgeAdapter =
+            IBridgeAdapter(caliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
         vm.stopPrank();
 
         acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
@@ -35,23 +34,23 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         vm.prank(mechanic);
         caliber.transferToHubMachine(
-            address(accountingToken), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, inputAmount)
+            address(accountingToken), inputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, inputAmount)
         );
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(securityCouncil);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
         vm.prank(mechanic);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_CancelScheduledTransfer() public {
@@ -59,7 +58,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(mechanic);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -67,7 +66,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
     function test_CancelSentTransfer_WithoutFee() public {
         vm.prank(mechanic);
-        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
+        caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
@@ -75,7 +74,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(mechanic);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -83,11 +82,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(mechanic);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_CancelScheduledTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -95,7 +94,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(securityCouncil);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -113,7 +112,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
     function test_CancelSentTransfer_WithoutFee_WhileInRecoveryMode() public {
         vm.prank(mechanic);
-        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
+        caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));
 
         vm.prank(securityCouncil);
         caliberMailbox.setRecoveryMode(true);
@@ -124,7 +123,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(securityCouncil);
-        caliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);

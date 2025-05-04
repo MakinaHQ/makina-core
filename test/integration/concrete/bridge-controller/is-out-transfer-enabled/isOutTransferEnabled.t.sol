@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
 abstract contract IsOutTransferEnabled_Integration_Concrete_Test is BridgeController_Integration_Concrete_Test {
@@ -11,11 +9,11 @@ abstract contract IsOutTransferEnabled_Integration_Concrete_Test is BridgeContro
     }
 
     function test_IsOutTransferEnabled() public {
-        assertFalse(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertFalse(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
 
         vm.prank(dao);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
-        assertTrue(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertTrue(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
     }
 }

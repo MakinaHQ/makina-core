@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
@@ -32,8 +31,7 @@ abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concre
 
         vm.startPrank(address(dao));
         spokeRegistry.setBridgeAdapterBeacon(
-            IBridgeAdapter.Bridge.ACROSS_V3,
-            address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
 

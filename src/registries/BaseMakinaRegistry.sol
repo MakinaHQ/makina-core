@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
-import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 
 abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaRegistry {
     /// @custom:storage-location erc7201:makina.storage.BaseMakinaRegistry
@@ -14,7 +13,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
         address _swapModule;
         address _flashLoanModule;
         address _caliberBeacon;
-        mapping(IBridgeAdapter.Bridge => address) _bridgeAdapters;
+        mapping(uint16 => address) _bridgeAdapters;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.BaseMakinaRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -71,7 +70,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
+    function bridgeAdapterBeacon(uint16 bridgeId) external view override returns (address) {
         return _getBaseMakinaRegistryStorage()._bridgeAdapters[bridgeId];
     }
 
@@ -118,11 +117,7 @@ abstract contract BaseMakinaRegistry is AccessManagedUpgradeable, IBaseMakinaReg
     }
 
     /// @inheritdoc IBaseMakinaRegistry
-    function setBridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId, address _bridgeAdapter)
-        external
-        override
-        restricted
-    {
+    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external override restricted {
         BaseMakinaRegistryStorage storage $ = _getBaseMakinaRegistryStorage();
         emit BridgeAdapterBeaconChange(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
         $._bridgeAdapters[bridgeId] = _bridgeAdapter;

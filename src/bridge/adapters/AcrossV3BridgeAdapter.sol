@@ -14,13 +14,15 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    uint16 private constant ACROSS_V3_BRIDGE_ID = 1;
+
     constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {
         _disableInitializers();
     }
 
     /// @inheritdoc IBridgeAdapter
     function initialize(address _controller, bytes calldata) external override initializer {
-        __BridgeAdapter_init(_controller);
+        __BridgeAdapter_init(_controller, ACROSS_V3_BRIDGE_ID);
     }
 
     /// @inheritdoc IBridgeAdapter

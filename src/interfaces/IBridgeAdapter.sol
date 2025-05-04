@@ -26,11 +26,6 @@ interface IBridgeAdapter {
     event ScheduleOutBridgeTransfer(uint256 indexed transferId, bytes32 indexed messageHash);
     event WithdrawPendingFunds(address indexed token, uint256 amount);
 
-    enum Bridge {
-        ACROSS_V3,
-        CIRCLE_CCTP
-    }
-
     struct OutBridgeTransfer {
         address recipient;
         uint256 destinationChainId;
@@ -71,7 +66,7 @@ interface IBridgeAdapter {
     function controller() external view returns (address);
 
     /// @notice Returns the ID of the adapted external bridge.
-    function bridgeId() external view returns (uint256);
+    function bridgeId() external view returns (uint16);
 
     /// @notice Returns the address of the external bridge approval target contract.
     function approvalTarget() external view returns (address);

@@ -15,37 +15,36 @@ abstract contract CreateBridgeAdapter_Integration_Concrete_Test is BridgeControl
 
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
     }
 
     function test_RevertGiven_BridgeAdapterAlreadyExists() public {
         vm.startPrank(address(dao));
 
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         vm.expectRevert(IBridgeController.BridgeAdapterAlreadyExists.selector);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
     }
 
     function test_createBridgeAdapter_acrossV3() public {
-        assertFalse(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertFalse(bridgeController.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
 
         address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(0)));
         vm.prank(dao);
-        registry.setBridgeAdapterBeacon(IBridgeAdapter.Bridge.ACROSS_V3, beacon);
+        registry.setBridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID, beacon);
 
         vm.expectEmit(true, false, false, false, address(bridgeController));
-        emit IBridgeController.BridgeAdapterCreated(uint256(IBridgeAdapter.Bridge.ACROSS_V3), address(0));
+        emit IBridgeController.BridgeAdapterCreated(ACROSS_V3_BRIDGE_ID, address(0));
         vm.prank(dao);
-        address adapter =
-            bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        address adapter = bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         assertTrue(bridgeAdapterFactory.isBridgeAdapter(adapter));
-        assertTrue(bridgeController.isBridgeSupported(IBridgeAdapter.Bridge.ACROSS_V3));
-        assertTrue(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
-        assertEq(adapter, bridgeController.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3));
-        assertEq(DEFAULT_MAX_BRIDGE_LOSS_BPS, bridgeController.getMaxBridgeLossBps(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertTrue(bridgeController.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
+        assertTrue(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
+        assertEq(adapter, bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID));
+        assertEq(DEFAULT_MAX_BRIDGE_LOSS_BPS, bridgeController.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID));
         assertEq(IBridgeAdapter(adapter).controller(), address(bridgeController));
-        assertEq(IBridgeAdapter(adapter).bridgeId(), uint256(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertEq(IBridgeAdapter(adapter).bridgeId(), ACROSS_V3_BRIDGE_ID);
     }
 }

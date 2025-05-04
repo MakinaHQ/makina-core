@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "./IBridgeAdapter.sol";
-
 interface IBaseMakinaRegistry {
     event BridgeAdapterBeaconChange(
         uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
@@ -33,7 +31,7 @@ interface IBaseMakinaRegistry {
     function caliberBeacon() external view returns (address);
 
     /// @notice Bridge ID => Address of the bridge adapter beacon contract.
-    function bridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+    function bridgeAdapterBeacon(uint16 bridgeId) external view returns (address);
 
     /// @notice Sets the core factory address.
     /// @param _coreFactory The core factory address.
@@ -62,5 +60,5 @@ interface IBaseMakinaRegistry {
     /// @notice Sets the bridge adapter beacon address.
     /// @param bridgeId The bridge ID.
     /// @param _bridgeAdapter The bridge adapter beacon address.
-    function setBridgeAdapterBeacon(IBridgeAdapter.Bridge bridgeId, address _bridgeAdapter) external;
+    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external;
 }

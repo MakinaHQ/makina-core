@@ -5,7 +5,6 @@ import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
-import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IHubRegistry} from "../interfaces/IHubRegistry.sol";
@@ -140,10 +139,7 @@ contract MachineFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IMach
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(IBridgeAdapter.Bridge bridgeId, bytes calldata initData)
-        external
-        returns (address adapter)
-    {
+    function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
         if (!_getMachineFactoryStorage()._isMachine[msg.sender]) {
             revert NotMachine();
         }

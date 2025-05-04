@@ -231,7 +231,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address) {
+    function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert InvalidChainId();
@@ -322,7 +322,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
     /// @inheritdoc IMachine
     function transferToSpokeCaliber(
-        IBridgeAdapter.Bridge bridgeId,
+        uint16 bridgeId,
         uint256 chainId,
         address token,
         uint256 amount,
@@ -360,7 +360,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IBridgeController
-    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
+    function sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data)
         external
         override
         notRecoveryMode
@@ -373,25 +373,17 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IBridgeController
-    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash)
-        external
-        override
-        onlyOperator
-    {
+    function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external override onlyOperator {
         _authorizeInBridgeTransfer(bridgeId, messageHash);
     }
 
     /// @inheritdoc IBridgeController
-    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external override onlyOperator {
+    function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external override onlyOperator {
         _claimInBridgeTransfer(bridgeId, transferId);
     }
 
     /// @inheritdoc IBridgeController
-    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId)
-        external
-        override
-        onlyOperator
-    {
+    function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external override onlyOperator {
         _cancelOutBridgeTransfer(bridgeId, transferId);
     }
 
@@ -492,7 +484,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function setSpokeCaliber(
         uint256 foreignChainId,
         address spokeCaliberMailbox,
-        IBridgeAdapter.Bridge[] calldata bridges,
+        uint16[] calldata bridges,
         address[] calldata adapters
     ) external restricted {
         if (!IChainRegistry(IHubRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
@@ -524,7 +516,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function setSpokeBridgeAdapter(uint256 foreignChainId, IBridgeAdapter.Bridge bridgeId, address adapter)
+    function setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter)
         external
         override
         restricted
@@ -587,20 +579,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IBridgeController
-    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
-        external
-        override
-        onlyRiskManagerTimelock
-    {
+    function setOutTransferEnabled(uint16 bridgeId, bool enabled) external override onlyRiskManagerTimelock {
         _setOutTransferEnabled(bridgeId, enabled);
     }
 
     /// @inheritdoc IBridgeController
-    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
-        external
-        override
-        onlyRiskManagerTimelock
-    {
+    function setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) external override onlyRiskManagerTimelock {
         _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 
@@ -637,7 +621,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @dev Sets the spoke bridge adapter for a given foreign chain ID and bridge ID.
-    function _setSpokeBridgeAdapter(uint256 foreignChainId, IBridgeAdapter.Bridge bridgeId, address adapter) internal {
+    function _setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter) internal {
         SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
 
         if (caliberData.bridgeAdapters[bridgeId] != address(0)) {

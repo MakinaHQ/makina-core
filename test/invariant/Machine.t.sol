@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
@@ -63,7 +62,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         // deploy across v3 spoke pool
         acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
-        machineStore.setBridgeFeeBps(IBridgeAdapter.Bridge.ACROSS_V3, ACROSS_V3_FEE_BPS);
+        machineStore.setBridgeFeeBps(ACROSS_V3_BRIDGE_ID, ACROSS_V3_FEE_BPS);
 
         // set up registries
         vm.startPrank(dao);
@@ -77,12 +76,10 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         hubRegistry.setBridgeAdapterBeacon(
-            IBridgeAdapter.Bridge.ACROSS_V3,
-            address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         spokeRegistry.setBridgeAdapterBeacon(
-            IBridgeAdapter.Bridge.ACROSS_V3,
-            address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
 
@@ -96,16 +93,13 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         vm.startPrank(dao);
         machine.setSpokeCaliber(
-            machineStore.spokeChainId(), address(spokeCaliberMailbox), new IBridgeAdapter.Bridge[](0), new address[](0)
+            machineStore.spokeChainId(), address(spokeCaliberMailbox), new uint16[](0), new address[](0)
         );
-        address hubBridgeAdapterAddr =
-            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        address hubBridgeAdapterAddr = machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
         address spokeBridgeAdapterAddr =
-            spokeCaliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
-        machine.setSpokeBridgeAdapter(
-            machineStore.spokeChainId(), IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr
-        );
-        spokeCaliberMailbox.setHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr);
+            spokeCaliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        machine.setSpokeBridgeAdapter(machineStore.spokeChainId(), ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
+        spokeCaliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
         vm.stopPrank();
 
         machineHandler = new MachineHandler(machine, spokeCaliber, machineStore);

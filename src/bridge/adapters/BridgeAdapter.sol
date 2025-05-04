@@ -36,7 +36,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     /// @custom:storage-location erc7201:makina.storage.BridgeAdapter
     struct BridgeAdapterStorage {
         address _controller;
-        Bridge _bridge;
+        uint16 _bridgeId;
         uint256 _nextOutTransferId;
         uint256 _nextInTransferId;
         mapping(uint256 outTransferId => OutBridgeTransfer transfer) _outgoingTransfers;
@@ -64,9 +64,10 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         receiveSource = _receiveSource;
     }
 
-    function __BridgeAdapter_init(address _controller) internal onlyInitializing {
+    function __BridgeAdapter_init(address _controller, uint16 _bridgeId) internal onlyInitializing {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         $._controller = _controller;
+        $._bridgeId = _bridgeId;
         $._nextOutTransferId = 1;
         $._nextInTransferId = 1;
         __ReentrancyGuard_init();
@@ -85,8 +86,8 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     }
 
     /// @inheritdoc IBridgeAdapter
-    function bridgeId() external view override returns (uint256) {
-        return uint256(_getBridgeAdapterStorage()._bridge);
+    function bridgeId() external view override returns (uint16) {
+        return _getBridgeAdapterStorage()._bridgeId;
     }
 
     /// @inheritdoc IBridgeAdapter

@@ -6,7 +6,6 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {VerificationFailed} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -24,9 +23,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         Machine_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        machine.setSpokeCaliber(
-            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
-        );
+        machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
     }
 
     function test_RevertWhen_ReentrantCall() public {

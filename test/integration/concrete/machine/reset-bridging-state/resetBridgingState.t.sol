@@ -33,7 +33,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     function test_ResetBridgingState_EmptyBalance()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.ResetBridgingState(address(accountingToken));
@@ -44,7 +44,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     function test_ResetBridgingState_EmptyBalanceAndNonPriceableToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
 
@@ -58,7 +58,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     function test_ResetBridgingState_PositiveBalance_AccountingToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.ResetBridgingState(address(accountingToken));
@@ -69,11 +69,11 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
     function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromHubCaliber()
         public
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
 
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         deal(address(baseToken2), address(bridgeAdapterAddr), 1, true);
 
         vm.expectRevert(
@@ -86,9 +86,9 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     function test_ResetBridgingState_PositiveBalance_BaseToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         deal(address(baseToken), address(bridgeAdapterAddr), 1, true);
 
         vm.expectEmit(true, false, false, false, address(machine));
@@ -102,14 +102,14 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
         withForeignTokenRegistered(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 amount1 = 1e18;
         uint256 amount2 = 2e19;
         uint256 amount3 = 3e20;
 
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
         // simulate incoming bridge transfer
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextInTransferId();
@@ -128,7 +128,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         );
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
-        machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
         IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
@@ -139,9 +139,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         deal(address(accountingToken), address(machine), amount2, true);
         transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
         vm.prank(mechanic);
-        machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), amount2, amount2
-        );
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), amount2, amount2);
 
         // mint some extra tokens to the bridge adapter
         accountingToken.mint(bridgeAdapterAddr, amount3);
@@ -156,14 +154,14 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
         withForeignTokenRegistered(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 amount1 = 1e18;
         uint256 amount2 = 2e19;
         uint256 amount3 = 3e20;
 
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
         // simulate incoming bridge transfer
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextInTransferId();
@@ -182,7 +180,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         );
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
-        machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(baseToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
         IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
@@ -193,9 +191,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         deal(address(baseToken), address(machine), amount2, true);
         transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
         vm.prank(mechanic);
-        machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(baseToken), amount2, amount2
-        );
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(baseToken), amount2, amount2);
 
         // mint some extra tokens to the bridge adapter
         baseToken.mint(bridgeAdapterAddr, amount3);
@@ -211,25 +207,25 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         public
         withForeignTokenRegistered(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr)
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
         // schedule and send outgoing bridge transfer
         deal(address(accountingToken), address(machine), inputAmount, true);
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
         vm.startPrank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
         );
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 days));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 days));
         vm.stopPrank();
 
         // cancel the transfer
         deal(address(accountingToken), bridgeAdapterAddr, inputAmount, true);
         vm.prank(mechanic);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         // simulate the machine transfer being received and claimed by spoke caliber
         uint64 blockNum = 1e10;

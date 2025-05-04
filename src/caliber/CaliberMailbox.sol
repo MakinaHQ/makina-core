@@ -28,7 +28,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     struct CaliberMailboxStorage {
         address _hubMachine;
         address _caliber;
-        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _hubBridgeAdapters;
+        mapping(uint16 bridgeId => address adapter) _hubBridgeAdapters;
         EnumerableMap.AddressToUintMap _bridgesIn;
         EnumerableMap.AddressToUintMap _bridgesOut;
     }
@@ -72,7 +72,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc ICaliberMailbox
-    function getHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId) external view override returns (address) {
+    function getHubBridgeAdapter(uint16 bridgeId) external view override returns (address) {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         if ($._hubBridgeAdapters[bridgeId] == address(0)) {
             revert HubBridgeAdapterNotSet();
@@ -114,8 +114,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
             address outputToken =
                 ITokenRegistry(ISpokeRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
 
-            (IBridgeAdapter.Bridge bridgeId, uint256 minOutputAmount) =
-                abi.decode(data, (IBridgeAdapter.Bridge, uint256));
+            (uint16 bridgeId, uint256 minOutputAmount) = abi.decode(data, (uint16, uint256));
 
             address recipient = $._hubBridgeAdapters[bridgeId];
             if (recipient == address(0)) {
@@ -150,29 +149,22 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc IBridgeController
-    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data)
-        external
-        onlyOperator
-    {
+    function sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) external onlyOperator {
         _sendOutBridgeTransfer(bridgeId, transferId, data);
     }
 
     /// @inheritdoc IBridgeController
-    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash)
-        external
-        notRecoveryMode
-        onlyOperator
-    {
+    function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external notRecoveryMode onlyOperator {
         _authorizeInBridgeTransfer(bridgeId, messageHash);
     }
 
     /// @inheritdoc IBridgeController
-    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+    function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external onlyOperator {
         _claimInBridgeTransfer(bridgeId, transferId);
     }
 
     /// @inheritdoc IBridgeController
-    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external onlyOperator {
+    function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external onlyOperator {
         _cancelOutBridgeTransfer(bridgeId, transferId);
     }
 
@@ -188,7 +180,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc ICaliberMailbox
-    function setHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address adapter) external restricted {
+    function setHubBridgeAdapter(uint16 bridgeId, address adapter) external restricted {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         if ($._hubBridgeAdapters[bridgeId] != address(0)) {
             revert HubBridgeAdapterAlreadySet();
@@ -202,20 +194,12 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc IBridgeController
-    function setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled)
-        external
-        override
-        onlyRiskManagerTimelock
-    {
+    function setOutTransferEnabled(uint16 bridgeId, bool enabled) external override onlyRiskManagerTimelock {
         _setOutTransferEnabled(bridgeId, enabled);
     }
 
     /// @inheritdoc IBridgeController
-    function setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps)
-        external
-        override
-        onlyRiskManagerTimelock
-    {
+    function setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) external override onlyRiskManagerTimelock {
         _setMaxBridgeLossBps(bridgeId, maxBridgeLossBps);
     }
 

@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
 
 /// @dev MockMachineEndpoint contract for testing use only
@@ -13,10 +12,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
     using SafeERC20 for IERC20;
 
     event ManageTransfer(address token, uint256 amount, bytes data);
-    event SendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes data);
-    event AuthorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash);
-    event ClaimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
-    event CancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId);
+    event SendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes data);
+    event AuthorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash);
+    event ClaimInBridgeTransfer(uint16 bridgeId, uint256 transferId);
+    event CancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId);
 
     function mechanic() public pure returns (address) {
         return address(0);
@@ -58,47 +57,47 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return;
     }
 
-    function isBridgeSupported(IBridgeAdapter.Bridge) external pure returns (bool) {
+    function isBridgeSupported(uint16) external pure returns (bool) {
         return false;
     }
 
-    function getMaxBridgeLossBps(IBridgeAdapter.Bridge) external pure returns (uint256) {
+    function getMaxBridgeLossBps(uint16) external pure returns (uint256) {
         return 0;
     }
 
-    function isOutTransferEnabled(IBridgeAdapter.Bridge) external pure returns (bool) {
+    function isOutTransferEnabled(uint16) external pure returns (bool) {
         return false;
     }
 
-    function getBridgeAdapter(IBridgeAdapter.Bridge) external pure returns (address) {
+    function getBridgeAdapter(uint16) external pure returns (address) {
         return address(0);
     }
 
-    function createBridgeAdapter(IBridgeAdapter.Bridge, uint256, bytes calldata) external pure returns (address) {
+    function createBridgeAdapter(uint16, uint256, bytes calldata) external pure returns (address) {
         return address(0);
     }
 
-    function setMaxBridgeLossBps(IBridgeAdapter.Bridge, uint256) external pure {
+    function setMaxBridgeLossBps(uint16, uint256) external pure {
         return;
     }
 
-    function setOutTransferEnabled(IBridgeAdapter.Bridge, bool) external pure {
+    function setOutTransferEnabled(uint16, bool) external pure {
         return;
     }
 
-    function sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) external {
+    function sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) external {
         emit SendOutBridgeTransfer(bridgeId, transferId, data);
     }
 
-    function authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash) external {
+    function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external {
         emit AuthorizeInBridgeTransfer(bridgeId, messageHash);
     }
 
-    function claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external {
+    function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external {
         emit ClaimInBridgeTransfer(bridgeId, transferId);
     }
 
-    function cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) external {
+    function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external {
         emit CancelOutBridgeTransfer(bridgeId, transferId);
     }
 

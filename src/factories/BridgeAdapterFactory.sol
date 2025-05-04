@@ -30,7 +30,7 @@ abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
     }
 
     /// @dev Internal logic for bridge adapter deployment.
-    function _createBridgeAdapter(address controller, IBridgeAdapter.Bridge bridgeId, bytes calldata initData)
+    function _createBridgeAdapter(address controller, uint16 bridgeId, bytes calldata initData)
         internal
         returns (address)
     {

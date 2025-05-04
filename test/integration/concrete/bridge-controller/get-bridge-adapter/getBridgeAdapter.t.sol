@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
@@ -13,14 +12,13 @@ abstract contract GetBridgeAdapter_Integration_Concrete_Test is BridgeController
 
     function test_RevertWhen_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
-        bridgeController.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
     }
 
     function test_GetBridgeAdapter() public {
         vm.prank(dao);
-        address adapter =
-            bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        address adapter = bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
-        assertEq(adapter, bridgeController.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3));
+        assertEq(adapter, bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID));
     }
 }

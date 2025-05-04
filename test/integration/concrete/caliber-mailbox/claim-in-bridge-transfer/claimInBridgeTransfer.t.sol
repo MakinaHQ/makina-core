@@ -21,9 +21,8 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(
-            caliberMailbox.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
-        );
+        bridgeAdapter =
+            IBridgeAdapter(caliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
         vm.stopPrank();
 
         inputAmount = 1e18;
@@ -47,7 +46,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         );
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
-        caliberMailbox.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);
@@ -59,11 +58,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(securityCouncil);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
@@ -71,7 +70,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
         vm.prank(mechanic);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextInTransferId);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextInTransferId);
     }
 
     function test_ClaimInBridgeTransfer() public {
@@ -79,7 +78,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         emit IBridgeAdapter.ClaimInBridgeTransfer(transferId);
 
         vm.prank(mechanic);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), outputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -87,11 +86,11 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(mechanic);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_ClaimInBridgeTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -99,7 +98,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         emit IBridgeAdapter.ClaimInBridgeTransfer(transferId);
 
         vm.prank(securityCouncil);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(caliber)), outputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);

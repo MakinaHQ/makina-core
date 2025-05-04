@@ -14,7 +14,6 @@ import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubRegistry} from "src/registries/HubRegistry.sol";
 import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineFactory} from "src/factories/MachineFactory.sol";
@@ -71,7 +70,7 @@ abstract contract Base is DeployViaIr {
 
     struct BridgeData {
         address approvalTarget;
-        IBridgeAdapter.Bridge bridgeId;
+        uint16 bridgeId;
         address executionTarget;
         address receiveSource;
     }
@@ -274,9 +273,9 @@ abstract contract Base is DeployViaIr {
         address dao
     ) public {
         for (uint256 i; i < bridgesData.length; i++) {
-            IBridgeAdapter.Bridge bridgeId = bridgesData[i].bridgeId;
+            uint16 bridgeId = bridgesData[i].bridgeId;
             address baBeacon;
-            if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
+            if (bridgeId == 1) {
                 baBeacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
             } else {
                 revert("Bridge not supported");

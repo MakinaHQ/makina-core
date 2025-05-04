@@ -17,13 +17,10 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(
-            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
-        );
-        machine.setSpokeCaliber(
-            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
-        );
-        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
+        bridgeAdapter =
+            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
+        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         vm.stopPrank();
 
         uint256 inputAmount = 2e18;
@@ -33,37 +30,37 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         transferId = bridgeAdapter.nextOutTransferId();
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
         );
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
 
         vm.prank(securityCouncil);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.CIRCLE_CCTP, 0, "");
+        machine.sendOutBridgeTransfer(CIRCLE_CCTP_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
         vm.prank(riskManagerTimelock);
-        machine.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+        machine.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
 
         vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
         vm.prank(mechanic);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0, "");
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
@@ -71,7 +68,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
         vm.prank(address(mechanic));
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextOutTransferId, "");
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextOutTransferId, "");
     }
 
     function test_SendOutBridgeTransfer() public {
@@ -79,6 +76,6 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
 
         vm.prank(address(mechanic));
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(0));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));
     }
 }

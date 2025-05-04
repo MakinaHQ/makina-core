@@ -3,8 +3,6 @@ pragma solidity 0.8.28;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-
 contract MachineStore {
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -16,7 +14,7 @@ contract MachineStore {
 
     address[] public tokens;
 
-    mapping(IBridgeAdapter.Bridge bridgeID => uint256 feeBps) public bridgeFeeBps;
+    mapping(uint16 bridgeID => uint256 feeBps) public bridgeFeeBps;
 
     EnumerableSet.UintSet private _pendingMachineScheduledOutTransferIds;
     EnumerableSet.UintSet private _pendingMachineSentOutTransferIds;
@@ -245,7 +243,7 @@ contract MachineStore {
         spokeChainId = _spokeChainId;
     }
 
-    function setBridgeFeeBps(IBridgeAdapter.Bridge bridgeID, uint256 feeBps) external {
+    function setBridgeFeeBps(uint16 bridgeID, uint256 feeBps) external {
         bridgeFeeBps[bridgeID] = feeBps;
     }
 }

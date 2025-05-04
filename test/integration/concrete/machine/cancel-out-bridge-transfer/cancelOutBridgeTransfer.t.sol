@@ -20,13 +20,10 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
-        bridgeAdapter = IBridgeAdapter(
-            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
-        );
-        machine.setSpokeCaliber(
-            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
-        );
-        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
+        bridgeAdapter =
+            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
+        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         vm.stopPrank();
 
         acrossV3DepositId = acrossV3SpokePool.numberOfDeposits();
@@ -37,23 +34,23 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
 
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
         );
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(securityCouncil);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
         vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
         vm.prank(mechanic);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_CancelScheduledTransfer() public {
@@ -61,7 +58,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(mechanic);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(machine)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -69,7 +66,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
 
     function test_CancelSentTransfer_WithoutFee() public {
         vm.prank(mechanic);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 hours));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 hours));
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
@@ -77,7 +74,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(mechanic);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(machine)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -85,11 +82,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(mechanic);
         vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, 0);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_CancelScheduledTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -97,7 +94,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(securityCouncil);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(machine)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
@@ -105,7 +102,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
 
     function test_CancelSentTransfer_WithoutFee_WhileInRecoveryMode() public {
         vm.prank(mechanic);
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 hours));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 hours));
 
         vm.prank(securityCouncil);
         machine.setRecoveryMode(true);
@@ -116,7 +113,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is Machine_Integratio
         emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
 
         vm.prank(securityCouncil);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(machine)), inputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);

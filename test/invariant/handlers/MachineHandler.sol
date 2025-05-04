@@ -16,13 +16,14 @@ import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
+import {Constants} from "../../utils/Constants.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineStore} from "../stores/MachineStore.sol";
 import {IMockAcrossV3SpokePool} from "../../mocks/IMockAcrossV3SpokePool.sol";
 import {PerChainData} from "../../utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "../../utils/WormholeQueryTestHelpers.sol";
 
-contract MachineHandler is CommonBase, StdCheats, StdUtils {
+contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     Machine public machine;
     Caliber public hubCaliber;
     Caliber public spokeCaliber;
@@ -52,22 +53,22 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
 
         vm.startPrank(_mechanic());
 
-        address bridgeAdapter = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapter).nextOutTransferId();
 
         vm.recordLogs();
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3,
+            ACROSS_V3_BRIDGE_ID,
             machineStore.spokeChainId(),
             token,
             amount,
-            _applyBridgeFee(IBridgeAdapter.Bridge.ACROSS_V3, amount)
+            _applyBridgeFee(ACROSS_V3_BRIDGE_ID, amount)
         );
         Vm.Log[] memory entries = vm.getRecordedLogs();
         // 2nd topic of 3rd emitted event
         bytes32 messageHash = entries[2].topics[2];
 
-        spokeCaliberMailbox.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        spokeCaliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
         vm.stopPrank();
 
@@ -82,12 +83,12 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         }
         transferIndex = _bound(transferIndex, 0, transfersLen - 1);
         uint256 transferId = machineStore.getPendingMachineScheduledOutTransferId(transferIndex);
-        address bridgeAdapter = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 acrossV3TransferId =
             IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).numberOfDeposits();
 
         vm.prank(_mechanic());
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 weeks));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 weeks));
 
         machineStore.removePendingMachineScheduledOutTransferId(transferId);
         machineStore.addPendingMachineSentOutTransferId(transferId);
@@ -104,7 +105,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         uint256 transferId = machineStore.getPendingMachineRefundedOutTransferId(transferIndex);
 
         vm.prank(_mechanic());
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         machineStore.removePendingMachineRefundedOutTransferId(transferId);
     }
@@ -119,7 +120,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         uint256 transferId = machineStore.getPendingMachineReceivedInTransferId(transferIndex);
 
         vm.prank(_mechanic());
-        machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         machineStore.removePendingMachineReceivedInTransferId(transferId);
         machineStore.addTotalAccountedBridgeFee(
@@ -142,20 +143,18 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
 
         vm.startPrank(_mechanic());
 
-        address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapter).nextOutTransferId();
 
         vm.recordLogs();
         spokeCaliber.transferToHubMachine(
-            token,
-            amount,
-            abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, _applyBridgeFee(IBridgeAdapter.Bridge.ACROSS_V3, amount))
+            token, amount, abi.encode(ACROSS_V3_BRIDGE_ID, _applyBridgeFee(ACROSS_V3_BRIDGE_ID, amount))
         );
         Vm.Log[] memory entries = vm.getRecordedLogs();
         // 2nd topic of 5th emitted event
         bytes32 messageHash = entries[4].topics[2];
 
-        machine.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
         vm.stopPrank();
 
@@ -170,12 +169,12 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         }
         transferIndex = _bound(transferIndex, 0, transfersLen - 1);
         uint256 transferId = machineStore.getPendingCaliberScheduledOutTransferId(transferIndex);
-        address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 acrossV3TransferId =
             IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).numberOfDeposits();
 
         vm.prank(_mechanic());
-        spokeCaliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 weeks));
+        spokeCaliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 weeks));
 
         machineStore.removePendingCaliberScheduledOutTransferId(transferId);
         machineStore.addPendingCaliberSentOutTransferId(transferId);
@@ -194,7 +193,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         uint256 transferId = machineStore.getPendingCaliberRefundedOutTransferId(transferIndex);
 
         vm.prank(_mechanic());
-        spokeCaliberMailbox.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        spokeCaliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         machineStore.removePendingCaliberRefundedOutTransferId(transferId);
     }
@@ -209,7 +208,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         uint256 transferId = machineStore.getPendingCaliberReceivedInTransferId(transferIndex);
 
         vm.prank(_mechanic());
-        spokeCaliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        spokeCaliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         machineStore.removePendingCaliberReceivedInTransferId(transferId);
         machineStore.addPendingCaliberRealisedBridgeFee(
@@ -231,7 +230,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
             transferIndex = _bound(transferIndex, 0, transfersLen - 1);
             uint256 transferId = machineStore.getPendingMachineSentOutTransferId(transferIndex);
             uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
-            address bridgeAdapter = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+            address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
             IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
 
@@ -245,7 +244,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
             transferIndex = _bound(transferIndex, 0, transfersLen - 1);
             uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
             uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
-            address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+            address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
             IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
 
@@ -265,7 +264,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
             uint256 transferId = machineStore.getPendingMachineSentOutTransferId(transferIndex);
             uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
 
-            address receiverBridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+            address receiverBridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
             uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
 
             address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
@@ -289,7 +288,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
             uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
             uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
 
-            address receiverBridgeAdapter = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+            address receiverBridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
             uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
 
             address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
@@ -338,7 +337,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils {
         return machine.mechanic();
     }
 
-    function _applyBridgeFee(IBridgeAdapter.Bridge bridgeId, uint256 amount) internal view returns (uint256) {
+    function _applyBridgeFee(uint16 bridgeId, uint256 amount) internal view returns (uint256) {
         return (amount * (10_000 - machineStore.bridgeFeeBps(bridgeId))) / 10_000;
     }
 }

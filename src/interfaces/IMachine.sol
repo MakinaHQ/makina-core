@@ -5,7 +5,6 @@ import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
@@ -60,7 +59,7 @@ interface IMachine is IMachineEndpoint {
 
     struct SpokeCaliberData {
         address mailbox;
-        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) bridgeAdapters;
+        mapping(uint16 bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
         bytes[] positions; // abi.encode(positionId, value)
@@ -151,7 +150,7 @@ interface IMachine is IMachineEndpoint {
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
 
     /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
-    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address);
+    function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
@@ -175,7 +174,7 @@ interface IMachine is IMachineEndpoint {
     /// @param amount The amount of token to transfer.
     /// @param minOutputAmount The minimum output amount expected from the transfer.
     function transferToSpokeCaliber(
-        IBridgeAdapter.Bridge bridgeId,
+        uint16 bridgeId,
         uint256 chainId,
         address token,
         uint256 amount,
@@ -215,7 +214,7 @@ interface IMachine is IMachineEndpoint {
     function setSpokeCaliber(
         uint256 chainId,
         address spokeCaliberMailbox,
-        IBridgeAdapter.Bridge[] calldata bridges,
+        uint16[] calldata bridges,
         address[] calldata adapters
     ) external;
 
@@ -223,7 +222,7 @@ interface IMachine is IMachineEndpoint {
     /// @param chainId The foreign EVM chain ID of the adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
-    function setSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
+    function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) external;
 
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.

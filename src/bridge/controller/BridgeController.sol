@@ -21,10 +21,10 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
 
     /// @custom:storage-location erc7201:makina.storage.BridgeController
     struct BridgeControllerStorage {
-        IBridgeAdapter.Bridge[] _supportedBridges;
-        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) _bridgeAdapters;
-        mapping(IBridgeAdapter.Bridge bridgeId => uint256 maxBridgeLossBps) _maxBridgeLossBps;
-        mapping(IBridgeAdapter.Bridge bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
+        uint16[] _supportedBridges;
+        mapping(uint16 bridgeId => address adapter) _bridgeAdapters;
+        mapping(uint16 bridgeId => uint256 maxBridgeLossBps) _maxBridgeLossBps;
+        mapping(uint16 bridgeId => bool isOutTransferEnabled) _isOutTransferEnabled;
         mapping(address addr => bool isAdapter) _isBridgeAdapter;
     }
 
@@ -39,17 +39,17 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function isBridgeSupported(IBridgeAdapter.Bridge bridgeId) external view override returns (bool) {
+    function isBridgeSupported(uint16 bridgeId) external view override returns (bool) {
         return _getBridgeControllerStorage()._bridgeAdapters[bridgeId] != address(0);
     }
 
     /// @inheritdoc IBridgeController
-    function isOutTransferEnabled(IBridgeAdapter.Bridge bridgeId) external view override returns (bool) {
+    function isOutTransferEnabled(uint16 bridgeId) external view override returns (bool) {
         return _getBridgeControllerStorage()._isOutTransferEnabled[bridgeId];
     }
 
     /// @inheritdoc IBridgeController
-    function getBridgeAdapter(IBridgeAdapter.Bridge bridgeId) public view override returns (address) {
+    function getBridgeAdapter(uint16 bridgeId) public view override returns (address) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
@@ -58,7 +58,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function getMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId) external view returns (uint256) {
+    function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
@@ -67,11 +67,11 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function createBridgeAdapter(
-        IBridgeAdapter.Bridge bridgeId,
-        uint256 initialMaxBridgeLossBps,
-        bytes calldata initData
-    ) external restricted returns (address) {
+    function createBridgeAdapter(uint16 bridgeId, uint256 initialMaxBridgeLossBps, bytes calldata initData)
+        external
+        restricted
+        returns (address)
+    {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
 
         if ($._bridgeAdapters[bridgeId] != address(0)) {
@@ -87,12 +87,12 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._isBridgeAdapter[bridgeAdapter] = true;
         $._supportedBridges.push(bridgeId);
 
-        emit BridgeAdapterCreated(uint256(bridgeId), bridgeAdapter);
+        emit BridgeAdapterCreated(bridgeId, bridgeAdapter);
 
         return bridgeAdapter;
     }
 
-    function _setOutTransferEnabled(IBridgeAdapter.Bridge bridgeId, bool enabled) internal {
+    function _setOutTransferEnabled(uint16 bridgeId, bool enabled) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
@@ -101,12 +101,12 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
-    function _setMaxBridgeLossBps(IBridgeAdapter.Bridge bridgeId, uint256 maxBridgeLossBps) internal {
+    function _setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert BridgeAdapterDoesNotExist();
         }
-        emit MaxBridgeLossBpsChange(uint256(bridgeId), $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
+        emit MaxBridgeLossBpsChange(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
     }
 
@@ -115,7 +115,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     function _scheduleOutBridgeTransfer(
-        IBridgeAdapter.Bridge bridgeId,
+        uint16 bridgeId,
         uint256 destinationChainId,
         address recipient,
         address inputToken,
@@ -140,7 +140,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         );
     }
 
-    function _sendOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId, bytes calldata data) internal {
+    function _sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) internal {
         address adapter = getBridgeAdapter(bridgeId);
         if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
             revert OutTransferDisabled();
@@ -148,17 +148,17 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
     }
 
-    function _authorizeInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, bytes32 messageHash) internal {
+    function _authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).authorizeInBridgeTransfer(messageHash);
     }
 
-    function _claimInBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) internal {
+    function _claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).claimInBridgeTransfer(transferId);
     }
 
-    function _cancelOutBridgeTransfer(IBridgeAdapter.Bridge bridgeId, uint256 transferId) internal {
+    function _cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).cancelOutBridgeTransfer(transferId);
     }
