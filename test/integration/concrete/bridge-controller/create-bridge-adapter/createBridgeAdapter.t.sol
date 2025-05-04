@@ -5,6 +5,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
@@ -23,7 +24,7 @@ abstract contract CreateBridgeAdapter_Integration_Concrete_Test is BridgeControl
 
         bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
-        vm.expectRevert(IBridgeController.BridgeAdapterAlreadyExists.selector);
+        vm.expectRevert(Errors.BridgeAdapterAlreadyExists.selector);
         bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
     }
 

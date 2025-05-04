@@ -3,17 +3,18 @@ pragma solidity 0.8.28;
 
 import {IOwnable2Step} from "src/interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {PreDepositVault_Integration_Concrete_Test} from "../PreDepositVault.t.sol";
 
 contract MigrateToMachine_Integration_Concrete_Test is PreDepositVault_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotPendingMachine() public {
-        vm.expectRevert(IPreDepositVault.NotPendingMachine.selector);
+        vm.expectRevert(Errors.NotPendingMachine.selector);
         preDepositVault.migrateToMachine();
     }
 
     function test_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         vm.prank(newMachineAddr);
         preDepositVault.migrateToMachine();
     }

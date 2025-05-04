@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {SwapModule_Unit_Concrete_Test} from "./SwapModule.t.sol";

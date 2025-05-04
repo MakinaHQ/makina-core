@@ -2,8 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
-import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -35,21 +34,21 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
         machine.sendOutBridgeTransfer(CIRCLE_CCTP_BRIDGE_ID, 0, "");
     }
@@ -58,7 +57,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         vm.prank(riskManagerTimelock);
         machine.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
 
-        vm.expectRevert(IBridgeController.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferDisabled.selector);
         vm.prank(mechanic);
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
@@ -66,7 +65,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     function test_RevertGiven_InvalidTransferStatus() public {
         uint256 nextOutTransferId = bridgeAdapter.nextOutTransferId();
 
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(mechanic));
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextOutTransferId, "");
     }

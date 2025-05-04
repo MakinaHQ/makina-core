@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernable {
     /// @custom:storage-location erc7201:makina.storage.MakinaGovernable
@@ -41,28 +42,28 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     modifier onlyOperator() {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
 
     modifier onlyRiskManager() {
         if (msg.sender != _getMakinaGovernableStorage()._riskManager) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
 
     modifier onlyRiskManagerTimelock() {
         if (msg.sender != _getMakinaGovernableStorage()._riskManagerTimelock) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
 
     modifier notRecoveryMode() {
         if (_getMakinaGovernableStorage()._recoveryMode) {
-            revert RecoveryMode();
+            revert Errors.RecoveryMode();
         }
         _;
     }
@@ -124,7 +125,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     function setRecoveryMode(bool enabled) external {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if (msg.sender != $._securityCouncil) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;

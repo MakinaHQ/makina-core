@@ -7,9 +7,8 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -46,7 +45,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertWhen_CallerNotAuthorized() public {
-        vm.expectRevert(IMachine.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.manageTransfer(address(0), 0, "");
     }
 
@@ -82,9 +81,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken2), address(caliber), inputAmount, true);
         vm.startPrank(address(caliber));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, "");
     }
 
@@ -102,7 +99,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_RevertGiven_InvalidChainId_FromBridgeAdapter() public {
         vm.prank(address(bridgeAdapter));
-        vm.expectRevert(IMachine.InvalidChainId.selector);
+        vm.expectRevert(Errors.InvalidChainId.selector);
         machine.manageTransfer(address(0), 0, abi.encode(SPOKE_CHAIN_ID + 1, 0, false));
     }
 
@@ -110,7 +107,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1;
 
         // try to send undeclared transfer to machine
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         vm.prank(address(bridgeAdapter));
         machine.manageTransfer(address(accountingToken), 0, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
     }
@@ -125,9 +122,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(address(bridgeAdapter));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
     }
 
@@ -262,7 +257,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         // try to refund the transfer to machine
         vm.startPrank(address(bridgeAdapter));
         accountingToken.approve(address(machine), inputAmount);
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
     }
 
@@ -273,9 +268,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(address(bridgeAdapter));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
     }
 

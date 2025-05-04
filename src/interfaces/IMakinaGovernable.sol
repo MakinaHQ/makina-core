@@ -2,9 +2,6 @@
 pragma solidity 0.8.28;
 
 interface IMakinaGovernable {
-    error RecoveryMode();
-    error UnauthorizedCaller();
-
     event MechanicChanged(address indexed oldMechanic, address indexed newMechanic);
     event SecurityCouncilChanged(address indexed oldSecurityCouncil, address indexed newSecurityCouncil);
     event RiskManagerChanged(address indexed oldRiskManager, address indexed newRiskManager);

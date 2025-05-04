@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
@@ -12,12 +12,12 @@ abstract contract SetOutTransferEnabled_Integration_Concrete_Test is BridgeContr
     }
 
     function test_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
     }
 
     function test_RevertGiven_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(riskManagerTimelock);
         bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
     }

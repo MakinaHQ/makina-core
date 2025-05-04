@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -35,7 +36,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         // 1st instruction does not exist
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
+        vm.expectRevert(Errors.PositionDoesNotExist.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         // 2nd instruction does not exist
@@ -43,7 +44,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         accountingInstructions[0] =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         accountingInstructions[1] = WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
+        vm.expectRevert(Errors.PositionDoesNotExist.selector);
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
@@ -52,7 +53,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         // 2nd instruction is not of accounting type
@@ -61,7 +62,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         accountingInstructions[1] =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
@@ -72,7 +73,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         ICaliber.Instruction[] memory accountingInstructions = new ICaliber.Instruction[](1);
         accountingInstructions[0] =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         // 2nd instruction uses wrong vault
@@ -81,7 +82,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         accountingInstructions[1] =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
@@ -92,7 +93,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         // replace end flag with null value in accounting output state
         delete accountingInstructions[0].state[1];
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        vm.expectRevert(Errors.InvalidAccounting.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         // 2nd instruction has invalid accounting
@@ -102,7 +103,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         accountingInstructions[1] = accountingInstructions[0];
         // replace end flag with null value in accounting output state
         delete accountingInstructions[1].state[1];
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        vm.expectRevert(Errors.InvalidAccounting.selector);
         caliber.accountForPositionBatch(accountingInstructions);
     }
 
@@ -141,7 +142,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         skip(caliber.timelockDuration());
 
         // accounting cannot be executed after the update takes effect
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         // schedule root update with the correct root
@@ -149,7 +150,7 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
 
         // accounting cannot be executed while the update is pending
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPositionBatch(accountingInstructions);
 
         skip(caliber.timelockDuration());

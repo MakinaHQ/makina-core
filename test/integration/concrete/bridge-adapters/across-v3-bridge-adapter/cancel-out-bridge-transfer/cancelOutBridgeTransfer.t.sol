@@ -7,6 +7,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockMachineEndpoint} from "test/mocks/MockMachineEndpoint.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3BridgeAdapter.t.sol";
 
@@ -36,12 +37,12 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
     }
 
     function test_RevertWhen_CallerNotController() public {
-        vm.expectRevert(IBridgeAdapter.NotController.selector);
+        vm.expectRevert(Errors.NotController.selector);
         bridgeAdapter1.cancelOutBridgeTransfer(0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.cancelOutBridgeTransfer(0);
     }
@@ -94,7 +95,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
-        vm.expectRevert(IBridgeAdapter.InsufficientBalance.selector);
+        vm.expectRevert(Errors.InsufficientBalance.selector);
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
     }
 

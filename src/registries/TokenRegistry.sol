@@ -2,7 +2,9 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     /// @custom:storage-location erc7201:makina.storage.TokenRegistry
@@ -33,7 +35,7 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     function getForeignToken(address _localToken, uint256 _foreignEvmChainId) external view returns (address) {
         address foreignToken = _getTokenRegistryStorage()._localToForeignTokens[_localToken][_foreignEvmChainId];
         if (foreignToken == address(0)) {
-            revert ForeignTokenNotRegistered(_localToken, _foreignEvmChainId);
+            revert Errors.ForeignTokenNotRegistered(_localToken, _foreignEvmChainId);
         }
         return foreignToken;
     }
@@ -42,7 +44,7 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     function getLocalToken(address _foreignToken, uint256 _foreignEvmChainId) external view returns (address) {
         address localToken = _getTokenRegistryStorage()._foreignToLocalTokens[_foreignToken][_foreignEvmChainId];
         if (localToken == address(0)) {
-            revert LocalTokenNotRegistered(_foreignToken, _foreignEvmChainId);
+            revert Errors.LocalTokenNotRegistered(_foreignToken, _foreignEvmChainId);
         }
         return localToken;
     }
@@ -51,10 +53,10 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     function setToken(address _localToken, uint256 _foreignEvmChainId, address _foreignToken) external restricted {
         TokenRegistryStorage storage $ = _getTokenRegistryStorage();
         if (_localToken == address(0) || _foreignToken == address(0)) {
-            revert ZeroTokenAddress();
+            revert Errors.ZeroTokenAddress();
         }
         if (_foreignEvmChainId == 0) {
-            revert ZeroChainId();
+            revert Errors.ZeroChainId();
         }
         $._localToForeignTokens[_localToken][_foreignEvmChainId] = _foreignToken;
         $._foreignToLocalTokens[_foreignToken][_foreignEvmChainId] = _localToken;

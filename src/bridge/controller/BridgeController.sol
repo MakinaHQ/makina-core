@@ -10,6 +10,7 @@ import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {IBridgeAdapterFactory} from "../../interfaces/IBridgeAdapterFactory.sol";
+import {Errors} from "../../libraries/Errors.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
 abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
@@ -52,7 +53,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     function getBridgeAdapter(uint16 bridgeId) public view override returns (address) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert BridgeAdapterDoesNotExist();
+            revert Errors.BridgeAdapterDoesNotExist();
         }
         return $._bridgeAdapters[bridgeId];
     }
@@ -61,7 +62,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert BridgeAdapterDoesNotExist();
+            revert Errors.BridgeAdapterDoesNotExist();
         }
         return $._maxBridgeLossBps[bridgeId];
     }
@@ -75,7 +76,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
 
         if ($._bridgeAdapters[bridgeId] != address(0)) {
-            revert BridgeAdapterAlreadyExists();
+            revert Errors.BridgeAdapterAlreadyExists();
         }
 
         address bridgeAdapter =
@@ -95,7 +96,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     function _setOutTransferEnabled(uint16 bridgeId, bool enabled) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert BridgeAdapterDoesNotExist();
+            revert Errors.BridgeAdapterDoesNotExist();
         }
         emit SetOutTransferEnabled(uint256(bridgeId), enabled);
         $._isOutTransferEnabled[bridgeId] = enabled;
@@ -104,7 +105,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     function _setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert BridgeAdapterDoesNotExist();
+            revert Errors.BridgeAdapterDoesNotExist();
         }
         emit MaxBridgeLossBpsChange(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
@@ -126,13 +127,13 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         address adapter = getBridgeAdapter(bridgeId);
         if (!$._isOutTransferEnabled[bridgeId]) {
-            revert OutTransferDisabled();
+            revert Errors.OutTransferDisabled();
         }
         if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS)) {
-            revert MaxValueLossExceeded();
+            revert Errors.MaxValueLossExceeded();
         }
         if (minOutputAmount > inputAmount) {
-            revert MinOutputAmountExceedsInputAmount();
+            revert Errors.MinOutputAmountExceedsInputAmount();
         }
         IERC20(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
@@ -143,7 +144,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     function _sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) internal {
         address adapter = getBridgeAdapter(bridgeId);
         if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
-            revert OutTransferDisabled();
+            revert Errors.OutTransferDisabled();
         }
         IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
     }

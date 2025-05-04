@@ -9,6 +9,7 @@ import {IAcrossV3MessageHandler} from "../../interfaces/IAcrossV3MessageHandler.
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IAcrossV3SpokePool} from "../../interfaces/IAcrossV3SpokePool.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
+import {Errors} from "../../libraries/Errors.sol";
 
 contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     using SafeERC20 for IERC20;
@@ -72,7 +73,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
                     - IERC20(receipt.inputToken).balanceOf(address(this));
             }
         } else if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).contains(transferId)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
         return 0;
     }
@@ -83,7 +84,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         override
     {
         if (msg.sender != receiveSource) {
-            revert UnauthorizedSource();
+            revert Errors.UnauthorizedSource();
         }
         _receiveInBridgeTransfer(encodedMessage, tokenSent, amount);
     }

@@ -6,7 +6,6 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
@@ -15,6 +14,8 @@ import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
+import {BridgeController} from "../bridge/controller/BridgeController.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
@@ -61,7 +62,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
     modifier onlyFactory() {
         if (msg.sender != ISpokeCoreRegistry(registry).coreFactory()) {
-            revert NotFactory();
+            revert Errors.NotFactory();
         }
         _;
     }
@@ -75,7 +76,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     function getHubBridgeAdapter(uint16 bridgeId) external view override returns (address) {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         if ($._hubBridgeAdapters[bridgeId] == address(0)) {
-            revert HubBridgeAdapterNotSet();
+            revert Errors.HubBridgeAdapterNotSet();
         }
         return $._hubBridgeAdapters[bridgeId];
     }
@@ -118,7 +119,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
             address recipient = $._hubBridgeAdapters[bridgeId];
             if (recipient == address(0)) {
-                revert HubBridgeAdapterNotSet();
+                revert Errors.HubBridgeAdapterNotSet();
             }
 
             IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -129,7 +130,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
             _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
         } else if (_isBridgeAdapter(msg.sender)) {
             if (!ICaliber($._caliber).isBaseToken(token)) {
-                revert ICaliber.NotBaseToken();
+                revert Errors.NotBaseToken();
             }
 
             (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
@@ -144,7 +145,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
             IERC20(token).safeTransferFrom(msg.sender, $._caliber, amount);
         } else {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
     }
 
@@ -172,7 +173,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     function setCaliber(address _caliber) external override onlyFactory {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         if ($._caliber != address(0)) {
-            revert CaliberAlreadySet();
+            revert Errors.CaliberAlreadySet();
         }
         $._caliber = _caliber;
 
@@ -183,10 +184,10 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     function setHubBridgeAdapter(uint16 bridgeId, address adapter) external restricted {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         if ($._hubBridgeAdapters[bridgeId] != address(0)) {
-            revert HubBridgeAdapterAlreadySet();
+            revert Errors.HubBridgeAdapterAlreadySet();
         }
         if (adapter == address(0)) {
-            revert ZeroBridgeAdapterAddress();
+            revert Errors.ZeroBridgeAdapterAddress();
         }
         $._hubBridgeAdapters[bridgeId] = adapter;
 
@@ -208,7 +209,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
         if (!ICaliber($._caliber).isBaseToken(token)) {
-            revert ICaliber.NotBaseToken();
+            revert Errors.NotBaseToken();
         }
 
         $._bridgesIn.remove(token);

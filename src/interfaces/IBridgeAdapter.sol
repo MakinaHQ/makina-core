@@ -2,22 +2,6 @@
 pragma solidity 0.8.28;
 
 interface IBridgeAdapter {
-    error BridgeTransferAlreadyCancelled();
-    error BridgeTransferAlreadyClaimed();
-    error BridgeTransferAlreadySent();
-    error InsufficientBalance();
-    error InsufficientOutputAmount();
-    error InvalidInputAmount();
-    error InvalidOutputToken();
-    error InvalidRecipientChainId();
-    error InvalidSenderChainId();
-    error InvalidTransferStatus();
-    error MaxValueLossExceeded();
-    error MessageAlreadyAuthorized();
-    error NotController();
-    error UnauthorizedSource();
-    error UnexpectedMessage();
-
     event AuthorizeInBridgeTransfer(bytes32 indexed messageHash);
     event CancelOutBridgeTransfer(uint256 indexed transferId);
     event ClaimInBridgeTransfer(uint256 indexed transferId);

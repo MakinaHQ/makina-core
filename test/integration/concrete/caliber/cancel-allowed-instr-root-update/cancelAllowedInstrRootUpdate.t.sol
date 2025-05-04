@@ -2,19 +2,19 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_CancelAllowedInstrRootUpdate_RevertWhen_CallerUnauthorized() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.cancelAllowedInstrRootUpdate();
     }
 
     function test_CancelAllowedInstrRootUpdate_RevertGiven_NoPendingUpdate() public {
-        vm.expectRevert(ICaliber.NoPendingUpdate.selector);
+        vm.expectRevert(Errors.NoPendingUpdate.selector);
         vm.prank(riskManager);
         caliber.cancelAllowedInstrRootUpdate();
     }
@@ -28,7 +28,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
 
         vm.warp(effectiveUpdateTime);
 
-        vm.expectRevert(ICaliber.NoPendingUpdate.selector);
+        vm.expectRevert(Errors.NoPendingUpdate.selector);
         vm.prank(riskManager);
         caliber.cancelAllowedInstrRootUpdate();
     }

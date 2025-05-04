@@ -2,14 +2,14 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotRM() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.scheduleAllowedInstrRootUpdate(bytes32(0));
     }
 
@@ -21,7 +21,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
 
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
-        vm.expectRevert(ICaliber.ActiveUpdatePending.selector);
+        vm.expectRevert(Errors.ActiveUpdatePending.selector);
         caliber.scheduleAllowedInstrRootUpdate(newRoot);
 
         vm.warp(effectiveUpdateTime);
@@ -34,7 +34,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
     function test_RevertWhen_SameRoot() public {
         bytes32 currentRoot = caliber.allowedInstrRoot();
 
-        vm.expectRevert(ICaliber.SameRoot.selector);
+        vm.expectRevert(Errors.SameRoot.selector);
         vm.prank(riskManager);
         caliber.scheduleAllowedInstrRootUpdate(currentRoot);
     }

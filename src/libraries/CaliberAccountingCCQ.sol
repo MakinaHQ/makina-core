@@ -10,10 +10,9 @@ import {
 } from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 library CaliberAccountingCCQ {
-    error UnexpectedResultLength();
-
     function parseAndVerifyQueryResponse(
         address wormhole,
         bytes memory response,
@@ -36,7 +35,7 @@ library CaliberAccountingCCQ {
 
         // Validate that only one result is returned.
         if (eqr.results.length != 1) {
-            revert UnexpectedResultLength();
+            revert Errors.UnexpectedResultLength();
         }
 
         // Validate addresses and function signatures.

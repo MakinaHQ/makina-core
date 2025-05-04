@@ -5,12 +5,6 @@ import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
 interface ICaliberMailbox is IMachineEndpoint {
-    error CaliberAlreadySet();
-    error HubBridgeAdapterAlreadySet();
-    error HubBridgeAdapterNotSet();
-    error NotFactory();
-    error ZeroBridgeAdapterAddress();
-
     event CaliberSet(address indexed caliber);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 

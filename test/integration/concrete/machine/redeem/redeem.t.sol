@@ -5,7 +5,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
@@ -22,12 +22,12 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.redeem(1e18, address(this), 0);
     }
 
     function test_RevertWhen_CallerNotRedeemer() public {
-        vm.expectRevert(IMachine.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.redeem(1e18, address(this), 0);
     }
 
@@ -48,7 +48,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
 
         // redeem shares
         uint256 expectedAssets = machine.convertToAssets(shares);
-        vm.expectRevert(abi.encodeWithSelector(IMachine.ExceededMaxWithdraw.selector, expectedAssets, inputAmount - 1));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ExceededMaxWithdraw.selector, expectedAssets, inputAmount - 1));
         vm.prank(machineRedeemer);
         machine.redeem(shares, address(this), expectedAssets);
     }
@@ -66,7 +66,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
 
         // try redeeming shares
         uint256 expectedAssets = machine.convertToAssets(shares);
-        vm.expectRevert(IMachine.SlippageProtection.selector);
+        vm.expectRevert(Errors.SlippageProtection.selector);
         vm.prank(machineRedeemer);
         machine.redeem(shares, address(this), expectedAssets + 1);
     }

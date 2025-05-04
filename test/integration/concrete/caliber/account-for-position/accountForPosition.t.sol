@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -35,7 +36,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
 
-        vm.expectRevert(ICaliber.PositionDoesNotExist.selector);
+        vm.expectRevert(Errors.PositionDoesNotExist.selector);
         caliber.accountForPosition(instruction);
     }
 
@@ -43,7 +44,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
 
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.accountForPosition(instruction);
     }
 
@@ -52,31 +53,31 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
         ICaliber.Instruction memory instruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong affected tokens list
         instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.affectedTokens[0] = address(0);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong commands
         instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.commands[2] = instruction.commands[1];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong state
         instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.state[2] = instruction.state[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong bitmap
         instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.stateBitmap = 0;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
     }
 
@@ -85,7 +86,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         // replace end flag with null value in accounting output state
         delete instruction.state[1];
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        vm.expectRevert(Errors.InvalidAccounting.selector);
         caliber.accountForPosition(instruction);
     }
 
@@ -121,7 +122,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         skip(caliber.timelockDuration());
 
         // accounting cannot be executed after the update takes effect
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // schedule root update with the correct root
@@ -129,7 +130,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
 
         // accounting cannot be executed while the update is pending
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         skip(caliber.timelockDuration());

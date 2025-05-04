@@ -6,6 +6,7 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {SwapModule_Unit_Concrete_Test} from "../SwapModule.t.sol";
 
@@ -43,17 +44,17 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: 0
         });
 
-        vm.expectRevert(ISwapModule.SwapperTargetsNotSet.selector);
+        vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
         swapModule.swap(order);
 
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(1), address(0));
-        vm.expectRevert(ISwapModule.SwapperTargetsNotSet.selector);
+        vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
         swapModule.swap(order);
 
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(0), address(1));
-        vm.expectRevert(ISwapModule.SwapperTargetsNotSet.selector);
+        vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
         swapModule.swap(order);
     }
 
@@ -115,7 +116,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: 0
         });
 
-        vm.expectRevert(ISwapModule.SwapFailed.selector);
+        vm.expectRevert(Errors.SwapFailed.selector);
         swapModule.swap(order);
     }
 
@@ -138,7 +139,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: previewSwap + 1
         });
 
-        vm.expectRevert(ISwapModule.AmountOutTooLow.selector);
+        vm.expectRevert(Errors.AmountOutTooLow.selector);
         swapModule.swap(order);
     }
 

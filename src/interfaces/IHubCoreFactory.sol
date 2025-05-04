@@ -8,9 +8,6 @@ import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
 interface IHubCoreFactory is IBridgeAdapterFactory {
-    error NotMachine();
-    error NotPreDepositVault();
-
     event HubCaliberDeployed(address indexed caliber);
     event PreDepositVaultDeployed(address indexed preDepositVault, address indexed shareToken);
     event MachineDeployed(address indexed machine, address indexed shareToken, address indexed machineOwner);

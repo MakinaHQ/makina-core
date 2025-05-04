@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeController} from "src/interfaces/IBridgeController.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
@@ -11,7 +11,7 @@ abstract contract GetMaxBridgeLossBps_Integration_Concrete_Test is BridgeControl
     }
 
     function test_RevertWhen_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         bridgeController.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID);
     }
 

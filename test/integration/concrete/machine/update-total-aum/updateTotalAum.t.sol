@@ -11,8 +11,8 @@ import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.so
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -41,7 +41,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.updateTotalAum();
     }
 
@@ -64,7 +64,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         skip(1);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, SUPPLY_POS_ID));
         machine.updateTotalAum();
     }
 
@@ -100,7 +100,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         skip(1);
 
         // data age exceeds staleness threshold
-        vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
         machine.updateTotalAum();
     }
 
@@ -139,7 +139,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update now reverts
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.updateTotalAum();
     }
 
@@ -180,7 +180,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update now reverts
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.updateTotalAum();
     }
 

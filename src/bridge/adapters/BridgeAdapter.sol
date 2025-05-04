@@ -9,6 +9,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
+import {Errors} from "../../libraries/Errors.sol";
 
 abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     using Math for uint256;
@@ -75,7 +76,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
     modifier onlyController() {
         if (msg.sender != _getBridgeAdapterStorage()._controller) {
-            revert NotController();
+            revert Errors.NotController();
         }
         _;
     }
@@ -145,7 +146,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         if ($._expectedInMessages[messageHash]) {
-            revert MessageAlreadyAuthorized();
+            revert Errors.MessageAlreadyAuthorized();
         }
         $._expectedInMessages[messageHash] = true;
 
@@ -158,7 +159,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         InBridgeTransfer storage receipt = $._incomingTransfers[id];
         if (!_getSet($._pendingInTransferIds[receipt.outputToken]).remove(id)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
 
         IERC20(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
@@ -193,7 +194,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
         if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
         _getSet($._sentOutTransferIds[receipt.inputToken]).add(id);
         $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
@@ -211,12 +212,12 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
                 IERC20(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
             ) {
-                revert InsufficientBalance();
+                revert Errors.InsufficientBalance();
             }
         } else if (_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
             $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
         } else {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
 
         IERC20(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
@@ -235,23 +236,23 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         bytes32 messageHash = keccak256(encodedMessage);
         if (!$._expectedInMessages[messageHash]) {
-            revert UnexpectedMessage();
+            revert Errors.UnexpectedMessage();
         }
         delete $._expectedInMessages[messageHash];
 
         BridgeMessage memory message = abi.decode(encodedMessage, (BridgeMessage));
 
         if (message.destinationChainId != block.chainid) {
-            revert InvalidRecipientChainId();
+            revert Errors.InvalidRecipientChainId();
         }
         if (receivedToken != message.outputToken) {
-            revert InvalidOutputToken();
+            revert Errors.InvalidOutputToken();
         }
         if (receivedAmount < message.minOutputAmount) {
-            revert InsufficientOutputAmount();
+            revert Errors.InsufficientOutputAmount();
         }
         if (message.inputAmount < receivedAmount) {
-            revert InvalidInputAmount();
+            revert Errors.InvalidInputAmount();
         }
 
         uint256 id = $._nextInTransferId++;

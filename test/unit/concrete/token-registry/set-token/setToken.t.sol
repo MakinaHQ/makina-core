@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {TokenRegistry_Unit_Concrete_Test} from "../TokenRegistry.t.sol";
 
@@ -16,23 +17,23 @@ contract SetToken_Unit_Concrete_Test is TokenRegistry_Unit_Concrete_Test {
     function test_RevertWhen_ZeroTokenAddress() public {
         vm.startPrank(dao);
 
-        vm.expectRevert(abi.encodeWithSelector(ITokenRegistry.ZeroTokenAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroTokenAddress.selector));
         tokenRegistry.setToken(address(0), 1, address(1));
 
-        vm.expectRevert(abi.encodeWithSelector(ITokenRegistry.ZeroTokenAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroTokenAddress.selector));
         tokenRegistry.setToken(address(0), 0, address(1));
 
-        vm.expectRevert(abi.encodeWithSelector(ITokenRegistry.ZeroTokenAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroTokenAddress.selector));
         tokenRegistry.setToken(address(1), 1, address(0));
 
-        vm.expectRevert(abi.encodeWithSelector(ITokenRegistry.ZeroTokenAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroTokenAddress.selector));
         tokenRegistry.setToken(address(1), 0, address(0));
     }
 
     function test_RevertWhen_ZeroChainId() public {
         vm.startPrank(dao);
 
-        vm.expectRevert(abi.encodeWithSelector(ITokenRegistry.ZeroChainId.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroChainId.selector));
         tokenRegistry.setToken(address(1), 0, address(2));
     }
 

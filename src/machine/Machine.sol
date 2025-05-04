@@ -22,6 +22,7 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
@@ -89,7 +90,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
         address oracleRegistry = IHubCoreRegistry(registry).oracleRegistry();
         if (!IOracleRegistry(oracleRegistry).isFeedRouteRegistered(_accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
+            revert Errors.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
         uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
@@ -216,7 +217,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
-            revert InvalidChainId();
+            revert Errors.InvalidChainId();
         }
         return (scData.netAum, scData.positions, scData.baseTokens, scData.timestamp);
     }
@@ -225,7 +226,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
-            revert InvalidChainId();
+            revert Errors.InvalidChainId();
         }
         return scData.mailbox;
     }
@@ -234,11 +235,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
-            revert InvalidChainId();
+            revert Errors.InvalidChainId();
         }
         address adapter = scData.bridgeAdapters[bridgeId];
         if (adapter == address(0)) {
-            revert SpokeBridgeAdapterNotSet();
+            revert Errors.SpokeBridgeAdapterNotSet();
         }
         return adapter;
     }
@@ -272,7 +273,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
             if (caliberData.mailbox == address(0)) {
-                revert InvalidChainId();
+                revert Errors.InvalidChainId();
             }
 
             if (refund) {
@@ -281,7 +282,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
                 caliberData.machineBridgesOut.set(token, newMOut);
                 (, uint256 cIn) = caliberData.caliberBridgesIn.tryGet(token);
                 if (cIn > newMOut) {
-                    revert BridgeStateMismatch();
+                    revert Errors.BridgeStateMismatch();
                 }
             } else {
                 (, uint256 mIn) = caliberData.machineBridgesIn.tryGet(token);
@@ -289,11 +290,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
                 caliberData.machineBridgesIn.set(token, newMIn);
                 (, uint256 cOut) = caliberData.caliberBridgesOut.tryGet(token);
                 if (newMIn > cOut) {
-                    revert BridgeStateMismatch();
+                    revert Errors.BridgeStateMismatch();
                 }
             }
         } else if (msg.sender != $._hubCaliber) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
@@ -305,11 +306,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != mechanic()) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         if (!ICaliber($._hubCaliber).isBaseToken(token)) {
-            revert ICaliber.NotBaseToken();
+            revert Errors.NotBaseToken();
         }
         IERC20(token).safeTransfer($._hubCaliber, amount);
 
@@ -331,7 +332,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != mechanic()) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         address outputToken = ITokenRegistry(IHubCoreRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
@@ -339,12 +340,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
         if (caliberData.mailbox == address(0)) {
-            revert InvalidChainId();
+            revert Errors.InvalidChainId();
         }
 
         address recipient = caliberData.bridgeAdapters[bridgeId];
         if (recipient == address(0)) {
-            revert SpokeBridgeAdapterNotSet();
+            revert Errors.SpokeBridgeAdapterNotSet();
         }
 
         (bool exists, uint256 mOut) = caliberData.machineBridgesOut.tryGet(token);
@@ -366,7 +367,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         notRecoveryMode
     {
         if (msg.sender != mechanic()) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         _sendOutBridgeTransfer(bridgeId, transferId, data);
@@ -412,16 +413,16 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._depositor) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         uint256 shares = convertToShares(assets);
         uint256 _maxMint = maxMint();
         if (shares > _maxMint) {
-            revert ExceededMaxMint(shares, _maxMint);
+            revert Errors.ExceededMaxMint(shares, _maxMint);
         }
         if (shares < minShares) {
-            revert SlippageProtection();
+            revert Errors.SlippageProtection();
         }
 
         IERC20($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
@@ -443,17 +444,17 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         MachineStorage storage $ = _getMachineStorage();
 
         if (msg.sender != $._redeemer) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         uint256 assets = convertToAssets(shares);
 
         uint256 _maxWithdraw = maxWithdraw();
         if (assets > _maxWithdraw) {
-            revert ExceededMaxWithdraw(assets, _maxWithdraw);
+            revert Errors.ExceededMaxWithdraw(assets, _maxWithdraw);
         }
         if (assets < minAssets) {
-            revert SlippageProtection();
+            revert Errors.SlippageProtection();
         }
 
         IERC20($._accountingToken).safeTransfer(receiver, assets);
@@ -488,14 +489,14 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         address[] calldata adapters
     ) external restricted {
         if (!IChainRegistry(IHubCoreRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
-            revert IChainRegistry.EvmChainIdNotRegistered(foreignChainId);
+            revert Errors.EvmChainIdNotRegistered(foreignChainId);
         }
 
         MachineStorage storage $ = _getMachineStorage();
         SpokeCaliberData storage caliberData = $._spokeCalibersData[foreignChainId];
 
         if (caliberData.mailbox != address(0)) {
-            revert SpokeCaliberAlreadySet();
+            revert Errors.SpokeCaliberAlreadySet();
         }
         $._foreignChainIds.push(foreignChainId);
         caliberData.mailbox = spokeCaliberMailbox;
@@ -504,7 +505,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
         uint256 len = bridges.length;
         if (len != adapters.length) {
-            revert MismatchedLength();
+            revert Errors.MismatchedLength();
         }
         for (uint256 i; i < len;) {
             _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);
@@ -524,7 +525,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
 
         if (caliberData.mailbox == address(0)) {
-            revert InvalidChainId();
+            revert Errors.InvalidChainId();
         }
         _setSpokeBridgeAdapter(foreignChainId, bridgeId, adapter);
     }
@@ -625,10 +626,10 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
 
         if (caliberData.bridgeAdapters[bridgeId] != address(0)) {
-            revert SpokeBridgeAdapterAlreadySet();
+            revert Errors.SpokeBridgeAdapterAlreadySet();
         }
         if (adapter == address(0)) {
-            revert ZeroBridgeAdapterAddress();
+            revert Errors.ZeroBridgeAdapterAddress();
         }
         caliberData.bridgeAdapters[bridgeId] = adapter;
 
@@ -642,7 +643,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             if (
                 newlyAdded && !IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)
             ) {
-                revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
+                revert Errors.PriceFeedRouteNotRegistered(token);
             }
         }
     }

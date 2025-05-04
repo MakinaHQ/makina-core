@@ -6,8 +6,8 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -23,7 +23,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
 
     function test_RevertWhen_TokenNotBaseToken() public {
         address token = makeAddr("token");
-        vm.expectRevert(ICaliber.NotBaseToken.selector);
+        vm.expectRevert(Errors.NotBaseToken.selector);
         vm.prank(dao);
         caliberMailbox.resetBridgingState(token);
     }

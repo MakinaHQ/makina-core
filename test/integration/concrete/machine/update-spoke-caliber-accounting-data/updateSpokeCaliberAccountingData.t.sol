@@ -6,12 +6,9 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {VerificationFailed} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
-import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
-import {CaliberAccountingCCQ} from "src/libraries/CaliberAccountingCCQ.sol";
-import {MachineUtils} from "src/libraries/MachineUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -72,9 +69,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IChainRegistry.WhChainIdNotRegistered.selector, WORMHOLE_SPOKE_CHAIN_ID + 1)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.WhChainIdNotRegistered.selector, WORMHOLE_SPOKE_CHAIN_ID + 1));
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -94,7 +89,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
-        vm.expectRevert(IMachine.InvalidChainId.selector);
+        vm.expectRevert(Errors.InvalidChainId.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -128,7 +123,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(MachineUtils.StaleData.selector);
+        vm.expectRevert(Errors.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // update data
@@ -147,7 +142,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
-        vm.expectRevert(MachineUtils.StaleData.selector);
+        vm.expectRevert(Errors.StaleData.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -166,7 +161,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
-        vm.expectRevert(CaliberAccountingCCQ.UnexpectedResultLength.selector);
+        vm.expectRevert(Errors.UnexpectedResultLength.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -189,9 +184,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         );
 
         vm.expectRevert(
-            abi.encodeWithSelector(
-                ITokenRegistry.LocalTokenNotRegistered.selector, spokeAccountingTokenAddr, SPOKE_CHAIN_ID
-            )
+            abi.encodeWithSelector(Errors.LocalTokenNotRegistered.selector, spokeAccountingTokenAddr, SPOKE_CHAIN_ID)
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }

@@ -7,6 +7,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {AggregatorV2V3Interface} from "../interfaces/AggregatorV2V3Interface.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     using Math for uint256;
@@ -49,7 +50,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     function getFeedRoute(address token) external view override returns (address, address) {
         FeedRoute memory route = _getOracleRegistryStorage()._feedRoutes[token];
         if (route.feed1 == address(0)) {
-            revert PriceFeedRouteNotRegistered(token);
+            revert Errors.PriceFeedRouteNotRegistered(token);
         }
         return (route.feed1, route.feed2);
     }
@@ -61,10 +62,10 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         FeedRoute memory quoteFR = $._feedRoutes[quoteToken];
 
         if (baseFR.feed1 == address(0)) {
-            revert PriceFeedRouteNotRegistered(baseToken);
+            revert Errors.PriceFeedRouteNotRegistered(baseToken);
         }
         if (quoteFR.feed1 == address(0)) {
-            revert PriceFeedRouteNotRegistered(quoteToken);
+            revert Errors.PriceFeedRouteNotRegistered(quoteToken);
         }
 
         uint8 baseFRDecimalsSum = _getFeedDecimals(baseFR.feed1) + _getFeedDecimals(baseFR.feed2);
@@ -99,12 +100,12 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
 
         if (feed1 == address(0)) {
-            revert InvalidFeedRoute();
+            revert Errors.InvalidFeedRoute();
         }
 
         uint8 tokenDecimals = DecimalsUtils._getDecimals(token);
         if (tokenDecimals < DecimalsUtils.MIN_DECIMALS || tokenDecimals > DecimalsUtils.MAX_DECIMALS) {
-            revert InvalidDecimals();
+            revert Errors.InvalidDecimals();
         }
 
         $._feedRoutes[token] = FeedRoute({feed1: feed1, feed2: feed2});
@@ -134,10 +135,10 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         }
         (, int256 answer,, uint256 updatedAt,) = AggregatorV2V3Interface(feed).latestRoundData();
         if (answer < 0) {
-            revert NegativeTokenPrice(feed);
+            revert Errors.NegativeTokenPrice(feed);
         }
         if (block.timestamp - updatedAt >= $._feedStaleThreshold[feed]) {
-            revert PriceFeedStale(feed, updatedAt);
+            revert Errors.PriceFeedStale(feed, updatedAt);
         }
         return uint256(answer);
     }

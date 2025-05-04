@@ -9,8 +9,7 @@ import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.so
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -76,9 +75,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         deal(address(baseToken2), address(bridgeAdapterAddr), 1, true);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         vm.prank(dao);
         machine.resetBridgingState(address(baseToken2));
     }
@@ -242,7 +239,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update now reverts
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.updateTotalAum();
 
         // reset bridge-related state in machine

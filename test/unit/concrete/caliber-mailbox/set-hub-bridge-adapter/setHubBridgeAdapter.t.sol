@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Unit_Concrete_Spoke_Test} from "../../UnitConcrete.t.sol";
 
@@ -18,21 +19,21 @@ contract SetHubBridgeAdapter_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
 
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(1));
 
-        vm.expectRevert(ICaliberMailbox.HubBridgeAdapterAlreadySet.selector);
+        vm.expectRevert(Errors.HubBridgeAdapterAlreadySet.selector);
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(1));
 
-        vm.expectRevert(ICaliberMailbox.HubBridgeAdapterAlreadySet.selector);
+        vm.expectRevert(Errors.HubBridgeAdapterAlreadySet.selector);
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(2));
     }
 
     function test_RevertWhen_ZeroBridgeAdapterAddress() public {
-        vm.expectRevert(ICaliberMailbox.ZeroBridgeAdapterAddress.selector);
+        vm.expectRevert(Errors.ZeroBridgeAdapterAddress.selector);
         vm.prank(dao);
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(0));
     }
 
     function test_SetHubBridgeAdapter() public {
-        vm.expectRevert(ICaliberMailbox.HubBridgeAdapterNotSet.selector);
+        vm.expectRevert(Errors.HubBridgeAdapterNotSet.selector);
         caliberMailbox.getHubBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
         vm.expectEmit(true, true, false, false, address(caliberMailbox));

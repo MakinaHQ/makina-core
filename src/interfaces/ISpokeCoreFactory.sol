@@ -6,8 +6,6 @@ import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
 interface ISpokeCoreFactory is IBridgeAdapterFactory {
-    error NotCaliberMailbox();
-
     event SpokeCaliberCreated(address indexed machine, address indexed caliber, address indexed mailbox);
 
     /// @notice Caliber => Is a caliber deployed by this factory

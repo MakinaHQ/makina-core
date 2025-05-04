@@ -16,6 +16,7 @@ import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubCoreFactory {
     /// @custom:storage-location erc7201:makina.storage.HubCoreFactory
@@ -91,7 +92,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
         if (!$._isPreDepositVault[preDepositVault]) {
-            revert NotPreDepositVault();
+            revert Errors.NotPreDepositVault();
         }
         address accountingToken = IPreDepositVault(preDepositVault).accountingToken();
         address shareToken = IPreDepositVault(preDepositVault).shareToken();
@@ -141,7 +142,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
     /// @inheritdoc IBridgeAdapterFactory
     function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
         if (!_getHubCoreFactoryStorage()._isMachine[msg.sender]) {
-            revert NotMachine();
+            revert Errors.NotMachine();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);
     }

@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeAdapter_Unit_Concrete_Test} from "../BridgeAdapter.t.sol";
 
@@ -9,7 +10,7 @@ abstract contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is BridgeA
     function setUp() public virtual override {}
 
     function test_RevertWhen_CallerNotController() public {
-        vm.expectRevert(IBridgeAdapter.NotController.selector);
+        vm.expectRevert(Errors.NotController.selector);
         bridgeAdapter.authorizeInBridgeTransfer(bytes32(0));
     }
 
@@ -20,7 +21,7 @@ abstract contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is BridgeA
 
         bridgeAdapter.authorizeInBridgeTransfer(messageHash);
 
-        vm.expectRevert(IBridgeAdapter.MessageAlreadyAuthorized.selector);
+        vm.expectRevert(Errors.MessageAlreadyAuthorized.selector);
         bridgeAdapter.authorizeInBridgeTransfer(messageHash);
 
         bytes32 messageHash2 = bytes32("67890");

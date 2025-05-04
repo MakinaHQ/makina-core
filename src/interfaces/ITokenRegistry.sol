@@ -3,11 +3,6 @@ pragma solidity 0.8.28;
 
 /// @notice This interface is used to map token addresses from one evm chain to another.
 interface ITokenRegistry {
-    error ForeignTokenNotRegistered(address _token, uint256 _foreignEvmChainId);
-    error LocalTokenNotRegistered(address _token, uint256 _foreignEvmChainId);
-    error ZeroTokenAddress();
-    error ZeroChainId();
-
     event TokenRegistered(address indexed localToken, uint256 indexed evmChainId, address indexed foreignToken);
 
     /// @notice Local token address => Foreign EVM chain ID => Foreign Token address

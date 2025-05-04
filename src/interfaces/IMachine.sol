@@ -8,22 +8,6 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
-    error CaliberAccountingStale(uint256 caliberChainId);
-    error BridgeStateMismatch();
-    error InvalidChainId();
-    error InvalidDecimals();
-    error ExceededMaxMint(uint256 shares, uint256 max);
-    error ExceededMaxWithdraw(uint256 assets, uint256 max);
-    error MachineMailboxDoesNotExist();
-    error MismatchedLength();
-    error NotMailbox();
-    error SlippageProtection();
-    error SpokeBridgeAdapterAlreadySet();
-    error SpokeBridgeAdapterNotSet();
-    error SpokeCaliberAlreadySet();
-    error UnauthorizedCaller();
-    error ZeroBridgeAdapterAddress();
-
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);

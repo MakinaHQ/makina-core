@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
@@ -31,7 +32,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
 
         skip(1);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, SUPPLY_POS_ID));
         caliberMailbox.getSpokeCaliberAccountingData();
     }
 

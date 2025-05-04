@@ -2,15 +2,6 @@
 pragma solidity 0.8.28;
 
 interface IPreDepositVault {
-    error ExceededMaxDeposit();
-    error InvalidDecimals();
-    error NotFactory();
-    error NotPendingMachine();
-    error NotMigrated();
-    error Migrated();
-    error SlippageProtection();
-    error UnauthorizedCaller();
-
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event MigrateToMachine(address indexed machine);
     event WhitelistModeChanged(bool indexed enabled);

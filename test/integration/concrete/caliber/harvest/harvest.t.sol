@@ -2,8 +2,8 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -31,11 +31,11 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         ICaliber.Instruction memory instruction;
         ISwapModule.SwapOrder[] memory swapOrders;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.harvest(instruction, swapOrders);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.harvest(instruction, swapOrders);
     }
 
@@ -61,7 +61,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
-        vm.expectRevert(ICaliber.InvalidOutputToken.selector);
+        vm.expectRevert(Errors.InvalidOutputToken.selector);
         vm.prank(mechanic);
         caliber.harvest(instruction, swapOrders);
     }
@@ -78,11 +78,11 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         ICaliber.Instruction memory instruction;
         ISwapModule.SwapOrder[] memory swapOrders;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.harvest(instruction, swapOrders);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.harvest(instruction, swapOrders);
     }
 
@@ -108,7 +108,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             WeirollUtils._buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.harvest(instruction, swapOrders);
 
@@ -122,7 +122,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             minOutputAmount: 0
         });
 
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         vm.prank(securityCouncil);
         caliber.harvest(instruction, swapOrders);
     }
@@ -144,7 +144,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
         vm.prank(sender);
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.harvest(instruction, swapOrders);
     }
 
@@ -159,7 +159,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         instruction = WeirollUtils._buildMockRewardTokenHarvestInstruction(
             address(caliber), address(accountingToken), harvestAmount
         );
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong commands
@@ -167,7 +167,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             address(caliber), address(accountingToken), harvestAmount
         );
         delete instruction.commands[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong state
@@ -175,7 +175,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             address(caliber), address(accountingToken), harvestAmount
         );
         delete instruction.state[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong bitmap
@@ -183,7 +183,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             address(caliber), address(accountingToken), harvestAmount
         );
         instruction.stateBitmap = 0;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         vm.stopPrank();
@@ -210,7 +210,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         // instruction cannot be executed after the update takes effect
         vm.prank(sender);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // schedule root update with the correct root
@@ -219,7 +219,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         // instruction cannot be executed while the update is pending
         vm.prank(sender);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         skip(caliber.timelockDuration());
@@ -271,7 +271,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
             minOutputAmount: previewOutputAmount
         });
         vm.prank(sender);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.harvest(instruction, swapOrders);
     }
 

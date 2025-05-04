@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
@@ -24,7 +25,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
 
         skip(1);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, VAULT_POS_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, VAULT_POS_ID));
         caliber.getDetailedAum();
     }
 

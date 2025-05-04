@@ -5,7 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -39,16 +39,16 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
     function test_RevertGiven_InvalidTransferStatus() public {
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(mechanic);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
@@ -81,11 +81,11 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 

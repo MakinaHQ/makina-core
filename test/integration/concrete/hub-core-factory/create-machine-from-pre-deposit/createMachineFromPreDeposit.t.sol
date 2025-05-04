@@ -9,6 +9,7 @@ import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 
@@ -27,7 +28,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
-        vm.expectRevert(IHubCoreFactory.NotPreDepositVault.selector);
+        vm.expectRevert(Errors.NotPreDepositVault.selector);
         vm.prank(dao);
         hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
     }

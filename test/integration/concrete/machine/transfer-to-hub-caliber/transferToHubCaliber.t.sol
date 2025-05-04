@@ -3,25 +3,24 @@ pragma solidity 0.8.28;
 
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract TransferToHubCaliber_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.transferToHubCaliber(address(0), 0);
     }
 
     function test_RevertWhen_CallerNotMechanic() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.transferToHubCaliber(address(0), 0);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.transferToHubCaliber(address(0), 0);
     }
 
@@ -30,7 +29,7 @@ contract TransferToHubCaliber_Integration_Concrete_Test is Machine_Integration_C
         deal(address(baseToken), address(caliber), inputAmount, true);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.NotBaseToken.selector);
+        vm.expectRevert(Errors.NotBaseToken.selector);
         machine.transferToHubCaliber(address(baseToken), inputAmount);
     }
 

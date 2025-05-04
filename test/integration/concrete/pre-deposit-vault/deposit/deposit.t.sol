@@ -4,12 +4,13 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {PreDepositVault_Integration_Concrete_Test} from "../PreDepositVault.t.sol";
 
 contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concrete_Test {
     function test_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         preDepositVault.deposit(0, address(0), 0);
     }
 
@@ -28,7 +29,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         deal(address(accountingToken), address(this), inputAmount, true);
 
         accountingToken.approve(address(preDepositVault), inputAmount);
-        vm.expectRevert(IPreDepositVault.ExceededMaxDeposit.selector);
+        vm.expectRevert(Errors.ExceededMaxDeposit.selector);
         preDepositVault.deposit(inputAmount, address(this), 0);
     }
 
@@ -37,7 +38,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
     }
 
     function test_RevertWhen_CallerNotWhitelisted_WhitelistMode() public whitelistMode {
-        vm.expectRevert(IPreDepositVault.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         preDepositVault.deposit(0, address(0), 0);
     }
 
@@ -61,7 +62,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
 
         baseToken.approve(address(preDepositVault), inputAmount);
 
-        vm.expectRevert(IPreDepositVault.SlippageProtection.selector);
+        vm.expectRevert(Errors.SlippageProtection.selector);
         preDepositVault.deposit(inputAmount, address(this), expectedShares + 1);
     }
 

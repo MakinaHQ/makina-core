@@ -2,7 +2,9 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+
 import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     /// @custom:storage-location erc7201:makina.storage.ChainRegistry
@@ -43,7 +45,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     function evmToWhChainId(uint256 _evmChainId) external view override returns (uint16) {
         uint16 whChainId = _getChainRegistryStorage()._evmToWhChainId[_evmChainId];
         if (whChainId == 0) {
-            revert EvmChainIdNotRegistered(_evmChainId);
+            revert Errors.EvmChainIdNotRegistered(_evmChainId);
         }
         return whChainId;
     }
@@ -52,7 +54,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     function whToEvmChainId(uint16 _whChainId) external view override returns (uint256) {
         uint256 evmChainId = _getChainRegistryStorage()._whToEvmChainId[_whChainId];
         if (evmChainId == 0) {
-            revert WhChainIdNotRegistered(_whChainId);
+            revert Errors.WhChainIdNotRegistered(_whChainId);
         }
         return evmChainId;
     }
@@ -61,7 +63,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     function setChainIds(uint256 _evmChainId, uint16 _whChainId) external restricted {
         ChainRegistryStorage storage $ = _getChainRegistryStorage();
         if (_evmChainId == 0 || _whChainId == 0) {
-            revert ZeroChainId();
+            revert Errors.ZeroChainId();
         }
         $._evmToWhChainId[_evmChainId] = _whChainId;
         $._whToEvmChainId[_whChainId] = _evmChainId;

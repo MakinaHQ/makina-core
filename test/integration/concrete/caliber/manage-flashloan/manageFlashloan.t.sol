@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {VM} from "@enso-weiroll/VM.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
@@ -29,7 +30,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
                 VM.ExecutionFailed.selector,
                 0,
                 address(flashLoanModule),
-                string(abi.encodePacked(ICaliber.ManageFlashLoanReentrantCall.selector))
+                string(abi.encodePacked(Errors.ManageFlashLoanReentrantCall.selector))
             )
         );
         vm.prank(mechanic);
@@ -38,13 +39,13 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
 
     function test_RevertWhen_CallerNotFlashLoanModule() public {
         ICaliber.Instruction memory dummyInstruction;
-        vm.expectRevert(ICaliber.NotFlashLoanModule.selector);
+        vm.expectRevert(Errors.NotFlashLoanModule.selector);
         caliber.manageFlashLoan(dummyInstruction, address(0), 0);
     }
 
     function test_RevertWhen_DirectCall() public {
         ICaliber.Instruction memory dummyInstruction;
-        vm.expectRevert(ICaliber.DirectManageFlashLoanCall.selector);
+        vm.expectRevert(Errors.DirectManageFlashLoanCall.selector);
         vm.prank(address(flashLoanModule));
         caliber.manageFlashLoan(dummyInstruction, address(0), 0);
     }
@@ -68,7 +69,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
                 VM.ExecutionFailed.selector,
                 0,
                 address(flashLoanModule),
-                string(abi.encodePacked(ICaliber.InvalidInstructionType.selector))
+                string(abi.encodePacked(Errors.InvalidInstructionType.selector))
             )
         );
         vm.prank(mechanic);
@@ -85,7 +86,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
             VM.ExecutionFailed.selector,
             0,
             address(flashLoanModule),
-            string(abi.encodePacked(ICaliber.InstructionsMismatch.selector))
+            string(abi.encodePacked(Errors.InstructionsMismatch.selector))
         );
 
         // instructions have different positionId
@@ -122,7 +123,7 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
         // set _isManagedPositionDebt to true
         vm.store(address(caliber), bytes32(uint256(caliberStorageLocation) + 11), bytes32(uint256(1)));
 
-        vm.expectRevert(ICaliber.InvalidDebtFlag.selector);
+        vm.expectRevert(Errors.InvalidDebtFlag.selector);
         vm.prank(address(flashLoanModule));
         caliber.manageFlashLoan(flMgmtInstruction, address(0), 0);
     }

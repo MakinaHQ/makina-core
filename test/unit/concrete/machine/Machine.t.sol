@@ -6,6 +6,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGovernable.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
@@ -98,7 +99,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     }
 
     function test_SetCaliberStaleThreshold_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setCaliberStaleThreshold(2 hours);
     }
 
@@ -140,7 +141,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     }
 
     function test_SetShareLimit_RevertWhen_CallerNotRM() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setShareLimit(1e18);
     }
 

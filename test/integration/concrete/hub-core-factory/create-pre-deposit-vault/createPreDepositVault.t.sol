@@ -6,6 +6,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 
 import {HubCoreFactory_Integration_Concrete_Test} from "../HubCoreFactory.t.sol";
@@ -41,7 +42,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
 
         assertFalse(preDepositVault.migrated());
 
-        vm.expectRevert(IPreDepositVault.NotMigrated.selector);
+        vm.expectRevert(Errors.NotMigrated.selector);
         preDepositVault.machine();
 
         assertEq(preDepositVault.depositToken(), address(baseToken));

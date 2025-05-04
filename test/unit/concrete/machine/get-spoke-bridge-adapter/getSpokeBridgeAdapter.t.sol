@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IMachine} from "src/interfaces/IMachine.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Machine_Unit_Concrete_Test} from "../Machine.t.sol";
 
@@ -10,7 +10,7 @@ contract GetSpokeBridgeAdapter_Integration_Concrete_Test is Machine_Unit_Concret
     address[] public spokeBridgeAdapters;
 
     function test_RevertWhen_InvalidChainId() public {
-        vm.expectRevert(IMachine.InvalidChainId.selector);
+        vm.expectRevert(Errors.InvalidChainId.selector);
         machine.getSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID);
     }
 
@@ -18,7 +18,7 @@ contract GetSpokeBridgeAdapter_Integration_Concrete_Test is Machine_Unit_Concret
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, bridges, spokeBridgeAdapters);
 
-        vm.expectRevert(IMachine.SpokeBridgeAdapterNotSet.selector);
+        vm.expectRevert(Errors.SpokeBridgeAdapterNotSet.selector);
         machine.getSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID);
     }
 

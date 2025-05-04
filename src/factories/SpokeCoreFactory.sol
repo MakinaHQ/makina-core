@@ -11,6 +11,7 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISpokeCoreFactory {
@@ -78,7 +79,7 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, ISp
     /// @inheritdoc IBridgeAdapterFactory
     function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
         if (!_getSpokeCoreFactoryStorage()._isCaliberMailbox[msg.sender]) {
-            revert NotCaliberMailbox();
+            revert Errors.NotCaliberMailbox();
         }
         return _createBridgeAdapter(msg.sender, bridgeId, initData);
     }

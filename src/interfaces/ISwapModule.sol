@@ -2,10 +2,6 @@
 pragma solidity 0.8.28;
 
 interface ISwapModule {
-    error AmountOutTooLow();
-    error SwapperTargetsNotSet();
-    error SwapFailed();
-
     event SwapperTargetsSet(uint16 indexed swapper, address approvalTarget, address executionTarget);
     event Swapped(
         address indexed sender,

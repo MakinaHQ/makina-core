@@ -2,12 +2,6 @@
 pragma solidity 0.8.28;
 
 interface IBridgeController {
-    error BridgeAdapterAlreadyExists();
-    error BridgeAdapterDoesNotExist();
-    error OutTransferDisabled();
-    error MaxValueLossExceeded();
-    error MinOutputAmountExceedsInputAmount();
-
     event BridgeAdapterCreated(uint16 indexed bridgeId, address indexed adapter);
     event MaxBridgeLossBpsChange(
         uint16 indexed bridgeId, uint256 indexed OldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps

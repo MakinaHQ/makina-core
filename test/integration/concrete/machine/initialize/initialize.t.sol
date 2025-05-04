@@ -8,9 +8,9 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -38,9 +38,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(accountingToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(accountingToken2)));
         new BeaconProxy(
             address(machineBeacon),
             abi.encodeCall(
