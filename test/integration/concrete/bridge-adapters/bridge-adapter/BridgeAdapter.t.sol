@@ -8,8 +8,6 @@ import {MockMachineEndpoint} from "test/mocks/MockMachineEndpoint.sol";
 import {Base_Test} from "test/base/Base.t.sol";
 
 abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
-    uint16 public bridgeId;
-
     MockMachineEndpoint public bridgeController1;
     MockMachineEndpoint public bridgeController2;
 

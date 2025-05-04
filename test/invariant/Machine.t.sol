@@ -76,10 +76,10 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         hubCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         spokeCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
 

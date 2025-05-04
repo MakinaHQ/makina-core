@@ -31,7 +31,7 @@ abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concre
 
         vm.startPrank(address(dao));
         spokeCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
 

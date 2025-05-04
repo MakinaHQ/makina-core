@@ -27,23 +27,23 @@ abstract contract Base is DeployViaIr {
         AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
-        HubCoreRegistry hubCoreRegistry;
         TokenRegistry tokenRegistry;
         ChainRegistry chainRegistry;
+        HubCoreRegistry hubCoreRegistry;
+        HubCoreFactory hubCoreFactory;
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon machineBeacon;
         UpgradeableBeacon preDepositVaultBeacon;
-        HubCoreFactory hubCoreFactory;
     }
 
     struct SpokeCore {
         AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
-        SpokeCoreRegistry spokeCoreRegistry;
         TokenRegistry tokenRegistry;
-        UpgradeableBeacon caliberBeacon;
+        SpokeCoreRegistry spokeCoreRegistry;
         SpokeCoreFactory spokeCoreFactory;
+        UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon caliberMailboxBeacon;
     }
 
@@ -290,7 +290,7 @@ abstract contract Base is DeployViaIr {
             uint16 bridgeId = bridgesData[i].bridgeId;
             address baBeacon;
             if (bridgeId == 1) {
-                baBeacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
+                baBeacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
             } else {
                 revert("Bridge not supported");
             }
@@ -351,7 +351,7 @@ abstract contract Base is DeployViaIr {
         caliberMailboxBeacon = new UpgradeableBeacon(caliberMailboxImplemAddr, _dao);
     }
 
-    function _deployAccrossV3BridgeAdapterBeacon(address _dao, address _acrossV3SpokePool)
+    function _deployAcrossV3BridgeAdapterBeacon(address _dao, address _acrossV3SpokePool)
         internal
         returns (UpgradeableBeacon acrossV3BridgeAdapterBeacon)
     {

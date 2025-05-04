@@ -24,7 +24,7 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
 
         acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
 
-        address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
+        address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
         bridgeAdapter1 = IBridgeAdapter(
             address(
                 new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController1), "")))
