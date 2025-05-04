@@ -510,10 +510,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
         emit SpokeCaliberMailboxSet(foreignChainId, spokeCaliberMailbox);
 
-        if (bridges.length != adapters.length) {
+        uint256 len = bridges.length;
+        if (len != adapters.length) {
             revert MismatchedLength();
         }
-        for (uint256 i; i < bridges.length;) {
+        for (uint256 i; i < len;) {
             _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);
 
             unchecked {

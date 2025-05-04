@@ -87,16 +87,22 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
         uint256 len = $._bridgesIn.length();
         data.bridgesIn = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             (address token, uint256 amount) = $._bridgesIn.at(i);
             data.bridgesIn[i] = abi.encode(token, amount);
+            unchecked {
+                ++i;
+            }
         }
 
         len = $._bridgesOut.length();
         data.bridgesOut = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             (address token, uint256 amount) = $._bridgesOut.at(i);
             data.bridgesOut[i] = abi.encode(token, amount);
+            unchecked {
+                ++i;
+            }
         }
     }
 

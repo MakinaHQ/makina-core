@@ -266,11 +266,14 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     function accountForPositionBatch(Instruction[] calldata instructions) external override {
         CaliberStorage storage $ = _getCaliberStorage();
         uint256 len = instructions.length;
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             if (!$._positionIds.contains(instructions[i].positionId)) {
                 revert PositionDoesNotExist();
             }
             _accountForPosition(instructions[i], true);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -280,10 +283,13 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 len = $._positionIds.length();
         uint256 currentTimestamp = block.timestamp;
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             if (currentTimestamp - $._positionById[$._positionIds.at(i)].lastAccountingTime > $._positionStaleThreshold)
             {
                 return false;
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -300,7 +306,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 len = $._positionIds.length();
         bytes[] memory positionsValues = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             uint256 posId = $._positionIds.at(i);
             Position memory pos = $._positionById[posId];
             if (currentTimestamp - $._positionById[posId].lastAccountingTime >= $._positionStaleThreshold) {
@@ -311,16 +317,22 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
                 aum += pos.value;
             }
             positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
+            unchecked {
+                ++i;
+            }
         }
 
         len = $._baseTokens.length();
         bytes[] memory baseTokensValues = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             address bt = $._baseTokens.at(i);
             uint256 btBal = IERC20(bt).balanceOf(address(this));
             uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
             aum += value;
             baseTokensValues[i] = abi.encode(bt, value);
+            unchecked {
+                ++i;
+            }
         }
 
         uint256 netAum = aum > debt ? aum - debt : 0;
@@ -402,8 +414,12 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
-        for (uint256 i; i < swapOrders.length; i++) {
+        uint256 len = swapOrders.length;
+        for (uint256 i; i < len;) {
             _swap(swapOrders[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -573,13 +589,17 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         _checkInstructionIsAllowed(mgmtInstruction);
 
         uint256 affectedTokensValueBefore;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+        uint256 atLen = mgmtInstruction.affectedTokens.length;
+        for (uint256 i; i < atLen;) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
             if (!$._baseTokens.contains(_affectedToken)) {
                 revert InvalidAffectedToken();
             }
             affectedTokensValueBefore +=
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            unchecked {
+                ++i;
+            }
         }
 
         _execute(mgmtInstruction.commands, mgmtInstruction.state);
@@ -587,13 +607,15 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
 
         uint256 affectedTokensValueAfter;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+        for (uint256 i; i < atLen;) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
             affectedTokensValueAfter +=
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            unchecked {
+                ++i;
+            }
         }
 
-        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
         bool isPositionIncrease = change >= 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
@@ -607,15 +629,15 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             revert OngoingCooldown();
         }
 
-        if (isBaseTokenInflow) {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
-                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
-            }
-        } else {
+        if (affectedTokensValueAfter < affectedTokensValueBefore) {
             if (mgmtInstruction.isDebt == isPositionIncrease) {
                 revert InvalidPositionChangeDirection();
             }
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
+        } else {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
+                _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
+            }
         }
 
         $._lastExecutionTimestamp[executionHash] = block.timestamp;
@@ -652,12 +674,15 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (amounts.length != len) {
             revert InvalidAccounting();
         }
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             address token = instruction.affectedTokens[i];
             if (!$._baseTokens.contains(token)) {
                 revert InvalidAffectedToken();
             }
             currentValue += _accountingValueOf(token, amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
 
         if (lastValue > 0 && currentValue == 0) {
@@ -679,15 +704,19 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @dev Decodes the output state of an accounting instruction into an array of amounts.
     function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
-        uint256[] memory amounts = new uint256[](state.length);
+        uint256 len = state.length;
+        uint256[] memory amounts = new uint256[](len);
 
         uint256 count;
-        for (uint256 i; i < state.length; i++) {
+        for (uint256 i; i < len;) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END) {
                 break;
             }
             amounts[i] = uint256(bytes32(state[i]));
-            count++;
+            unchecked {
+                ++count;
+                ++i;
+            }
         }
 
         // Resize the array to the actual number of values.
