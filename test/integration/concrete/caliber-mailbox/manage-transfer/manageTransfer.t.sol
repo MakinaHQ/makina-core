@@ -147,7 +147,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(nextOutTransferId, expectedMessageHash);
+        emit IBridgeAdapter.OutBridgeTransferScheduled(nextOutTransferId, expectedMessageHash);
         caliberMailbox.manageTransfer(
             address(accountingToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeMinOutputAmount)
         );

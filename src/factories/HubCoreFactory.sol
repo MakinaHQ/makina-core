@@ -77,7 +77,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
 
         $._isPreDepositVault[preDepositVault] = true;
 
-        emit PreDepositVaultDeployed(preDepositVault, shareToken);
+        emit PreDepositVaultCreated(preDepositVault, shareToken);
 
         return preDepositVault;
     }
@@ -107,7 +107,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         $._isMachine[machine] = true;
         $._isCaliber[caliber] = true;
 
-        emit MachineDeployed(machine, shareToken, caliber);
+        emit MachineCreated(machine, shareToken, caliber);
 
         return machine;
     }
@@ -134,7 +134,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         $._isMachine[machine] = true;
         $._isCaliber[caliber] = true;
 
-        emit MachineDeployed(machine, token, caliber);
+        emit MachineCreated(machine, token, caliber);
 
         return machine;
     }
@@ -159,7 +159,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
             )
         );
 
-        emit HubCaliberDeployed(caliber);
+        emit HubCaliberCreated(caliber);
 
         return caliber;
     }
@@ -170,7 +170,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, BridgeAdapterFactory, IHubC
         returns (address)
     {
         address _shareToken = address(new MachineShare(name, symbol, DecimalsUtils.SHARE_TOKEN_DECIMALS, initialOwner));
-        emit ShareTokenDeployed(_shareToken);
+        emit ShareTokenCreated(_shareToken);
         return _shareToken;
     }
 }

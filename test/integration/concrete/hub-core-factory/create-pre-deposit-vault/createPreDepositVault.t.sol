@@ -20,7 +20,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
 
     function test_CreatePreDepositVault() public {
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.PreDepositVaultDeployed(address(0), address(0));
+        emit IHubCoreFactory.PreDepositVaultCreated(address(0), address(0));
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(

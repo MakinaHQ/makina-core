@@ -85,7 +85,7 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         );
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.SendOutBridgeTransfer(nextOutTransferId);
+        emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
 
         vm.expectEmit(true, true, true, true, address(acrossV3SpokePool));
         emit IMockAcrossV3SpokePool.FundsDeposited(

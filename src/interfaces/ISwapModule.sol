@@ -2,8 +2,7 @@
 pragma solidity 0.8.28;
 
 interface ISwapModule {
-    event SwapperTargetsSet(uint16 indexed swapper, address approvalTarget, address executionTarget);
-    event Swapped(
+    event Swap(
         address indexed sender,
         uint16 swapperId,
         address indexed inputToken,
@@ -11,6 +10,7 @@ interface ISwapModule {
         uint256 inputAmount,
         uint256 outputAmount
     );
+    event SwapperTargetsSet(uint16 indexed swapper, address approvalTarget, address executionTarget);
 
     struct SwapperTargets {
         address approvalTarget;

@@ -6,6 +6,6 @@ createMachineFromPreDeposit.t.sol
    ├── it should mark the pre-deposit vault's deposit token as an idle token in the machine
    ├── it should transfer the pre-deposit vault's asset balance to the machine
    ├── it should set the machine as owner of the pre-deposit vault's share token
-   ├── it should emit a HubCaliberDeployed event
+   ├── it should emit a HubCaliberCreated event
    ├── it should emit a MigrateToMachine event
-   └── it should emit a MachineDeployed event
+   └── it should emit a MachineCreated event

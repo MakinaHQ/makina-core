@@ -12,10 +12,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
     using SafeERC20 for IERC20;
 
     event ManageTransfer(address token, uint256 amount, bytes data);
-    event SendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes data);
-    event AuthorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash);
-    event ClaimInBridgeTransfer(uint16 bridgeId, uint256 transferId);
-    event CancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId);
+    event OutBridgeTransferSent(uint16 bridgeId, uint256 transferId, bytes data);
+    event InBridgeTransferAuthorized(uint16 bridgeId, bytes32 messageHash);
+    event InBridgeTransferClaimed(uint16 bridgeId, uint256 transferId);
+    event OutBridgeTransferCancelled(uint16 bridgeId, uint256 transferId);
 
     function mechanic() public pure returns (address) {
         return address(0);
@@ -86,19 +86,19 @@ contract MockMachineEndpoint is IMachineEndpoint {
     }
 
     function sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) external {
-        emit SendOutBridgeTransfer(bridgeId, transferId, data);
+        emit OutBridgeTransferSent(bridgeId, transferId, data);
     }
 
     function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external {
-        emit AuthorizeInBridgeTransfer(bridgeId, messageHash);
+        emit InBridgeTransferAuthorized(bridgeId, messageHash);
     }
 
     function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external {
-        emit ClaimInBridgeTransfer(bridgeId, transferId);
+        emit InBridgeTransferClaimed(bridgeId, transferId);
     }
 
     function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external {
-        emit CancelOutBridgeTransfer(bridgeId, transferId);
+        emit OutBridgeTransferCancelled(bridgeId, transferId);
     }
 
     function resetBridgingState(address) external pure override {

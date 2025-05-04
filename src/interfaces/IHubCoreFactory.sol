@@ -8,10 +8,10 @@ import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 
 interface IHubCoreFactory is IBridgeAdapterFactory {
-    event HubCaliberDeployed(address indexed caliber);
-    event PreDepositVaultDeployed(address indexed preDepositVault, address indexed shareToken);
-    event MachineDeployed(address indexed machine, address indexed shareToken, address indexed machineOwner);
-    event ShareTokenDeployed(address indexed shareToken);
+    event HubCaliberCreated(address indexed caliber);
+    event MachineCreated(address indexed machine, address indexed shareToken, address indexed machineOwner);
+    event PreDepositVaultCreated(address indexed preDepositVault, address indexed shareToken);
+    event ShareTokenCreated(address indexed shareToken);
 
     /// @notice PreDepositVault => whether the contract was deployed by this factory
     function isPreDepositVault(address preDepositVault) external view returns (bool);

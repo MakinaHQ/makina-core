@@ -35,7 +35,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IBridgeController.ResetBridgingState(address(accountingToken));
+        emit IBridgeController.BridgingStateReset(address(accountingToken));
         vm.prank(dao);
         machine.resetBridgingState(address(accountingToken));
     }
@@ -48,7 +48,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
 
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IBridgeController.ResetBridgingState(address(baseToken2));
+        emit IBridgeController.BridgingStateReset(address(baseToken2));
         vm.prank(dao);
         machine.resetBridgingState(address(baseToken2));
         assertFalse(machine.isIdleToken(address(baseToken2)));
@@ -60,7 +60,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
     {
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IBridgeController.ResetBridgingState(address(accountingToken));
+        emit IBridgeController.BridgingStateReset(address(accountingToken));
         vm.prank(dao);
         machine.resetBridgingState(address(accountingToken));
         assertTrue(machine.isIdleToken(address(accountingToken)));
@@ -89,7 +89,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         deal(address(baseToken), address(bridgeAdapterAddr), 1, true);
 
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IBridgeController.ResetBridgingState(address(baseToken));
+        emit IBridgeController.BridgingStateReset(address(baseToken));
         vm.prank(dao);
         machine.resetBridgingState(address(baseToken));
         assertTrue(machine.isIdleToken(address(baseToken)));

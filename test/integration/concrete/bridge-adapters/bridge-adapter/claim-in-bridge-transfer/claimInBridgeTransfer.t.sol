@@ -90,7 +90,7 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
         emit MockMachineEndpoint.ManageTransfer(address(token1), outputAmount, abi.encode(chainId2, inputAmount, false));
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.ClaimInBridgeTransfer(nextInTransferId);
+        emit IBridgeAdapter.InBridgeTransferClaimed(nextInTransferId);
 
         vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);

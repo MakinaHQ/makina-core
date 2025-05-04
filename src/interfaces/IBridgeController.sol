@@ -3,11 +3,11 @@ pragma solidity 0.8.28;
 
 interface IBridgeController {
     event BridgeAdapterCreated(uint16 indexed bridgeId, address indexed adapter);
-    event MaxBridgeLossBpsChange(
+    event MaxBridgeLossBpsChanged(
         uint16 indexed bridgeId, uint256 indexed OldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
     );
-    event ResetBridgingState(address indexed token);
-    event SetOutTransferEnabled(uint256 indexed bridgeId, bool enabled);
+    event BridgingStateReset(address indexed token);
+    event OutTransferEnabledSet(uint256 indexed bridgeId, bool enabled);
 
     /// @notice Bridge ID => Is bridge adapter deployed.
     function isBridgeSupported(uint16 bridgeId) external view returns (bool);

@@ -30,7 +30,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
 
     function test_ResetBridgingState_CountersAlreadyNull() public {
         vm.expectEmit(true, false, false, false, address(caliberMailbox));
-        emit IBridgeController.ResetBridgingState(address(accountingToken));
+        emit IBridgeController.BridgingStateReset(address(accountingToken));
         vm.prank(dao);
         caliberMailbox.resetBridgingState(address(accountingToken));
     }

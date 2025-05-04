@@ -72,7 +72,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
     function test_SendOutBridgeTransfer() public {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferSent(transferId);
 
         vm.prank(address(mechanic));
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));

@@ -45,7 +45,7 @@ contract SwapModule is AccessManagedUpgradeable, ISwapModule {
         }
         IERC20(order.outputToken).safeTransfer(caller, outputAmount);
 
-        emit Swapped(caller, order.swapperId, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
+        emit Swap(caller, order.swapperId, order.inputToken, order.outputToken, order.inputAmount, outputAmount);
 
         return outputAmount;
     }

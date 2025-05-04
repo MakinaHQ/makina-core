@@ -27,7 +27,7 @@ abstract contract SetMaxBridgeLossBps_Integration_Concrete_Test is BridgeControl
         bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         vm.expectEmit(true, true, true, false, address(bridgeController));
-        emit IBridgeController.MaxBridgeLossBpsChange(
+        emit IBridgeController.MaxBridgeLossBpsChanged(
             ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, DEFAULT_MAX_BRIDGE_LOSS_BPS * 2
         );
         vm.prank(riskManagerTimelock);

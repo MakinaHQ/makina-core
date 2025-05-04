@@ -29,7 +29,7 @@ contract SetFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concret
         assertEq(oracleRegistry.getFeedStaleThreshold(address(priceFeed1)), DEFAULT_PF_STALE_THRSHLD);
 
         vm.expectEmit(true, true, true, true, address(oracleRegistry));
-        emit IOracleRegistry.FeedStaleThresholdChange(address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
+        emit IOracleRegistry.FeedStaleThresholdChanged(address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, 1 days);
         vm.prank(dao);
         oracleRegistry.setFeedStaleThreshold(address(priceFeed1), 1 days);
 

@@ -58,13 +58,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.HubCaliberDeployed(address(0));
+        emit IHubCoreFactory.HubCaliberCreated(address(0));
 
         vm.expectEmit(false, false, false, false, address(preDepositVault));
         emit IPreDepositVault.MigrateToMachine(address(0));
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.MachineDeployed(address(0), address(0), address(0));
+        emit IHubCoreFactory.MachineCreated(address(0), address(0), address(0));
 
         vm.prank(dao);
         machine = Machine(

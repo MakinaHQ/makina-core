@@ -27,13 +27,13 @@ abstract contract SetOutTransferEnabled_Integration_Concrete_Test is BridgeContr
         bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         vm.expectEmit(true, true, false, false, address(bridgeController));
-        emit IBridgeController.SetOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        emit IBridgeController.OutTransferEnabledSet(ACROSS_V3_BRIDGE_ID, false);
         vm.prank(riskManagerTimelock);
         bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
         assertFalse(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
 
         vm.expectEmit(true, true, false, false, address(bridgeController));
-        emit IBridgeController.SetOutTransferEnabled(ACROSS_V3_BRIDGE_ID, true);
+        emit IBridgeController.OutTransferEnabledSet(ACROSS_V3_BRIDGE_ID, true);
         vm.prank(riskManagerTimelock);
         bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, true);
         assertTrue(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));

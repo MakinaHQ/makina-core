@@ -618,7 +618,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
 
         _notifyIdleToken(token);
 
-        emit ResetBridgingState(token);
+        emit BridgingStateReset(token);
     }
 
     /// @dev Sets the spoke bridge adapter for a given foreign chain ID and bridge ID.

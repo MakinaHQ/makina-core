@@ -87,7 +87,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.WithdrawPendingFunds(address(token1), amount1 + amount3 + amount4);
+        emit IBridgeAdapter.PendingFundsWithdrawn(address(token1), amount1 + amount3 + amount4);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.withdrawPendingFunds(address(token1));
 

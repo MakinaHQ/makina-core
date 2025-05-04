@@ -97,7 +97,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
     function test_ClaimInBridgeTransfer() public {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ClaimInBridgeTransfer(transferId);
+        emit IBridgeAdapter.InBridgeTransferClaimed(transferId);
 
         vm.prank(mechanic);
         machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
@@ -117,7 +117,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
     function test_ClaimInBridgeTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ClaimInBridgeTransfer(transferId);
+        emit IBridgeAdapter.InBridgeTransferClaimed(transferId);
 
         vm.prank(securityCouncil);
         machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);

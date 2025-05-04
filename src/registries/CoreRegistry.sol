@@ -77,49 +77,49 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
     /// @inheritdoc ICoreRegistry
     function setCoreFactory(address _coreFactory) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit CoreFactoryChange($._coreFactory, _coreFactory);
+        emit CoreFactoryChanged($._coreFactory, _coreFactory);
         $._coreFactory = _coreFactory;
     }
 
     /// @inheritdoc ICoreRegistry
     function setOracleRegistry(address _oracleRegistry) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit OracleRegistryChange($._oracleRegistry, _oracleRegistry);
+        emit OracleRegistryChanged($._oracleRegistry, _oracleRegistry);
         $._oracleRegistry = _oracleRegistry;
     }
 
     /// @inheritdoc ICoreRegistry
     function setTokenRegistry(address _tokenRegistry) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit TokenRegistryChange($._tokenRegistry, _tokenRegistry);
+        emit TokenRegistryChanged($._tokenRegistry, _tokenRegistry);
         $._tokenRegistry = _tokenRegistry;
     }
 
     /// @inheritdoc ICoreRegistry
     function setSwapModule(address _swapModule) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit SwapModuleChange($._swapModule, _swapModule);
+        emit SwapModuleChanged($._swapModule, _swapModule);
         $._swapModule = _swapModule;
     }
 
     /// @inheritdoc ICoreRegistry
     function setFlashLoanModule(address _newFlashLoanModule) external restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit FlashLoanModuleChange($._flashLoanModule, _newFlashLoanModule);
+        emit FlashLoanModuleChanged($._flashLoanModule, _newFlashLoanModule);
         $._flashLoanModule = _newFlashLoanModule;
     }
 
     /// @inheritdoc ICoreRegistry
     function setCaliberBeacon(address _caliberBeacon) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit CaliberBeaconChange($._caliberBeacon, _caliberBeacon);
+        emit CaliberBeaconChanged($._caliberBeacon, _caliberBeacon);
         $._caliberBeacon = _caliberBeacon;
     }
 
     /// @inheritdoc ICoreRegistry
     function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit BridgeAdapterBeaconChange(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
+        emit BridgeAdapterBeaconChanged(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
         $._bridgeAdapters[bridgeId] = _bridgeAdapter;
     }
 }

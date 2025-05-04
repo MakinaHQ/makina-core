@@ -136,7 +136,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         bytes32 messageHash = keccak256(encodedMessage);
 
-        emit ScheduleOutBridgeTransfer(id, messageHash);
+        emit OutBridgeTransferScheduled(id, messageHash);
 
         return messageHash;
     }
@@ -150,7 +150,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         }
         $._expectedInMessages[messageHash] = true;
 
-        emit AuthorizeInBridgeTransfer(messageHash);
+        emit InBridgeTransferAuthorized(messageHash);
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -169,7 +169,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         $._reservedBalances[receipt.outputToken] -= receipt.outputAmount;
 
-        emit ClaimInBridgeTransfer(id);
+        emit InBridgeTransferClaimed(id);
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -186,7 +186,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             IERC20(token).safeTransfer($._controller, amount);
         }
 
-        emit WithdrawPendingFunds(token, amount);
+        emit PendingFundsWithdrawn(token, amount);
     }
 
     /// @dev Updates contract state before sending out a bridge transfer.
@@ -199,7 +199,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         _getSet($._sentOutTransferIds[receipt.inputToken]).add(id);
         $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
 
-        emit SendOutBridgeTransfer(id);
+        emit OutBridgeTransferSent(id);
     }
 
     /// @dev Cancels an outgoing bridge transfer that is either scheduled or refunded.
@@ -225,7 +225,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             receipt.inputToken, receipt.inputAmount, abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
         );
 
-        emit CancelOutBridgeTransfer(id);
+        emit OutBridgeTransferCancelled(id);
     }
 
     /// @dev Updates contract state when receiving an incoming bridge transfer.
@@ -266,7 +266,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         );
         _getSet($._pendingInTransferIds[receivedToken]).add(id);
         $._reservedBalances[receivedToken] += receivedAmount;
-        emit ReceiveInBridgeTransfer(id);
+        emit InBridgeTransferReceived(id);
     }
 
     /// @dev Returns a reference to the current active set for this versioned set.

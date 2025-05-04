@@ -121,7 +121,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @inheritdoc IOracleRegistry
     function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
-        emit FeedStaleThresholdChange(feed, $._feedStaleThreshold[feed], newThreshold);
+        emit FeedStaleThresholdChanged(feed, $._feedStaleThreshold[feed], newThreshold);
         // zero is allowed in order to disable a feed
         $._feedStaleThreshold[feed] = newThreshold;
     }

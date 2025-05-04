@@ -129,7 +129,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         deal(address(accountingToken), address(machine), inputAmount, true);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(
+        emit IBridgeAdapter.OutBridgeTransferScheduled(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
                 address(bridgeAdapter),
@@ -161,7 +161,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         uint256 transferAmount = inputAmount / 2;
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(
+        emit IBridgeAdapter.OutBridgeTransferScheduled(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
                 address(bridgeAdapter),
@@ -199,7 +199,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         tokenRegistry.setToken(address(baseToken), SPOKE_CHAIN_ID, spokeBaseTokenAddr);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(
+        emit IBridgeAdapter.OutBridgeTransferScheduled(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
                 address(bridgeAdapter), SPOKE_CHAIN_ID, address(baseToken), inputAmount, spokeBaseTokenAddr, inputAmount
@@ -235,7 +235,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         uint256 transferAmount = inputAmount / 2;
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(
+        emit IBridgeAdapter.OutBridgeTransferScheduled(
             bridgeAdapter.nextOutTransferId(),
             _buildBridgeMessageHash(
                 address(bridgeAdapter),

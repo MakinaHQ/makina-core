@@ -4,9 +4,9 @@ pragma solidity 0.8.28;
 import {ICoreRegistry} from "./ICoreRegistry.sol";
 
 interface IHubCoreRegistry is ICoreRegistry {
-    event ChainRegistryChange(address indexed oldChainRegistry, address indexed newChainRegistry);
-    event MachineBeaconChange(address indexed oldMachineBeacon, address indexed newMachineBeacon);
-    event PreDepositVaultBeaconChange(
+    event ChainRegistryChanged(address indexed oldChainRegistry, address indexed newChainRegistry);
+    event MachineBeaconChanged(address indexed oldMachineBeacon, address indexed newMachineBeacon);
+    event PreDepositVaultBeaconChanged(
         address indexed oldPreDepositVaultBeacon, address indexed newPreDepositVaultBeacon
     );
 

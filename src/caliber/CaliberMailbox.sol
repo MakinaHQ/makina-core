@@ -226,6 +226,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         }
         IERC20(token).safeTransfer($._caliber, IERC20(token).balanceOf(address(this)));
 
-        emit ResetBridgingState(token);
+        emit BridgingStateReset(token);
     }
 }

@@ -35,7 +35,7 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_I
         bytes32 messageHash = bytes32("12345");
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.AuthorizeInBridgeTransfer(messageHash);
+        emit IBridgeAdapter.InBridgeTransferAuthorized(messageHash);
         vm.prank(mechanic);
         caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
     }

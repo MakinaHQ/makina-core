@@ -65,7 +65,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         emit MockMachineEndpoint.ManageTransfer(address(token1), inputAmount, abi.encode(chainId2, inputAmount, true));
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(nextOutTransferId);
 
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
@@ -118,7 +118,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(nextOutTransferId);
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), inputAmount);
@@ -155,7 +155,7 @@ contract CancelOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test
         token1.mint(address(bridgeAdapter1), cancelFeeBps * inputAmount / 10000);
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(nextOutTransferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(nextOutTransferId);
         bridgeAdapter1.cancelOutBridgeTransfer(nextOutTransferId);
 
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), inputAmount);

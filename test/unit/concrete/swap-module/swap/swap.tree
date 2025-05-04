@@ -14,6 +14,6 @@ swap.t.sol
             ├── given the output amount is smaller that given minimum
             │  └── it should revert with AmountOutTooLow
             └── given the output amount is not smaller that given minimum
-               ├── it should emit a Swapped event
+               ├── it should emit a Swap event
                ├── it should decrease the input token balance of the sender by input amount
                └── it should increase the output token balance of the sender by output amount

@@ -39,7 +39,7 @@ contract SpokeCoreRegistry is CoreRegistry, ISpokeCoreRegistry {
     /// @inheritdoc ISpokeCoreRegistry
     function setCaliberMailboxBeacon(address _caliberMailboxBeacon) external override restricted {
         SpokeCoreRegistryStorage storage $ = _getSpokeCoreRegistryStorage();
-        emit CaliberMailboxBeaconChange($._caliberMailboxBeacon, _caliberMailboxBeacon);
+        emit CaliberMailboxBeaconChanged($._caliberMailboxBeacon, _caliberMailboxBeacon);
         $._caliberMailboxBeacon = _caliberMailboxBeacon;
     }
 }

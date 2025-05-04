@@ -2,15 +2,15 @@
 pragma solidity 0.8.28;
 
 interface ICoreRegistry {
-    event BridgeAdapterBeaconChange(
+    event BridgeAdapterBeaconChanged(
         uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
     );
-    event CaliberBeaconChange(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
-    event CoreFactoryChange(address indexed oldCoreFactory, address indexed newCoreFactory);
-    event OracleRegistryChange(address indexed oldOracleRegistry, address indexed newOracleRegistry);
-    event SwapModuleChange(address indexed oldSwapModule, address indexed newSwapModule);
-    event FlashLoanModuleChange(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
-    event TokenRegistryChange(address indexed oldTokenRegistry, address indexed newTokenRegistry);
+    event CaliberBeaconChanged(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
+    event CoreFactoryChanged(address indexed oldCoreFactory, address indexed newCoreFactory);
+    event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
+    event OracleRegistryChanged(address indexed oldOracleRegistry, address indexed newOracleRegistry);
+    event SwapModuleChanged(address indexed oldSwapModule, address indexed newSwapModule);
+    event TokenRegistryChanged(address indexed oldTokenRegistry, address indexed newTokenRegistry);
 
     /// @notice Address of the core factory.
     function coreFactory() external view returns (address);

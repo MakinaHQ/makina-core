@@ -3,5 +3,5 @@ createMachine.t.sol
 │  └── it should revert with AccessManagedUnauthorized
 └── given sender has the relevant role
    ├── it should deploy a machine instance, along with a share token and a caliber instance, and initialize them with provided parameters
-   ├── it should emit a HubCaliberDeployed event
-   └── it should emit a MachineDeployed event
+   ├── it should emit a HubCaliberCreated event
+   └── it should emit a MachineCreated event

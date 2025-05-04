@@ -6,5 +6,5 @@ authorizeInBridgeTransfer.t.sol
    │  └── it should revert with MessageAlreadyAuthorized
    └── given the provided messageHash is not already authorized
       ├── it should mark the messageHash as authorized in adapter storage
-      └── it should emit a AuthorizeInBridgeTransfer event
+      └── it should emit a InBridgeTransferAuthorized event
     

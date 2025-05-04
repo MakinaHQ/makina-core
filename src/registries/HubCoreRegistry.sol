@@ -55,21 +55,21 @@ contract HubCoreRegistry is CoreRegistry, IHubCoreRegistry {
     /// @inheritdoc IHubCoreRegistry
     function setChainRegistry(address _chainRegistry) external override restricted {
         HubCoreRegistryStorage storage $ = _getHubCoreRegistryStorage();
-        emit ChainRegistryChange($._chainRegistry, _chainRegistry);
+        emit ChainRegistryChanged($._chainRegistry, _chainRegistry);
         $._chainRegistry = _chainRegistry;
     }
 
     /// @inheritdoc IHubCoreRegistry
     function setMachineBeacon(address _machineBeacon) external override restricted {
         HubCoreRegistryStorage storage $ = _getHubCoreRegistryStorage();
-        emit MachineBeaconChange($._machineBeacon, _machineBeacon);
+        emit MachineBeaconChanged($._machineBeacon, _machineBeacon);
         $._machineBeacon = _machineBeacon;
     }
 
     /// @inheritdoc IHubCoreRegistry
     function setPreDepositVaultBeacon(address _preDepositVaultBeacon) external override restricted {
         HubCoreRegistryStorage storage $ = _getHubCoreRegistryStorage();
-        emit PreDepositVaultBeaconChange($._preDepositVaultBeacon, _preDepositVaultBeacon);
+        emit PreDepositVaultBeaconChanged($._preDepositVaultBeacon, _preDepositVaultBeacon);
         $._preDepositVaultBeacon = _preDepositVaultBeacon;
     }
 }

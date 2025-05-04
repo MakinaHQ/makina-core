@@ -4,11 +4,11 @@ pragma solidity 0.8.28;
 interface IPreDepositVault {
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event MigrateToMachine(address indexed machine);
-    event WhitelistModeChanged(bool indexed enabled);
-    event UserWhitelistingChanged(address indexed user, bool indexed whitelisted);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event RiskManagerChanged(address indexed oldRiskManager, address indexed newRiskManager);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
+    event UserWhitelistingChanged(address indexed user, bool indexed whitelisted);
+    event WhitelistModeChanged(bool indexed enabled);
 
     struct PreDepositVaultInitParams {
         uint256 initialShareLimit;

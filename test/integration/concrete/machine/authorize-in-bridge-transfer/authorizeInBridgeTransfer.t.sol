@@ -30,7 +30,7 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
         bytes32 messageHash = bytes32("12345");
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.AuthorizeInBridgeTransfer(messageHash);
+        emit IBridgeAdapter.InBridgeTransferAuthorized(messageHash);
         vm.prank(mechanic);
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
     }
@@ -48,7 +48,7 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
         bytes32 messageHash = bytes32("12345");
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.AuthorizeInBridgeTransfer(messageHash);
+        emit IBridgeAdapter.InBridgeTransferAuthorized(messageHash);
         vm.prank(securityCouncil);
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
     }

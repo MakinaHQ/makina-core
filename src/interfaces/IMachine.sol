@@ -15,9 +15,9 @@ interface IMachine is IMachineEndpoint {
     event FeeMintCooldownChanged(uint256 indexed oldFeeMintCooldown, uint256 indexed newFeeMintCooldown);
     event FeesMinted(uint256 shares);
     event MaxFeeAccrualRateChanged(uint256 indexed oldMaxFeeAccrualRate, uint256 indexed newMaxFeeAccrualRate);
+    event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
-    event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum);

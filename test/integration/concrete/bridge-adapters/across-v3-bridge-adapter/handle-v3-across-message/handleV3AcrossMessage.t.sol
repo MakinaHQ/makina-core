@@ -93,7 +93,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectEmit(true, false, false, false, address(acrossV3BridgeAdapter1));
-        emit IBridgeAdapter.ReceiveInBridgeTransfer(nextInTransferId);
+        emit IBridgeAdapter.InBridgeTransferReceived(nextInTransferId);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
 

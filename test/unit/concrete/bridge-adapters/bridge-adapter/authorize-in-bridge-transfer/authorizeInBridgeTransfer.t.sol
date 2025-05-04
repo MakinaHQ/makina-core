@@ -32,7 +32,7 @@ abstract contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is BridgeA
         bytes32 messageHash = bytes32("12345");
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.AuthorizeInBridgeTransfer(messageHash);
+        emit IBridgeAdapter.InBridgeTransferAuthorized(messageHash);
         vm.prank(address(controller));
         bridgeAdapter.authorizeInBridgeTransfer(messageHash);
     }

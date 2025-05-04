@@ -163,7 +163,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         });
 
         vm.expectEmit(true, true, true, true, address(swapModule));
-        emit ISwapModule.Swapped(
+        emit ISwapModule.Swap(
             address(this), ZEROX_SWAPPER_ID, address(token0), address(token1), inputAmount, previewSwap
         );
         uint256 outputAmount = swapModule.swap(order);

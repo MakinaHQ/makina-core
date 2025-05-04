@@ -30,7 +30,7 @@ contract SpokeCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(true, true, false, false, address(spokeCoreRegistry));
-        emit ICoreRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
+        emit ICoreRegistry.CaliberBeaconChanged(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         spokeCoreRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(spokeCoreRegistry.caliberBeacon(), newCaliberBeacon);
@@ -44,7 +44,7 @@ contract SpokeCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test
     function test_SetCaliberMailboxBeacon() public {
         address newCaliberMailboxBeacon = makeAddr("newCaliberMailboxBeacon");
         vm.expectEmit(true, true, false, false, address(spokeCoreRegistry));
-        emit ISpokeCoreRegistry.CaliberMailboxBeaconChange(address(caliberMailboxBeacon), newCaliberMailboxBeacon);
+        emit ISpokeCoreRegistry.CaliberMailboxBeaconChanged(address(caliberMailboxBeacon), newCaliberMailboxBeacon);
         vm.prank(dao);
         spokeCoreRegistry.setCaliberMailboxBeacon(newCaliberMailboxBeacon);
         assertEq(spokeCoreRegistry.caliberMailboxBeacon(), newCaliberMailboxBeacon);

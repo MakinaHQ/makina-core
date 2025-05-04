@@ -10,4 +10,4 @@ scheduleOutgoingBridgeTransfer.t.sol
       └── given the sender has sufficient token allowance and balance
          ├── it should increase the adapter's token balance by amount
          ├── it should decrease the sender's token balance by amount
-         └── it should emit a ScheduleOutBridgeTransfer event
+         └── it should emit a OutBridgeTransferScheduled event

@@ -25,10 +25,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.HubCaliberDeployed(address(0));
+        emit IHubCoreFactory.HubCaliberCreated(address(0));
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
-        emit IHubCoreFactory.MachineDeployed(address(0), address(0), address(0));
+        emit IHubCoreFactory.MachineCreated(address(0), address(0), address(0));
 
         vm.prank(dao);
         machine = Machine(

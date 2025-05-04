@@ -28,6 +28,6 @@ transferToSpokeCaliber.t.sol
    │                       ├── it should increase the local bridge adapter's token balance by amount
    │                       ├── it should increase the machine's bridgeOut value by amount for the input token and destination chain ID
    │                       ├── it should emit a TransferToCaliber event
-   │                       └── it should emit a ScheduleOutBridgeTransfer event
+   │                       └── it should emit a OutBridgeTransferScheduled event
    └── given recovery mode is on
       └── it should revert with RecoveryMode

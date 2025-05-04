@@ -55,7 +55,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
     function test_CancelScheduledTransfer() public {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(transferId);
 
         vm.prank(mechanic);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
@@ -71,7 +71,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(transferId);
 
         vm.prank(mechanic);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
@@ -91,7 +91,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
     function test_CancelScheduledTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(transferId);
 
         vm.prank(securityCouncil);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
@@ -120,7 +120,7 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
 
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.CancelOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferCancelled(transferId);
 
         vm.prank(securityCouncil);
         caliberMailbox.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);

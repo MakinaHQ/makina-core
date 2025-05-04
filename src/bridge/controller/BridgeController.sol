@@ -98,7 +98,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert Errors.BridgeAdapterDoesNotExist();
         }
-        emit SetOutTransferEnabled(uint256(bridgeId), enabled);
+        emit OutTransferEnabledSet(uint256(bridgeId), enabled);
         $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
@@ -107,7 +107,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert Errors.BridgeAdapterDoesNotExist();
         }
-        emit MaxBridgeLossBpsChange(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
+        emit MaxBridgeLossBpsChanged(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
     }
 

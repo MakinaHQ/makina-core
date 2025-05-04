@@ -31,7 +31,7 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
     function test_SetCaliberBeacon() public {
         address newCaliberBeacon = makeAddr("newCaliberBeacon");
         vm.expectEmit(true, true, false, false, address(hubCoreRegistry));
-        emit ICoreRegistry.CaliberBeaconChange(address(caliberBeacon), newCaliberBeacon);
+        emit ICoreRegistry.CaliberBeaconChanged(address(caliberBeacon), newCaliberBeacon);
         vm.prank(dao);
         hubCoreRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(hubCoreRegistry.caliberBeacon(), newCaliberBeacon);
@@ -45,7 +45,7 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
     function test_SetChainRegistry() public {
         address newChainRegistry = makeAddr("newChainRegistry");
         vm.expectEmit(true, true, false, false, address(hubCoreRegistry));
-        emit IHubCoreRegistry.ChainRegistryChange(address(chainRegistry), newChainRegistry);
+        emit IHubCoreRegistry.ChainRegistryChanged(address(chainRegistry), newChainRegistry);
         vm.prank(dao);
         hubCoreRegistry.setChainRegistry(newChainRegistry);
         assertEq(hubCoreRegistry.chainRegistry(), newChainRegistry);
@@ -59,7 +59,7 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
     function test_SetMachineBeacon() public {
         address newMachineBeacon = makeAddr("newMachineBeacon");
         vm.expectEmit(true, true, false, false, address(hubCoreRegistry));
-        emit IHubCoreRegistry.MachineBeaconChange(address(machineBeacon), newMachineBeacon);
+        emit IHubCoreRegistry.MachineBeaconChanged(address(machineBeacon), newMachineBeacon);
         vm.prank(dao);
         hubCoreRegistry.setMachineBeacon(newMachineBeacon);
         assertEq(hubCoreRegistry.machineBeacon(), newMachineBeacon);
@@ -73,7 +73,7 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
     function test_SetPreDepositVaultBeacon() public {
         address newPreDepositVaultBeacon = makeAddr("newPreDepositVaultBeacon");
         vm.expectEmit(true, true, false, false, address(hubCoreRegistry));
-        emit IHubCoreRegistry.PreDepositVaultBeaconChange(address(preDepositVaultBeacon), newPreDepositVaultBeacon);
+        emit IHubCoreRegistry.PreDepositVaultBeaconChanged(address(preDepositVaultBeacon), newPreDepositVaultBeacon);
         vm.prank(dao);
         hubCoreRegistry.setPreDepositVaultBeacon(newPreDepositVaultBeacon);
         assertEq(hubCoreRegistry.preDepositVaultBeacon(), newPreDepositVaultBeacon);

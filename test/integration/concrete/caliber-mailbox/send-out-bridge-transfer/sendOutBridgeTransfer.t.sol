@@ -66,7 +66,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
     function test_SendOutBridgeTransfer() public {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferSent(transferId);
 
         vm.prank(mechanic);
         caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));
@@ -106,7 +106,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
 
     function test_SendOutBridgeTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
-        emit IBridgeAdapter.SendOutBridgeTransfer(transferId);
+        emit IBridgeAdapter.OutBridgeTransferSent(transferId);
 
         vm.prank(address(securityCouncil));
         caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(0));
