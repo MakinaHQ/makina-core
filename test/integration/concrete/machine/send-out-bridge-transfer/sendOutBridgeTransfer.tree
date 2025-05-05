@@ -1,8 +1,8 @@
 sendOutBridgeTransfer.t.sol
 ├── given recovery mode is off
-│  ├── when sender is not the Mechanic
+│  ├── when caller is not the Mechanic
 │  │  └── it should revert with UnauthorizedCaller
-│  └── when sender is the Mechanic
+│  └── when caller is the Mechanic
 │     ├── given no local bridge adapter is set for the provided bridge ID
 │     │  └── it should revert with BridgeAdapterDoesNotExist
 │     └── given a local bridge adapter is set for the provided bridge ID

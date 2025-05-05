@@ -1,7 +1,7 @@
 setHubBridgeAdapter.t.sol
-├── given sender does not have the relevant role
+├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+└── when caller has the relevant role
    ├── given an adapter address is already set for the provided bridge ID in caliber mailbox
    │  └── it should revert with HubBridgeAdapterAlreadySet
    └── given no adapter address is already set for the provided bridge ID in caliber mailbox

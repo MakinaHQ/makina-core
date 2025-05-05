@@ -3,9 +3,9 @@ redeem.t.sol
 │  └── it should revert with Migrated
 └── given pre-deposit vault was not migrated
    ├── given pre-deposit vault is in whitelist mode
-   │  ├── given sender is not whitelisted
+   │  ├── when caller is not whitelisted
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── given sender is whitelisted
+   │  └── when caller is whitelisted
    │     ├── given output asset amount is lower than provided minAssets
    │     │  └── it should revert with SlippageProtection
    │     └── given output asset amount is not lower than provided minAssets

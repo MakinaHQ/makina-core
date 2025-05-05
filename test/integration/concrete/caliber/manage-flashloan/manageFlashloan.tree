@@ -2,9 +2,9 @@ manageFlashloan.t.sol
 ├── when call is reentrant
 │  └── it should revert
 └── when call is not reentrant
-   ├── when sender is not the flashLoan module
+   ├── when caller is not the flashLoan module
    │  └── it should revert with NotFlashLoanModule
-   └── when sender is the flashLoan module
+   └── when caller is the flashLoan module
       ├── when the function is not called from within a call to managePosition 
       │  └── it should revert with DirectManageFlashLoanCall
       └── when the instruction is called from within a call to managePosition 

@@ -2,9 +2,9 @@ withdrawPendingFunds.t.sol
 ├── when call is reentrant
 │  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
-   ├── given sender is not the controller contract
+   ├── when caller is not the controller contract
    │  └── it should revert with NotController
-   └── given sender is the controller contract
+   └── when caller is the controller contract
       ├── it should reset internal state for the provided chain ID and token
       ├── it should increase the controller's token balance by adapter token balance
       ├── it should decrease the adapter token balance to 0

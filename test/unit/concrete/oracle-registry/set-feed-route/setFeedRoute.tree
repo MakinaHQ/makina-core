@@ -1,7 +1,7 @@
 setFeedRoute.t.sol
-├── given sender does not have the relevant role
+├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+└── when caller has the relevant role
    ├── given first price feed is null
    │  └── it should revert with InvalidFeedRoute
    └── given first price feed is non null

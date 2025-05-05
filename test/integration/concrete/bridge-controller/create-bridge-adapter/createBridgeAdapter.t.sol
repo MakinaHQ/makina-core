@@ -31,7 +31,7 @@ abstract contract CreateBridgeAdapter_Integration_Concrete_Test is BridgeControl
     function test_createBridgeAdapter_acrossV3() public {
         assertFalse(bridgeController.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
 
-        address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(0)));
+        address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(0)));
         vm.prank(dao);
         registry.setBridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID, beacon);
 

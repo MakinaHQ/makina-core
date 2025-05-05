@@ -55,7 +55,7 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
 
         vm.startPrank(address(dao));
         hubCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
     }

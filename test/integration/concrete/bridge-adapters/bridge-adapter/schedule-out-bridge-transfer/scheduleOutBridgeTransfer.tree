@@ -2,12 +2,12 @@ scheduleOutgoingBridgeTransfer.t.sol
 ├── when call is reentrant
 │  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
-   ├── given sender is not the controller contract
+   ├── when caller is not the controller contract
    │  └── it should revert with NotController
-   └── given sender is the controller contract
-      ├── given the sender has insufficient token allowance or balance
+   └── when caller is the controller contract
+      ├── given caller has insufficient token allowance or balance
       │  └── it should revert
-      └── given the sender has sufficient token allowance and balance
+      └── given caller has sufficient token allowance and balance
          ├── it should increase the adapter's token balance by amount
-         ├── it should decrease the sender's token balance by amount
+         ├── it should decrease the caller's token balance by amount
          └── it should emit a OutBridgeTransferScheduled event

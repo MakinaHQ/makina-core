@@ -43,7 +43,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     ///
 
     /// @dev Schedules a transfer from machine to spoke caliber
-    function machine_transferToSpokeCaliber_AccrossV3(uint256 tokenIndex, uint256 amount) external {
+    function machine_transferToSpokeCaliber_AcrossV3(uint256 tokenIndex, uint256 amount) external {
         tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
         address token = machineStore.tokens(tokenIndex);
         amount = _bound(amount, 0, IERC20(token).balanceOf(address(machine)));
@@ -76,7 +76,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Sends a scheduled outgoing transfer from machine to spoke caliber
-    function machine_sendOutBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function machine_sendOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingMachineScheduledOutTransferLength();
         if (transfersLen == 0) {
             return;
@@ -96,7 +96,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Cancels a refunded transfer initially sent from machine to spoke caliber
-    function machine_cancelOutBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function machine_cancelOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingMachineRefundedOutTransferLength();
         if (transfersLen == 0) {
             return;
@@ -111,7 +111,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Claims a pending transfer received by machine from spoke caliber
-    function machine_claimInBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function machine_claimInBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingMachineReceivedInTransferLength();
         if (transfersLen == 0) {
             return;
@@ -133,7 +133,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     ///
 
     /// @dev Schedules a transfer from spoke caliber to machine
-    function caliber_transferToHubMachine_AccrossV3(uint256 tokenIndex, uint256 amount) external {
+    function caliber_transferToHubMachine_AcrossV3(uint256 tokenIndex, uint256 amount) external {
         tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
         address token = machineStore.tokens(tokenIndex);
         amount = _bound(amount, 0, IERC20(token).balanceOf(address(spokeCaliber)));
@@ -162,7 +162,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Sends a scheduled outgoing transfer from spoke caliber to machine
-    function caliber_sendOutBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function caliber_sendOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingCaliberScheduledOutTransferLength();
         if (transfersLen == 0) {
             return;
@@ -184,7 +184,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Cancels a refunded transfer initially sent from spoke caliber to machine
-    function caliber_cancelOutBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function caliber_cancelOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingCaliberRefundedOutTransferLength();
         if (transfersLen == 0) {
             return;
@@ -199,7 +199,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Claims a pending transfer received by spoke caliber from machine
-    function caliber_claimInBridgeTransfer_AccrossV3(uint256 transferIndex) external {
+    function caliber_claimInBridgeTransfer_AcrossV3(uint256 transferIndex) external {
         uint256 transfersLen = machineStore.pendingCaliberReceivedInTransferLength();
         if (transfersLen == 0) {
             return;
@@ -220,7 +220,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     /// ACROSS V3 Side
     ///
 
-    /// @dev Cancels a pending accross V3 transfer and refund the tokens to the sender
+    /// @dev Cancels a pending Across V3 transfer and refund the tokens to the sender
     function acrossV3CancelTransfer(bool fromMachineToCaliber, uint256 transferIndex) external {
         if (fromMachineToCaliber) {
             uint256 transfersLen = machineStore.pendingMachineSentOutTransferLength();
@@ -253,7 +253,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
         }
     }
 
-    /// @dev Settles a pending accross V3 transfer
+    /// @dev Settles a pending Across V3 transfer
     function acrossV3SettleTransfer(bool fromMachineToCaliber, uint256 transferIndex) external {
         if (fromMachineToCaliber) {
             uint256 transfersLen = machineStore.pendingMachineSentOutTransferLength();

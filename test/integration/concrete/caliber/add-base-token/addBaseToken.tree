@@ -1,7 +1,7 @@
 addBaseToken.t.sol
-├── given sender is not the risk manager timelock
+├── when caller is not the risk manager timelock
 │  └── it should revert with UnauthorizedCaller
-└── given sender is the risk manager timelock
+└── when caller is the risk manager timelock
    ├── given the base token is already registered in the Caliber
    │  └── it should revert with AlreadyBaseToken
    └── given the base token is not already registered in the Caliber

@@ -1,15 +1,15 @@
 cancelOutBridgeTransfer.t.sol
 ├── given recovery mode is off
-│  ├── when sender is not the Mechanic
+│  ├── when caller is not the Mechanic
 │  │  └── it should revert with UnauthorizedCaller
-│  └── when sender is the Mechanic
+│  └── when caller is the Mechanic
 │     ├── it should decrease the corresponding adapter's token balance by bridge transfer input amount
 │     ├── it should increase the caliber's token balance by bridge transfer input amount
 │     └── it should emit a OutBridgeTransferCancelled event
 └── given recovery mode is on
-   ├── when sender is not the Security Council
+   ├── when caller is not the Security Council
    │  └── it should revert with UnauthorizedCaller
-   └── when sender is the Security Council
+   └── when caller is the Security Council
       ├── it should decrease the corresponding adapter's token balance by bridge transfer input amount
       ├── it should increase the caliber's token balance by bridge transfer input amount
       └── it should emit a OutBridgeTransferCancelled event

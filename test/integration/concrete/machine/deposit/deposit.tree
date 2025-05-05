@@ -5,16 +5,16 @@ deposit.t.sol
    ├── given recovery mode is on
    │  └── it should revert with RecoveryMode
    └── given recovery mode is off
-      ├── when sender is not depositor
+      ├── when caller is not depositor
       │  └── it should revert with UnauthorizedCaller
-      └── when sender is depositor
-         ├── given that the minted shares exceed the maximum allowed minting amount
+      └── when caller is depositor
+         ├── given the minted shares exceed the maximum allowed minting amount
          │  └── it should revert with ExceededMaxMint
-         └── given that the minted shares do not exceed the maximum allowed minting amount
+         └── given the minted shares do not exceed the maximum allowed minting amount
             ├── given output share amount is lower than provided minShares
             │  └── it should revert with SlippageProtection
             └── given output share amount is not lower than provided minShares
-               ├── it should transfer assets from sender to machine
+               ├── it should transfer assets from caller to machine
                ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by convertToShares
                ├── it should increase the last AUM value by assets
                └── it should emit a Deposit event

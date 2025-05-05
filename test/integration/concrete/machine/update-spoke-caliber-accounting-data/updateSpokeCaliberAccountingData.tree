@@ -8,9 +8,9 @@ updateSpokeCaliberAccountingData.t.sol
       ├── when data references an invalid chain
       │  └── it should revert with InvalidChainId
       └── when data does not reference an invalid chain
-         ├── when more than one result is returned for a given chainId
+         ├── when more than one result is returned for a given chain ID
          │  └── it should revert with UnexpectedResultLength
-         └── when no more than one result is returned per chainId
+         └── when no more than one result is returned per chain ID
             ├── when a received result does not come from a registered spoke caliber mailbox
             │  └── it should revert with InvalidContractAddress
             └── when all received results come from a registered spoke caliber mailbox

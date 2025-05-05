@@ -1,7 +1,7 @@
 scheduleAllowedInstrRootUpdate.t.sol
-├── given sender is not the risk manager
+├── when caller is not the risk manager
 │  └── it should revert with UnauthorizedCaller
-└── given sender is the risk manager
+└── when caller is the risk manager
    ├── given there is already a pending root update
    │  └── it should revert with ActiveUpdatePending
    └── given there is no pending root update

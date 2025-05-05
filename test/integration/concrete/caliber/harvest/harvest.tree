@@ -3,9 +3,9 @@ harvest.t.sol
 │  └── it should revert
 └── when call is not reentrant
    ├── given recovery mode is off
-   │  ├── when sender is not the Mechanic
+   │  ├── when caller is not the Mechanic
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── when sender is the Mechanic
+   │  └── when caller is the Mechanic
    │     ├── when the instruction is not of the harvest type
    │     │  └── it should revert with InvalidInstructionType
    │     └── when the instruction is of the harvest type
@@ -28,9 +28,9 @@ harvest.t.sol
    │                       ├── for each order execution, order.inputAmount of order.inputToken should have been spent in the caliber
    │                       └── for each order execution, order.minOutputAmount of order.outputToken should have been received by the caliber
    └── given recovery mode is on
-      ├── when sender is not the Security Council
+      ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
-      └── when sender is the Security Council
+      └── when caller is the Security Council
          ├── when the instruction is not of the harvest type
          │  └── it should revert with InvalidInstructionType
          └── when the instruction is of the harvest type

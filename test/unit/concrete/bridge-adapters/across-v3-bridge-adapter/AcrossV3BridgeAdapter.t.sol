@@ -15,7 +15,7 @@ abstract contract AcrossV3BridgeAdapter_Unit_Concrete_Test is BridgeAdapter_Unit
 
         address acrossV3SpokePool = makeAddr("acrossV3SpokePool");
 
-        address beacon = address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
+        address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
         bridgeAdapter = IBridgeAdapter(
             address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(controller), ""))))
         );
