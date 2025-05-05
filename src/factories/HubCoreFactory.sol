@@ -16,7 +16,6 @@ import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
-import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 
 contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapterFactory, IHubCoreFactory {
@@ -145,7 +144,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         internal
         returns (address)
     {
-        address _shareToken = address(new MachineShare(name, symbol, DecimalsUtils.SHARE_TOKEN_DECIMALS, initialOwner));
+        address _shareToken = address(new MachineShare(name, symbol, initialOwner));
         emit ShareTokenCreated(_shareToken);
         return _shareToken;
     }
