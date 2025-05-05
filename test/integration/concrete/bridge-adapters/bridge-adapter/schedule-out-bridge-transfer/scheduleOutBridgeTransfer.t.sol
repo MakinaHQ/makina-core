@@ -6,6 +6,7 @@ import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.so
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {BridgeAdapter_Integration_Concrete_Test} from "../BridgeAdapter.t.sol";
@@ -29,7 +30,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
     }
 
     function test_RevertWhen_CallerNotController() public {
-        vm.expectRevert(IBridgeAdapter.NotController.selector);
+        vm.expectRevert(Errors.NotController.selector);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(0), 0, address(0), 0);
     }
 
@@ -85,7 +86,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
         token1.approve(address(bridgeAdapter1), inputAmount);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.ScheduleOutBridgeTransfer(nextOutTransferId, expectedMessageHash);
+        emit IBridgeAdapter.OutBridgeTransferScheduled(nextOutTransferId, expectedMessageHash);
 
         bytes32 actualMessageHash = bridgeAdapter1.scheduleOutBridgeTransfer(
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount

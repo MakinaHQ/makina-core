@@ -4,39 +4,6 @@ pragma solidity 0.8.28;
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 
 interface ICaliber {
-    error AccountingToken();
-    error ActiveUpdatePending();
-    error AlreadyBaseToken();
-    error AlreadyRootGuardian();
-    error DirectManageFlashLoanCall();
-    error InvalidAccounting();
-    error InvalidAffectedToken();
-    error InvalidDebtFlag();
-    error InvalidPositionChangeDirection();
-    error InvalidInstructionsLength();
-    error InvalidInstructionProof();
-    error InvalidInstructionType();
-    error InvalidOutputToken();
-    error ManageFlashLoanReentrantCall();
-    error MaxValueLossExceeded();
-    error MismatchedLengths();
-    error NonZeroBalance();
-    error NoPendingUpdate();
-    error NotBaseToken();
-    error NotFlashLoanModule();
-    error NotRootGuardian();
-    error OngoingCooldown();
-    error PositionAccountingStale(uint256 posId);
-    error PositionDoesNotExist();
-    error ProtectedRootGuardian();
-    error RecoveryMode();
-    error SameRoot();
-    error TimelockDurationTooShort();
-    error UnauthorizedCaller();
-    error UnmatchingInstructions();
-    error ZeroTokenAddress();
-    error ZeroPositionId();
-
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
@@ -184,6 +151,15 @@ interface ICaliber {
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
 
+    /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
+    /// @return netAum The total value of all base token balances and positive positions, minus total debts.
+    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
+    /// @return baseTokens The array of encoded tuples of the form (token, value).
+    function getDetailedAum()
+        external
+        view
+        returns (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens);
+
     /// @notice Adds a new base token.
     /// @param token The address of the base token.
     function addBaseToken(address token) external;
@@ -203,15 +179,6 @@ interface ICaliber {
     /// @dev Convenience function to account for multiple positions in a single transaction.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
-
-    /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
-    /// @return netAum The total value of all base token balances and positive positions, minus total debts.
-    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
-    /// @return baseTokens The array of encoded tuples of the form (token, value).
-    function getDetailedAum()
-        external
-        view
-        returns (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:

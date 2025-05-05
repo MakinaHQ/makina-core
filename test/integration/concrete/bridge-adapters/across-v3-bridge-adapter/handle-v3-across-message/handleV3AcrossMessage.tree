@@ -17,5 +17,5 @@ handleV3AcrossMessage.t.sol
                ├── given the input amount specified in the message is smaller than received amount
                │  └── it should revert with InvalidInputAmount
                └── given the input amount specified in the message is not smaller than received amount
-                  ├── it should emit a ReceiveInBridgeTransfer event
+                  ├── it should emit a InBridgeTransferReceived event
                   └── it should increase the nextInTransferId in the receiving adapter

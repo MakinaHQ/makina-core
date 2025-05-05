@@ -2,34 +2,13 @@
 pragma solidity 0.8.28;
 
 interface IBridgeAdapter {
-    error BridgeTransferAlreadyCancelled();
-    error BridgeTransferAlreadyClaimed();
-    error BridgeTransferAlreadySent();
-    error InsufficientBalance();
-    error InsufficientOutputAmount();
-    error InvalidInputAmount();
-    error InvalidOutputToken();
-    error InvalidRecipientChainId();
-    error InvalidSenderChainId();
-    error InvalidTransferStatus();
-    error MaxValueLossExceeded();
-    error MessageAlreadyAuthorized();
-    error NotController();
-    error UnauthorizedSource();
-    error UnexpectedMessage();
-
-    event AuthorizeInBridgeTransfer(bytes32 indexed messageHash);
-    event CancelOutBridgeTransfer(uint256 indexed transferId);
-    event ClaimInBridgeTransfer(uint256 indexed transferId);
-    event SendOutBridgeTransfer(uint256 indexed transferId);
-    event ReceiveInBridgeTransfer(uint256 indexed transferId);
-    event ScheduleOutBridgeTransfer(uint256 indexed transferId, bytes32 indexed messageHash);
-    event WithdrawPendingFunds(address indexed token, uint256 amount);
-
-    enum Bridge {
-        ACROSS_V3,
-        CIRCLE_CCTP
-    }
+    event InBridgeTransferAuthorized(bytes32 indexed messageHash);
+    event OutBridgeTransferCancelled(uint256 indexed transferId);
+    event InBridgeTransferClaimed(uint256 indexed transferId);
+    event InBridgeTransferReceived(uint256 indexed transferId);
+    event OutBridgeTransferSent(uint256 indexed transferId);
+    event OutBridgeTransferScheduled(uint256 indexed transferId, bytes32 indexed messageHash);
+    event PendingFundsWithdrawn(address indexed token, uint256 amount);
 
     struct OutBridgeTransfer {
         address recipient;
@@ -71,7 +50,7 @@ interface IBridgeAdapter {
     function controller() external view returns (address);
 
     /// @notice Returns the ID of the adapted external bridge.
-    function bridgeId() external view returns (uint256);
+    function bridgeId() external view returns (uint16);
 
     /// @notice Returns the address of the external bridge approval target contract.
     function approvalTarget() external view returns (address);

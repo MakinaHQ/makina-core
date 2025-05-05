@@ -12,14 +12,8 @@ pragma solidity 0.8.28;
 /// - Finally, the price Token A -> Token B is calculated using both tokens individual prices in the reference currency.
 ///
 interface IOracleRegistry {
-    error PriceFeedRouteNotRegistered(address token);
-    error InvalidDecimals();
-    error InvalidFeedRoute();
-    error NegativeTokenPrice(address priceFeed);
-    error PriceFeedStale(address priceFeed, uint256 updatedAt);
-
-    event FeedStaleThresholdChange(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
     event FeedRouteRegistered(address indexed token, address indexed feed1, address indexed feed2);
+    event FeedStaleThresholdChanged(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
 
     struct FeedRoute {
         address feed1;
@@ -27,7 +21,7 @@ interface IOracleRegistry {
     }
 
     /// @notice Feed => Staleness threshold in seconds
-    function feedStaleThreshold(address feed) external view returns (uint256);
+    function getFeedStaleThreshold(address feed) external view returns (uint256);
 
     /// @notice Token => Is feed route registered for the token
     function isFeedRouteRegistered(address token) external view returns (bool);

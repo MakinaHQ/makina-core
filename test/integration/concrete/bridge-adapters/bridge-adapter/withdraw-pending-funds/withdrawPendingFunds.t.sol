@@ -6,6 +6,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeAdapter_Integration_Concrete_Test} from "../BridgeAdapter.t.sol";
 
@@ -29,7 +30,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
     }
 
     function test_RevertWhen_CallerNotController() public {
-        vm.expectRevert(IBridgeAdapter.NotController.selector);
+        vm.expectRevert(Errors.NotController.selector);
         bridgeAdapter1.withdrawPendingFunds(address(0));
     }
 
@@ -86,7 +87,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
 
         vm.expectEmit(true, true, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.WithdrawPendingFunds(address(token1), amount1 + amount3 + amount4);
+        emit IBridgeAdapter.PendingFundsWithdrawn(address(token1), amount1 + amount3 + amount4);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.withdrawPendingFunds(address(token1));
 
@@ -94,22 +95,22 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), amount1 + amount3 + amount4);
 
         // check that scheduled outgoing transfer cannot be sent
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.sendOutBridgeTransfer(outTransferId1, "");
 
         // check that scheduled outgoing transfer cannot be cancelled
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.cancelOutBridgeTransfer(outTransferId1);
 
         // check that sent outgoing transfer cannot be cancelled
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.cancelOutBridgeTransfer(outTransferId2);
 
         // check that received transfer can be claimed
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(inTransferId);
     }

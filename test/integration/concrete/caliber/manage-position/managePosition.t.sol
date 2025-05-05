@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
@@ -37,11 +37,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -53,12 +53,12 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), 0, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
-        vm.expectRevert(ICaliber.ZeroPositionId.selector);
+        vm.expectRevert(Errors.ZeroPositionId.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
-    function test_RevertWhen_ProvidedInstructionsUnmatching() public {
+    function test_RevertWhen_ProvidedInstructionsMismatch() public {
         uint256 inputAmount = 3e18;
 
         vm.startPrank(mechanic);
@@ -68,13 +68,13 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), POOL_POS_ID, address(vault));
-        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        vm.expectRevert(Errors.InstructionsMismatch.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // instructions have different isDebt flags
         acctInstruction.positionId = VAULT_POS_ID;
         acctInstruction.isDebt = true;
-        vm.expectRevert(ICaliber.UnmatchingInstructions.selector);
+        vm.expectRevert(Errors.InstructionsMismatch.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -84,7 +84,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -98,7 +98,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), false);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidAffectedToken.selector);
+        vm.expectRevert(Errors.InvalidAffectedToken.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -112,7 +112,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault2), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -120,7 +120,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), POOL_POS_ID, address(vault), inputAmount);
         acctInstruction.positionId = POOL_POS_ID;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -130,7 +130,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction.isDebt = true;
         acctInstruction.isDebt = true;
         acctInstruction.positionId = VAULT_POS_ID;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -139,7 +139,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.affectedTokens[0] = address(0);
         acctInstruction.isDebt = false;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -147,7 +147,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.commands[1] = mgmtInstruction.commands[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -155,7 +155,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.state[2] = mgmtInstruction.state[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -163,7 +163,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.stateBitmap = 0;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
@@ -196,7 +196,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // instruction cannot be executed after the update takes effect
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // schedule root update with the correct root
@@ -205,7 +205,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // instruction cannot be executed while the update is pending
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         skip(caliber.timelockDuration());
@@ -224,7 +224,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidInstructionType.selector);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -238,31 +238,31 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong affected tokens list
         acctInstruction.affectedTokens[0] = address(0);
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong commands
         delete acctInstruction.commands[0];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong state
         delete acctInstruction.state[2];
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong bitmap
         acctInstruction.stateBitmap = 0;
-        vm.expectRevert(ICaliber.InvalidInstructionProof.selector);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
@@ -279,7 +279,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // replace end flag with null value in accounting output state
         delete acctInstruction.state[1];
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidAccounting.selector);
+        vm.expectRevert(Errors.InvalidAccounting.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -293,7 +293,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidAffectedToken.selector);
+        vm.expectRevert(Errors.InvalidAffectedToken.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -312,7 +312,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try to create position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.OngoingCooldown.selector);
+        vm.expectRevert(Errors.OngoingCooldown.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -337,7 +337,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try increase position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidPositionChangeDirection.selector);
+        vm.expectRevert(Errors.InvalidPositionChangeDirection.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -365,7 +365,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try repay debt
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.InvalidPositionChangeDirection.selector);
+        vm.expectRevert(Errors.InvalidPositionChangeDirection.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -386,7 +386,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try create position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -407,7 +407,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try create position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -435,7 +435,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try decrease position
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check that execution succeeds when value loss reaches the position increase loss threshold,
@@ -467,7 +467,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check that execution succeeds when value loss reaches the position increase loss threshold,
@@ -981,11 +981,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction memory dummyInstruction;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePosition(dummyInstruction, dummyInstruction);
     }
 
@@ -1015,7 +1015,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try to decrease position again
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.OngoingCooldown.selector);
+        vm.expectRevert(Errors.OngoingCooldown.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1036,7 +1036,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1057,7 +1057,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // create position
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1088,7 +1088,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try increase position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.InvalidPositionChangeDirection.selector);
+        vm.expectRevert(Errors.InvalidPositionChangeDirection.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -1122,7 +1122,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try decrease position
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check that execution succeeds when value loss reaches the position increase loss threshold,
@@ -1160,7 +1160,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(ICaliber.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // check that execution succeeds when value loss reaches the position increase loss threshold,
@@ -1200,7 +1200,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         // try decrease position
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 

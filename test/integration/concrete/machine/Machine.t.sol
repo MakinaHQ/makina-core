@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBaseMakinaRegistry} from "src/interfaces/IBaseMakinaRegistry.sol";
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -55,9 +54,8 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
 
         vm.startPrank(address(dao));
-        hubRegistry.setBridgeAdapterBeacon(
-            IBridgeAdapter.Bridge.ACROSS_V3,
-            address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+        hubCoreRegistry.setBridgeAdapterBeacon(
+            ACROSS_V3_BRIDGE_ID, address(_deployAccrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
         );
         vm.stopPrank();
     }
@@ -144,9 +142,9 @@ abstract contract BridgeController_Machine_Integration_Concrete_Test is
     {
         Machine_Integration_Concrete_Test.setUp();
 
-        registry = IBaseMakinaRegistry(address(hubRegistry));
+        registry = ICoreRegistry(address(hubCoreRegistry));
         bridgeController = IBridgeController(address(machine));
-        bridgeAdapterFactory = IBridgeAdapterFactory(address(machineFactory));
+        bridgeAdapterFactory = IBridgeAdapterFactory(address(hubCoreFactory));
     }
 }
 

@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
@@ -38,7 +39,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setPositionStaleThreshold(2 hours);
     }
 
@@ -52,7 +53,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetTimelockDuration_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setTimelockDuration(2 hours);
     }
 
@@ -66,7 +67,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxPositionIncreaseLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setMaxPositionIncreaseLossBps(1000);
     }
 
@@ -79,7 +80,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxPositionDecreaseLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setMaxPositionDecreaseLossBps(1000);
     }
 
@@ -92,7 +93,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetMaxSwapLossBps_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setMaxSwapLossBps(1000);
     }
 
@@ -105,7 +106,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
     }
 
     function test_SetCooldownDuration_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(ICaliber.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.setCooldownDuration(1000);
     }
 

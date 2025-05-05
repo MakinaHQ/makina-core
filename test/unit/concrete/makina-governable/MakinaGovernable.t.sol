@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Unit_Concrete_Test} from "../UnitConcrete.t.sol";
 
@@ -77,7 +78,7 @@ abstract contract MakinaGovernable_Unit_Concrete_Test is Unit_Concrete_Test {
     }
 
     function test_SetRecoveryMode_RevertWhen_CallerNotSC() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         governable.setRecoveryMode(true);
     }
 

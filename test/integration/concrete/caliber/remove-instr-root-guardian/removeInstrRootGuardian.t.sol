@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -14,17 +15,17 @@ contract RemoveInstrRootGuardian_Integration_Concrete_Test is Caliber_Integratio
     }
 
     function test_RevertWhen_TargetIsAlreadyRootGuardian() public {
-        vm.expectRevert(ICaliber.NotRootGuardian.selector);
+        vm.expectRevert(Errors.NotRootGuardian.selector);
         vm.prank(dao);
         caliber.removeInstrRootGuardian(address(0));
     }
 
     function test_RevertWhen_TargetIsProtectedRootGuardian() public {
-        vm.expectRevert(ICaliber.ProtectedRootGuardian.selector);
+        vm.expectRevert(Errors.ProtectedRootGuardian.selector);
         vm.prank(dao);
         caliber.removeInstrRootGuardian(riskManager);
 
-        vm.expectRevert(ICaliber.ProtectedRootGuardian.selector);
+        vm.expectRevert(Errors.ProtectedRootGuardian.selector);
         vm.prank(dao);
         caliber.removeInstrRootGuardian(securityCouncil);
     }

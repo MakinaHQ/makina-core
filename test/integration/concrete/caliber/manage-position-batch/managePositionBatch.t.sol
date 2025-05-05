@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
@@ -36,11 +36,11 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {
         ICaliber.Instruction[] memory dummyInstructions;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePositionBatch(dummyInstructions, dummyInstructions);
 
         vm.prank(securityCouncil);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePositionBatch(dummyInstructions, dummyInstructions);
     }
 
@@ -49,7 +49,7 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](1);
 
         vm.prank(mechanic);
-        vm.expectRevert(ICaliber.MismatchedLengths.selector);
+        vm.expectRevert(Errors.MismatchedLengths.selector);
         caliber.managePositionBatch(mgmtInstructions, acctInstructions);
     }
 
@@ -99,11 +99,11 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
         ICaliber.Instruction[] memory dummyInstructions;
 
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePositionBatch(dummyInstructions, dummyInstructions);
 
         vm.prank(mechanic);
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.managePositionBatch(dummyInstructions, dummyInstructions);
     }
 

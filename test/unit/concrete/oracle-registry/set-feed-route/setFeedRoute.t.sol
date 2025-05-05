@@ -5,6 +5,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC20NoDecimals} from "test/mocks/MockERC20NoDecimals.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
@@ -23,7 +24,7 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     function test_RevertWhen_ProvidedFeed1Null() public {
         priceFeed2 = new MockPriceFeed(18, int256(1e18), block.timestamp);
 
-        vm.expectRevert(IOracleRegistry.InvalidFeedRoute.selector);
+        vm.expectRevert(Errors.InvalidFeedRoute.selector);
         vm.prank(dao);
         oracleRegistry.setFeedRoute(
             address(baseToken), address(0), DEFAULT_PF_STALE_THRSHLD, address(priceFeed2), DEFAULT_PF_STALE_THRSHLD
@@ -34,7 +35,7 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         MockERC20 token = new MockERC20("Token", "TKN", DecimalsUtils.MIN_DECIMALS - 1);
         priceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
 
-        vm.expectRevert(IOracleRegistry.InvalidDecimals.selector);
+        vm.expectRevert(Errors.InvalidDecimals.selector);
         vm.prank(dao);
         oracleRegistry.setFeedRoute(address(token), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
     }
@@ -43,7 +44,7 @@ contract SetFeedRoute_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         MockERC20 token = new MockERC20("Token", "TKN", DecimalsUtils.MAX_DECIMALS + 1);
         priceFeed1 = new MockPriceFeed(18, int256(1e18), block.timestamp);
 
-        vm.expectRevert(IOracleRegistry.InvalidDecimals.selector);
+        vm.expectRevert(Errors.InvalidDecimals.selector);
         vm.prank(dao);
         oracleRegistry.setFeedRoute(address(token), address(priceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
     }

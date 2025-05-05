@@ -6,8 +6,8 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -23,14 +23,14 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
 
     function test_RevertWhen_TokenNotBaseToken() public {
         address token = makeAddr("token");
-        vm.expectRevert(ICaliber.NotBaseToken.selector);
+        vm.expectRevert(Errors.NotBaseToken.selector);
         vm.prank(dao);
         caliberMailbox.resetBridgingState(token);
     }
 
     function test_ResetBridgingState_CountersAlreadyNull() public {
         vm.expectEmit(true, false, false, false, address(caliberMailbox));
-        emit IBridgeController.ResetBridgingState(address(accountingToken));
+        emit IBridgeController.BridgingStateReset(address(accountingToken));
         vm.prank(dao);
         caliberMailbox.resetBridgingState(address(accountingToken));
     }
@@ -38,20 +38,20 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
     function test_ResetBridgingState_ResetBridgeOutCounter()
         public
         withForeignTokenRegistered(address(accountingToken), hubChainId, hubAccountingTokenAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
 
         // schedule and send outgoing bridge transfer to increase bridgeOut counter
         deal(address(accountingToken), address(caliber), inputAmount, true);
-        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
         vm.startPrank(mechanic);
         caliber.transferToHubMachine(
-            address(accountingToken), inputAmount, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, inputAmount)
+            address(accountingToken), inputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, inputAmount)
         );
-        caliberMailbox.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 days));
+        caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 days));
         vm.stopPrank();
 
         ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
@@ -72,13 +72,13 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
     function test_ResetBridgingState_ResetBridgeInCounter()
         public
         withForeignTokenRegistered(address(accountingToken), hubChainId, hubAccountingTokenAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr)
     {
         // simulate incoming bridge transfer
         uint256 inputAmount = 1e18;
         uint256 outputAmount = 1e18;
-        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextInTransferId();
         bytes memory encodedMessage = abi.encode(
             IBridgeAdapter.BridgeMessage(
@@ -95,7 +95,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         );
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
-        caliberMailbox.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
         IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
@@ -104,7 +104,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
 
         // claim transfer
         vm.prank(mechanic);
-        caliberMailbox.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        caliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         ICaliberMailbox.SpokeCaliberAccountingData memory accountingData =
             caliberMailbox.getSpokeCaliberAccountingData();
@@ -122,14 +122,14 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
     function test_ResetBridgingState_WithdrawAdapterFunds()
         public
         withForeignTokenRegistered(address(accountingToken), hubChainId, hubAccountingTokenAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withHubBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, hubBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr)
     {
         uint256 amount1 = 1e18;
         uint256 amount2 = 2e19;
         uint256 amount3 = 3e20;
 
-        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = caliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
 
         // simulate incoming bridge transfer
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextInTransferId();
@@ -148,7 +148,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         );
         bytes32 messageHash = keccak256(encodedMessage);
         vm.prank(mechanic);
-        caliberMailbox.authorizeInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, messageHash);
+        caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
         IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
@@ -159,9 +159,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         deal(address(accountingToken), address(caliber), amount2, true);
         transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
         vm.prank(mechanic);
-        caliber.transferToHubMachine(
-            address(accountingToken), amount2, abi.encode(IBridgeAdapter.Bridge.ACROSS_V3, amount2)
-        );
+        caliber.transferToHubMachine(address(accountingToken), amount2, abi.encode(ACROSS_V3_BRIDGE_ID, amount2));
 
         // mint some extra tokens to the bridge adapter
         accountingToken.mint(bridgeAdapterAddr, amount3);

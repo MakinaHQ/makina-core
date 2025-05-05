@@ -35,7 +35,7 @@ contract DeployHubCore is DeployCore {
         uint256[] memory supportedChains = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
         _deployment = deployHubCore(deployer, dao, wormhole);
 
-        setupHubRegistry(_deployment);
+        setupHubCoreRegistry(_deployment);
         setupOracleRegistry(_deployment.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_deployment.tokenRegistry, tokensToRegister);
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
@@ -54,9 +54,9 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "AccessManager", address(_deployment.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_deployment.caliberBeacon));
         vm.serializeAddress(key, "MachineBeacon", address(_deployment.machineBeacon));
-        vm.serializeAddress(key, "MachineFactory", address(_deployment.machineFactory));
+        vm.serializeAddress(key, "HubCoreFactory", address(_deployment.hubCoreFactory));
         vm.serializeAddress(key, "ChainRegistry", address(_deployment.chainRegistry));
-        vm.serializeAddress(key, "HubRegistry", address(_deployment.hubRegistry));
+        vm.serializeAddress(key, "HubCoreRegistry", address(_deployment.hubCoreRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_deployment.oracleRegistry));
         vm.serializeAddress(key, "TokenRegistry", address(_deployment.tokenRegistry));
         vm.writeJson(vm.serializeAddress(key, "SwapModule", address(_deployment.swapModule)), outputPath);

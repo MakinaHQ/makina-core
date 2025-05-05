@@ -19,6 +19,7 @@ import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
 import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Machine} from "src/machine/Machine.sol";
 
@@ -26,8 +27,6 @@ library MachineUtils {
     using Math for uint256;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using EnumerableSet for EnumerableSet.AddressSet;
-
-    error StaleData();
 
     function updateTotalAum(Machine.MachineStorage storage $, address oracleRegistry) external returns (uint256) {
         $._lastTotalAum = _getTotalAum($, oracleRegistry);
@@ -162,7 +161,7 @@ library MachineUtils {
         IMachine.SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
 
         if (caliberData.mailbox == address(0)) {
-            revert IMachine.InvalidChainId();
+            revert Errors.InvalidChainId();
         }
 
         // Decode and validate accounting data.
@@ -174,7 +173,7 @@ library MachineUtils {
             responseTimestamp < caliberData.timestamp
                 || (block.timestamp > responseTimestamp && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
         ) {
-            revert StaleData();
+            revert Errors.StaleData();
         }
 
         // Update the spoke caliber data in the machine storage.
@@ -221,7 +220,7 @@ library MachineUtils {
                 currentTimestamp > spokeCaliberData.timestamp
                     && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold
             ) {
-                revert IMachine.CaliberAccountingStale(chainId);
+                revert Errors.CaliberAccountingStale(chainId);
             }
             totalAum += spokeCaliberData.netAum;
 
@@ -290,7 +289,7 @@ library MachineUtils {
             (address token, uint256 amountIn) = insMap.at(i);
             (, uint256 amountOut) = outsMap.tryGet(token);
             if (amountIn > amountOut) {
-                revert IMachine.BridgeStateMismatch();
+                revert Errors.BridgeStateMismatch();
             }
             unchecked {
                 ++i;

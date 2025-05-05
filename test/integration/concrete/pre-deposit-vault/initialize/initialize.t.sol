@@ -4,9 +4,9 @@ pragma solidity 0.8.28;
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
@@ -30,9 +30,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
         MockERC20 accountingToken2 = new MockERC20("Accounting Token 2", "AT2", 18);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(accountingToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(accountingToken2)));
         new BeaconProxy(
             address(preDepositVaultBeacon),
             abi.encodeCall(
@@ -45,9 +43,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     function test_RevertWhen_ProvidedDepositTokenNonPriceable() public {
         MockERC20 baseToken2 = new MockERC20("Deposit Token 2", "DT2", 18);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         new BeaconProxy(
             address(preDepositVaultBeacon),
             abi.encodeCall(
@@ -79,7 +75,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
 
         assertFalse(preDepositVault.migrated());
 
-        vm.expectRevert(IPreDepositVault.NotMigrated.selector);
+        vm.expectRevert(Errors.NotMigrated.selector);
         preDepositVault.machine();
 
         assertEq(preDepositVault.depositToken(), address(baseToken));

@@ -6,7 +6,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMachineFactory} from "src/interfaces/IMachineFactory.sol";
+import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
@@ -52,12 +52,12 @@ contract DeployHubMachine is Script, SortedParams {
         string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
         string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
 
-        IMachineFactory machineFactory =
-            IMachineFactory(abi.decode(vm.parseJson(coreOutputJson, ".MachineFactory"), (address)));
+        IHubCoreFactory hubCoreFactory =
+            IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
 
         // Deploy caliber
         vm.startBroadcast();
-        deployedInstance = machineFactory.createMachine(
+        deployedInstance = hubCoreFactory.createMachine(
             IMachine.MachineInitParams(
                 mParams.initialDepositor,
                 mParams.initialRedeemer,

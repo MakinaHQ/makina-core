@@ -12,8 +12,9 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
-import {IBaseMakinaRegistry} from "../interfaces/IBaseMakinaRegistry.sol";
+import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
@@ -106,21 +107,21 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
                         : _hubMachineEndpoint.mechanic()
                 )
         ) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
 
     modifier onlyRiskManager() {
         if (msg.sender != IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).riskManager()) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
 
     modifier onlyRiskManagerTimelock() {
         if (msg.sender != IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).riskManagerTimelock()) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         _;
     }
@@ -232,58 +233,18 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function addBaseToken(address token) external override onlyRiskManagerTimelock {
-        _addBaseToken(token);
-    }
-
-    /// @inheritdoc ICaliber
-    function removeBaseToken(address token) external override onlyRiskManagerTimelock {
-        CaliberStorage storage $ = _getCaliberStorage();
-
-        if (token == $._accountingToken) {
-            revert AccountingToken();
-        }
-        if (!$._baseTokens.remove(token)) {
-            revert NotBaseToken();
-        }
-        if (IERC20(token).balanceOf(address(this)) > 0) {
-            revert NonZeroBalance();
-        }
-
-        emit BaseTokenRemoved(token);
-    }
-
-    /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._positionIds.contains(instruction.positionId)) {
-            revert PositionDoesNotExist();
-        }
-        return _accountForPosition(instruction, true);
-    }
-
-    /// @inheritdoc ICaliber
-    function accountForPositionBatch(Instruction[] calldata instructions) external override {
-        CaliberStorage storage $ = _getCaliberStorage();
-        uint256 len = instructions.length;
-        for (uint256 i; i < len; i++) {
-            if (!$._positionIds.contains(instructions[i].positionId)) {
-                revert PositionDoesNotExist();
-            }
-            _accountForPosition(instructions[i], true);
-        }
-    }
-
-    /// @inheritdoc ICaliber
     function isAccountingFresh() external view returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 len = $._positionIds.length();
         uint256 currentTimestamp = block.timestamp;
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             if (currentTimestamp - $._positionById[$._positionIds.at(i)].lastAccountingTime > $._positionStaleThreshold)
             {
                 return false;
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -300,32 +261,84 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 len = $._positionIds.length();
         bytes[] memory positionsValues = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             uint256 posId = $._positionIds.at(i);
             Position memory pos = $._positionById[posId];
             if (currentTimestamp - $._positionById[posId].lastAccountingTime >= $._positionStaleThreshold) {
-                revert PositionAccountingStale(posId);
+                revert Errors.PositionAccountingStale(posId);
             } else if (pos.isDebt) {
                 debt += pos.value;
             } else {
                 aum += pos.value;
             }
             positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
+            unchecked {
+                ++i;
+            }
         }
 
         len = $._baseTokens.length();
         bytes[] memory baseTokensValues = new bytes[](len);
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             address bt = $._baseTokens.at(i);
             uint256 btBal = IERC20(bt).balanceOf(address(this));
             uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
             aum += value;
             baseTokensValues[i] = abi.encode(bt, value);
+            unchecked {
+                ++i;
+            }
         }
 
         uint256 netAum = aum > debt ? aum - debt : 0;
 
         return (netAum, positionsValues, baseTokensValues);
+    }
+
+    /// @inheritdoc ICaliber
+    function addBaseToken(address token) external override onlyRiskManagerTimelock {
+        _addBaseToken(token);
+    }
+
+    /// @inheritdoc ICaliber
+    function removeBaseToken(address token) external override onlyRiskManagerTimelock {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if (token == $._accountingToken) {
+            revert Errors.AccountingToken();
+        }
+        if (!$._baseTokens.remove(token)) {
+            revert Errors.NotBaseToken();
+        }
+        if (IERC20(token).balanceOf(address(this)) > 0) {
+            revert Errors.NonZeroBalance();
+        }
+
+        emit BaseTokenRemoved(token);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._positionIds.contains(instruction.positionId)) {
+            revert Errors.PositionDoesNotExist();
+        }
+        return _accountForPosition(instruction, true);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPositionBatch(Instruction[] calldata instructions) external override {
+        CaliberStorage storage $ = _getCaliberStorage();
+        uint256 len = instructions.length;
+        for (uint256 i; i < len;) {
+            if (!$._positionIds.contains(instructions[i].positionId)) {
+                revert Errors.PositionDoesNotExist();
+            }
+            _accountForPosition(instructions[i], true);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @inheritdoc ICaliber
@@ -348,7 +361,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     {
         uint256 len = mgmtInstructions.length;
         if (len != acctInstructions.length) {
-            revert MismatchedLengths();
+            revert Errors.MismatchedLengths();
         }
         for (uint256 i; i < len;) {
             _managePosition(mgmtInstructions[i], acctInstructions[i]);
@@ -363,24 +376,24 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         CaliberStorage storage $ = _getCaliberStorage();
 
         if ($._isManagingFlashloan) {
-            revert ManageFlashLoanReentrantCall();
+            revert Errors.ManageFlashLoanReentrantCall();
         }
 
-        address _flashLoanModule = IBaseMakinaRegistry(registry).flashLoanModule();
+        address _flashLoanModule = ICoreRegistry(registry).flashLoanModule();
         if (msg.sender != _flashLoanModule) {
-            revert NotFlashLoanModule();
+            revert Errors.NotFlashLoanModule();
         }
         if ($._managedPositionId == 0) {
-            revert DirectManageFlashLoanCall();
+            revert Errors.DirectManageFlashLoanCall();
         }
         if (instruction.instructionType != InstructionType.FLASHLOAN_MANAGEMENT) {
-            revert InvalidInstructionType();
+            revert Errors.InvalidInstructionType();
         }
         if ($._managedPositionId != instruction.positionId || $._isManagedPositionDebt != instruction.isDebt) {
-            revert UnmatchingInstructions();
+            revert Errors.InstructionsMismatch();
         }
         if (instruction.isDebt) {
-            revert InvalidDebtFlag();
+            revert Errors.InvalidDebtFlag();
         }
         $._isManagingFlashloan = true;
         IERC20(token).safeTransferFrom(_flashLoanModule, address(this), amount);
@@ -398,12 +411,16 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         onlyOperator
     {
         if (instruction.instructionType != InstructionType.HARVEST) {
-            revert InvalidInstructionType();
+            revert Errors.InvalidInstructionType();
         }
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
-        for (uint256 i; i < swapOrders.length; i++) {
+        uint256 len = swapOrders.length;
+        for (uint256 i; i < len;) {
             _swap(swapOrders[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -439,10 +456,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         CaliberStorage storage $ = _getCaliberStorage();
         _updateAllowedInstrRoot();
         if ($._pendingTimelockExpiry != 0) {
-            revert ActiveUpdatePending();
+            revert Errors.ActiveUpdatePending();
         }
         if (newAllowedInstrRoot == $._allowedInstrRoot) {
-            revert SameRoot();
+            revert Errors.SameRoot();
         }
         $._pendingAllowedInstrRoot = newAllowedInstrRoot;
         $._pendingTimelockExpiry = block.timestamp + $._timelockDuration;
@@ -457,10 +474,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             msg.sender != _hubMachineEndpoint.riskManager() && msg.sender != _hubMachineEndpoint.securityCouncil()
                 && !_getCaliberStorage()._instrRootGuardians.contains(msg.sender)
         ) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         if ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry) {
-            revert NoPendingUpdate();
+            revert Errors.NoPendingUpdate();
         }
         emit NewAllowedInstrRootCancelled($._pendingAllowedInstrRoot);
         delete $._pendingAllowedInstrRoot;
@@ -511,7 +528,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             newGuardian == _hubMachineEndpoint.riskManager() || newGuardian == _hubMachineEndpoint.securityCouncil()
                 || !$._instrRootGuardians.add(newGuardian)
         ) {
-            revert AlreadyRootGuardian();
+            revert Errors.AlreadyRootGuardian();
         }
         emit InstrRootGuardianAdded(newGuardian);
     }
@@ -521,10 +538,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         CaliberStorage storage $ = _getCaliberStorage();
         IMachineEndpoint _hubMachineEndpoint = IMachineEndpoint($._hubMachineEndpoint);
         if (guardian == _hubMachineEndpoint.riskManager() || guardian == _hubMachineEndpoint.securityCouncil()) {
-            revert ProtectedRootGuardian();
+            revert Errors.ProtectedRootGuardian();
         }
         if (!$._instrRootGuardians.remove(guardian)) {
-            revert NotRootGuardian();
+            revert Errors.NotRootGuardian();
         }
         emit InstrRootGuardianRemoved(guardian);
     }
@@ -534,16 +551,16 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         CaliberStorage storage $ = _getCaliberStorage();
 
         if (token == address(0)) {
-            revert ZeroTokenAddress();
+            revert Errors.ZeroTokenAddress();
         }
         if (!$._baseTokens.add(token)) {
-            revert AlreadyBaseToken();
+            revert Errors.AlreadyBaseToken();
         }
 
         emit BaseTokenAdded(token);
 
-        if (!IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(token);
+        if (!IOracleRegistry(ICoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(token)) {
+            revert Errors.PriceFeedRouteNotRegistered(token);
         }
     }
 
@@ -556,13 +573,13 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 posId = mgmtInstruction.positionId;
         if (posId == 0) {
-            revert ZeroPositionId();
+            revert Errors.ZeroPositionId();
         }
         if (posId != acctInstruction.positionId || mgmtInstruction.isDebt != acctInstruction.isDebt) {
-            revert UnmatchingInstructions();
+            revert Errors.InstructionsMismatch();
         }
         if (mgmtInstruction.instructionType != InstructionType.MANAGEMENT) {
-            revert InvalidInstructionType();
+            revert Errors.InvalidInstructionType();
         }
 
         $._managedPositionId = posId;
@@ -573,13 +590,17 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         _checkInstructionIsAllowed(mgmtInstruction);
 
         uint256 affectedTokensValueBefore;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+        uint256 atLen = mgmtInstruction.affectedTokens.length;
+        for (uint256 i; i < atLen;) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
             if (!$._baseTokens.contains(_affectedToken)) {
-                revert InvalidAffectedToken();
+                revert Errors.InvalidAffectedToken();
             }
             affectedTokensValueBefore +=
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            unchecked {
+                ++i;
+            }
         }
 
         _execute(mgmtInstruction.commands, mgmtInstruction.state);
@@ -587,35 +608,37 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
 
         uint256 affectedTokensValueAfter;
-        for (uint256 i; i < mgmtInstruction.affectedTokens.length; i++) {
+        for (uint256 i; i < atLen;) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
             affectedTokensValueAfter +=
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            unchecked {
+                ++i;
+            }
         }
 
-        bool isBaseTokenInflow = affectedTokensValueAfter >= affectedTokensValueBefore;
         bool isPositionIncrease = change >= 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
         if (isPositionIncrease && IMachineEndpoint($._hubMachineEndpoint).recoveryMode()) {
-            revert RecoveryMode();
+            revert Errors.RecoveryMode();
         }
 
         bytes32 executionHash = keccak256(abi.encodePacked(posId, mgmtInstruction.commands, isPositionIncrease));
         if (block.timestamp - $._lastExecutionTimestamp[executionHash] < $._cooldownDuration) {
-            revert OngoingCooldown();
+            revert Errors.OngoingCooldown();
         }
 
-        if (isBaseTokenInflow) {
+        if (affectedTokensValueAfter < affectedTokensValueBefore) {
+            if (mgmtInstruction.isDebt == isPositionIncrease) {
+                revert Errors.InvalidPositionChangeDirection();
+            }
+            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
+        } else {
             if (mgmtInstruction.isDebt == isPositionIncrease) {
                 _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
             }
-        } else {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
-                revert InvalidPositionChangeDirection();
-            }
-            _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         }
 
         $._lastExecutionTimestamp[executionHash] = block.timestamp;
@@ -630,7 +653,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     function _accountForPosition(Instruction calldata instruction, bool checks) internal returns (uint256, int256) {
         if (checks) {
             if (instruction.instructionType != InstructionType.ACCOUNTING) {
-                revert InvalidInstructionType();
+                revert Errors.InvalidInstructionType();
             }
             _checkInstructionIsAllowed(instruction);
         }
@@ -650,14 +673,17 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         uint256 len = instruction.affectedTokens.length;
         if (amounts.length != len) {
-            revert InvalidAccounting();
+            revert Errors.InvalidAccounting();
         }
-        for (uint256 i; i < len; i++) {
+        for (uint256 i; i < len;) {
             address token = instruction.affectedTokens[i];
             if (!$._baseTokens.contains(token)) {
-                revert InvalidAffectedToken();
+                revert Errors.InvalidAffectedToken();
             }
             currentValue += _accountingValueOf(token, amounts[i]);
+            unchecked {
+                ++i;
+            }
         }
 
         if (lastValue > 0 && currentValue == 0) {
@@ -679,15 +705,19 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @dev Decodes the output state of an accounting instruction into an array of amounts.
     function _decodeAccountingOutputState(bytes[] memory state) internal pure returns (uint256[] memory) {
-        uint256[] memory amounts = new uint256[](state.length);
+        uint256 len = state.length;
+        uint256[] memory amounts = new uint256[](len);
 
         uint256 count;
-        for (uint256 i; i < state.length; i++) {
+        for (uint256 i; i < len;) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END) {
                 break;
             }
             amounts[i] = uint256(bytes32(state[i]));
-            count++;
+            unchecked {
+                ++count;
+                ++i;
+            }
         }
 
         // Resize the array to the actual number of values.
@@ -704,8 +734,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (token == $._accountingToken) {
             return amount;
         }
-        uint256 price =
-            IOracleRegistry(IBaseMakinaRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
+        uint256 price = IOracleRegistry(ICoreRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
         return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
     }
 
@@ -716,7 +745,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     {
         uint256 minChange = affectedTokensValChange.mulDiv(MAX_BPS - maxLossBps, MAX_BPS);
         if (positionValChange < minChange) {
-            revert MaxValueLossExceeded();
+            revert Errors.MaxValueLossExceeded();
         }
     }
 
@@ -727,7 +756,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     {
         uint256 maxChange = affectedTokensValChange.mulDiv(MAX_BPS + maxLossBps, MAX_BPS);
         if (positionValChange > maxChange) {
-            revert MaxValueLossExceeded();
+            revert Errors.MaxValueLossExceeded();
         }
     }
 
@@ -753,7 +782,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             )
         );
         if (!MerkleProof.verify(instruction.merkleProof, _updateAllowedInstrRoot(), instructionLeaf)) {
-            revert InvalidInstructionProof();
+            revert Errors.InvalidInstructionProof();
         }
     }
 
@@ -799,21 +828,21 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     function _swap(ISwapModule.SwapOrder calldata order) internal {
         CaliberStorage storage $ = _getCaliberStorage();
         if (IMachineEndpoint($._hubMachineEndpoint).recoveryMode() && order.outputToken != $._accountingToken) {
-            revert RecoveryMode();
+            revert Errors.RecoveryMode();
         } else if (!$._baseTokens.contains(order.outputToken)) {
-            revert InvalidOutputToken();
+            revert Errors.InvalidOutputToken();
         }
 
         uint256 valBefore;
         bool isInputBaseToken = $._baseTokens.contains(order.inputToken);
         if (isInputBaseToken) {
             if (block.timestamp - $._lastBTSwapTimestamp < $._cooldownDuration) {
-                revert OngoingCooldown();
+                revert Errors.OngoingCooldown();
             }
             valBefore = _accountingValueOf(order.inputToken, order.inputAmount);
         }
 
-        address _swapModule = IBaseMakinaRegistry(registry).swapModule();
+        address _swapModule = ICoreRegistry(registry).swapModule();
         IERC20(order.inputToken).forceApprove(_swapModule, order.inputAmount);
         uint256 amountOut = ISwapModule(_swapModule).swap(order);
         IERC20(order.inputToken).forceApprove(_swapModule, 0);
@@ -821,7 +850,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
             if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
-                revert MaxValueLossExceeded();
+                revert Errors.MaxValueLossExceeded();
             }
             $._lastBTSwapTimestamp = block.timestamp;
         }

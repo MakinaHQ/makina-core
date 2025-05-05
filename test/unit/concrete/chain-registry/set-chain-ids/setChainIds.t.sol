@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {ChainRegistry_Unit_Concrete_Test} from "../ChainRegistry.t.sol";
 
@@ -16,10 +17,10 @@ contract SetChainIds_Unit_Concrete_Test is ChainRegistry_Unit_Concrete_Test {
     function test_RevertWhen_ZeroChainId() public {
         vm.startPrank(dao);
 
-        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.ZeroChainId.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroChainId.selector));
         chainRegistry.setChainIds(0, 1);
 
-        vm.expectRevert(abi.encodeWithSelector(IChainRegistry.ZeroChainId.selector));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroChainId.selector));
         chainRegistry.setChainIds(1, 0);
     }
 

@@ -12,4 +12,4 @@ sendOutBridgeTransfer.t.sol
          │  └── it should revert with InvalidTransferStatus
          └── given the corresponding transfer has not been already sent
             ├── it should decrease the adapter's token balance by amount
-            └── it should emit a SendOutBridgeTransfer event
+            └── it should emit a OutBridgeTransferSent event

@@ -5,6 +5,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
@@ -16,7 +17,7 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
         vm.prank(dao);
         preDepositVault = PreDepositVault(
-            machineFactory.createPreDepositVault(
+            hubCoreFactory.createPreDepositVault(
                 IPreDepositVault.PreDepositVaultInitParams({
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
@@ -34,7 +35,7 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     modifier migrated() {
         address newMachineAddr = makeAddr("newMachine");
 
-        vm.prank(address(machineFactory));
+        vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(newMachineAddr);
 
         vm.prank(newMachineAddr);
@@ -46,7 +47,7 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
 contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_Unit_Concrete_Test {
     function test_Getters() public view {
-        assertEq(preDepositVault.registry(), address(hubRegistry));
+        assertEq(preDepositVault.registry(), address(hubCoreRegistry));
         assertEq(preDepositVault.totalAssets(), 0);
         assertEq(preDepositVault.depositToken(), address(baseToken));
         assertEq(preDepositVault.accountingToken(), address(accountingToken));
@@ -61,12 +62,12 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
     }
 
     function test_SetShareLimit_RevertWhen_CallerNotRiskManager() public {
-        vm.expectRevert(IPreDepositVault.UnauthorizedCaller.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         preDepositVault.setShareLimit(0);
     }
 
     function test_SetShareLimit_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         vm.prank(riskManager);
         preDepositVault.setShareLimit(0);
     }
@@ -88,7 +89,7 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
     }
 
     function test_SetRiskManager_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         vm.prank(dao);
         preDepositVault.setRiskManager(address(0));
     }
@@ -110,7 +111,7 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
     }
 
     function test_SetWhitelistedUsers_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         vm.prank(dao);
         preDepositVault.setWhitelistedUsers(new address[](0), true);
     }
@@ -139,7 +140,7 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
     }
 
     function test_SetWhitelistMode_RevertGiven_VaultMigrated() public migrated {
-        vm.expectRevert(IPreDepositVault.Migrated.selector);
+        vm.expectRevert(Errors.Migrated.selector);
         vm.prank(dao);
         preDepositVault.setWhitelistMode(true);
     }

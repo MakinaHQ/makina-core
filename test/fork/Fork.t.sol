@@ -67,11 +67,11 @@ abstract contract Fork_Test is Base, Test, Constants {
 
         // setup makina registry and chain registry
         if (isHub) {
-            setupHubRegistry(hubCore);
+            setupHubCoreRegistry(hubCore);
             uint256[] memory evmChainIds = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
             setupChainRegistry(hubCore.chainRegistry, evmChainIds);
         } else {
-            setupSpokeRegistry(spokeCores[chainId]);
+            setupSpokeCoreRegistry(spokeCores[chainId]);
         }
 
         // setup oracle registry

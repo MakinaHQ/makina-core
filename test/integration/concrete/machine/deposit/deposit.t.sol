@@ -5,7 +5,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
@@ -22,12 +22,12 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.deposit(1e18, address(this), 0);
     }
 
     function test_RevertWhen_CallerNotDepositor() public {
-        vm.expectRevert(IMachine.UnauthorizedDepositor.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.deposit(1e18, address(this), 0);
     }
 
@@ -44,7 +44,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), inputAmount);
         // as the share supply is zero, maxMint is equal to shareLimit
-        vm.expectRevert(abi.encodeWithSelector(IMachine.ExceededMaxMint.selector, expectedShares, newShareLimit));
+        vm.expectRevert(abi.encodeWithSelector(Errors.ExceededMaxMint.selector, expectedShares, newShareLimit));
         machine.deposit(inputAmount, address(this), 0);
     }
 
@@ -56,7 +56,7 @@ contract Deposit_Integration_Concrete_Test is Machine_Integration_Concrete_Test 
 
         accountingToken.approve(address(machine), inputAmount);
 
-        vm.expectRevert(IMachine.SlippageProtection.selector);
+        vm.expectRevert(Errors.SlippageProtection.selector);
         vm.prank(machineDepositor);
         machine.deposit(inputAmount, address(this), expectedShares + 1);
     }

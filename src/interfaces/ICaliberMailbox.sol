@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
 interface ICaliberMailbox is IMachineEndpoint {
-    error CaliberAlreadySet();
-    error HubBridgeAdapterAlreadySet();
-    error HubBridgeAdapterNotSet();
-    error NotFactory();
-    error ZeroBridgeAdapterAddress();
-
     event CaliberSet(address indexed caliber);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 
@@ -33,7 +26,7 @@ interface ICaliberMailbox is IMachineEndpoint {
 
     /// @notice Returns the foreign address of the Hub bridge adapter for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
-    function getHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId) external view returns (address);
+    function getHubBridgeAdapter(uint16 bridgeId) external view returns (address);
 
     /// @notice Chain ID of the hub.
     function hubChainId() external view returns (uint256);
@@ -49,5 +42,5 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @notice Registers a hub bridge adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
-    function setHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address adapter) external;
+    function setHubBridgeAdapter(uint16 bridgeId, address adapter) external;
 }

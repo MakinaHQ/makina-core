@@ -3,27 +3,27 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {Caliber} from "src/caliber/Caliber.sol";
-import {CaliberFactory} from "src/factories/CaliberFactory.sol";
+import {SpokeCoreFactory} from "src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
-import {HubRegistry} from "src/registries/HubRegistry.sol";
+import {HubCoreRegistry} from "src/registries/HubCoreRegistry.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {MachineFactory} from "src/factories/MachineFactory.sol";
+import {HubCoreFactory} from "src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeRegistry} from "src/registries/SpokeRegistry.sol";
+import {SpokeCoreRegistry} from "src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "src/swap/SwapModule.sol";
 import {TokenRegistry} from "src/registries/TokenRegistry.sol";
 
@@ -40,7 +40,7 @@ abstract contract Base_Test is Base, Constants, Test {
     address public riskManager;
     address public riskManagerTimelock;
 
-    AccessManager public accessManager;
+    AccessManagerUpgradeable public accessManager;
     OracleRegistry public oracleRegistry;
     TokenRegistry public tokenRegistry;
     SwapModule public swapModule;
@@ -58,9 +58,9 @@ abstract contract Base_Test is Base, Constants, Test {
 }
 
 abstract contract Base_Hub_Test is Base_Test {
-    HubRegistry public hubRegistry;
+    HubCoreRegistry public hubCoreRegistry;
     ChainRegistry public chainRegistry;
-    MachineFactory public machineFactory;
+    HubCoreFactory public hubCoreFactory;
     UpgradeableBeacon public machineBeacon;
     UpgradeableBeacon public preDepositVaultBeacon;
 
@@ -80,15 +80,15 @@ abstract contract Base_Hub_Test is Base_Test {
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
-        hubRegistry = deployment.hubRegistry;
+        hubCoreRegistry = deployment.hubCoreRegistry;
         tokenRegistry = deployment.tokenRegistry;
         chainRegistry = deployment.chainRegistry;
-        machineFactory = deployment.machineFactory;
+        hubCoreFactory = deployment.hubCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         machineBeacon = deployment.machineBeacon;
         preDepositVaultBeacon = deployment.preDepositVaultBeacon;
 
-        setupHubRegistry(deployment);
+        setupHubCoreRegistry(deployment);
         setupAccessManager(accessManager, dao);
     }
 
@@ -102,7 +102,7 @@ abstract contract Base_Hub_Test is Base_Test {
     {
         vm.prank(dao);
         Machine _machine = Machine(
-            machineFactory.createMachine(
+            hubCoreFactory.createMachine(
                 IMachine.MachineInitParams({
                     initialDepositor: machineDepositor,
                     initialRedeemer: machineRedeemer,
@@ -139,8 +139,8 @@ abstract contract Base_Hub_Test is Base_Test {
 }
 
 abstract contract Base_Spoke_Test is Base_Test {
-    SpokeRegistry public spokeRegistry;
-    CaliberFactory public caliberFactory;
+    SpokeCoreRegistry public spokeCoreRegistry;
+    SpokeCoreFactory public spokeCoreFactory;
     UpgradeableBeacon public caliberMailboxBeacon;
 
     function setUp() public virtual override {
@@ -152,12 +152,12 @@ abstract contract Base_Spoke_Test is Base_Test {
         oracleRegistry = deployment.oracleRegistry;
         tokenRegistry = deployment.tokenRegistry;
         swapModule = deployment.swapModule;
-        spokeRegistry = deployment.spokeRegistry;
-        caliberFactory = deployment.caliberFactory;
+        spokeCoreRegistry = deployment.spokeCoreRegistry;
+        spokeCoreFactory = deployment.spokeCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
-        setupSpokeRegistry(deployment);
+        setupSpokeCoreRegistry(deployment);
         setupAccessManager(accessManager, dao);
     }
 
@@ -167,7 +167,7 @@ abstract contract Base_Spoke_Test is Base_Test {
     {
         vm.prank(dao);
         Caliber _caliber = Caliber(
-            caliberFactory.createCaliber(
+            spokeCoreFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: _allowedInstrMerkleRoot,
@@ -198,24 +198,23 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
         Base_Test.setUp();
         Base_Hub_Test.setUp();
 
-        spokeRegistry = _deploySpokeRegistry(
-            dao, address(oracleRegistry), address(tokenRegistry), address(swapModule), address(accessManager)
-        );
+        spokeCoreRegistry =
+            _deploySpokeCoreRegistry(dao, address(oracleRegistry), address(tokenRegistry), address(accessManager));
 
-        caliberFactory = _deployCaliberFactory(dao, address(spokeRegistry), address(accessManager));
+        spokeCoreFactory = _deploySpokeCoreFactory(dao, address(spokeCoreRegistry), address(accessManager));
 
-        caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeRegistry), hubChainId);
+        caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeCoreRegistry), hubChainId);
 
         vm.startPrank(dao);
-        setupSpokeRegistry(
+        setupSpokeCoreRegistry(
             SpokeCore({
                 accessManager: accessManager,
                 oracleRegistry: oracleRegistry,
                 swapModule: swapModule,
-                spokeRegistry: spokeRegistry,
+                spokeCoreRegistry: spokeCoreRegistry,
                 tokenRegistry: tokenRegistry,
                 caliberBeacon: caliberBeacon,
-                caliberFactory: caliberFactory,
+                spokeCoreFactory: spokeCoreFactory,
                 caliberMailboxBeacon: caliberMailboxBeacon
             })
         );

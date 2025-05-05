@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3BridgeAdapter.t.sol";
 
@@ -21,12 +22,12 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
     }
 
     function test_RevertWhen_CallerNotAuthorizedSource() public {
-        vm.expectRevert(IBridgeAdapter.UnauthorizedSource.selector);
+        vm.expectRevert(Errors.UnauthorizedSource.selector);
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(token1), 0, address(0), "");
     }
 
     function test_RevertWhen_UnexpectedMessage() public {
-        vm.expectRevert(IBridgeAdapter.UnexpectedMessage.selector);
+        vm.expectRevert(Errors.UnexpectedMessage.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(token1), 0, address(0), "");
     }
@@ -38,7 +39,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
-        vm.expectRevert(IBridgeAdapter.InvalidRecipientChainId.selector);
+        vm.expectRevert(Errors.InvalidRecipientChainId.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
     }
@@ -51,7 +52,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
-        vm.expectRevert(IBridgeAdapter.InvalidOutputToken.selector);
+        vm.expectRevert(Errors.InvalidOutputToken.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(token1), 0, address(0), encodedMessage);
     }
@@ -64,7 +65,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
-        vm.expectRevert(IBridgeAdapter.InsufficientOutputAmount.selector);
+        vm.expectRevert(Errors.InsufficientOutputAmount.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
     }
@@ -77,7 +78,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
-        vm.expectRevert(IBridgeAdapter.InvalidInputAmount.selector);
+        vm.expectRevert(Errors.InvalidInputAmount.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 1, address(0), encodedMessage);
     }
@@ -92,7 +93,7 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
         vm.expectEmit(true, false, false, false, address(acrossV3BridgeAdapter1));
-        emit IBridgeAdapter.ReceiveInBridgeTransfer(nextInTransferId);
+        emit IBridgeAdapter.InBridgeTransferReceived(nextInTransferId);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
 

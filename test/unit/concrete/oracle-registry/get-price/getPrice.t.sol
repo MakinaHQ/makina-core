@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 
@@ -34,9 +34,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     function test_RevertGiven_BaseTokenFeedRouteNotRegistered() public {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
 
         vm.prank(dao);
@@ -44,9 +42,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
             address(quoteToken), address(quotePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -58,9 +54,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
             address(baseToken), address(basePriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(quoteToken))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(quoteToken)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -77,7 +71,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(abi.encodeWithSelector(IOracleRegistry.NegativeTokenPrice.selector, address(basePriceFeed1)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.NegativeTokenPrice.selector, address(basePriceFeed1)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -94,7 +88,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(abi.encodeWithSelector(IOracleRegistry.NegativeTokenPrice.selector, address(quotePriceFeed1)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.NegativeTokenPrice.selector, address(quotePriceFeed1)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -116,7 +110,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(abi.encodeWithSelector(IOracleRegistry.NegativeTokenPrice.selector, address(basePriceFeed2)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.NegativeTokenPrice.selector, address(basePriceFeed2)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -138,7 +132,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(abi.encodeWithSelector(IOracleRegistry.NegativeTokenPrice.selector, address(quotePriceFeed2)));
+        vm.expectRevert(abi.encodeWithSelector(Errors.NegativeTokenPrice.selector, address(quotePriceFeed2)));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -159,9 +153,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedStale.selector, address(basePriceFeed1), startTimestamp)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedStale.selector, address(basePriceFeed1), startTimestamp));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -183,7 +175,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         vm.stopPrank();
 
         vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedStale.selector, address(quotePriceFeed1), startTimestamp)
+            abi.encodeWithSelector(Errors.PriceFeedStale.selector, address(quotePriceFeed1), startTimestamp)
         );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
@@ -210,9 +202,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         );
         vm.stopPrank();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedStale.selector, address(basePriceFeed2), startTimestamp)
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedStale.selector, address(basePriceFeed2), startTimestamp));
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }
 
@@ -239,7 +229,7 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
         vm.stopPrank();
 
         vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedStale.selector, address(quotePriceFeed2), startTimestamp)
+            abi.encodeWithSelector(Errors.PriceFeedStale.selector, address(quotePriceFeed2), startTimestamp)
         );
         oracleRegistry.getPrice(address(baseToken), address(quoteToken));
     }

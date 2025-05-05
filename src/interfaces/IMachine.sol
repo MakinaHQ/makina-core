@@ -5,28 +5,9 @@ import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {IBridgeAdapter} from "./IBridgeAdapter.sol";
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
-    error CaliberAccountingStale(uint256 caliberChainId);
-    error BridgeStateMismatch();
-    error InvalidChainId();
-    error InvalidDecimals();
-    error ExceededMaxMint(uint256 shares, uint256 max);
-    error ExceededMaxWithdraw(uint256 assets, uint256 max);
-    error MachineMailboxDoesNotExist();
-    error MismatchedLength();
-    error NotMailbox();
-    error SlippageProtection();
-    error SpokeBridgeAdapterAlreadySet();
-    error SpokeBridgeAdapterNotSet();
-    error SpokeCaliberAlreadySet();
-    error UnauthorizedSender();
-    error UnauthorizedDepositor();
-    error UnauthorizedRedeemer();
-    error ZeroBridgeAdapterAddress();
-
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
@@ -34,9 +15,9 @@ interface IMachine is IMachineEndpoint {
     event FeeMintCooldownChanged(uint256 indexed oldFeeMintCooldown, uint256 indexed newFeeMintCooldown);
     event FeesMinted(uint256 shares);
     event MaxFeeAccrualRateChanged(uint256 indexed oldMaxFeeAccrualRate, uint256 indexed newMaxFeeAccrualRate);
+    event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
-    event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum);
@@ -60,7 +41,7 @@ interface IMachine is IMachineEndpoint {
 
     struct SpokeCaliberData {
         address mailbox;
-        mapping(IBridgeAdapter.Bridge bridgeId => address adapter) bridgeAdapters;
+        mapping(uint16 bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
         bytes[] positions; // abi.encode(positionId, value)
@@ -151,7 +132,7 @@ interface IMachine is IMachineEndpoint {
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
 
     /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
-    function getSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId) external view returns (address);
+    function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address);
 
     /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
     /// @param assets The amount of assets.
@@ -175,7 +156,7 @@ interface IMachine is IMachineEndpoint {
     /// @param amount The amount of token to transfer.
     /// @param minOutputAmount The minimum output amount expected from the transfer.
     function transferToSpokeCaliber(
-        IBridgeAdapter.Bridge bridgeId,
+        uint16 bridgeId,
         uint256 chainId,
         address token,
         uint256 amount,
@@ -215,7 +196,7 @@ interface IMachine is IMachineEndpoint {
     function setSpokeCaliber(
         uint256 chainId,
         address spokeCaliberMailbox,
-        IBridgeAdapter.Bridge[] calldata bridges,
+        uint16[] calldata bridges,
         address[] calldata adapters
     ) external;
 
@@ -223,7 +204,7 @@ interface IMachine is IMachineEndpoint {
     /// @param chainId The foreign EVM chain ID of the adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
-    function setSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) external;
+    function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) external;
 
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.

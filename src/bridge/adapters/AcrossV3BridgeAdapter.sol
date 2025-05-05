@@ -9,16 +9,21 @@ import {IAcrossV3MessageHandler} from "../../interfaces/IAcrossV3MessageHandler.
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IAcrossV3SpokePool} from "../../interfaces/IAcrossV3SpokePool.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
+import {Errors} from "../../libraries/Errors.sol";
 
 contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
 
-    constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {}
+    uint16 private constant ACROSS_V3_BRIDGE_ID = 1;
+
+    constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {
+        _disableInitializers();
+    }
 
     /// @inheritdoc IBridgeAdapter
     function initialize(address _controller, bytes calldata) external override initializer {
-        __BridgeAdapter_init(_controller);
+        __BridgeAdapter_init(_controller, ACROSS_V3_BRIDGE_ID);
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -68,7 +73,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
                     - IERC20(receipt.inputToken).balanceOf(address(this));
             }
         } else if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).contains(transferId)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
         return 0;
     }
@@ -79,7 +84,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         override
     {
         if (msg.sender != receiveSource) {
-            revert UnauthorizedSource();
+            revert Errors.UnauthorizedSource();
         }
         _receiveInBridgeTransfer(encodedMessage, tokenSent, amount);
     }

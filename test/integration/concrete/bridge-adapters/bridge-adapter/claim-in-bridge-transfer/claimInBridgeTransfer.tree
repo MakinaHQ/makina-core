@@ -9,4 +9,4 @@ claimInBridgeTransfer.t.sol
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to an incoming transfer in adapter's storage
          ├── it should decrease the adapter's token balance by amount
-         └── it should emit a ClaimInBridgeTransfer event
+         └── it should emit a InBridgeTransferClaimed event

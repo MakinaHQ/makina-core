@@ -6,12 +6,13 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {IHubRegistry} from "src/interfaces/IHubRegistry.sol";
+import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "src/interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDepositVault {
@@ -55,11 +56,11 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     ) external override initializer {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(_depositToken);
+        if (!IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_depositToken)) {
+            revert Errors.PriceFeedRouteNotRegistered(_depositToken);
         }
-        if (!IOracleRegistry(IHubRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
-            revert IOracleRegistry.PriceFeedRouteNotRegistered(_accountingToken);
+        if (!IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).isFeedRouteRegistered(_accountingToken)) {
+            revert Errors.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
         uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
@@ -80,7 +81,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     modifier notMigrated() {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if ($._migrated) {
-            revert Migrated();
+            revert Errors.Migrated();
         }
         _;
     }
@@ -94,7 +95,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function machine() external view override returns (address) {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if (!$._migrated) {
-            revert NotMigrated();
+            revert Errors.NotMigrated();
         }
         return $._machine;
     }
@@ -162,7 +163,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
 
         address _depositToken = $._depositToken;
         uint256 price_d_a =
-            IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
+            IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
         uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20($._shareToken).totalSupply();
@@ -177,7 +178,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
 
         address _depositToken = $._depositToken;
         uint256 price_d_a =
-            IOracleRegistry(IHubRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
+            IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
         uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
         uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
         uint256 stSupply = IERC20($._shareToken).totalSupply();
@@ -196,16 +197,16 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
         if ($._whitelistMode && !$._isWhitelistedUser[msg.sender]) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         if (assets > maxDeposit()) {
-            revert ExceededMaxDeposit();
+            revert Errors.ExceededMaxDeposit();
         }
 
         uint256 shares = previewDeposit(assets);
         if (shares < minShares) {
-            revert SlippageProtection();
+            revert Errors.SlippageProtection();
         }
 
         IERC20($._depositToken).safeTransferFrom(msg.sender, address(this), assets);
@@ -226,12 +227,12 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
 
         if ($._whitelistMode && !$._isWhitelistedUser[msg.sender]) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
 
         uint256 assets = previewRedeem(shares);
         if (assets < minAssets) {
-            revert SlippageProtection();
+            revert Errors.SlippageProtection();
         }
 
         IMachineShare($._shareToken).burn(msg.sender, shares);
@@ -246,7 +247,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function migrateToMachine() external override notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if (msg.sender != $._machine) {
-            revert NotPendingMachine();
+            revert Errors.NotPendingMachine();
         }
 
         $._migrated = true;
@@ -260,8 +261,8 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     /// @inheritdoc IPreDepositVault
     function setPendingMachine(address _machine) external override notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
-        if (msg.sender != IHubRegistry(registry).coreFactory()) {
-            revert NotFactory();
+        if (msg.sender != IHubCoreRegistry(registry).coreFactory()) {
+            revert Errors.NotFactory();
         }
         $._machine = _machine;
     }
@@ -270,7 +271,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function setShareLimit(uint256 newShareLimit) external override notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if (msg.sender != $._riskManager) {
-            revert UnauthorizedCaller();
+            revert Errors.UnauthorizedCaller();
         }
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;

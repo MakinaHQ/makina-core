@@ -7,6 +7,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
@@ -75,7 +76,7 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
         // try 1st redeem
         if (expectedAssets1 > expectedTotalAssets) {
             vm.expectRevert(
-                abi.encodeWithSelector(IMachine.ExceededMaxWithdraw.selector, expectedAssets1, expectedTotalAssets)
+                abi.encodeWithSelector(Errors.ExceededMaxWithdraw.selector, expectedAssets1, expectedTotalAssets)
             );
             vm.prank(machineRedeemer);
             machine.redeem(data.sharesToRedeem1, address(this), expectedAssets1);
@@ -114,7 +115,7 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
         // try 2nd redeem
         if (expectedAssets2 > expectedTotalAssets) {
             vm.expectRevert(
-                abi.encodeWithSelector(IMachine.ExceededMaxWithdraw.selector, expectedAssets2, expectedTotalAssets)
+                abi.encodeWithSelector(Errors.ExceededMaxWithdraw.selector, expectedAssets2, expectedTotalAssets)
             );
             vm.prank(machineRedeemer);
             machine.redeem(data.sharesToRedeem2, address(this), expectedAssets2);

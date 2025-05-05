@@ -9,6 +9,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
+import {Errors} from "../../libraries/Errors.sol";
 
 abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     using Math for uint256;
@@ -36,7 +37,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     /// @custom:storage-location erc7201:makina.storage.BridgeAdapter
     struct BridgeAdapterStorage {
         address _controller;
-        Bridge _bridge;
+        uint16 _bridgeId;
         uint256 _nextOutTransferId;
         uint256 _nextInTransferId;
         mapping(uint256 outTransferId => OutBridgeTransfer transfer) _outgoingTransfers;
@@ -62,12 +63,12 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         approvalTarget = _approvalTarget;
         executionTarget = _executionTarget;
         receiveSource = _receiveSource;
-        _disableInitializers();
     }
 
-    function __BridgeAdapter_init(address _controller) internal onlyInitializing {
+    function __BridgeAdapter_init(address _controller, uint16 _bridgeId) internal onlyInitializing {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         $._controller = _controller;
+        $._bridgeId = _bridgeId;
         $._nextOutTransferId = 1;
         $._nextInTransferId = 1;
         __ReentrancyGuard_init();
@@ -75,7 +76,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
     modifier onlyController() {
         if (msg.sender != _getBridgeAdapterStorage()._controller) {
-            revert NotController();
+            revert Errors.NotController();
         }
         _;
     }
@@ -86,8 +87,8 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
     }
 
     /// @inheritdoc IBridgeAdapter
-    function bridgeId() external view override returns (uint256) {
-        return uint256(_getBridgeAdapterStorage()._bridge);
+    function bridgeId() external view override returns (uint16) {
+        return _getBridgeAdapterStorage()._bridgeId;
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -135,7 +136,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         bytes32 messageHash = keccak256(encodedMessage);
 
-        emit ScheduleOutBridgeTransfer(id, messageHash);
+        emit OutBridgeTransferScheduled(id, messageHash);
 
         return messageHash;
     }
@@ -145,11 +146,11 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         if ($._expectedInMessages[messageHash]) {
-            revert MessageAlreadyAuthorized();
+            revert Errors.MessageAlreadyAuthorized();
         }
         $._expectedInMessages[messageHash] = true;
 
-        emit AuthorizeInBridgeTransfer(messageHash);
+        emit InBridgeTransferAuthorized(messageHash);
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -158,7 +159,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         InBridgeTransfer storage receipt = $._incomingTransfers[id];
         if (!_getSet($._pendingInTransferIds[receipt.outputToken]).remove(id)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
 
         IERC20(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
@@ -168,7 +169,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         $._reservedBalances[receipt.outputToken] -= receipt.outputAmount;
 
-        emit ClaimInBridgeTransfer(id);
+        emit InBridgeTransferClaimed(id);
     }
 
     /// @inheritdoc IBridgeAdapter
@@ -185,7 +186,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             IERC20(token).safeTransfer($._controller, amount);
         }
 
-        emit WithdrawPendingFunds(token, amount);
+        emit PendingFundsWithdrawn(token, amount);
     }
 
     /// @dev Updates contract state before sending out a bridge transfer.
@@ -193,12 +194,12 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         OutBridgeTransfer storage receipt = $._outgoingTransfers[id];
         if (!_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
         _getSet($._sentOutTransferIds[receipt.inputToken]).add(id);
         $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
 
-        emit SendOutBridgeTransfer(id);
+        emit OutBridgeTransferSent(id);
     }
 
     /// @dev Cancels an outgoing bridge transfer that is either scheduled or refunded.
@@ -211,12 +212,12 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
                 IERC20(receipt.inputToken).balanceOf(address(this))
                     < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
             ) {
-                revert InsufficientBalance();
+                revert Errors.InsufficientBalance();
             }
         } else if (_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(id)) {
             $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
         } else {
-            revert InvalidTransferStatus();
+            revert Errors.InvalidTransferStatus();
         }
 
         IERC20(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
@@ -224,7 +225,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
             receipt.inputToken, receipt.inputAmount, abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
         );
 
-        emit CancelOutBridgeTransfer(id);
+        emit OutBridgeTransferCancelled(id);
     }
 
     /// @dev Updates contract state when receiving an incoming bridge transfer.
@@ -235,23 +236,23 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
 
         bytes32 messageHash = keccak256(encodedMessage);
         if (!$._expectedInMessages[messageHash]) {
-            revert UnexpectedMessage();
+            revert Errors.UnexpectedMessage();
         }
         delete $._expectedInMessages[messageHash];
 
         BridgeMessage memory message = abi.decode(encodedMessage, (BridgeMessage));
 
         if (message.destinationChainId != block.chainid) {
-            revert InvalidRecipientChainId();
+            revert Errors.InvalidRecipientChainId();
         }
         if (receivedToken != message.outputToken) {
-            revert InvalidOutputToken();
+            revert Errors.InvalidOutputToken();
         }
         if (receivedAmount < message.minOutputAmount) {
-            revert InsufficientOutputAmount();
+            revert Errors.InsufficientOutputAmount();
         }
         if (message.inputAmount < receivedAmount) {
-            revert InvalidInputAmount();
+            revert Errors.InvalidInputAmount();
         }
 
         uint256 id = $._nextInTransferId++;
@@ -265,7 +266,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         );
         _getSet($._pendingInTransferIds[receivedToken]).add(id);
         $._reservedBalances[receivedToken] += receivedAmount;
-        emit ReceiveInBridgeTransfer(id);
+        emit InBridgeTransferReceived(id);
     }
 
     /// @dev Returns a reference to the current active set for this versioned set.

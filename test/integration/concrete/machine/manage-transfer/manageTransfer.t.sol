@@ -7,9 +7,8 @@ import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -23,13 +22,10 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         Machine_Integration_Concrete_Test.setUp();
 
         vm.startPrank(dao);
-        machine.setSpokeCaliber(
-            SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new IBridgeAdapter.Bridge[](0), new address[](0)
-        );
-        bridgeAdapter = IBridgeAdapter(
-            machine.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
-        );
-        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr);
+        machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
+        bridgeAdapter =
+            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         vm.stopPrank();
 
         assertFalse(machine.isIdleToken(address(baseToken)));
@@ -49,7 +45,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertWhen_CallerNotAuthorized() public {
-        vm.expectRevert(IMachine.UnauthorizedSender.selector);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.manageTransfer(address(0), 0, "");
     }
 
@@ -85,9 +81,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken2), address(caliber), inputAmount, true);
         vm.startPrank(address(caliber));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, "");
     }
 
@@ -105,7 +99,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_RevertGiven_InvalidChainId_FromBridgeAdapter() public {
         vm.prank(address(bridgeAdapter));
-        vm.expectRevert(IMachine.InvalidChainId.selector);
+        vm.expectRevert(Errors.InvalidChainId.selector);
         machine.manageTransfer(address(0), 0, abi.encode(SPOKE_CHAIN_ID + 1, 0, false));
     }
 
@@ -113,7 +107,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1;
 
         // try to send undeclared transfer to machine
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         vm.prank(address(bridgeAdapter));
         machine.manageTransfer(address(accountingToken), 0, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
     }
@@ -128,9 +122,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(address(bridgeAdapter));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
     }
 
@@ -241,9 +233,9 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(machine), inputAmount, true);
         vm.startPrank(mechanic);
         machine.transferToSpokeCaliber(
-            IBridgeAdapter.Bridge.ACROSS_V3, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
         );
-        machine.sendOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId, abi.encode(1 days));
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 days));
         vm.stopPrank();
 
         // simulate caliber having received the transfer
@@ -265,25 +257,23 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         // try to refund the transfer to machine
         vm.startPrank(address(bridgeAdapter));
         accountingToken.approve(address(machine), inputAmount);
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.manageTransfer(address(accountingToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
     }
 
     function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromBridgeAdapter_Refund() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1;
-        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken2), inputAmount);
+        _simulateTransferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, address(baseToken2), inputAmount);
 
         vm.startPrank(address(bridgeAdapter));
         baseToken2.approve(address(machine), inputAmount);
-        vm.expectRevert(
-            abi.encodeWithSelector(IOracleRegistry.PriceFeedRouteNotRegistered.selector, address(baseToken2))
-        );
+        vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
         machine.manageTransfer(address(baseToken2), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, true));
     }
 
     function test_ManageTransfer_EmptyBalance_FromBridgeAdapter_Refund() public {
-        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken), 0);
+        _simulateTransferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, address(baseToken), 0);
 
         vm.prank(address(bridgeAdapter));
         machine.manageTransfer(address(baseToken), 0, abi.encode(SPOKE_CHAIN_ID, 0, true));
@@ -292,7 +282,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_ManageTransfer_EmptyBalanceAndNonPriceableToken_FromBridgeAdapter_Refund() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
-        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken2), 0);
+        _simulateTransferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, address(baseToken2), 0);
 
         vm.prank(address(bridgeAdapter));
         machine.manageTransfer(address(baseToken2), 0, abi.encode(SPOKE_CHAIN_ID, 0, true));
@@ -301,7 +291,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_ManageTransfer_AccountingToken_FromBridgeAdapter_Refund() public {
         uint256 inputAmount = 1;
-        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+        _simulateTransferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, address(accountingToken), inputAmount);
 
         vm.startPrank(address(bridgeAdapter));
         accountingToken.approve(address(machine), inputAmount);
@@ -316,7 +306,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
     function test_ManageTransfer_BaseToken_FromBridgeAdapter_Refund() public {
         uint256 inputAmount = 1;
 
-        _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge.ACROSS_V3, address(baseToken), inputAmount);
+        _simulateTransferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, address(baseToken), inputAmount);
 
         vm.startPrank(address(bridgeAdapter));
         baseToken.approve(address(machine), inputAmount);
@@ -327,9 +317,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         assertTrue(machine.isIdleToken(address(baseToken)));
     }
 
-    function _simulateTransferToSpokeCaliber(IBridgeAdapter.Bridge bridgeId, address token, uint256 inputAmount)
-        internal
-    {
+    function _simulateTransferToSpokeCaliber(uint16 bridgeId, address token, uint256 inputAmount) internal {
         vm.prank(dao);
         tokenRegistry.setToken(token, SPOKE_CHAIN_ID, makeAddr("spokeToken"));
 

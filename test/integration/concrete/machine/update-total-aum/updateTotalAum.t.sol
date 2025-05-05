@@ -11,8 +11,8 @@ import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.so
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -41,7 +41,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     }
 
     function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(IMakinaGovernable.RecoveryMode.selector);
+        vm.expectRevert(Errors.RecoveryMode.selector);
         machine.updateTotalAum();
     }
 
@@ -64,7 +64,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         skip(1);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaliber.PositionAccountingStale.selector, SUPPLY_POS_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, SUPPLY_POS_ID));
         machine.updateTotalAum();
     }
 
@@ -72,8 +72,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         public
         withTokenAsBT(address(baseToken))
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
@@ -100,15 +100,15 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         skip(1);
 
         // data age exceeds staleness threshold
-        vm.expectRevert(abi.encodeWithSelector(IMachine.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.CaliberAccountingStale.selector, SPOKE_CHAIN_ID));
         machine.updateTotalAum();
     }
 
     function test_RevertGiven_CaliberTransferCancelledAfterBeingClaimed()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         vm.prank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
@@ -117,7 +117,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1e18;
         _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
-            IBridgeAdapter.Bridge.ACROSS_V3,
+            ACROSS_V3_BRIDGE_ID,
             spokeAccountingTokenAddr,
             inputAmount,
             address(accountingToken),
@@ -139,31 +139,31 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update now reverts
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.updateTotalAum();
     }
 
     function test_RevertGiven_MachineTransferCancelledAfterBeingClaimed()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         vm.prank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
 
-        address bridgeAdapterAddr = machine.getBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3);
+        address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapterAddr).nextOutTransferId();
 
         // schedule and send outgoing bridge transfer
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
-        _sendBridgeTransfer(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), inputAmount);
 
         // cancel the transfer
         deal(address(accountingToken), bridgeAdapterAddr, inputAmount, true);
         vm.prank(mechanic);
-        machine.cancelOutBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, transferId);
+        machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         // simulate the machine transfer being received and claimed by spoke caliber
         uint64 blockNum = 1e10;
@@ -180,7 +180,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update now reverts
-        vm.expectRevert(IMachine.BridgeStateMismatch.selector);
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
         machine.updateTotalAum();
     }
 
@@ -391,13 +391,13 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeInProgressFromMachineToSpokeCaliber()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
 
         deal(address(accountingToken), address(machine), inputAmount, true);
-        _sendBridgeTransfer(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), inputAmount);
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
@@ -421,15 +421,15 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeCompletedFromMachineToSpokeCaliber()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
         uint256 bridgeFee = 1e16;
         uint256 outputAmount = inputAmount - bridgeFee;
 
         deal(address(accountingToken), address(machine), inputAmount, true);
-        _sendBridgeTransfer(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), inputAmount);
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), inputAmount);
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
@@ -454,8 +454,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeInProgressFromSpokeCaliberToMachine()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
 
@@ -482,8 +482,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeCompletedFromSpokeCaliberToMachine()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 inputAmount = 1e18;
         uint256 bridgeFee = 1e16;
@@ -491,7 +491,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
-            IBridgeAdapter.Bridge.ACROSS_V3,
+            ACROSS_V3_BRIDGE_ID,
             spokeAccountingTokenAddr,
             inputAmount,
             address(accountingToken),
@@ -521,16 +521,14 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeInProgressBothDirection_SameToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 machineToCaliberInputAmount = 1e18;
         uint256 caliberToMachineInputAmount = 2e18;
 
         deal(address(accountingToken), address(machine), machineToCaliberInputAmount, true);
-        _sendBridgeTransfer(
-            SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
-        );
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), machineToCaliberInputAmount);
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
@@ -558,16 +556,14 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeInProgressBothDirection_DifferentToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 machineToCaliberInputAmount = 1e18;
         uint256 caliberToMachineInputAmount = 2e18;
 
         deal(address(accountingToken), address(machine), machineToCaliberInputAmount, true);
-        _sendBridgeTransfer(
-            SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
-        );
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), machineToCaliberInputAmount);
 
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
@@ -596,8 +592,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeCompletedBothDirection_SameToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 machineToCaliberInputAmount = 1e18;
         uint256 bridgeFee1 = 1e16;
@@ -608,13 +604,11 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 caliberToMachineOutputAmount = caliberToMachineInputAmount - bridgeFee2;
 
         deal(address(accountingToken), address(machine), machineToCaliberInputAmount, true);
-        _sendBridgeTransfer(
-            SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
-        );
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), machineToCaliberInputAmount);
 
         _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
-            IBridgeAdapter.Bridge.ACROSS_V3,
+            ACROSS_V3_BRIDGE_ID,
             spokeAccountingTokenAddr,
             caliberToMachineInputAmount,
             address(accountingToken),
@@ -648,8 +642,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_BridgeCompletedBothDirection_DifferentToken()
         public
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
-        withBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3)
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, spokeBridgeAdapterAddr)
+        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         uint256 machineToCaliberInputAmount = 1e18;
         uint256 bridgeFee1 = 1e16;
@@ -660,13 +654,11 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 caliberToMachineOutputAmount = caliberToMachineInputAmount - bridgeFee2;
 
         deal(address(accountingToken), address(machine), machineToCaliberInputAmount, true);
-        _sendBridgeTransfer(
-            SPOKE_CHAIN_ID, IBridgeAdapter.Bridge.ACROSS_V3, address(accountingToken), machineToCaliberInputAmount
-        );
+        _sendBridgeTransfer(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, address(accountingToken), machineToCaliberInputAmount);
 
         _receiveAndClaimBridgeTransfer(
             SPOKE_CHAIN_ID,
-            IBridgeAdapter.Bridge.ACROSS_V3,
+            ACROSS_V3_BRIDGE_ID,
             spokeBaseTokenAddr,
             caliberToMachineInputAmount,
             address(baseToken),
@@ -1039,9 +1031,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), expectedMintedFees1 + fixedFee3 + perfFee3);
     }
 
-    function _sendBridgeTransfer(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address token, uint256 amount)
-        internal
-    {
+    function _sendBridgeTransfer(uint256 chainId, uint16 bridgeId, address token, uint256 amount) internal {
         uint256 nextOutTransferId = IBridgeAdapter(machine.getBridgeAdapter(bridgeId)).nextOutTransferId();
         vm.startPrank(mechanic);
         machine.transferToSpokeCaliber(bridgeId, chainId, token, amount, amount);
@@ -1051,7 +1041,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function _receiveAndClaimBridgeTransfer(
         uint256 chainId,
-        IBridgeAdapter.Bridge bridgeId,
+        uint16 bridgeId,
         address inputToken,
         uint256 inputAmount,
         address outputToken,
@@ -1095,7 +1085,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             machine.updateSpokeCaliberAccountingData(response, signatures);
         }
         // send funds with message from bridge
-        if (bridgeId == IBridgeAdapter.Bridge.ACROSS_V3) {
+        if (bridgeId == ACROSS_V3_BRIDGE_ID) {
             deal(address(outputToken), address(bridgeAdapterAddr), outputAmount, true);
             vm.prank(address(acrossV3SpokePool));
             IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
@@ -1106,7 +1096,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         }
 
         vm.prank(mechanic);
-        machine.claimInBridgeTransfer(IBridgeAdapter.Bridge.ACROSS_V3, nextInTransferId);
+        machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextInTransferId);
     }
 
     function _deposit(uint256 inputAmount) internal {

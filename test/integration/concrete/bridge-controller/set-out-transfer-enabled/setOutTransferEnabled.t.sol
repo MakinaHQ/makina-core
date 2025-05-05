@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
@@ -13,30 +12,30 @@ abstract contract SetOutTransferEnabled_Integration_Concrete_Test is BridgeContr
     }
 
     function test_RevertWhen_CallerNotRMT() public {
-        vm.expectRevert(IMakinaGovernable.UnauthorizedCaller.selector);
-        bridgeController.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
     }
 
     function test_RevertGiven_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(IBridgeController.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(riskManagerTimelock);
-        bridgeController.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
+        bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
     }
 
     function test_SetOutTransferEnabled() public {
         vm.prank(dao);
-        bridgeController.createBridgeAdapter(IBridgeAdapter.Bridge.ACROSS_V3, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
 
         vm.expectEmit(true, true, false, false, address(bridgeController));
-        emit IBridgeController.SetOutTransferEnabled(uint256(IBridgeAdapter.Bridge.ACROSS_V3), false);
+        emit IBridgeController.OutTransferEnabledSet(ACROSS_V3_BRIDGE_ID, false);
         vm.prank(riskManagerTimelock);
-        bridgeController.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, false);
-        assertFalse(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
+        bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        assertFalse(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
 
         vm.expectEmit(true, true, false, false, address(bridgeController));
-        emit IBridgeController.SetOutTransferEnabled(uint256(IBridgeAdapter.Bridge.ACROSS_V3), true);
+        emit IBridgeController.OutTransferEnabledSet(ACROSS_V3_BRIDGE_ID, true);
         vm.prank(riskManagerTimelock);
-        bridgeController.setOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3, true);
-        assertTrue(bridgeController.isOutTransferEnabled(IBridgeAdapter.Bridge.ACROSS_V3));
+        bridgeController.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, true);
+        assertTrue(bridgeController.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
     }
 }

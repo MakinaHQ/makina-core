@@ -8,4 +8,4 @@ withdrawPendingFunds.t.sol
       ├── it should reset internal state for the provided chain ID and token
       ├── it should increase the controller's token balance by adapter token balance
       ├── it should decrease the adapter token balance to 0
-      └── it should emit an WithdrawPendingFunds event
+      └── it should emit an PendingFundsWithdrawn event

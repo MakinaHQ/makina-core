@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {Errors} from "src/libraries/Errors.sol";
 
 import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3BridgeAdapter.t.sol";
 
@@ -9,7 +9,7 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
     AcrossV3BridgeAdapter_Integration_Concrete_Test
 {
     function test_RevertGiven_InvalidTransferStatus() public {
-        vm.expectRevert(IBridgeAdapter.InvalidTransferStatus.selector);
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.outBridgeTransferCancelDefault(0);
     }

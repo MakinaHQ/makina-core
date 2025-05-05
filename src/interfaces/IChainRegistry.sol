@@ -3,10 +3,6 @@ pragma solidity 0.8.28;
 
 /// @notice This interface is used to map EVM chain IDs to Wormhole chain IDs and vice versa.
 interface IChainRegistry {
-    error EvmChainIdNotRegistered(uint256 chainId);
-    error WhChainIdNotRegistered(uint16 chainId);
-    error ZeroChainId();
-
     event ChainIdsRegistered(uint256 indexed evmChainId, uint16 indexed whChainId);
 
     /// @notice EVM chain ID => Is the chain ID registered

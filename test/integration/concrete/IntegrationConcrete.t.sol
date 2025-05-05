@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -17,7 +16,6 @@ import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
-import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
@@ -66,7 +64,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         oracleRegistry.setFeedRoute(
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
-        swapModule.setSwapperTargets(ISwapModule.Swapper.ZEROX, address(pool), address(pool));
+        swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
         vm.stopPrank();
     }
 
@@ -154,7 +152,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        hubRegistry.setFlashLoanModule(address(flashLoanModule));
+        hubCoreRegistry.setFlashLoanModule(address(flashLoanModule));
 
         feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
@@ -176,17 +174,17 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
     modifier withSpokeCaliber(uint256 chainId, address mailbox) {
         vm.prank(dao);
-        machine.setSpokeCaliber(chainId, mailbox, new IBridgeAdapter.Bridge[](0), new address[](0));
+        machine.setSpokeCaliber(chainId, mailbox, new uint16[](0), new address[](0));
         _;
     }
 
-    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+    modifier withBridgeAdapter(uint16 bridgeId) {
         vm.prank(dao);
         machine.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
         _;
     }
 
-    modifier withSpokeBridgeAdapter(uint256 chainId, IBridgeAdapter.Bridge bridgeId, address adapter) {
+    modifier withSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) {
         vm.prank(dao);
         machine.setSpokeBridgeAdapter(chainId, bridgeId, adapter);
         _;
@@ -204,7 +202,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        spokeRegistry.setFlashLoanModule(address(flashLoanModule));
+        spokeCoreRegistry.setFlashLoanModule(address(flashLoanModule));
 
         hubMachineAddr = makeAddr("hubMachine");
 
@@ -223,13 +221,13 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         _;
     }
 
-    modifier withBridgeAdapter(IBridgeAdapter.Bridge bridgeId) {
+    modifier withBridgeAdapter(uint16 bridgeId) {
         vm.prank(dao);
         caliberMailbox.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
         _;
     }
 
-    modifier withHubBridgeAdapter(IBridgeAdapter.Bridge bridgeId, address foreignAdapter) {
+    modifier withHubBridgeAdapter(uint16 bridgeId, address foreignAdapter) {
         vm.prank(dao);
         caliberMailbox.setHubBridgeAdapter(bridgeId, foreignAdapter);
         _;

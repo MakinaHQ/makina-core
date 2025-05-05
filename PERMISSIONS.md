@@ -4,15 +4,15 @@
 
 This is a list of role permissions in Makina Core contracts. These roles must be assigned to respective contracts at deployment.
 
-### HubRegistry
+### HubCoreRegistry
 
 - `ADMIN_ROLE` (roleId `0`)
   - Can set address of OracleRegistry.
   - Can set address of SwapModule.
   - Can set address of OracleRegistry.
-  - Can set address of MachineFactory.
+  - Can set address of HubCoreFactory.
   - Can set address of MachineBeacon.
-  - Can set address of CaliberFactory.
+  - Can set address of SpokeCoreFactory.
   - Can set address of CaliberBeacon.
 
 #### OracleRegistry
@@ -21,7 +21,7 @@ This is a list of role permissions in Makina Core contracts. These roles must be
   - Can set token price feed route.
   - Can set feeds staleness threshold.
 
-#### CaliberFactory
+#### SpokeCoreFactory
 
 - `ADMIN_ROLE` (roleId `0`)
   - Can deploy calibers.
@@ -41,4 +41,4 @@ This is a list of role permissions in Makina Core contracts. These roles must be
 #### SwapModule
 
 - `ADMIN_ROLE` (roleId `0`)
-  - Can set a swapper approval and execution targets.
+  - Can set approval and execution targets for a given swapper ID.
