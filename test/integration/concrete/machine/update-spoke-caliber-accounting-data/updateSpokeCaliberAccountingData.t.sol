@@ -3,8 +3,8 @@ pragma solidity 0.8.28;
 
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
-import {VerificationFailed} from "@wormhole/sdk/libraries/QueryResponse.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
+import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -25,7 +25,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
     function test_RevertWhen_ReentrantCall() public {
         bytes memory response;
-        IWormhole.Signature[] memory signatures;
+        GuardianSignature[] memory signatures;
 
         accountingToken.scheduleReenter(
             MockERC20.Type.Before,
@@ -47,12 +47,12 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         signatures[0].v = 0;
 
-        vm.expectRevert(VerificationFailed.selector);
+        vm.expectRevert(QueryResponseLib.VerificationFailed.selector);
         machine.updateSpokeCaliberAccountingData(response, signatures);
     }
 
@@ -65,7 +65,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             WORMHOLE_SPOKE_CHAIN_ID + 1, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
@@ -85,7 +85,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             WORMHOLE_SPOKE_CHAIN_ID + 1, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
@@ -95,7 +95,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
     function test_RevertWhen_InvalidFormat() public {
         bytes memory response;
-        IWormhole.Signature[] memory signatures;
+        GuardianSignature[] memory signatures;
 
         vm.expectRevert();
         machine.updateSpokeCaliberAccountingData(response, signatures);
@@ -120,7 +120,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             spokeCaliberMailboxAddr,
             abi.encode(queriedData)
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         vm.expectRevert(Errors.StaleData.selector);
@@ -157,7 +157,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         perChainData[0].result = new bytes[](2);
         perChainData[0].result[0] = abi.encode(queriedData);
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
@@ -179,7 +179,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 
@@ -203,7 +203,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
 
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 

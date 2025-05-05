@@ -2,7 +2,8 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
@@ -124,7 +125,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);

@@ -8,7 +8,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
@@ -466,7 +466,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function updateSpokeCaliberAccountingData(bytes calldata response, IWormhole.Signature[] calldata signatures)
+    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures)
         external
         override
         nonReentrant

@@ -8,7 +8,7 @@ import {Vm} from "forge-std/Vm.sol";
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
@@ -322,7 +322,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
             address(spokeCaliberMailbox),
             abi.encode(queriedData)
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
