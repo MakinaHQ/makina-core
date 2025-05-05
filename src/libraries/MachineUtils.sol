@@ -6,8 +6,8 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 import {PerChainQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -99,10 +99,10 @@ library MachineUtils {
         address chainRegistry,
         address wormhole,
         bytes calldata response,
-        IWormhole.Signature[] calldata signatures
+        GuardianSignature[] calldata signatures
     ) external {
         PerChainQueryResponse[] memory responses =
-            CaliberAccountingCCQ.parseAndVerifyQueryResponse(wormhole, response, signatures).responses;
+            CaliberAccountingCCQ.decodeAndVerifyQueryResponse(wormhole, response, signatures).responses;
 
         uint256 len = responses.length;
         for (uint256 i; i < len;) {

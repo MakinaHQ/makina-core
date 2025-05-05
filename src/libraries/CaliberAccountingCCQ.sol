@@ -8,17 +8,20 @@ import {
     QueryResponse,
     QueryResponseLib
 } from "@wormhole/sdk/libraries/QueryResponse.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
 library CaliberAccountingCCQ {
-    function parseAndVerifyQueryResponse(
+    function decodeAndVerifyQueryResponse(
         address wormhole,
-        bytes memory response,
-        IWormhole.Signature[] memory signatures
+        bytes calldata response,
+        GuardianSignature[] calldata signatures
     ) external view returns (QueryResponse memory ret) {
-        return QueryResponseLib.parseAndVerifyQueryResponse(wormhole, response, signatures);
+        return QueryResponseLib.decodeAndVerifyQueryResponseCd(
+            wormhole, response, signatures, IWormhole(wormhole).getCurrentGuardianSetIndex()
+        );
     }
 
     /// @dev Parses the PerChainQueryResponse and retrieves the accounting data for the given caliber mailbox.
@@ -31,7 +34,7 @@ library CaliberAccountingCCQ {
         pure
         returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256)
     {
-        EthCallQueryResponse memory eqr = QueryResponseLib.parseEthCallQueryResponse(pcr);
+        EthCallQueryResponse memory eqr = QueryResponseLib.decodeEthCallQueryResponse(pcr);
 
         // Validate that only one result is returned.
         if (eqr.results.length != 1) {

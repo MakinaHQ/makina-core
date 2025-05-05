@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
@@ -161,7 +161,7 @@ contract Machine_Fork_Test is Fork_Test {
             spokeCaliberMailbox,
             abi.encode(ICaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData())
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
 

@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Vm} from "forge-std/Vm.sol";
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryRequestBuilder} from "@wormhole/sdk/testing/QueryRequestBuilder.sol";
 
@@ -20,7 +20,7 @@ struct PerChainData {
 
 struct ResponseData {
     bytes response;
-    IWormhole.Signature[] signatures;
+    GuardianSignature[] signatures;
 }
 
 library WormholeQueryTestHelpers {
@@ -44,7 +44,7 @@ library WormholeQueryTestHelpers {
     address public constant DEVNET_GUARDIAN_ADDRESS = 0xbeFA429d57cD18b7F8A4d91A2da9AB4AF05d0FBe;
 
     function getSignature(bytes memory response) internal pure returns (uint8 v, bytes32 r, bytes32 s) {
-        bytes32 responseDigest = QueryResponseLib.calcPrefixedResponseHash(response);
+        bytes32 responseDigest = QueryResponseLib.calcPrefixedResponseHashMem(response);
         (v, r, s) = vm.sign(DEVNET_GUARDIAN_PRIVATE_KEY, responseDigest);
     }
 
@@ -53,7 +53,7 @@ library WormholeQueryTestHelpers {
         bytes memory callData,
         bytes4 selector,
         bytes memory _finality
-    ) internal pure returns (bytes memory response, IWormhole.Signature[] memory signatures) {
+    ) internal pure returns (bytes memory response, GuardianSignature[] memory signatures) {
         if (perChainData.length == 0) {
             revert ZeroArrayLength();
         }
@@ -109,8 +109,8 @@ library WormholeQueryTestHelpers {
         );
 
         (uint8 sigV, bytes32 sigR, bytes32 sigS) = getSignature(response);
-        IWormhole.Signature[] memory signatures = new IWormhole.Signature[](1);
-        signatures[0] = IWormhole.Signature({r: sigR, s: sigS, v: sigV, guardianIndex: 0});
+        GuardianSignature[] memory signatures = new GuardianSignature[](1);
+        signatures[0] = GuardianSignature({r: sigR, s: sigS, v: sigV, guardianIndex: 0});
 
         return ResponseData({response: response, signatures: signatures});
     }

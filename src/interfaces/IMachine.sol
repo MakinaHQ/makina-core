@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
@@ -185,8 +185,7 @@ interface IMachine is IMachineEndpoint {
     /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
     /// @param response The Wormhole CCQ response payload containing the accounting data.
     /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
-    function updateSpokeCaliberAccountingData(bytes memory response, IWormhole.Signature[] memory signatures)
-        external;
+    function updateSpokeCaliberAccountingData(bytes memory response, GuardianSignature[] memory signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The foreign EVM chain ID of the spoke caliber.

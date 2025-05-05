@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -249,7 +249,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
@@ -338,7 +338,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
         );
-        (bytes memory response, IWormhole.Signature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
             perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
