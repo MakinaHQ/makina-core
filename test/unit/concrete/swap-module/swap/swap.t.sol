@@ -8,9 +8,9 @@ import {MockPool} from "test/mocks/MockPool.sol";
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
-import {SwapModule_Unit_Concrete_Test} from "../SwapModule.t.sol";
+import {Unit_Concrete_Spoke_Test} from "../../UnitConcrete.t.sol";
 
-contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
+contract Swap_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     MockERC20 internal token0;
     MockERC20 internal token1;
 
@@ -20,7 +20,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
     uint256 internal initialPoolLiquidityOneSide;
 
     function setUp() public override {
-        SwapModule_Unit_Concrete_Test.setUp();
+        Unit_Concrete_Spoke_Test.setUp();
 
         token0 = new MockERC20("token0", "T1", 18);
         token1 = new MockERC20("token1", "T2", 18);
@@ -34,6 +34,20 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         pool.addLiquidity(initialPoolLiquidityOneSide, initialPoolLiquidityOneSide);
     }
 
+    function test_RevertGiven_CallerNotCaliber() public {
+        ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
+            swapperId: ZEROX_SWAPPER_ID,
+            data: bytes(""),
+            inputToken: address(0),
+            outputToken: address(token1),
+            inputAmount: 1e18,
+            minOutputAmount: 0
+        });
+
+        vm.expectRevert(Errors.NotCaliber.selector);
+        swapModule.swap(order);
+    }
+
     function test_RevertGiven_TargetsNotSet() public {
         ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,
@@ -45,16 +59,19 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         });
 
         vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
+        vm.prank(address(caliber));
         swapModule.swap(order);
 
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(1), address(0));
         vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
+        vm.prank(address(caliber));
         swapModule.swap(order);
 
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(0), address(1));
         vm.expectRevert(Errors.SwapperTargetsNotSet.selector);
+        vm.prank(address(caliber));
         swapModule.swap(order);
     }
 
@@ -62,20 +79,23 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
 
+        uint256 inputAmount = 1e18;
+
         ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,
             data: bytes(""),
             inputToken: address(token1),
             outputToken: address(0),
-            inputAmount: 1e18,
+            inputAmount: inputAmount,
             minOutputAmount: 0
         });
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IERC20Errors.ERC20InsufficientAllowance.selector, address(swapModule), 0, order.inputAmount
+                IERC20Errors.ERC20InsufficientAllowance.selector, address(swapModule), 0, inputAmount
             )
         );
+        vm.prank(address(caliber));
         swapModule.swap(order);
     }
 
@@ -83,18 +103,22 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
 
+        uint256 inputAmount = 1e18;
+
         ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,
             data: bytes(""),
             inputToken: address(token1),
             outputToken: address(0),
-            inputAmount: 1e18,
+            inputAmount: inputAmount,
             minOutputAmount: 0
         });
 
-        token1.approve(address(swapModule), order.inputAmount);
+        vm.startPrank(address(caliber));
+        token1.approve(address(swapModule), inputAmount);
+
         vm.expectRevert(
-            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(this), 0, order.inputAmount)
+            abi.encodeWithSelector(IERC20Errors.ERC20InsufficientBalance.selector, address(caliber), 0, inputAmount)
         );
         swapModule.swap(order);
     }
@@ -104,8 +128,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
 
         uint256 inputAmount = initialPoolLiquidityOneSide + 1;
-        deal(address(token0), address(this), inputAmount, true);
-        token0.approve(address(swapModule), inputAmount);
+        deal(address(token0), address(caliber), inputAmount, true);
 
         ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,
@@ -116,6 +139,9 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: 0
         });
 
+        vm.startPrank(address(caliber));
+        token0.approve(address(swapModule), inputAmount);
+
         vm.expectRevert(Errors.SwapFailed.selector);
         swapModule.swap(order);
     }
@@ -125,8 +151,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(token0), address(this), inputAmount, true);
-        token0.approve(address(swapModule), inputAmount);
+        deal(address(token0), address(caliber), inputAmount, true);
 
         uint256 previewSwap = pool.previewSwap(address(token0), inputAmount);
 
@@ -139,6 +164,9 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: previewSwap + 1
         });
 
+        vm.startPrank(address(caliber));
+        token0.approve(address(swapModule), inputAmount);
+
         vm.expectRevert(Errors.AmountOutTooLow.selector);
         swapModule.swap(order);
     }
@@ -148,8 +176,7 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(pool), address(pool));
 
         uint256 inputAmount = 1e18;
-        deal(address(token0), address(this), inputAmount, true);
-        token0.approve(address(swapModule), inputAmount);
+        deal(address(token0), address(caliber), inputAmount, true);
 
         uint256 previewSwap = pool.previewSwap(address(token0), inputAmount);
 
@@ -162,13 +189,16 @@ contract Swap_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
             minOutputAmount: previewSwap
         });
 
+        vm.startPrank(address(caliber));
+        token0.approve(address(swapModule), inputAmount);
+
         vm.expectEmit(true, true, true, true, address(swapModule));
         emit ISwapModule.Swap(
-            address(this), ZEROX_SWAPPER_ID, address(token0), address(token1), inputAmount, previewSwap
+            address(caliber), ZEROX_SWAPPER_ID, address(token0), address(token1), inputAmount, previewSwap
         );
         uint256 outputAmount = swapModule.swap(order);
 
         assertEq(outputAmount, previewSwap);
-        assertEq(token1.balanceOf(address(this)), outputAmount);
+        assertEq(token1.balanceOf(address(caliber)), outputAmount);
     }
 }

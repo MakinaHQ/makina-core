@@ -5,9 +5,9 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
-import {SwapModule_Unit_Concrete_Test} from "./SwapModule.t.sol";
+import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
-contract SetSwapperTargets_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
+contract SetSwapperTargets_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, address(0), address(0));
@@ -21,7 +21,7 @@ contract SetSwapperTargets_Unit_Concrete_Test is SwapModule_Unit_Concrete_Test {
         emit ISwapModule.SwapperTargetsSet(ZEROX_SWAPPER_ID, newApprovalTarget, newExecutionTarget);
         vm.prank(dao);
         swapModule.setSwapperTargets(ZEROX_SWAPPER_ID, newApprovalTarget, newExecutionTarget);
-        (address approvalTarget, address executionTarget) = swapModule.swapperTargets(ZEROX_SWAPPER_ID);
+        (address approvalTarget, address executionTarget) = swapModule.getSwapperTargets(ZEROX_SWAPPER_ID);
         assertEq(approvalTarget, newApprovalTarget);
         assertEq(executionTarget, newExecutionTarget);
     }

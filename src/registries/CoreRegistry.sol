@@ -26,16 +26,13 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
         }
     }
 
-    function __CoreRegistry_init(
-        address _oracleRegistry,
-        address _tokenRegistry,
-        address _swapModule,
-        address _initialAuthority
-    ) internal onlyInitializing {
+    function __CoreRegistry_init(address _oracleRegistry, address _tokenRegistry, address _initialAuthority)
+        internal
+        onlyInitializing
+    {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         $._oracleRegistry = _oracleRegistry;
         $._tokenRegistry = _tokenRegistry;
-        $._swapModule = _swapModule;
         __AccessManaged_init(_initialAuthority);
     }
 

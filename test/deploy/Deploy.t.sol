@@ -92,7 +92,7 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".swappersTargets"), (SwapperData[]));
         for (uint256 i; i < _swappersData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                hubCoreDeployment.swapModule.swapperTargets(_swappersData[i].swapperId);
+                hubCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
             assertEq(_swappersData[i].executionTarget, executionTarget);
         }
@@ -206,7 +206,7 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".swappersTargets"), (SwapperData[]));
         for (uint256 i; i < _swappersData.length; i++) {
             (address approvalTarget, address executionTarget) =
-                spokeCoreDeployment.swapModule.swapperTargets(_swappersData[i].swapperId);
+                spokeCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
             assertEq(_swappersData[i].executionTarget, executionTarget);
         }

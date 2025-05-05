@@ -11,7 +11,7 @@ contract OracleRegistry_Unit_Concrete_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        (accessManager, oracleRegistry,,) = deploySharedCore(deployer, dao);
+        (accessManager, oracleRegistry,) = deploySharedCore(deployer, dao);
         setupAccessManager(accessManager, dao);
     }
 }

@@ -198,9 +198,8 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
         Base_Test.setUp();
         Base_Hub_Test.setUp();
 
-        spokeCoreRegistry = _deploySpokeCoreRegistry(
-            dao, address(oracleRegistry), address(tokenRegistry), address(swapModule), address(accessManager)
-        );
+        spokeCoreRegistry =
+            _deploySpokeCoreRegistry(dao, address(oracleRegistry), address(tokenRegistry), address(accessManager));
 
         spokeCoreFactory = _deploySpokeCoreFactory(dao, address(spokeCoreRegistry), address(accessManager));
 

@@ -48,6 +48,7 @@ library Errors {
     error NoPendingUpdate();
     error NonZeroBalance();
     error NotBaseToken();
+    error NotCaliber();
     error NotCaliberMailbox();
     error NotController();
     error NotFactory();

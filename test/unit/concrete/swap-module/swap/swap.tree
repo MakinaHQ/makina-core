@@ -1,19 +1,22 @@
 swap.t.sol
-├── given approval or execution target is not set for given swapper ID
-│  └── it should revert with SwapperNotSet
-└── given both targets are set for given swapper ID
-   ├── given the swapModule has insufficient input token allowance from sender
-   │  └── it should revert with ERC20InsufficientAllowance
-   └── given the swapModule has sufficient input token allowance from sender
-      ├── given the sender has insufficient input token balance
-      │  └── it should revert with ERC20InsufficientBalance
-      └── given the sender has sufficient input token balance
-         ├── given the external swapper execution fails
-         │  └── it should revert with SwapFailed
-         └── given the external swapper execution succeeds
-            ├── given the output amount is smaller that given minimum
-            │  └── it should revert with AmountOutTooLow
-            └── given the output amount is not smaller that given minimum
-               ├── it should emit a Swap event
-               ├── it should decrease the input token balance of the sender by input amount
-               └── it should increase the output token balance of the sender by output amount
+├── given caller is not a registered caliber
+│  └── it should revert with NotCaliber
+└── given caller is a registered caliber
+   ├── given approval or execution target is not set for given swapper ID
+   │  └── it should revert with SwapperNotSet
+   └── given both targets are set for given swapper ID
+      ├── given the swapModule has insufficient input token allowance from sender
+      │  └── it should revert with ERC20InsufficientAllowance
+      └── given the swapModule has sufficient input token allowance from sender
+         ├── given the sender has insufficient input token balance
+         │  └── it should revert with ERC20InsufficientBalance
+         └── given the sender has sufficient input token balance
+            ├── given the external swapper execution fails
+            │  └── it should revert with SwapFailed
+            └── given the external swapper execution succeeds
+               ├── given the output amount is smaller that given minimum
+               │  └── it should revert with AmountOutTooLow
+               └── given the output amount is not smaller that given minimum
+                  ├── it should emit a Swap event
+                  ├── it should decrease the input token balance of the sender by input amount
+                  └── it should increase the output token balance of the sender by output amount
