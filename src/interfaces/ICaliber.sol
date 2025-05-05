@@ -151,6 +151,15 @@ interface ICaliber {
     /// @dev Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
 
+    /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
+    /// @return netAum The total value of all base token balances and positive positions, minus total debts.
+    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
+    /// @return baseTokens The array of encoded tuples of the form (token, value).
+    function getDetailedAum()
+        external
+        view
+        returns (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens);
+
     /// @notice Adds a new base token.
     /// @param token The address of the base token.
     function addBaseToken(address token) external;
@@ -170,15 +179,6 @@ interface ICaliber {
     /// @dev Convenience function to account for multiple positions in a single transaction.
     /// @param instructions The array of accounting instructions.
     function accountForPositionBatch(Instruction[] calldata instructions) external;
-
-    /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
-    /// @return netAum The total value of all base token balances and positive positions, minus total debts.
-    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
-    /// @return baseTokens The array of encoded tuples of the form (token, value).
-    function getDetailedAum()
-        external
-        view
-        returns (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:

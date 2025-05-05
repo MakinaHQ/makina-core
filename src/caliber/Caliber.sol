@@ -231,53 +231,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         return user == IMakinaGovernable($._hubMachineEndpoint).riskManager()
             || user == IMakinaGovernable($._hubMachineEndpoint).securityCouncil() || $._instrRootGuardians.contains(user);
     }
-
-    /// @inheritdoc ICaliber
-    function addBaseToken(address token) external override onlyRiskManagerTimelock {
-        _addBaseToken(token);
-    }
-
-    /// @inheritdoc ICaliber
-    function removeBaseToken(address token) external override onlyRiskManagerTimelock {
-        CaliberStorage storage $ = _getCaliberStorage();
-
-        if (token == $._accountingToken) {
-            revert Errors.AccountingToken();
-        }
-        if (!$._baseTokens.remove(token)) {
-            revert Errors.NotBaseToken();
-        }
-        if (IERC20(token).balanceOf(address(this)) > 0) {
-            revert Errors.NonZeroBalance();
-        }
-
-        emit BaseTokenRemoved(token);
-    }
-
-    /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
-        CaliberStorage storage $ = _getCaliberStorage();
-        if (!$._positionIds.contains(instruction.positionId)) {
-            revert Errors.PositionDoesNotExist();
-        }
-        return _accountForPosition(instruction, true);
-    }
-
-    /// @inheritdoc ICaliber
-    function accountForPositionBatch(Instruction[] calldata instructions) external override {
-        CaliberStorage storage $ = _getCaliberStorage();
-        uint256 len = instructions.length;
-        for (uint256 i; i < len;) {
-            if (!$._positionIds.contains(instructions[i].positionId)) {
-                revert Errors.PositionDoesNotExist();
-            }
-            _accountForPosition(instructions[i], true);
-            unchecked {
-                ++i;
-            }
-        }
-    }
-
+    
     /// @inheritdoc ICaliber
     function isAccountingFresh() external view returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
@@ -339,6 +293,52 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 netAum = aum > debt ? aum - debt : 0;
 
         return (netAum, positionsValues, baseTokensValues);
+    }
+
+    /// @inheritdoc ICaliber
+    function addBaseToken(address token) external override onlyRiskManagerTimelock {
+        _addBaseToken(token);
+    }
+
+    /// @inheritdoc ICaliber
+    function removeBaseToken(address token) external override onlyRiskManagerTimelock {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        if (token == $._accountingToken) {
+            revert Errors.AccountingToken();
+        }
+        if (!$._baseTokens.remove(token)) {
+            revert Errors.NotBaseToken();
+        }
+        if (IERC20(token).balanceOf(address(this)) > 0) {
+            revert Errors.NonZeroBalance();
+        }
+
+        emit BaseTokenRemoved(token);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+        CaliberStorage storage $ = _getCaliberStorage();
+        if (!$._positionIds.contains(instruction.positionId)) {
+            revert Errors.PositionDoesNotExist();
+        }
+        return _accountForPosition(instruction, true);
+    }
+
+    /// @inheritdoc ICaliber
+    function accountForPositionBatch(Instruction[] calldata instructions) external override {
+        CaliberStorage storage $ = _getCaliberStorage();
+        uint256 len = instructions.length;
+        for (uint256 i; i < len;) {
+            if (!$._positionIds.contains(instructions[i].positionId)) {
+                revert Errors.PositionDoesNotExist();
+            }
+            _accountForPosition(instructions[i], true);
+            unchecked {
+                ++i;
+            }
+        }
     }
 
     /// @inheritdoc ICaliber
