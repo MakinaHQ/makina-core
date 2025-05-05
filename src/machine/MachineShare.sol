@@ -4,20 +4,18 @@ pragma solidity 0.8.28;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
+import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 
 contract MachineShare is ERC20, Ownable2Step, IMachineShare {
-    uint8 private immutable decimals_;
-
-    constructor(string memory _name, string memory _symbol, uint8 _decimals, address _initialMinter)
+    constructor(string memory _name, string memory _symbol, address _initialMinter)
         ERC20(_name, _symbol)
         Ownable(_initialMinter)
-    {
-        decimals_ = _decimals;
-    }
+    {}
 
     function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
-        return decimals_;
+        return DecimalsUtils.SHARE_TOKEN_DECIMALS;
     }
 
     function minter() external view override returns (address) {

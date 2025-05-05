@@ -5,7 +5,6 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -19,12 +18,8 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
     function setUp() public override {
         PreDepositVault_Integration_Concrete_Test.setUp();
 
-        shareToken = new MachineShare(
-            DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-            DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-            DecimalsUtils.SHARE_TOKEN_DECIMALS,
-            address(this)
-        );
+        shareToken =
+            new MachineShare(DEFAULT_MACHINE_SHARE_TOKEN_NAME, DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL, address(this));
     }
 
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {

@@ -9,7 +9,6 @@ import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
@@ -27,12 +26,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
     function setUp() public override {
         Machine_Integration_Concrete_Test.setUp();
         hubCaliberAddr = makeAddr("hubCaliber");
-        shareToken = new MachineShare(
-            DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-            DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-            DecimalsUtils.SHARE_TOKEN_DECIMALS,
-            address(this)
-        );
+        shareToken =
+            new MachineShare(DEFAULT_MACHINE_SHARE_TOKEN_NAME, DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL, address(this));
     }
 
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
