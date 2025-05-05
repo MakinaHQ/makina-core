@@ -696,7 +696,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (lastValue == 0) {
                 pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
-                emit PositionCreated(posId);
+                emit PositionCreated(posId, currentValue);
+            } else {
+                emit PositionUpdated(posId, currentValue);
             }
         }
 
