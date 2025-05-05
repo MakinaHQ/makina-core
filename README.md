@@ -1,45 +1,37 @@
-## Makina Core Smart Contracts
+# Makina Core Smart Contracts
 
-This repository contains the core smart contracts of Makina.
+This repository contains the core smart contracts of the Makina Protocol.
+
+## Background
+
+Makina is a protocol for executing advanced cross-chain investment strategies. It provides the infrastructure for operators to issue tokenized strategies with full DeFi composability and strong risk controls. At the core of each strategy is a Machine contract, on the Hub Chain, which handles deposits, withdrawals, share pricing, and cross-chain coordination. Execution across chains is performed by Calibers, which serve as the strategy’s execution engines across the Hub and Spoke Chains. Every strategy is defined by a Mandate that outlines its objectives, risk profile, and operating parameters, serving as a reference for the operator, risk managers, the Security Council, and the DAO.
 
 ## Contracts Overview
 
-| Filename                     | Deployment chain | Description                                                                                                                                                        |
-| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `HubCoreRegistry.sol`        | Hub              | Stores hub chain factories, oracle registry, swapModule module and beacons for machines, calibers and mailboxes.                                                   |
-| `SpokeCoreRegistry.sol`      | Spoke            | Stores spoke chain factories, oracle registry, swapModule module, and beacons for calibers and mailboxes.                                                          |
-| `OracleRegistry.sol`         | Hub + Spoke      | Aggregates price feeds in order to price base tokens against accounting tokens used in machines and calibers.                                                      |
-| `TokenRegistry.sol`          | Hub + Spoke      | Maps token addresses accross different chains.                                                                                                                     |
-| `ChainRegistry.sol`          | Hub              | Maps EVM chain IDs to Wormhole chain IDs.                                                                                                                          |
-| `HubCoreFactory.sol`         | Hub              | Hub chain factory for creation of machines, machine shares, caliber and bridge adapters.                                                                           |
-| `Machine.sol`                | Hub              | Core component of Makina which handles deposits, redemptions and share price calculation.                                                                          |
-| `SpokeCoreFactory.sol`       | Spoke            | Spoke chain factory for creation of calibers caliber mailboxes and bridge adapters.                                                                                |
-| `Caliber.sol`                | Hub + Spoke      | Execution engine used to manage positions. Each machine is attributed a caliber on the hub chain, and can later be attributed one caliber per supported evm chain. |
-| `CaliberMailbox.sol`         | Spoke            | Handles spoke caliber communication with hub machine.                                                                                                              |
-| `SwapModule.sol`             | Hub + Spoke      | Standalone module used by calibers to execute swap transactions through external protocols.                                                                        |
-| `AccrossV3BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via Accross V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain.               |
+| Filename                    | Deployment chain | Description                                                                                                                                         |
+| --------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HubCoreRegistry.sol`       | Hub              | Stores addresses of core hub components of the protocol, including registries, factory, and beacons.                                                |
+| `SpokeCoreRegistry.sol`     | Spoke            | Stores addresses of core spoke components of the protocol, including registries, factory, and beacons.                                              |
+| `OracleRegistry.sol`        | Hub + Spoke      | Aggregates price feeds in order to price base tokens against accounting tokens used in machines and calibers.                                       |
+| `TokenRegistry.sol`         | Hub + Spoke      | Maps token addresses across different chains.                                                                                                       |
+| `ChainRegistry.sol`         | Hub              | Maps EVM chain IDs to Wormhole chain IDs.                                                                                                           |
+| `HubCoreFactory.sol`        | Hub              | Hub factory for creation of machines, machine shares, caliber, bridge adapters, and pre-deposit vaults.                                             |
+| `SpokeCoreFactory.sol`      | Spoke            | Spoke factory for creation of calibers, caliber mailboxes and bridge adapters.                                                                      |
+| `Machine.sol`               | Hub              | Core component of Makina which handles deposits, redemptions and share price calculation.                                                           |
+| `Caliber.sol`               | Hub + Spoke      | Execution engine used to manage positions on each supported chain.                                                                                  |
+| `CaliberMailbox.sol`        | Spoke            | Handles communication between a spoke caliber and the hub machine.                                                                                  |
+| `SwapModule.sol`            | Hub + Spoke      | Standalone module used by calibers to execute swap transactions through external protocols.                                                         |
+| `AcrossV3BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via Across V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain. |
 
 ## Installation
 
-Follow [this link](https://book.getfoundry.sh/getting-started/installation) to install foundry, forge, cast and anvil
-
-Do not forget to update foundry regularly with the following command
-
-```properties
-foundryup
-```
-
-Similarly for forge-std run
-
-```properties
-forge update lib/forge-std
-```
+Follow [this link](https://book.getfoundry.sh/getting-started/installation) to install the Foundry toolchain.
 
 ## Submodules
 
-Run below command to include/update all git submodules like openzeppelin contracts, forge-std etc (`lib/`)
+Run below command to include/update all git submodules like forge-std, openzeppelin contracts etc (`lib/`)
 
-```properties
+```shell
 git submodule update --init --recursive
 ```
 
@@ -47,7 +39,7 @@ git submodule update --init --recursive
 
 Run below command to include project dependencies like prettier and solhint (`node_modules/`)
 
-```properties
+```shell
 yarn
 ```
 
@@ -56,29 +48,35 @@ yarn
 Run below command to compile contracts that require IR-based codegen (`src-ir/` and `test-ir/`)
 
 ```shell
-$ yarn build:ir
+yarn build:ir
 ```
 
 Run below command to compile all other contracts
 
 ```shell
-$ forge build
+forge build
 ```
 
 ### Test
 
 ```shell
-$ forge test
+forge test
+```
+
+### Coverage
+
+```shell
+yarn coverage
 ```
 
 ### Format
 
 ```shell
-$ forge fmt
+forge fmt
 ```
 
-### Anvil
+### Lint
 
 ```shell
-$ anvil
+yarn lint
 ```
