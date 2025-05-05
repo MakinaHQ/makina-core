@@ -60,7 +60,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         machineStore.addToken(address(accountingToken));
         machineStore.addToken(address(baseToken));
 
-        // deploy across v3 spoke pool
+        // deploy Across V3 spoke pool
         acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
         machineStore.setBridgeFeeBps(ACROSS_V3_BRIDGE_ID, ACROSS_V3_FEE_BPS);
 
