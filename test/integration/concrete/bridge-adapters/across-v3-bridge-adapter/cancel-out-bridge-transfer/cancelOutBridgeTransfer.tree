@@ -2,9 +2,9 @@ cancelOutBridgeTransfer.t.sol
 ├── when call is reentrant
 │  └── it should revert
 └── when call is not reentrant
-   ├── given sender is not the controller contract
+   ├── when caller is not the controller contract
    │  └── it should revert with NotController
-   └── given sender is the controller contract
+   └── when caller is the controller contract
       ├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to a outgoing transfer in adapter's storage

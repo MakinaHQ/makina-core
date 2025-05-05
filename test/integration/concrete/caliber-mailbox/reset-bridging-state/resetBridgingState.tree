@@ -1,7 +1,7 @@
 resetBridgingState.t.sol
-├── given sender does not have the relevant role
+├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+└── when caller has the relevant role
    ├── it should erase all the existing bridge counters for the given token, in caliber mailbox storage
    ├── it should withdraw token balance in all bridge adapters to caliber, and wipe out pending transfers
    └── it should emit a BridgingStateReset event

@@ -3,9 +3,9 @@ managePosition.t.sol
 │  └── it should revert
 └── when call is not reentrant
    ├── given recovery mode is off
-   │  ├── when sender is not the Mechanic
+   │  ├── when caller is not the Mechanic
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── when sender is the Mechanic
+   │  └── when caller is the Mechanic
    │     ├── when the 2 instructions position IDs or isDebt flags do not match
    │     │  └── it should revert with InstructionsMismatch
    │     └── when the 2 instructions position IDs and isDebt flags match
@@ -74,9 +74,9 @@ managePosition.t.sol
    │                                                  ├── it should emit a PositionClosed event
    │                                                  └── it should return the new value and the value change since last accounting
    └── given recovery mode is on
-      ├── when sender is not the Security Council
+      ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
-      └── when sender is the Security Council  
+      └── when caller is the Security Council  
          ├── given the position value did not decrease
          │  └── it should revert with RecoveryMode
          └── given the position value decreased

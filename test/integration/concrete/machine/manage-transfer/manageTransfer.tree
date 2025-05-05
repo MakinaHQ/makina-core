@@ -2,10 +2,10 @@ manageTransfer.t.sol
 ├── when call is reentrant
 │  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
-   ├── when sender is not a machine's bridge adapter
-   │  ├── when sender is not the machine's hub caliber
+   ├── when caller is not a machine's bridge adapter
+   │  ├── when caller is not the machine's hub caliber
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── when sender is the machine's hub caliber
+   │  └── when caller is the machine's hub caliber
    │     ├── given the machine has a resulting null token balance
    │     │  └── it should not change any state
    │     └── given the machine has a resulting positive token balance
@@ -19,7 +19,7 @@ manageTransfer.t.sol
    │              ├── it should decrease the hub caliber's token balance by amount
    │              ├── it should increase the machine's token balance by amount
    │              └── it should mark the token as an idle token in the machine
-   └── when sender is a machine's bridge adapter
+   └── when caller is a machine's bridge adapter
       ├── given no spoke caliber is registered for the provided bridge ID
       │  └── it should revert with InvalidChainId
       └── given a spoke caliber is registered for the provided bridge ID

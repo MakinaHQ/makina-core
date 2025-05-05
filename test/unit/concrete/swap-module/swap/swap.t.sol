@@ -34,7 +34,7 @@ contract Swap_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         pool.addLiquidity(initialPoolLiquidityOneSide, initialPoolLiquidityOneSide);
     }
 
-    function test_RevertGiven_CallerNotCaliber() public {
+    function test_RevertWhen_CallerNotCaliber() public {
         ISwapModule.SwapOrder memory order = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,
             data: bytes(""),

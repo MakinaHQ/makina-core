@@ -1,7 +1,7 @@
 handleV3AcrossMessage.t.sol
-├── given sender is not the authorized receive source
+├── when caller is not the authorized receive source
 │  └── it should revert with UnauthorizedSource
-└── given sender is the authorized receive source
+└── when caller is the authorized receive source
    ├── given the hash of the received message was not registered beforehand
    │  └── it should revert with UnexpectedMessage
    └── given the hash of the received message was registered beforehand

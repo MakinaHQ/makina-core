@@ -1,16 +1,16 @@
 setSpokeCaliber.t.sol
-├── given sender does not have the relevant role
+├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
-   ├── when the provided EVM chain id is not registered in ChainRegistry
+└── when caller has the relevant role
+   ├── when the provided EVM chain ID is not registered in ChainRegistry
    │  └── it should revert with EvmChainIdNotRegistered
-   └── when the provided EVM chain id is registered in ChainRegistry
+   └── when the provided EVM chain ID is registered in ChainRegistry
       ├── given a spoke caliber was registered in this contract for the provided chain ID
       │  └── it should revert with SpokeCaliberAlreadySet
       └── given no spoke caliber was registered in this contract for the provided chain ID
-         ├── when the provided bridge id list and adapter list do not have the same length
+         ├── when the provided bridge ID list and adapter list do not have the same length
          │  └── it should revert with MismatchedLength
-         └── when the provided bridge id list and adapter list have the same length
+         └── when the provided bridge ID list and adapter list have the same length
             ├── given an adapter address is already set for the provided chain ID and one of the bridge IDs
             │  └── it should revert with SpokeBridgeAdapterAlreadySet
             └── given no adapter address is already set for the provided chain ID and bridge IDs

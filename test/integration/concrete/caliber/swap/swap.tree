@@ -3,9 +3,9 @@ swap.t.sol
 │  └── it should revert
 └── when call is not reentrant
    ├── given recovery mode is off
-   │  ├── when sender is not the Mechanic
+   │  ├── when caller is not the Mechanic
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── when sender is the Mechanic
+   │  └── when caller is the Mechanic
    │     ├── given output token is not a base token
    │     │  └── it should revert with InvalidOutputToken
    │     └── given output token is a base token
@@ -18,9 +18,9 @@ swap.t.sol
    │              ├── the input token balance of the caliber should be decreased by order.inputAmount
    │              └── the output token balance of the caliber should be increased by at least order.minOutputAmount
    └── given recovery mode is on
-      ├── when sender is not the Security Council
+      ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
-      └── when sender is the Security Council
+      └── when caller is the Security Council
          ├── given output token is not the accounting token
          │  └── it should revert with RecoveryMode
          └── given output token is the accounting token

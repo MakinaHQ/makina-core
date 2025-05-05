@@ -1,7 +1,7 @@
 addInstrRootGuardian.t.sol
-├── given sender does not have the relevant role
+├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
-└── given sender has the relevant role
+└── when caller has the relevant role
    ├── given provided address is already a root guardian
    │  └── it should revert with AlreadyRootGuardian
    └── given provided address is not already a root guardian

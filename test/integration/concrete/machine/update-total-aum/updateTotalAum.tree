@@ -3,9 +3,9 @@ updateTotalAum.t.sol
 │  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
    ├── given recovery mode is off
-   │  ├── when sender is not the Mechanic
+   │  ├── when caller is not the Mechanic
    │  │  └── it should revert with UnauthorizedCaller
-   │  └── when sender is the Mechanic
+   │  └── when caller is the Mechanic
    │     ├── given one of the calibers accounting is stale
    │     │  └── it should revert with CaliberAccountingStale
    │     └── given none of the calibers accounting is stale

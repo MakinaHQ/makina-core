@@ -5,12 +5,12 @@ redeem.t.sol
    ├── given recovery mode is on
    │  └── it should revert with RecoveryMode
    └── given recovery mode is off
-      ├── when sender is not redeemer
+      ├── when caller is not redeemer
       │  └── it should revert with UnauthorizedCaller
-      └── when sender is redeemer
-         ├── given that the asset amount to withdraw exceeds the maximum allowed withdrawal amount
+      └── when caller is redeemer
+         ├── given the asset amount to withdraw exceeds the maximum allowed withdrawal amount
          │  └── it should revert with ExceededMaxWithdraw
-         └── given that the asset amount to withdraw does not exceed the maximum allowed withdrawal amount
+         └── given the asset amount to withdraw does not exceed the maximum allowed withdrawal amount
             ├── given output asset amount is lower than provided minAssets
             │  └── it should revert with SlippageProtection
             └── given output asset amount is not lower than provided minAssets

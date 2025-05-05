@@ -1,7 +1,7 @@
 setCaliber.t.sol
-├── when sender is not the spoke core factory
+├── when caller is not the spoke core factory
 │  └── it should revert with NotFactory
-└── when sender is the spoke core factory
+└── when caller is the spoke core factory
    ├── given a non-zero address is already set for caliber in caliber mailbox
    │  └── it should revert with CaliberAlreadySet
    └── given no address is set for caliber in caliber mailbox
