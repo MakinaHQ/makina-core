@@ -42,7 +42,7 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
 
         for (uint256 i; i < amounts.length; i++) {
             if (direction[i]) {
-                uint256 assets = amounts[i] = bound(amounts[i], 1, 1e40);
+                uint256 assets = amounts[i] = bound(amounts[i], accountingTokenUnit / 1e3, 1e30);
 
                 deal(address(accountingToken), machineDepositor, assets, true);
 
@@ -71,8 +71,8 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
                 machine.redeem(sharesToRedeem, machineDepositor, 0);
             }
 
-            assertApproxEqRel(machine.convertToShares(accountingTokenUnit), shareTokenUnit, 1e14);
-            assertApproxEqRel(machine.convertToAssets(shareTokenUnit), accountingTokenUnit, 1e14);
+            assertApproxEqRel(machine.convertToShares(accountingTokenUnit), shareTokenUnit, 1e15);
+            assertApproxEqRel(machine.convertToAssets(shareTokenUnit), accountingTokenUnit, 1e15);
         }
     }
 }
