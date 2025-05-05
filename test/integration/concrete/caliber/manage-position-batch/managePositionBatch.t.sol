@@ -72,11 +72,14 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
 
-        vm.expectEmit(true, false, false, false, address(caliber));
-        emit ICaliber.PositionCreated(BORROW_POS_ID);
+        uint256 expectedBorrowPosValue = inputAmount * PRICE_B_A;
+        uint256 expectedSupplyPosValue = inputAmount * PRICE_B_A;
 
         vm.expectEmit(true, false, false, false, address(caliber));
-        emit ICaliber.PositionCreated(SUPPLY_POS_ID);
+        emit ICaliber.PositionCreated(BORROW_POS_ID, expectedBorrowPosValue);
+
+        vm.expectEmit(true, false, false, false, address(caliber));
+        emit ICaliber.PositionCreated(SUPPLY_POS_ID, expectedSupplyPosValue);
 
         vm.prank(mechanic);
         caliber.managePositionBatch(mgmtInstructions, acctInstructions);
@@ -87,11 +90,11 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
         assertEq(borrowModule.debtOf(address(caliber)), inputAmount);
         assertEq(supplyModule.collateralOf(address(caliber)), inputAmount);
 
-        assertEq(caliber.getPosition(BORROW_POS_ID).value, inputAmount * PRICE_B_A);
+        assertEq(caliber.getPosition(BORROW_POS_ID).value, expectedBorrowPosValue);
         assertEq(caliber.getPosition(BORROW_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
 
-        assertEq(caliber.getPosition(SUPPLY_POS_ID).value, inputAmount * PRICE_B_A);
+        assertEq(caliber.getPosition(SUPPLY_POS_ID).value, expectedSupplyPosValue);
         assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
     }

@@ -535,15 +535,17 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         uint256 inputAmount = 3e18;
         uint256 previewShares = vault.previewDeposit(inputAmount);
 
-        deal(address(baseToken), address(caliber), 3e18, true);
+        deal(address(baseToken), address(caliber), inputAmount, true);
 
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
 
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.PositionCreated(VAULT_POS_ID);
+        uint256 expectedPosValue = inputAmount * PRICE_B_A;
+
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionCreated(VAULT_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -551,7 +553,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionId(0), VAULT_POS_ID);
         assertEq(vault.balanceOf(address(caliber)), previewShares);
         assertEq(value, uint256(change));
-        assertEq(value, inputAmount * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, value);
         assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
@@ -568,8 +570,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             address(caliber), SUPPLY_POS_ID, address(supplyModule)
         );
 
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.PositionCreated(SUPPLY_POS_ID);
+        uint256 expectedPosValue = inputAmount * PRICE_B_A;
+
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionCreated(SUPPLY_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -577,7 +581,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionId(0), SUPPLY_POS_ID);
         assertEq(supplyModule.collateralOf(address(caliber)), inputAmount);
         assertEq(value, uint256(change));
-        assertEq(value, inputAmount * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(caliber.getPosition(SUPPLY_POS_ID).value, value);
         assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
@@ -594,8 +598,10 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
             address(caliber), BORROW_POS_ID, address(borrowModule)
         );
 
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.PositionCreated(BORROW_POS_ID);
+        uint256 expectedPosValue = inputAmount * PRICE_B_A;
+
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionCreated(BORROW_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -603,7 +609,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionId(0), BORROW_POS_ID);
         assertEq(borrowModule.debtOf(address(caliber)), inputAmount);
         assertEq(value, uint256(change));
-        assertEq(value, inputAmount * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(caliber.getPosition(BORROW_POS_ID).value, value);
         assertEq(caliber.getPosition(BORROW_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
@@ -625,9 +631,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory acctInstruction =
             WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
 
+        uint256 expectedPosValue = assets1 * PRICE_B_A;
+
         // create position
-        vm.expectEmit(true, true, false, true, address(caliber));
-        emit ICaliber.PositionCreated(POOL_POS_ID);
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionCreated(POOL_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -635,7 +643,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(caliber.getPositionId(0), POOL_POS_ID);
         assertEq(pool.balanceOf(address(caliber)), previewLpts);
         assertEq(value, uint256(change));
-        assertEq(value, assets1 * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(caliber.getPosition(POOL_POS_ID).value, value);
         assertEq(caliber.getPosition(POOL_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(POOL_POS_ID).isDebt, false);
@@ -661,13 +669,17 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
 
+        uint256 expectedPosValue = 2 * inputAmount * PRICE_B_A;
+
         // increase position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(VAULT_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
         assertEq(caliber.getPositionsLength(), posLengthBefore);
         assertEq(vault.balanceOf(address(caliber)), previewShares);
-        assertEq(value, 2 * inputAmount * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(uint256(change), inputAmount * PRICE_B_A);
         assertEq(caliber.getPosition(VAULT_POS_ID).value, value);
         assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
@@ -693,7 +705,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
 
+        uint256 expectedPosValue = 2 * inputAmount * PRICE_B_A;
+
         // increase position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(SUPPLY_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -725,13 +741,17 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
 
+        uint256 expectedPosValue = 2 * inputAmount * PRICE_B_A;
+
         // increase position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(BORROW_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
         assertEq(caliber.getPositionsLength(), posLengthBefore);
         assertEq(borrowModule.debtOf(address(caliber)), 2 * inputAmount);
-        assertEq(value, 2 * inputAmount * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(uint256(change), inputAmount * PRICE_B_A);
         assertEq(caliber.getPosition(BORROW_POS_ID).value, value);
         assertEq(caliber.getPosition(BORROW_POS_ID).lastAccountingTime, block.timestamp);
@@ -760,13 +780,17 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
 
+        uint256 expectedPosValue = (previewShares - sharesToRedeem) * PRICE_B_A;
+
         // decrease position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(VAULT_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
         assertEq(caliber.getPositionsLength(), posLengthBefore);
         assertEq(vault.balanceOf(address(caliber)), previewShares - sharesToRedeem);
-        assertEq(value, (previewShares - sharesToRedeem) * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(change, -1 * int256(sharesToRedeem * PRICE_B_A));
         assertEq(
             caliber.getPosition(VAULT_POS_ID).value, vault.previewRedeem(vault.balanceOf(address(caliber))) * PRICE_B_A
@@ -797,7 +821,11 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), withdrawAmount);
 
+        uint256 expectedPosValue = (inputAmount - withdrawAmount) * PRICE_B_A;
+
         // decrease position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(SUPPLY_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -832,13 +860,17 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), repayAmount);
 
+        uint256 expectedPosValue = (inputAmount - repayAmount) * PRICE_B_A;
+
         // decrease position
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionUpdated(BORROW_POS_ID, expectedPosValue);
         vm.prank(mechanic);
         (uint256 value, int256 change) = caliber.managePosition(mgmtInstruction, acctInstruction);
 
         assertEq(caliber.getPositionsLength(), posLengthBefore);
         assertEq(borrowModule.debtOf(address(caliber)), inputAmount - repayAmount);
-        assertEq(value, (inputAmount - repayAmount) * PRICE_B_A);
+        assertEq(value, expectedPosValue);
         assertEq(change, -1 * int256(repayAmount * PRICE_B_A));
         assertEq(caliber.getPosition(BORROW_POS_ID).value, borrowModule.debtOf(address(caliber)) * PRICE_B_A);
         assertEq(caliber.getPosition(BORROW_POS_ID).lastAccountingTime, block.timestamp);

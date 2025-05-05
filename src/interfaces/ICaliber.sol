@@ -19,7 +19,8 @@ interface ICaliber {
     event NewAllowedInstrRootCancelled(bytes32 indexed cancelledMerkleRoot);
     event NewAllowedInstrRootScheduled(bytes32 indexed newMerkleRoot, uint256 indexed effectiveTime);
     event PositionClosed(uint256 indexed id);
-    event PositionCreated(uint256 indexed id);
+    event PositionCreated(uint256 indexed id, uint256 value);
+    event PositionUpdated(uint256 indexed id, uint256 value);
     event PositionStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event TimelockDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
     event TransferToHubMachine(address indexed token, uint256 amount);
