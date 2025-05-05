@@ -8,12 +8,18 @@ interface ICaliberMailbox is IMachineEndpoint {
     event CaliberSet(address indexed caliber);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 
+    /// @notice Accounting data of the caliber.
+    /// @param netAum The net assets under management.
+    /// @param positions The list of positions of the caliber, each encoded as abi.encode(positionId, value).
+    /// @param baseTokens The list of base tokens of the caliber, each encoded as abi.encode(token, value).
+    /// @param bridgesIn The list of incoming bridge amounts, each encoded as abi.encode(token, amount).
+    /// @param bridgesOut The list of outgoing bridge amounts, each encoded as abi.encode(token, amount).
     struct SpokeCaliberAccountingData {
         uint256 netAum;
-        bytes[] positions; // abi.encode(positionId, value)
-        bytes[] baseTokens; // abi.encode(token, value)
-        bytes[] bridgesIn; // abi.encode(token, amount)
-        bytes[] bridgesOut; // abi.encode(token, amount)
+        bytes[] positions;
+        bytes[] baseTokens;
+        bytes[] bridgesIn;
+        bytes[] bridgesOut;
     }
 
     /// @notice Initializer of the contract.

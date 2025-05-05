@@ -28,6 +28,8 @@ interface IMachine is IMachineEndpoint {
     /// @param initialRedeemer The address of the initial redeemer.
     /// @param initialFeeManager The address of the initial fee manager.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
+    /// @param initialMaxFeeAccrualRate The maximum fee accrual rate in basis points.
+    /// @param initialFeeMintCooldown The minimum time to be elapsed between two fee minting events in seconds.
     /// @param initialShareLimit The share cap value.
     struct MachineInitParams {
         address initialDepositor;
@@ -39,13 +41,24 @@ interface IMachine is IMachineEndpoint {
         uint256 initialShareLimit;
     }
 
+    /// @dev Internal state structure for a spoke caliber data.
+    /// @param mailbox The foreign address of the spoke caliber mailbox.
+    /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
+    /// @param timestamp The timestamp of the last accounting.
+    /// @param netAum The net AUM of the spoke caliber.
+    /// @param positions The list of positions of the spoke caliber, each encoded as abi.encode(positionId, value).
+    /// @param baseTokens The list of base tokens of the spoke caliber, each encoded as abi.encode(token, value).
+    /// @param caliberBridgesIn The mapping of spoke caliber incoming bridge amounts.
+    /// @param caliberBridgesOut The mapping of spoke caliber outgoing bridge amounts.
+    /// @param machineBridgesIn The mapping of machine incoming bridge amounts.
+    /// @param machineBridgesOut The mapping of machine outgoing bridge amounts.
     struct SpokeCaliberData {
         address mailbox;
         mapping(uint16 bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
-        bytes[] positions; // abi.encode(positionId, value)
-        bytes[] baseTokens; // abi.encode(token, value)
+        bytes[] positions;
+        bytes[] baseTokens;
         EnumerableMap.AddressToUintMap caliberBridgesIn;
         EnumerableMap.AddressToUintMap caliberBridgesOut;
         EnumerableMap.AddressToUintMap machineBridgesIn;
