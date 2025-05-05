@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.8.28;
 
-import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
@@ -24,7 +24,7 @@ import {TokenRegistry} from "src/registries/TokenRegistry.sol";
 
 abstract contract Base is DeployViaIr {
     struct HubCore {
-        AccessManager accessManager;
+        AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
         HubCoreRegistry hubCoreRegistry;
@@ -37,7 +37,7 @@ abstract contract Base is DeployViaIr {
     }
 
     struct SpokeCore {
-        AccessManager accessManager;
+        AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
         SpokeCoreRegistry spokeCoreRegistry;
@@ -80,9 +80,16 @@ abstract contract Base is DeployViaIr {
 
     function deploySharedCore(address initialAMAdmin, address dao)
         public
-        returns (AccessManager accessManager, OracleRegistry oracleRegistry, TokenRegistry tokenRegistry)
+        returns (AccessManagerUpgradeable accessManager, OracleRegistry oracleRegistry, TokenRegistry tokenRegistry)
     {
-        accessManager = new AccessManager(initialAMAdmin);
+        address accessManagerImplemAddr = address(new AccessManagerUpgradeable());
+        accessManager = AccessManagerUpgradeable(
+            address(
+                new TransparentUpgradeableProxy(
+                    accessManagerImplemAddr, dao, abi.encodeCall(AccessManagerUpgradeable.initialize, (initialAMAdmin))
+                )
+            )
+        );
 
         address oracleRegistryImplemAddr = address(new OracleRegistry());
         oracleRegistry = OracleRegistry(
@@ -295,7 +302,7 @@ abstract contract Base is DeployViaIr {
     /// ACCESS MANAGER SETUP
     ///
 
-    function setupAccessManager(AccessManager accessManager, address dao) public {
+    function setupAccessManager(AccessManagerUpgradeable accessManager, address dao) public {
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
     }

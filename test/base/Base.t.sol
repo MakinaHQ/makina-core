@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {AccessManager} from "@openzeppelin/contracts/access/manager/AccessManager.sol";
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
@@ -40,7 +40,7 @@ abstract contract Base_Test is Base, Constants, Test {
     address public riskManager;
     address public riskManagerTimelock;
 
-    AccessManager public accessManager;
+    AccessManagerUpgradeable public accessManager;
     OracleRegistry public oracleRegistry;
     TokenRegistry public tokenRegistry;
     SwapModule public swapModule;

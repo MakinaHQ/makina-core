@@ -231,7 +231,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         return user == IMakinaGovernable($._hubMachineEndpoint).riskManager()
             || user == IMakinaGovernable($._hubMachineEndpoint).securityCouncil() || $._instrRootGuardians.contains(user);
     }
-    
+
     /// @inheritdoc ICaliber
     function isAccountingFresh() external view returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
