@@ -46,6 +46,17 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     function machine_transferToSpokeCaliber_AcrossV3(uint256 tokenIndex, uint256 amount) external {
         tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
         address token = machineStore.tokens(tokenIndex);
+
+        if (
+            machineStore.pendingMachineScheduledOutTransferId(token) != 0
+                || machineStore.pendingMachineSentOutTransferId(token) != 0
+                || machineStore.pendingMachineRefundedOutTransferId(token) != 0
+                || machineStore.pendingCaliberReceivedInTransferId(token) != 0
+                || machineStore.pendingCaliberClaimedInTransferId(token) != 0
+        ) {
+            return;
+        }
+
         amount = _bound(amount, 0, IERC20(token).balanceOf(address(machine)));
         if (amount == 0) {
             return;
@@ -72,17 +83,19 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
 
         vm.stopPrank();
 
-        machineStore.addPendingMachineScheduledOutTransferId(transferId);
+        machineStore.setPendingMachineScheduledOutTransferId(token, transferId);
     }
 
     /// @dev Sends a scheduled outgoing transfer from machine to spoke caliber
-    function machine_sendOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
-        uint256 transfersLen = machineStore.pendingMachineScheduledOutTransferLength();
-        if (transfersLen == 0) {
+    function machine_sendOutBridgeTransfer_AcrossV3(uint256 tokenIndex) external {
+        tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
+        address token = machineStore.tokens(tokenIndex);
+
+        uint256 transferId = machineStore.pendingMachineScheduledOutTransferId(token);
+        if (transferId == 0) {
             return;
         }
-        transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-        uint256 transferId = machineStore.getPendingMachineScheduledOutTransferId(transferIndex);
+
         address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 acrossV3TransferId =
             IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).numberOfDeposits();
@@ -90,24 +103,25 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
         vm.prank(_mechanic());
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId, abi.encode(1 weeks));
 
-        machineStore.removePendingMachineScheduledOutTransferId(transferId);
-        machineStore.addPendingMachineSentOutTransferId(transferId);
+        machineStore.clearPendingMachineScheduledOutTransferId(token);
+        machineStore.setPendingMachineSentOutTransferId(token, transferId);
         machineStore.setMachineAcrossV3TransferId(transferId, acrossV3TransferId);
     }
 
     /// @dev Cancels a refunded transfer initially sent from machine to spoke caliber
-    function machine_cancelOutBridgeTransfer_AcrossV3(uint256 transferIndex) external {
-        uint256 transfersLen = machineStore.pendingMachineRefundedOutTransferLength();
-        if (transfersLen == 0) {
+    function machine_cancelOutBridgeTransfer_AcrossV3(uint256 tokenIndex) external {
+        tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
+        address token = machineStore.tokens(tokenIndex);
+
+        uint256 transferId = machineStore.pendingMachineRefundedOutTransferId(token);
+        if (transferId == 0) {
             return;
         }
-        transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-        uint256 transferId = machineStore.getPendingMachineRefundedOutTransferId(transferIndex);
 
         vm.prank(_mechanic());
         machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
-        machineStore.removePendingMachineRefundedOutTransferId(transferId);
+        machineStore.clearPendingMachineRefundedOutTransferId(token);
     }
 
     /// @dev Claims a pending transfer received by machine from spoke caliber
@@ -199,21 +213,23 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     /// @dev Claims a pending transfer received by spoke caliber from machine
-    function caliber_claimInBridgeTransfer_AcrossV3(uint256 transferIndex) external {
-        uint256 transfersLen = machineStore.pendingCaliberReceivedInTransferLength();
-        if (transfersLen == 0) {
+    function caliber_claimInBridgeTransfer_AcrossV3(uint256 tokenIndex) external {
+        tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
+        address token = machineStore.tokens(tokenIndex);
+
+        uint256 transferId = machineStore.pendingCaliberReceivedInTransferId(token);
+        if (transferId == 0) {
             return;
         }
-        transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-        uint256 transferId = machineStore.getPendingCaliberReceivedInTransferId(transferIndex);
 
         vm.prank(_mechanic());
         spokeCaliberMailbox.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
-        machineStore.removePendingCaliberReceivedInTransferId(transferId);
         machineStore.addPendingCaliberRealisedBridgeFee(
-            machineStore.caliberInTransferToken(transferId), machineStore.pendingCaliberInTransferBridgeFee(transferId)
+            token, machineStore.pendingCaliberInTransferBridgeFee(transferId)
         );
+        machineStore.clearPendingCaliberReceivedInTransferId(token);
+        machineStore.setPendingCaliberClaimedInTransferId(token, transferId);
     }
 
     ///
@@ -221,89 +237,94 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     ///
 
     /// @dev Cancels a pending Across V3 transfer and refund the tokens to the sender
-    function acrossV3CancelTransfer(bool fromMachineToCaliber, uint256 transferIndex) external {
-        if (fromMachineToCaliber) {
-            uint256 transfersLen = machineStore.pendingMachineSentOutTransferLength();
-            if (transfersLen == 0) {
-                return;
-            }
-            transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-            uint256 transferId = machineStore.getPendingMachineSentOutTransferId(transferIndex);
-            uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
-            address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
+    function acrossV3CancelMachineTransfer(uint256 tokenIndex) external {
+        tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
+        address token = machineStore.tokens(tokenIndex);
 
-            IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
-
-            machineStore.removePendingMachineSentOutTransferId(transferId);
-            machineStore.addPendingMachineRefundedOutTransferId(transferId);
-        } else {
-            uint256 transfersLen = machineStore.pendingCaliberSentOutTransferLength();
-            if (transfersLen == 0) {
-                return;
-            }
-            transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-            uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
-            uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
-            address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
-
-            IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
-
-            machineStore.removePendingCaliberSentOutTransferId(transferId);
-            machineStore.addPendingCaliberRefundedOutTransferId(transferId);
+        uint256 transferId = machineStore.pendingMachineSentOutTransferId(token);
+        if (transferId == 0) {
+            return;
         }
+
+        uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
+        address bridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
+
+        IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
+
+        machineStore.clearPendingMachineSentOutTransferId(token);
+        machineStore.setPendingMachineRefundedOutTransferId(token, transferId);
     }
 
-    /// @dev Settles a pending Across V3 transfer
-    function acrossV3SettleTransfer(bool fromMachineToCaliber, uint256 transferIndex) external {
-        if (fromMachineToCaliber) {
-            uint256 transfersLen = machineStore.pendingMachineSentOutTransferLength();
-            if (transfersLen == 0) {
-                return;
-            }
-            transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-            uint256 transferId = machineStore.getPendingMachineSentOutTransferId(transferIndex);
-            uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
-
-            address receiverBridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
-            uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
-
-            address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
-
-            IMockAcrossV3SpokePool.DepositV3Params memory depositV3Params =
-                IMockAcrossV3SpokePool(acrossV3SpokePool).getTransferData(acrossV3TransferId);
-            IMockAcrossV3SpokePool(acrossV3SpokePool).settleTransfer(acrossV3TransferId);
-
-            machineStore.removePendingMachineSentOutTransferId(transferId);
-            machineStore.addPendingCaliberReceivedInTransferId(inTransferId);
-            machineStore.setCaliberInTransferToken(inTransferId, address(uint160(uint256(depositV3Params.outputToken))));
-            machineStore.setPendingCaliberInTransferBridgeFee(
-                inTransferId, depositV3Params.inputAmount - depositV3Params.outputAmount
-            );
-        } else {
-            uint256 transfersLen = machineStore.pendingCaliberSentOutTransferLength();
-            if (transfersLen == 0) {
-                return;
-            }
-            transferIndex = _bound(transferIndex, 0, transfersLen - 1);
-            uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
-            uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
-
-            address receiverBridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
-            uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
-
-            address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
-
-            IMockAcrossV3SpokePool.DepositV3Params memory depositV3Params =
-                IMockAcrossV3SpokePool(acrossV3SpokePool).getTransferData(acrossV3TransferId);
-            IMockAcrossV3SpokePool(acrossV3SpokePool).settleTransfer(acrossV3TransferId);
-
-            machineStore.removePendingCaliberSentOutTransferId(transferId);
-            machineStore.addPendingMachineReceivedInTransferId(inTransferId);
-            machineStore.setMachineInTransferToken(inTransferId, address(uint160(uint256(depositV3Params.outputToken))));
-            machineStore.setPendingMachineInTransferBridgeFee(
-                inTransferId, depositV3Params.inputAmount - depositV3Params.outputAmount
-            );
+    /// @dev Cancels a pending Across V3 transfer and refund the tokens to the sender
+    function acrossV3CancelCaliberTransfer(uint256 transferIndex) external {
+        uint256 transfersLen = machineStore.pendingCaliberSentOutTransferLength();
+        if (transfersLen == 0) {
+            return;
         }
+        transferIndex = _bound(transferIndex, 0, transfersLen - 1);
+        uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
+        uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
+        address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
+
+        IMockAcrossV3SpokePool(IBridgeAdapter(bridgeAdapter).executionTarget()).cancelTransfer(acrossV3TransferId);
+
+        machineStore.removePendingCaliberSentOutTransferId(transferId);
+        machineStore.addPendingCaliberRefundedOutTransferId(transferId);
+    }
+
+    /// @dev Settles a pending Across V3 transfer from machine to spoke caliber
+    function acrossV3SettleMachineTransfer(uint256 tokenIndex) external {
+        tokenIndex = _bound(tokenIndex, 0, machineStore.tokensLength() - 1);
+        address token = machineStore.tokens(tokenIndex);
+
+        uint256 transferId = machineStore.pendingMachineSentOutTransferId(token);
+        if (transferId == 0) {
+            return;
+        }
+
+        uint256 acrossV3TransferId = machineStore.machineAcrossV3TransferId(transferId);
+
+        address receiverBridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
+        uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
+
+        address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
+
+        IMockAcrossV3SpokePool.DepositV3Params memory depositV3Params =
+            IMockAcrossV3SpokePool(acrossV3SpokePool).getTransferData(acrossV3TransferId);
+        IMockAcrossV3SpokePool(acrossV3SpokePool).settleTransfer(acrossV3TransferId);
+
+        machineStore.clearPendingMachineSentOutTransferId(token);
+        machineStore.setPendingCaliberReceivedInTransferId(token, inTransferId);
+        machineStore.setPendingCaliberInTransferBridgeFee(
+            inTransferId, depositV3Params.inputAmount - depositV3Params.outputAmount
+        );
+    }
+
+    /// @dev Settles a pending Across V3 transfer from spoke caliber to machine
+    function acrossV3SettleCaliberTransfer(uint256 transferIndex) external {
+        uint256 transfersLen = machineStore.pendingCaliberSentOutTransferLength();
+        if (transfersLen == 0) {
+            return;
+        }
+        transferIndex = _bound(transferIndex, 0, transfersLen - 1);
+        uint256 transferId = machineStore.getPendingCaliberSentOutTransferId(transferIndex);
+        uint256 acrossV3TransferId = machineStore.caliberAcrossV3TransferId(transferId);
+
+        address receiverBridgeAdapter = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
+        uint256 inTransferId = IBridgeAdapter(receiverBridgeAdapter).nextInTransferId();
+
+        address acrossV3SpokePool = IBridgeAdapter(receiverBridgeAdapter).executionTarget();
+
+        IMockAcrossV3SpokePool.DepositV3Params memory depositV3Params =
+            IMockAcrossV3SpokePool(acrossV3SpokePool).getTransferData(acrossV3TransferId);
+        IMockAcrossV3SpokePool(acrossV3SpokePool).settleTransfer(acrossV3TransferId);
+
+        machineStore.removePendingCaliberSentOutTransferId(transferId);
+        machineStore.addPendingMachineReceivedInTransferId(inTransferId);
+        machineStore.setMachineInTransferToken(inTransferId, address(uint160(uint256(depositV3Params.outputToken))));
+        machineStore.setPendingMachineInTransferBridgeFee(
+            inTransferId, depositV3Params.inputAmount - depositV3Params.outputAmount
+        );
     }
 
     /// @dev Notifies machine of the current state of the spoke caliber accounting
@@ -331,6 +352,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
             address token = machineStore.tokens(i);
             machineStore.addTotalAccountedBridgeFee(token, machineStore.pendingCaliberRealisedBridgeFee(token));
             machineStore.resetPendingCaliberRealisedBridgeFee(token);
+            machineStore.clearPendingCaliberClaimedInTransferId(token);
         }
     }
 

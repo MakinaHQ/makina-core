@@ -279,19 +279,19 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             if (refund) {
                 uint256 mOut = caliberData.machineBridgesOut.get(token);
                 uint256 newMOut = mOut - inputAmount;
-                caliberData.machineBridgesOut.set(token, newMOut);
                 (, uint256 cIn) = caliberData.caliberBridgesIn.tryGet(token);
                 if (cIn > newMOut) {
                     revert Errors.BridgeStateMismatch();
                 }
+                caliberData.machineBridgesOut.set(token, newMOut);
             } else {
                 (, uint256 mIn) = caliberData.machineBridgesIn.tryGet(token);
                 uint256 newMIn = mIn + inputAmount;
-                caliberData.machineBridgesIn.set(token, newMIn);
                 (, uint256 cOut) = caliberData.caliberBridgesOut.tryGet(token);
                 if (newMIn > cOut) {
                     revert Errors.BridgeStateMismatch();
                 }
+                caliberData.machineBridgesIn.set(token, newMIn);
             }
         } else if (msg.sender != $._hubCaliber) {
             revert Errors.UnauthorizedCaller();
@@ -349,6 +349,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         }
 
         (bool exists, uint256 mOut) = caliberData.machineBridgesOut.tryGet(token);
+        (, uint256 cIn) = caliberData.caliberBridgesIn.tryGet(token);
+        if (mOut > cIn) {
+            revert Errors.PendingBridgeTransfer();
+        } else if (mOut < cIn) {
+            revert Errors.BridgeStateMismatch();
+        }
         caliberData.machineBridgesOut.set(token, exists ? mOut + amount : amount);
 
         _scheduleOutBridgeTransfer(bridgeId, chainId, recipient, token, amount, outputToken, minOutputAmount);
