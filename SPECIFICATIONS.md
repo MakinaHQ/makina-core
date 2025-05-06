@@ -36,6 +36,8 @@ In order to compute a machine's total AUM, accounting data of each caliber needs
 
 To move funds between the Hub Chain and Spoke Chains, the protocol supports multiple liquidity bridging protocols through a modular bridge adapter system. At each stage of a bridge transfer, the involved funds are accounted for in the Machine’s AUM calculation.
 
+See more in the [Liquidity Bridging](#liquidity-bridging) section.
+
 #### Standard Operator Actions:
 
 - Can store the last accounting data from spoke calibers.
@@ -52,7 +54,7 @@ The `Caliber` contract serves as the execution engine, responsible for deploying
 
 #### Mailbox
 
-Cross-chain communication between the Hub Machine and Spoke Calibers is facilitated through `CaliberMailbox` contracts. Each Spoke Caliber is deployed alongside a `CaliberMailbox` on its respective Spoke Chain. These mailbox contracts enable Spoke Calibers to communicate asynchronously with the Hub Machine, coordinating and tracking cross-chain fund transfers initiated or received by the Caliber.
+Cross-chain communication between the Hub Machine and Spoke calibers is facilitated through `CaliberMailbox` contracts. Each Spoke `Caliber` is deployed alongside a `CaliberMailbox` on its respective Spoke Chain. The `CaliberMailbox` acts as a machine endpoint from the `Caliber`’s perspective. It abstracts away chain-specific logic, managing liquidity bridging for transfers to and from the Hub Machine, and it also handles access control setup.
 
 #### Instructions
 
@@ -108,11 +110,24 @@ The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](h
 
 ### Chain Registry
 
-The protocol uses Wormhole cross-chain queries to relay accounting data from Spoke Calibers to the Hub Machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
+The protocol uses Wormhole Cross-Chain Queries to relay accounting data from Spoke Calibers to the Hub Machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
 
 ### Token Registry
 
 The `TokenRegistry` contract maintains the association between token addresses on the Hub and Spoke Chains. It enables consistent identification and pricing of bridged assets across networks, ensuring accurate cross-chain accounting.
+
+### Liquidity Bridging
+
+Liquidity can be bridged between a Hub Machine and a Spoke Caliber via their respective bridge adapters. The protocol provides a dedicated bridge adapter implementation for each supported external bridge protocol.
+
+Bridging is a four-step process, executed by the operator, and functions symmetrically in both directions: Hub → Spoke and Spoke → Hub.
+
+1. Schedule the outgoing transfer on the sender side.
+2. Authorize the incoming transfer on the recipient side by registering the message hash.
+3. Send the outgoing transfer through the bridge protocol from the sender side.
+4. Claim the transfer on the recipient side to finalize fund delivery.
+
+The protocol assumes that the input and output tokens involved in a bridge transfer are homologous and share the same number of decimals. This assumption relies on the Token Registry, which maintains the mapping between local and equivalent foreign token addresses and must be correctly configured on all chains.
 
 ### Access Control
 
