@@ -10,4 +10,10 @@ contract CreateBridgeAdapter_Integration_Concrete_Test is SpokeCoreFactory_Integ
         vm.expectRevert(Errors.NotCaliberMailbox.selector);
         spokeCoreFactory.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, "");
     }
+
+    function test_CreateBridgeAdapter_RevertWhen_BridgeIdUnsupported() public {
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
+        vm.prank(address(caliberMailbox));
+        spokeCoreFactory.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, "");
+    }
 }

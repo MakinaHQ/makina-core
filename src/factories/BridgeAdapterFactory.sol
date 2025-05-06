@@ -7,6 +7,7 @@ import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
     /// @custom:storage-location erc7201:makina.storage.BridgeAdapterFactory
@@ -35,6 +36,10 @@ abstract contract BridgeAdapterFactory is MakinaContext, IBridgeAdapterFactory {
         returns (address)
     {
         address bridgeAdapterBeacon = ICoreRegistry(registry).bridgeAdapterBeacon(bridgeId);
+        if (bridgeAdapterBeacon == address(0)) {
+            revert Errors.InvalidBridgeId();
+        }
+
         address bridgeAdapter = address(
             new BeaconProxy(bridgeAdapterBeacon, abi.encodeCall(IBridgeAdapter.initialize, (controller, initData)))
         );

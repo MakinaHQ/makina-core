@@ -78,6 +78,7 @@ library Errors {
     error UnauthorizedSource();
     error UnexpectedMessage();
     error UnexpectedResultLength();
+    error InvalidBridgeId();
     error WhChainIdNotRegistered(uint16 chainId);
     error ZeroBridgeAdapterAddress();
     error ZeroChainId();
