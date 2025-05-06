@@ -9,9 +9,9 @@ updateTotalAum.t.sol
    │     ├── given one of the calibers accounting is stale
    │     │  └── it should revert with CaliberAccountingStale
    │     └── given none of the calibers accounting is stale
-   │        ├── given some transfers appear as received by the machine but not sent by the correspoinding caliber
+   │        ├── given some transfers appear as received by the machine but not sent by the corresponding caliber
    │        │  └── it should revert with BridgeStateMismatch
-   │        └── given no transfer appears as received by the machine but not sent by the correspoinding caliber
+   │        └── given no transfer appears as received by the machine but not sent by the corresponding caliber
    │           ├── given some transfers appear as received by a caliber but not sent by the machine
    │           │  └── it should revert with BridgeStateMismatch
    │           └── given no transfer appears as as received by a caliber but not sent by the machine

@@ -14,7 +14,7 @@ contract MachineShare is ERC20, Ownable2Step, IMachineShare {
         Ownable(_initialMinter)
     {}
 
-    function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
+    function decimals() public pure override(ERC20, IERC20Metadata) returns (uint8) {
         return DecimalsUtils.SHARE_TOKEN_DECIMALS;
     }
 

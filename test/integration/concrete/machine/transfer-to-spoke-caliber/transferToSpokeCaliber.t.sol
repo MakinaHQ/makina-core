@@ -3,10 +3,15 @@ pragma solidity 0.8.28;
 
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
+import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
+
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
+import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
+import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -78,6 +83,55 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         vm.expectRevert(Errors.SpokeBridgeAdapterNotSet.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(CIRCLE_CCTP_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
+    }
+
+    function test_RevertGiven_PendingBridgeTransfer() public {
+        uint256 inputAmount = 1e18;
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+        );
+
+        vm.expectRevert(Errors.PendingBridgeTransfer.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 1, 1);
+    }
+
+    function test_RevertGiven_BridgeStateMismatch() public {
+        uint256 inputAmount = 1e18;
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        uint256 nextOutTransferId = bridgeAdapter.nextOutTransferId();
+
+        // schedule and send out a transfer
+        vm.startPrank(mechanic);
+        machine.transferToSpokeCaliber(
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, inputAmount
+        );
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextOutTransferId, abi.encode(1 hours));
+        vm.stopPrank();
+
+        // simulate spoke caliber having a bridgeIn value abnormally high
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        bytes[] memory cBridgeIn = new bytes[](1);
+        cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount + 1);
+        bytes[] memory cBridgeOut;
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 1, 1);
     }
 
     function test_RevertWhen_BridgeAdapterDoesNotExist()
@@ -258,6 +312,65 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         assertEq(baseToken.balanceOf(address(machine)), inputAmount - transferAmount);
         assertEq(baseToken.balanceOf(address(bridgeAdapter)), transferAmount);
         assertTrue(machine.isIdleToken(address(baseToken)));
+    }
+
+    function test_TransferToSpokeCaliber_AfterPreviousTransferCompletion() public {
+        uint256 transferAmount1 = 1e18;
+        deal(address(accountingToken), address(machine), transferAmount1, true);
+
+        uint256 nextOutTransferId = bridgeAdapter.nextOutTransferId();
+
+        // schedule and send out a transfer
+        vm.startPrank(mechanic);
+        machine.transferToSpokeCaliber(
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), transferAmount1, transferAmount1
+        );
+        machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextOutTransferId, abi.encode(1 hours));
+        vm.stopPrank();
+
+        // simulate spoke caliber having received the transfer
+        uint64 blockNum = 1e10;
+        uint64 blockTime = uint64(block.timestamp);
+        bytes[] memory cBridgeIn = new bytes[](1);
+        cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, transferAmount1);
+        bytes[] memory cBridgeOut;
+        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
+            _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
+        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
+            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        );
+        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
+            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
+        );
+        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        uint256 transferAmount2 = 2e18;
+
+        deal(address(accountingToken), address(machine), transferAmount2, true);
+
+        vm.expectEmit(true, true, false, false, address(bridgeAdapter));
+        emit IBridgeAdapter.OutBridgeTransferScheduled(
+            bridgeAdapter.nextOutTransferId(),
+            _buildBridgeMessageHash(
+                address(bridgeAdapter),
+                SPOKE_CHAIN_ID,
+                address(accountingToken),
+                transferAmount2,
+                spokeAccountingTokenAddr,
+                transferAmount2
+            )
+        );
+
+        vm.expectEmit(true, true, false, true, address(machine));
+        emit IMachine.TransferToCaliber(SPOKE_CHAIN_ID, address(accountingToken), transferAmount2);
+
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(
+            ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), transferAmount2, transferAmount2
+        );
+
+        assertEq(accountingToken.balanceOf(address(machine)), 0);
+        assertEq(accountingToken.balanceOf(address(bridgeAdapter)), transferAmount2);
     }
 
     function _buildBridgeMessageHash(

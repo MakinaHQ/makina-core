@@ -60,6 +60,7 @@ library Errors {
     error NotRootGuardian();
     error OngoingCooldown();
     error OutTransferDisabled();
+    error PendingBridgeTransfer();
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
     error PriceFeedRouteNotRegistered(address token);

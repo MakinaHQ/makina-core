@@ -16,15 +16,16 @@ contract MachineStore {
 
     mapping(uint16 bridgeID => uint256 feeBps) public bridgeFeeBps;
 
-    EnumerableSet.UintSet private _pendingMachineScheduledOutTransferIds;
-    EnumerableSet.UintSet private _pendingMachineSentOutTransferIds;
-    EnumerableSet.UintSet private _pendingMachineRefundedOutTransferIds;
+    mapping(address token => uint256 transferId) public pendingMachineScheduledOutTransferId;
+    mapping(address token => uint256 transferId) public pendingMachineSentOutTransferId;
+    mapping(address token => uint256 transferId) public pendingMachineRefundedOutTransferId;
     EnumerableSet.UintSet private _pendingMachineReceivedInTransferIds;
 
     EnumerableSet.UintSet private _pendingCaliberScheduledOutTransferIds;
     EnumerableSet.UintSet private _pendingCaliberSentOutTransferIds;
     EnumerableSet.UintSet private _pendingCaliberRefundedOutTransferIds;
-    EnumerableSet.UintSet private _pendingCaliberReceivedInTransferIds;
+    mapping(address token => uint256 transferId) public pendingCaliberReceivedInTransferId;
+    mapping(address token => uint256 transferId) public pendingCaliberClaimedInTransferId;
 
     mapping(uint256 machineOutTransferId => uint256 acrossV3TransferId) public machineAcrossV3TransferId;
 
@@ -33,7 +34,6 @@ contract MachineStore {
     mapping(uint256 machineInTransferId => address token) public machineInTransferToken;
     mapping(uint256 machineInTransferId => uint256 pendingFee) public pendingMachineInTransferBridgeFee;
 
-    mapping(uint256 caliberInTransferId => address token) public caliberInTransferToken;
     mapping(uint256 caliberInTransferId => uint256 pendingFee) public pendingCaliberInTransferBridgeFee;
     mapping(address token => uint256 totalRealisedFee) public pendingCaliberRealisedBridgeFee;
 
@@ -51,18 +51,6 @@ contract MachineStore {
     /// Transfer list lengths
     ///
 
-    function pendingMachineScheduledOutTransferLength() external view returns (uint256) {
-        return _pendingMachineScheduledOutTransferIds.length();
-    }
-
-    function pendingMachineSentOutTransferLength() external view returns (uint256) {
-        return _pendingMachineSentOutTransferIds.length();
-    }
-
-    function pendingMachineRefundedOutTransferLength() external view returns (uint256) {
-        return _pendingMachineRefundedOutTransferIds.length();
-    }
-
     function pendingMachineReceivedInTransferLength() external view returns (uint256) {
         return _pendingMachineReceivedInTransferIds.length();
     }
@@ -79,25 +67,9 @@ contract MachineStore {
         return _pendingCaliberRefundedOutTransferIds.length();
     }
 
-    function pendingCaliberReceivedInTransferLength() external view returns (uint256) {
-        return _pendingCaliberReceivedInTransferIds.length();
-    }
-
     ///
     /// Transfer list getters
     ///
-
-    function getPendingMachineScheduledOutTransferId(uint256 index) external view returns (uint256) {
-        return _pendingMachineScheduledOutTransferIds.at(index);
-    }
-
-    function getPendingMachineSentOutTransferId(uint256 index) external view returns (uint256) {
-        return _pendingMachineSentOutTransferIds.at(index);
-    }
-
-    function getPendingMachineRefundedOutTransferId(uint256 index) external view returns (uint256) {
-        return _pendingMachineRefundedOutTransferIds.at(index);
-    }
 
     function getPendingMachineReceivedInTransferId(uint256 index) external view returns (uint256) {
         return _pendingMachineReceivedInTransferIds.at(index);
@@ -115,25 +87,9 @@ contract MachineStore {
         return _pendingCaliberRefundedOutTransferIds.at(index);
     }
 
-    function getPendingCaliberReceivedInTransferId(uint256 index) external view returns (uint256) {
-        return _pendingCaliberReceivedInTransferIds.at(index);
-    }
-
     ///
     /// Transfer list adding
     ///
-
-    function addPendingMachineScheduledOutTransferId(uint256 transferId) external {
-        _pendingMachineScheduledOutTransferIds.add(transferId);
-    }
-
-    function addPendingMachineSentOutTransferId(uint256 transferId) external {
-        _pendingMachineSentOutTransferIds.add(transferId);
-    }
-
-    function addPendingMachineRefundedOutTransferId(uint256 transferId) external {
-        _pendingMachineRefundedOutTransferIds.add(transferId);
-    }
 
     function addPendingMachineReceivedInTransferId(uint256 transferId) external {
         _pendingMachineReceivedInTransferIds.add(transferId);
@@ -151,25 +107,9 @@ contract MachineStore {
         _pendingCaliberRefundedOutTransferIds.add(transferId);
     }
 
-    function addPendingCaliberReceivedInTransferId(uint256 transferId) external {
-        _pendingCaliberReceivedInTransferIds.add(transferId);
-    }
-
     ///
     /// Transfer list removal
     ///
-
-    function removePendingMachineScheduledOutTransferId(uint256 transferId) external {
-        _pendingMachineScheduledOutTransferIds.remove(transferId);
-    }
-
-    function removePendingMachineSentOutTransferId(uint256 transferId) external {
-        _pendingMachineSentOutTransferIds.remove(transferId);
-    }
-
-    function removePendingMachineRefundedOutTransferId(uint256 transferId) external {
-        _pendingMachineRefundedOutTransferIds.remove(transferId);
-    }
 
     function removePendingMachineReceivedInTransferId(uint256 transferId) external {
         _pendingMachineReceivedInTransferIds.remove(transferId);
@@ -187,13 +127,49 @@ contract MachineStore {
         _pendingCaliberRefundedOutTransferIds.remove(transferId);
     }
 
-    function removePendingCaliberReceivedInTransferId(uint256 transferId) external {
-        _pendingCaliberReceivedInTransferIds.remove(transferId);
-    }
-
     ///
     /// Transfer data setters
     ///
+
+    function setPendingMachineScheduledOutTransferId(address token, uint256 transferId) external {
+        pendingMachineScheduledOutTransferId[token] = transferId;
+    }
+
+    function setPendingMachineSentOutTransferId(address token, uint256 transferId) external {
+        pendingMachineSentOutTransferId[token] = transferId;
+    }
+
+    function setPendingMachineRefundedOutTransferId(address token, uint256 transferId) external {
+        pendingMachineRefundedOutTransferId[token] = transferId;
+    }
+
+    function setPendingCaliberReceivedInTransferId(address token, uint256 transferId) external {
+        pendingCaliberReceivedInTransferId[token] = transferId;
+    }
+
+    function setPendingCaliberClaimedInTransferId(address token, uint256 transferId) external {
+        pendingCaliberClaimedInTransferId[token] = transferId;
+    }
+
+    function clearPendingMachineScheduledOutTransferId(address token) external {
+        delete pendingMachineScheduledOutTransferId[token];
+    }
+
+    function clearPendingMachineSentOutTransferId(address token) external {
+        delete pendingMachineSentOutTransferId[token];
+    }
+
+    function clearPendingMachineRefundedOutTransferId(address token) external {
+        delete pendingMachineRefundedOutTransferId[token];
+    }
+
+    function clearPendingCaliberReceivedInTransferId(address token) external {
+        delete pendingCaliberReceivedInTransferId[token];
+    }
+
+    function clearPendingCaliberClaimedInTransferId(address token) external {
+        delete pendingCaliberClaimedInTransferId[token];
+    }
 
     function setMachineAcrossV3TransferId(uint256 machineOutTransferId, uint256 acrossV3TransferId) external {
         machineAcrossV3TransferId[machineOutTransferId] = acrossV3TransferId;
@@ -205,10 +181,6 @@ contract MachineStore {
 
     function setMachineInTransferToken(uint256 machineOutTransferId, address token) external {
         machineInTransferToken[machineOutTransferId] = token;
-    }
-
-    function setCaliberInTransferToken(uint256 caliberOutTransferId, address token) external {
-        caliberInTransferToken[caliberOutTransferId] = token;
     }
 
     function setPendingMachineInTransferBridgeFee(uint256 machineInTransferId, uint256 pendingFee) external {
