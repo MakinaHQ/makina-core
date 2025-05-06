@@ -10,4 +10,10 @@ contract CreateBridgeAdapter_Integration_Concrete_Test is HubCoreFactory_Integra
         vm.expectRevert(Errors.NotMachine.selector);
         hubCoreFactory.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, "");
     }
+
+    function test_CreateBridgeAdapter_RevertWhen_BridgeIdUnsupported() public {
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
+        vm.prank(address(machine));
+        hubCoreFactory.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, "");
+    }
 }

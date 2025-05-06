@@ -88,11 +88,10 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
         vm.expectEmit(true, true, false, false, address(bridgeAdapter1));
         emit IBridgeAdapter.OutBridgeTransferScheduled(nextOutTransferId, expectedMessageHash);
 
-        bytes32 actualMessageHash = bridgeAdapter1.scheduleOutBridgeTransfer(
+        bridgeAdapter1.scheduleOutBridgeTransfer(
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        assertEq(actualMessageHash, expectedMessageHash);
         assertEq(bridgeAdapter1.nextOutTransferId(), nextOutTransferId + 1);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), inputAmount);

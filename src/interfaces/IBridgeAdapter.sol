@@ -68,13 +68,13 @@ interface IBridgeAdapter {
     function nextInTransferId() external view returns (uint256);
 
     /// @notice Schedules an outgoing bridge transfer and returns the message hash.
+    /// @dev Emits an event containing the id of the transfer and the hash of the bridge transfer message.
     /// @param destinationChainId The ID of the destination chain.
     /// @param recipient The address of the recipient on the destination chain.
     /// @param inputToken The address of the input token.
     /// @param inputAmount The amount of the input token to transfer.
     /// @param outputToken The address of the output token on the destination chain.
     /// @param minOutputAmount The minimum amount of the output token to receive.
-    /// @return messageHash The hash of the bridge message.
     function scheduleOutBridgeTransfer(
         uint256 destinationChainId,
         address recipient,
@@ -82,7 +82,7 @@ interface IBridgeAdapter {
         uint256 inputAmount,
         address outputToken,
         uint256 minOutputAmount
-    ) external returns (bytes32);
+    ) external;
 
     /// @notice Executes a scheduled outgoing bridge transfer.
     /// @param transferId The ID of the transfer to execute.

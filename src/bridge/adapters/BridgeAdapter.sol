@@ -109,7 +109,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         uint256 inputAmount,
         address outputToken,
         uint256 minOutputAmount
-    ) external override nonReentrant onlyController returns (bytes32) {
+    ) external override nonReentrant onlyController {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         IERC20(inputToken).safeTransferFrom(msg.sender, address(this), inputAmount);
@@ -137,8 +137,6 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         bytes32 messageHash = keccak256(encodedMessage);
 
         emit OutBridgeTransferScheduled(id, messageHash);
-
-        return messageHash;
     }
 
     /// @inheritdoc IBridgeAdapter
