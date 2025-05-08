@@ -8,9 +8,10 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeployHubMachine is Script, SortedParams {
+contract DeployHubMachineFromPreDeposit is Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -18,6 +19,7 @@ contract DeployHubMachine is Script, SortedParams {
     string public inputJson;
     string public outputPath;
 
+    address public preDepositVault;
     address public deployedInstance;
 
     constructor() {
@@ -27,18 +29,20 @@ contract DeployHubMachine is Script, SortedParams {
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
         // load input params
-        string memory inputPath = string.concat(basePath, "inputs/hub-machines/");
+        string memory inputPath = string.concat(basePath, "inputs/pre-deposit-migrations/");
         inputPath = string.concat(inputPath, inputFilename);
         inputJson = vm.readFile(inputPath);
 
         // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/hub-machines/");
+        outputPath = string.concat(basePath, "outputs/pre-deposit-migrations/");
         outputPath = string.concat(outputPath, outputFilename);
 
         // load output from DeployHubCore script
         string memory coreOutputPath = string.concat(basePath, "outputs/hub-cores/");
         coreOutputPath = string.concat(coreOutputPath, outputFilename);
         coreOutputJson = vm.readFile(coreOutputPath);
+
+        preDepositVault = abi.decode(vm.parseJson(inputJson, ".preDepositVault"), (address));
     }
 
     function run() public {
@@ -48,16 +52,13 @@ contract DeployHubMachine is Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
-        address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
-        string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
-        string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
 
         IHubCoreFactory hubCoreFactory =
             IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
 
-        // Deploy machine
+        // Deploy pre-deposit vault
         vm.startBroadcast();
-        deployedInstance = hubCoreFactory.createMachine(
+        deployedInstance = hubCoreFactory.createMachineFromPreDeposit(
             IMachine.MachineInitParams(
                 mParams.initialDepositor,
                 mParams.initialRedeemer,
@@ -83,14 +84,12 @@ contract DeployHubMachine is Script, SortedParams {
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority
             ),
-            accountingToken,
-            shareTokenName,
-            shareTokenSymbol
+            preDepositVault
         );
         vm.stopBroadcast();
 
         // Write to file
-        string memory key = "key-deploy-hub-machine-output-file";
+        string memory key = "key-migrate-pre-deposit-output-file";
         vm.serializeAddress(key, "machine", deployedInstance);
         vm.writeJson(vm.serializeAddress(key, "hubCaliber", IMachine(deployedInstance).hubCaliber()), outputPath);
     }
