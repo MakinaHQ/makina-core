@@ -8,7 +8,6 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
-import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
 contract DeployHubMachineFromPreDeposit is Script, SortedParams {
