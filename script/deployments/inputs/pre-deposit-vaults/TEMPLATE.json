@@ -1,0 +1,12 @@
+{
+  "preDepositVaultInitParams": {
+    "initialWhitelistMode": false,
+    "initialShareLimit": 0,
+    "initialRiskManager": "0x0000000000000000000000000000000000000000",
+    "initialAuthority": "0x0000000000000000000000000000000000000000"
+  },
+  "depositToken": "0x0000000000000000000000000000000000000000",
+  "accountingToken": "0x0000000000000000000000000000000000000000",
+  "shareTokenName": "",
+  "shareTokenSymbol": ""
+}

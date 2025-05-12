@@ -2,6 +2,13 @@
 pragma solidity 0.8.28;
 
 contract SortedParams {
+    struct PreDepositVaultInitParamsSorted {
+        address initialAuthority;
+        address initialRiskManager;
+        uint256 initialShareLimit;
+        bool initialWhitelistMode;
+    }
+
     struct MachineInitParamsSorted {
         uint256 initialCaliberStaleThreshold;
         address initialDepositor;

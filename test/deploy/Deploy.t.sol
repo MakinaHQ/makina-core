@@ -9,12 +9,15 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
 import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
+import {DeployHubMachineFromPreDeposit} from "script/deployments/DeployHubMachineFromPreDeposit.s.sol";
+import {DeployPreDepositVault} from "script/deployments/DeployPreDepositVault.s.sol";
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
 import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
+import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {SortedParams} from "script/deployments/utils/SortedParams.sol";
 
 import {Base_Test} from "../base/Base.t.sol";
@@ -25,13 +28,20 @@ contract Deploy_Scripts_Test is Base_Test {
 
     // Scripts to test
     DeployHubCore public deployHubCore;
+    DeployPreDepositVault public deployPreDepositVault;
     DeployHubMachine public deployHubMachine;
+    DeployHubMachineFromPreDeposit public deployMachineFromPreDeposit;
     DeploySpokeCore public deploySpokeCore;
     DeploySpokeCaliber public deploySpokeCaliber;
 
     function testLoadedState() public {
-        vm.setEnv("HUB_INPUT_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM).constantsFilename);
-        vm.setEnv("SPOKE_INPUT_FILENAME", ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE).constantsFilename);
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
+        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         deployHubCore = new DeployHubCore();
         deploySpokeCore = new DeploySpokeCore();
@@ -48,13 +58,14 @@ contract Deploy_Scripts_Test is Base_Test {
         assertTrue(spokeSecurityCouncil != address(0));
     }
 
-    function testDeployScriptHub() public {
+    function testScriptDeployHubCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
         vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
+        // Core deployment
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
 
@@ -106,7 +117,22 @@ contract Deploy_Scripts_Test is Base_Test {
                 ChainsInfo.getChainInfo(supportedChains[i]).wormholeChainId
             );
         }
+    }
 
+    function testScriptDeployHubMachine() public {
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        // Core deployment
+        deployHubCore = new DeployHubCore();
+        deployHubCore.run();
+
+        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+
+        // Machine deployment
         deployHubMachine = new DeployHubMachine();
         deployHubMachine.run();
 
@@ -159,18 +185,141 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(shareToken.symbol(), shareTokenSymbol);
     }
 
-    function testDeployScriptSpoke() public {
+    function testScriptDeployPreDepositVault() public {
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        // Core deployment
+        deployHubCore = new DeployHubCore();
+        deployHubCore.run();
+
+        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+
+        // PreDeposit Vault deployment
+        deployPreDepositVault = new DeployPreDepositVault();
+        deployPreDepositVault.run();
+
+        // Check that PreDepositVault is correctly set up
+        SortedParams.PreDepositVaultInitParamsSorted memory pdvParams = abi.decode(
+            vm.parseJson(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams"),
+            (SortedParams.PreDepositVaultInitParamsSorted)
+        );
+        address depositToken = abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".depositToken"), (address));
+        address accountingToken =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".accountingToken"), (address));
+        string memory shareTokenName =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenName"), (string));
+        string memory shareTokenSymbol =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenSymbol"), (string));
+
+        IPreDepositVault preDepositVault = IPreDepositVault(deployPreDepositVault.deployedInstance());
+        IMachineShare shareToken = IMachineShare(preDepositVault.shareToken());
+
+        assertTrue(hubCoreDeployment.hubCoreFactory.isPreDepositVault(address(preDepositVault)));
+        assertEq(preDepositVault.shareLimit(), pdvParams.initialShareLimit);
+        assertEq(preDepositVault.whitelistMode(), pdvParams.initialWhitelistMode);
+        assertEq(preDepositVault.riskManager(), pdvParams.initialRiskManager);
+        assertEq(preDepositVault.depositToken(), depositToken);
+        assertEq(preDepositVault.accountingToken(), accountingToken);
+        assertEq(IAccessManaged(address(preDepositVault)).authority(), pdvParams.initialAuthority);
+
+        assertEq(shareToken.name(), shareTokenName);
+        assertEq(shareToken.symbol(), shareTokenSymbol);
+    }
+
+    function testScripDeployHubMachineFromPreDeposit() public {
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        // Core deployment
+        deployHubCore = new DeployHubCore();
+        deployHubCore.run();
+
+        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+
+        // PreDeposit Vault deployment
+        deployPreDepositVault = new DeployPreDepositVault();
+        deployPreDepositVault.run();
+
+        // PreDeposit Vault migration to Machine
+        deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
+        stdstore.target(address(deployMachineFromPreDeposit)).sig("preDepositVault()").checked_write(
+            deployPreDepositVault.deployedInstance()
+        );
+        deployMachineFromPreDeposit.run();
+
+        // Check that Hub Machine is correctly set up
+        SortedParams.MachineInitParamsSorted memory mParams = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".machineInitParams"),
+            (SortedParams.MachineInitParamsSorted)
+        );
+        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".caliberInitParams"),
+            (SortedParams.CaliberInitParamsSorted)
+        );
+        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams"),
+            (SortedParams.MakinaGovernableInitParamsSorted)
+        );
+        address accountingToken =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".accountingToken"), (address));
+        address depositToken = abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".depositToken"), (address));
+        string memory shareTokenName =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenName"), (string));
+        string memory shareTokenSymbol =
+            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenSymbol"), (string));
+
+        IMachine machine = IMachine(deployMachineFromPreDeposit.deployedInstance());
+        ICaliber hubCaliber = ICaliber(machine.hubCaliber());
+        IMachineShare shareToken = IMachineShare(machine.shareToken());
+
+        assertTrue(hubCoreDeployment.hubCoreFactory.isMachine(address(machine)));
+        assertTrue(hubCoreDeployment.hubCoreFactory.isCaliber(address(hubCaliber)));
+        assertEq(machine.depositor(), mParams.initialDepositor);
+        assertEq(machine.redeemer(), mParams.initialRedeemer);
+        assertEq(machine.accountingToken(), accountingToken);
+        assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
+        assertEq(machine.shareLimit(), mParams.initialShareLimit);
+        assertEq(machine.accountingToken(), accountingToken);
+        assertTrue(machine.isIdleToken(depositToken));
+
+        assertEq(machine.mechanic(), mgParams.initialMechanic);
+        assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
+        assertEq(machine.riskManager(), mgParams.initialRiskManager);
+        assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
+        assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+
+        assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
+        assertEq(hubCaliber.accountingToken(), accountingToken);
+        assertEq(hubCaliber.positionStaleThreshold(), cParams.initialPositionStaleThreshold);
+        assertEq(hubCaliber.allowedInstrRoot(), cParams.initialAllowedInstrRoot);
+        assertEq(hubCaliber.timelockDuration(), cParams.initialTimelockDuration);
+        assertEq(hubCaliber.maxPositionIncreaseLossBps(), cParams.initialMaxPositionIncreaseLossBps);
+        assertEq(hubCaliber.maxPositionDecreaseLossBps(), cParams.initialMaxPositionDecreaseLossBps);
+        assertEq(hubCaliber.maxSwapLossBps(), cParams.initialMaxSwapLossBps);
+        assertEq(hubCaliber.cooldownDuration(), cParams.initialCooldownDuration);
+
+        assertEq(machine.getSpokeCalibersLength(), 0);
+        assertEq(shareToken.name(), shareTokenName);
+        assertEq(shareToken.symbol(), shareTokenSymbol);
+    }
+
+    function testScriptDeploySpokeCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
         vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
+        // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCore.run();
-
-        deploySpokeCaliber = new DeploySpokeCaliber();
-        deploySpokeCaliber.run();
 
         SpokeCore memory spokeCoreDeployment = deploySpokeCore.deployment();
 
@@ -210,6 +359,24 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
             assertEq(_swappersData[i].executionTarget, executionTarget);
         }
+    }
+
+    function testScriptDeploySpokeCaliber() public {
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        // Spoke Core deployment
+        deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.run();
+
+        SpokeCore memory spokeCoreDeployment = deploySpokeCore.deployment();
+
+        // Caliber deployment
+        deploySpokeCaliber = new DeploySpokeCaliber();
+        deploySpokeCaliber.run();
 
         // Check that Spoke Caliber is correctly set up
         SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
