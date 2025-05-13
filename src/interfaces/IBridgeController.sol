@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 interface IBridgeController {
     event BridgeAdapterCreated(uint16 indexed bridgeId, address indexed adapter);
     event MaxBridgeLossBpsChanged(
-        uint16 indexed bridgeId, uint256 indexed OldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
+        uint16 indexed bridgeId, uint256 indexed oldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
     );
     event BridgingStateReset(address indexed token);
     event OutTransferEnabledSet(uint256 indexed bridgeId, bool enabled);
