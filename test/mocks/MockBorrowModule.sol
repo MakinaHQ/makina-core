@@ -12,10 +12,10 @@ contract MockBorrowModule {
 
     error RepayAmountExceedsDebt();
 
+    uint256 private constant BPS_DIVIDER = 10_000;
+
     IERC20 private _asset;
     mapping(address user => uint256 grossDebt) private _grossDebtOf;
-
-    uint256 private BPS_DIVIDER = 10_000;
 
     bool public faultyMode;
     uint256 public rateBps;

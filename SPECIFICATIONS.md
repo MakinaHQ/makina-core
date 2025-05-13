@@ -18,6 +18,12 @@ Each machine controls a share token, which represent users shares in a given str
 
 The share price consists essentially in the ratio between share token supply and the last calculated total machine AUM. In order to mitigate donation attacks, the conversion includes a `shareTokenDecimalsOffset` value representing the decimal offset between the accounting token and the share token. By setting the ratio between virtual shares and virtual assets in the vault, the offset also determines the initial exchange rate.
 
+#### Deposits and Redemptions
+
+Machines serve as the user-facing contracts for deposits and redemptions. However, the actual processing is handled by a dedicated deposit module and a redemption queue, both of which are excluded from this repository’s scope. This design allows strategies to implement various deposit and redemption flows, whether permissionless, permissioned, queued, or synchronous. When needed, settlement can be performed by the operator.
+
+Since deposits, redemptions, and share price calculation occur independently, it is the operator's duty to take precautions to prevent price manipulation and ensure fairness between users.
+
 #### Fees
 
 After each total AUM computation, machines apply three types of fees by inflating the share supply:
@@ -58,14 +64,14 @@ Cross-chain communication between the Hub Machine and Spoke calibers is facilita
 
 #### Instructions
 
-Calibers can manage and account for positions by executing authorized instructions, which leverage the [Weiroll](https://github.com/EnsoBuild/enso-weiroll) command-chaining framework. A large set of instructions can be pre-approved and registered in a Merkle Tree, whose root is stored in the caliber and used to verify authorization proof.
+Calibers can manage and account for positions by executing authorized instructions, which leverages the [Weiroll](https://github.com/EnsoBuild/enso-weiroll) command-chaining framework. A large set of instructions can be pre-approved and registered in a Merkle Tree, whose root is stored in the caliber and used to verify authorization proof.
 
 Instructions can be of four different types:
 
 - **ACCOUNTING**: Calculates the current size of a position and updates it in the executing caliber's storage.
 - **MANAGEMENT**: Modifies the size of a position. A `MANAGEMENT` instruction is always paired with an `ACCOUNTING` instruction to account for the changes it introduces.
-- **HARVESTING**: Collects rewards earned by Caliber’s open positions from external protocols. `HARVESTING` instructions can collect rewards for multiple positions in a single operation. The rewards are moved from the external protocols’ reward distribution contracts to the Caliber contract.
-- **FLASHLOAN_MANAGEMENT**: Modifies the size of a position in the context of a flash loan, as part of an outer `MANAGEMENT` instruction. A `FLASHLOAN_MANAGEMENT` instruction is always associated with a `MANAGEMENT` and an `ACCOUNTING` instructions.
+- **HARVESTING**: Collects rewards earned by Caliber’s open positions from external protocols. A single `HARVESTING` instruction can aggregate rewards from multiple positions and transfer them to the Caliber contract.
+- **FLASHLOAN_MANAGEMENT**: Modifies the size of a position in the context of a flash loan, as part of an outer `MANAGEMENT` instruction. A `FLASHLOAN_MANAGEMENT` instruction is always associated with a `MANAGEMENT` instruction and can only be executed in its scope.
 
 Each `Instruction` object includes an `affectedTokens` list which can have various purpose for different instruction types. For `HARVESTING` and `FLASHLOAN_MANAGEMENT` instructions, this list is ignored.
 
@@ -76,7 +82,7 @@ Flash loans are a specialized use case that require a `FlashLoanModule` instance
 The protocol relies on specific assumptions on the instructions:
 
 - **ACCOUNTING**:
-  - They must consist solely of read actions.
+  - They must not introduce changes in position states or token balances.
   - The `affectedTokens` list must include exactly all tokens in which the position size is expressed. These tokens must be registered as base tokens in the executing caliber.
   - Their output state must start with an ordered list of amounts (one amount per slot) corresponding to the tokens in `affectedTokens`, followed by an end-of-args flag.
 - **MANAGEMENT**:
