@@ -4,7 +4,9 @@ This repository contains the core smart contracts of the Makina Protocol.
 
 ## Background
 
-Makina is a protocol for executing advanced cross-chain investment strategies. It provides the infrastructure for operators to issue tokenized strategies with full DeFi composability and strong risk controls. At the core of each strategy is a Machine contract, on the Hub Chain, which handles deposits, withdrawals, share pricing, and cross-chain coordination. Execution across chains is performed by Calibers, which serve as the strategy’s execution engines across the Hub and Spoke Chains. Every strategy is defined by a Mandate that outlines its objectives, risk profile, and operating parameters, serving as a reference for the operator, risk managers, the Security Council, and the DAO.
+Makina is a protocol for executing advanced cross-chain investment strategies. It provides the infrastructure for operators to issue tokenized strategies with full DeFi composability and strong risk controls. At the core of each strategy is a Machine contract, on the Hub Chain, which handles deposits, withdrawals, share pricing, and cross-chain coordination. Execution across chains is performed by Calibers, which serve as the strategy’s execution engines across the Hub and and all supported Spoke Chains. Every strategy is defined by a Mandate that outlines its objectives, risk profile, and operating parameters, serving as a reference for the operator, risk managers, the Security Council, and the DAO.
+
+See `SPECIFICATION.md` and `PERMISSIONS.MD` for more details.
 
 ## Contracts Overview
 
@@ -59,6 +61,10 @@ forge build
 
 ### Test
 
+Some tests involve network forking. To run them, the `MAINNET_RPC_URL` and `BASE_RPC_URL` variables must be set in a .env file located at the project root.
+
+Some tests also execute JavaScript scripts for Merkle root generation. These require Node.js v18 or later.
+
 ```shell
 forge test
 ```
@@ -80,3 +86,7 @@ forge fmt
 ```shell
 yarn lint
 ```
+
+### Deployment
+
+See `script/README.md` for instructions.
