@@ -35,12 +35,12 @@ contract Machine_Fork_Test is Fork_Test {
     }
 
     function test_fork_Hub_USDC() public {
-        hubChainId = ChainsInfo.CHAIN_ID_SEPOLIA;
-        spokeChainIds.push(ChainsInfo.CHAIN_ID_BASE_SEPOLIA);
+        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
+        spokeChainIds.push(ChainsInfo.CHAIN_ID_BASE);
         _setUp();
 
         ForkData memory ethForkData = forksData[hubChainId];
-        ForkData memory baseForkData = forksData[ChainsInfo.CHAIN_ID_BASE_SEPOLIA];
+        ForkData memory baseForkData = forksData[ChainsInfo.CHAIN_ID_BASE];
 
         ///
         /// SWITCH TO ETHEREUM
@@ -122,7 +122,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy spoke caliber
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
-            spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].spokeCoreFactory.createCaliber(
+            spokeCores[ChainsInfo.CHAIN_ID_BASE].spokeCoreFactory.createCaliber(
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
                     initialAllowedInstrRoot: bytes32(""),
@@ -137,7 +137,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialSecurityCouncil: baseForkData.securityCouncil,
                     initialRiskManager: address(0),
                     initialRiskManagerTimelock: address(0),
-                    initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE_SEPOLIA].accessManager)
+                    initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager)
                 }),
                 baseForkData.usdc,
                 address(machine)
@@ -155,7 +155,7 @@ contract Machine_Fork_Test is Fork_Test {
 
         // read spoke caliber accounting data
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WormholeChains.CHAIN_ID_BASE_SEPOLIA,
+            WormholeChains.CHAIN_ID_BASE,
             uint64(block.number),
             uint64(block.timestamp),
             spokeCaliberMailbox,
@@ -173,9 +173,7 @@ contract Machine_Fork_Test is Fork_Test {
 
         // register spoke caliber mailbox in machine
         vm.prank(ethForkData.dao);
-        machine.setSpokeCaliber(
-            ChainsInfo.CHAIN_ID_BASE_SEPOLIA, spokeCaliberMailbox, new uint16[](0), new address[](0)
-        );
+        machine.setSpokeCaliber(ChainsInfo.CHAIN_ID_BASE, spokeCaliberMailbox, new uint16[](0), new address[](0));
 
         // write spoke caliber accounting data in machine
         machine.updateSpokeCaliberAccountingData(response, signatures);
