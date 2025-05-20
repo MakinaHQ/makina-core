@@ -9,19 +9,19 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {PerChainQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
-import {IFeeManager} from "src/interfaces/IFeeManager.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMachineShare} from "src/interfaces/IMachineShare.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
-import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {ITokenRegistry} from "src/interfaces/ITokenRegistry.sol";
-import {CaliberAccountingCCQ} from "../libraries/CaliberAccountingCCQ.sol";
-import {Errors} from "src/libraries/Errors.sol";
-import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
-import {Machine} from "src/machine/Machine.sol";
+import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
+import {IFeeManager} from "../interfaces/IFeeManager.sol";
+import {IMachine} from "../interfaces/IMachine.sol";
+import {IMachineShare} from "../interfaces/IMachineShare.sol";
+import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
+import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
+import {CaliberAccountingCCQ} from "./CaliberAccountingCCQ.sol";
+import {Errors} from "./Errors.sol";
+import {DecimalsUtils} from "./DecimalsUtils.sol";
+import {Machine} from "../machine/Machine.sol";
 
 library MachineUtils {
     using Math for uint256;

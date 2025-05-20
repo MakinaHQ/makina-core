@@ -6,11 +6,11 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
-import {IMachineShare} from "src/interfaces/IMachineShare.sol";
-import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
-import {IOwnable2Step} from "src/interfaces/IOwnable2Step.sol";
-import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
+import {IMachineShare} from "../interfaces/IMachineShare.sol";
+import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
+import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
+import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
