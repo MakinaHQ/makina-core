@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-import {ISwapModule} from "../interfaces/ISwapModule.sol";
+import {ISwapModule} from "./ISwapModule.sol";
 
 interface ICaliber {
     event BaseTokenAdded(address indexed token);

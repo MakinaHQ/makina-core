@@ -4,8 +4,8 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
-import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
+import {IPreDepositVault} from "../../src/interfaces/IPreDepositVault.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
 contract DeployPreDepositVault is Script, SortedParams {

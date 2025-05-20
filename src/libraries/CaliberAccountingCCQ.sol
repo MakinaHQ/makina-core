@@ -10,8 +10,8 @@ import {
 } from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {Errors} from "src/libraries/Errors.sol";
+import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
+import {Errors} from "./Errors.sol";
 
 library CaliberAccountingCCQ {
     function decodeAndVerifyQueryResponse(

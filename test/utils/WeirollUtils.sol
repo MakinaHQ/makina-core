@@ -6,12 +6,12 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IERC4626} from "@openzeppelin/contracts/interfaces/IERC4626.sol";
 
 import {MerkleProofs} from "./MerkleProofs.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {MockERC20} from "test/mocks/MockERC20.sol";
-import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
-import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
-import {MockPool} from "test/mocks/MockPool.sol";
-import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
+import {ICaliber} from "../../src/interfaces/ICaliber.sol";
+import {MockERC20} from "../mocks/MockERC20.sol";
+import {MockBorrowModule} from "../mocks/MockBorrowModule.sol";
+import {MockSupplyModule} from "../mocks/MockSupplyModule.sol";
+import {MockPool} from "../mocks/MockPool.sol";
+import {MockFlashLoanModule} from "../mocks/MockFlashLoanModule.sol";
 
 library WeirollUtils {
     bytes32 internal constant ACCOUNTING_OUTPUT_STATE_END_OF_ARGS = bytes32(type(uint256).max);

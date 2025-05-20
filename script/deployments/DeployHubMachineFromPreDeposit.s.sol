@@ -4,10 +4,10 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
-import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {ICaliber} from "../../src/interfaces/ICaliber.sol";
+import {IMachine} from "../../src/interfaces/IMachine.sol";
+import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
+import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
 contract DeployHubMachineFromPreDeposit is Script, SortedParams {

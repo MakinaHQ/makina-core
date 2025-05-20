@@ -3,8 +3,8 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
-import {Errors} from "src/libraries/Errors.sol";
+import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
+import {Errors} from "../libraries/Errors.sol";
 
 abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernable {
     /// @custom:storage-location erc7201:makina.storage.MakinaGovernable

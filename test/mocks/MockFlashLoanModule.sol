@@ -6,7 +6,7 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MockERC20} from "./MockERC20.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 
 /// @dev MockFlashLoanModule contract for testing use only
 contract MockFlashLoanModule {
