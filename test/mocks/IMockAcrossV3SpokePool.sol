@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-import {IAcrossV3SpokePool} from "src/interfaces/IAcrossV3SpokePool.sol";
+import {IAcrossV3SpokePool} from "../../src/interfaces/IAcrossV3SpokePool.sol";
 
 /// @dev IMockAcrossV3SpokePool contract for testing use only
 interface IMockAcrossV3SpokePool is IAcrossV3SpokePool {

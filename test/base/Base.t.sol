@@ -8,24 +8,24 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 
 import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
 
-import {Caliber} from "src/caliber/Caliber.sol";
-import {SpokeCoreFactory} from "src/factories/SpokeCoreFactory.sol";
-import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
-import {ChainRegistry} from "src/registries/ChainRegistry.sol";
+import {Caliber} from "../../src/caliber/Caliber.sol";
+import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
+import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
+import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
-import {HubCoreRegistry} from "src/registries/HubCoreRegistry.sol";
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {IMachine} from "src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
-import {Machine} from "src/machine/Machine.sol";
-import {HubCoreFactory} from "src/factories/HubCoreFactory.sol";
+import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
+import {ICaliber} from "../../src/interfaces/ICaliber.sol";
+import {IMachine} from "../../src/interfaces/IMachine.sol";
+import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {Machine} from "../../src/machine/Machine.sol";
+import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
-import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {SpokeCoreRegistry} from "src/registries/SpokeCoreRegistry.sol";
-import {SwapModule} from "src/swap/SwapModule.sol";
-import {TokenRegistry} from "src/registries/TokenRegistry.sol";
+import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
+import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
+import {SwapModule} from "../../src/swap/SwapModule.sol";
+import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 
 import {Base} from "./Base.sol";
 

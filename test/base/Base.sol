@@ -5,22 +5,22 @@ import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {AcrossV3BridgeAdapter} from "../../src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
-import {Caliber} from "src/caliber/Caliber.sol";
-import {SpokeCoreFactory} from "src/factories/SpokeCoreFactory.sol";
-import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
-import {ChainRegistry} from "src/registries/ChainRegistry.sol";
+import {Caliber} from "../../src/caliber/Caliber.sol";
+import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
+import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
+import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
-import {HubCoreRegistry} from "src/registries/HubCoreRegistry.sol";
-import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
-import {Machine} from "src/machine/Machine.sol";
-import {HubCoreFactory} from "src/factories/HubCoreFactory.sol";
-import {OracleRegistry} from "src/registries/OracleRegistry.sol";
-import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
-import {SpokeCoreRegistry} from "src/registries/SpokeCoreRegistry.sol";
-import {SwapModule} from "src/swap/SwapModule.sol";
-import {TokenRegistry} from "src/registries/TokenRegistry.sol";
+import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
+import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
+import {Machine} from "../../src/machine/Machine.sol";
+import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
+import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
+import {PreDepositVault} from "../../src/pre-deposit/PreDepositVault.sol";
+import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
+import {SwapModule} from "../../src/swap/SwapModule.sol";
+import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 
 abstract contract Base is DeployViaIr {
     struct HubCore {

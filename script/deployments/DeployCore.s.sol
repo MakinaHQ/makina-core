@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {Base} from "test/base/Base.sol";
+import {Base} from "../../test/base/Base.sol";
 
 abstract contract DeployCore is Base, Script {
     using stdJson for string;

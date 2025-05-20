@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
+import {IMachineEndpoint} from "../../src/interfaces/IMachineEndpoint.sol";
 
 /// @dev MockMachineEndpoint contract for testing use only
 /// @dev This contract facilitates testing of interactions with a IMachineEndpoint instance.

@@ -4,9 +4,9 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {ISpokeCoreFactory} from "src/interfaces/ISpokeCoreFactory.sol";
-import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {ICaliber} from "../../src/interfaces/ICaliber.sol";
+import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
+import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
 contract DeploySpokeCaliber is Script, SortedParams {
