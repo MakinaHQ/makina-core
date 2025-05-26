@@ -513,12 +513,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         if (len != adapters.length) {
             revert Errors.MismatchedLength();
         }
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -599,27 +595,20 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function resetBridgingState(address token) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         uint256 len = $._foreignChainIds.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             SpokeCaliberData storage caliberData = $._spokeCalibersData[$._foreignChainIds[i]];
 
             caliberData.caliberBridgesIn.remove(token);
             caliberData.caliberBridgesOut.remove(token);
             caliberData.machineBridgesIn.remove(token);
             caliberData.machineBridgesOut.remove(token);
-
-            unchecked {
-                ++i;
-            }
         }
 
         BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
         len = $bc._supportedBridges.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
             IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
-            unchecked {
-                ++i;
-            }
         }
 
         _notifyIdleToken(token);

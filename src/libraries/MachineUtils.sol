@@ -105,12 +105,8 @@ library MachineUtils {
             CaliberAccountingCCQ.decodeAndVerifyQueryResponse(wormhole, response, signatures).responses;
 
         uint256 len = responses.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             _handlePerChainQueryResponse($, tokenRegistry, chainRegistry, responses[i]);
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -193,14 +189,10 @@ library MachineUtils {
         address tokenRegistry
     ) private {
         uint256 len = data.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address foreignToken, uint256 amount) = abi.decode(data[i], (address, uint256));
             address localToken = ITokenRegistry(tokenRegistry).getLocalToken(foreignToken, chainId);
             map.set(localToken, amount);
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -213,7 +205,7 @@ library MachineUtils {
         // spoke calibers net AUM
         uint256 currentTimestamp = block.timestamp;
         uint256 len = $._foreignChainIds.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             uint256 chainId = $._foreignChainIds[i];
             IMachine.SpokeCaliberData storage spokeCaliberData = $._spokeCalibersData[chainId];
             if (
@@ -232,32 +224,22 @@ library MachineUtils {
 
             // check for funds sent by machine but not yet received by spoke caliber
             uint256 len2 = spokeCaliberData.machineBridgesOut.length();
-            for (uint256 j; j < len2;) {
+            for (uint256 j; j < len2; ++j) {
                 (address token, uint256 mOut) = spokeCaliberData.machineBridgesOut.at(j);
                 (, uint256 cIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
                 if (mOut > cIn) {
                     totalAum += _accountingValueOf(oracleRegistry, $._accountingToken, token, mOut - cIn);
                 }
-                unchecked {
-                    ++j;
-                }
             }
 
             // check for funds sent by spoke caliber but not yet received by machine
             len2 = spokeCaliberData.caliberBridgesOut.length();
-            for (uint256 j; j < len2;) {
+            for (uint256 j; j < len2; ++j) {
                 (address token, uint256 cOut) = spokeCaliberData.caliberBridgesOut.at(j);
                 (, uint256 mIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
                 if (cOut > mIn) {
                     totalAum += _accountingValueOf(oracleRegistry, $._accountingToken, token, cOut - mIn);
                 }
-                unchecked {
-                    ++j;
-                }
-            }
-
-            unchecked {
-                ++i;
             }
         }
 
@@ -267,13 +249,10 @@ library MachineUtils {
 
         // idle tokens
         len = $._idleTokens.length();
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             address token = $._idleTokens.at(i);
             totalAum +=
                 _accountingValueOf(oracleRegistry, $._accountingToken, token, IERC20(token).balanceOf(address(this)));
-            unchecked {
-                ++i;
-            }
         }
 
         return totalAum;
@@ -285,14 +264,11 @@ library MachineUtils {
         EnumerableMap.AddressToUintMap storage outsMap
     ) private view {
         uint256 len = insMap.length();
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address token, uint256 amountIn) = insMap.at(i);
             (, uint256 amountOut) = outsMap.tryGet(token);
             if (amountIn > amountOut) {
                 revert Errors.BridgeStateMismatch();
-            }
-            unchecked {
-                ++i;
             }
         }
     }

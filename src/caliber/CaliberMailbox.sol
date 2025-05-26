@@ -88,22 +88,16 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
         uint256 len = $._bridgesIn.length();
         data.bridgesIn = new bytes[](len);
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address token, uint256 amount) = $._bridgesIn.at(i);
             data.bridgesIn[i] = abi.encode(token, amount);
-            unchecked {
-                ++i;
-            }
         }
 
         len = $._bridgesOut.length();
         data.bridgesOut = new bytes[](len);
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address token, uint256 amount) = $._bridgesOut.at(i);
             data.bridgesOut[i] = abi.encode(token, amount);
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -217,12 +211,9 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
         BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
         uint256 len = $bc._supportedBridges.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
             IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
-            unchecked {
-                ++i;
-            }
         }
         IERC20(token).safeTransfer($._caliber, IERC20(token).balanceOf(address(this)));
 
