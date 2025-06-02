@@ -251,6 +251,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @inheritdoc ICaliber
     function getDetailedAum() external view override returns (uint256, bytes[] memory, bytes[] memory) {
+        if (_reentrancyGuardEntered()) {
+            revert ReentrancyGuardReentrantCall();
+        }
+
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 currentTimestamp = block.timestamp;
