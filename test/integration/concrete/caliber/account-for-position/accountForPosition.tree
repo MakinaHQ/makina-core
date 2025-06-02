@@ -1,33 +1,36 @@
 accountForPosition.t.sol
-├── given the position ID does not reference an existing position
-│  └── it should revert with PositionDoesNotExist
-└── given the position ID references an existing position
-   ├── given the group ID references an existing group of size greater than one
-   │  └── it should revert with PositionIsGrouped
-   └── given the group ID does not reference an existing group of size greater than one
-      ├── when the instruction is not of the accounting type
-      │  └── it should revert with InvalidInstructionType
-      └── when the instruction is of the accounting type
-         ├── when the instruction proof is not valid against the merkle root set in the caliber
-         │  └── it should revert with InvalidInstructionProof
-         └── when the instruction proof is valid against the merkle root set in the caliber
-            ├── given the instruction execution fails
-            │  └── it should revert
-            └── given the instruction execution succeeds
-               ├── given the instruction does not output a valid state
-               │  └── it should revert with InvalidAccounting
-               └── given the instruction outputs a valid state
-                  ├── given the new position value is zero
-                  │  └── given the position value was previously positive
-                  │     └── the position should be closed, i.e erased from storage
-                  └── given the new position value is positive
-                     ├── given the position was just created
-                     │  ├── the position ID should be stored in caliber
-                     │  ├── it should set position.lastAccountingTime to current block timestmap
-                     │  ├── it should set position.value to the computed position value converted to accounting token
-                     │  └── it should return the new value and the value change since last accounting
-                     └── given the position already existed
-                        ├── it should set position.lastAccountingTime to current block timestmap
-                        ├── it should set position.value to the computed position value converted to accounting token
-                        └── it should return the new value and the value change since last accounting
-                           
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── given the position ID does not reference an existing position
+   │  └── it should revert with PositionDoesNotExist
+   └── given the position ID references an existing position
+      ├── given the group ID references an existing group of size greater than one
+      │  └── it should revert with PositionIsGrouped
+      └── given the group ID does not reference an existing group of size greater than one
+         ├── when the instruction is not of the accounting type
+         │  └── it should revert with InvalidInstructionType
+         └── when the instruction is of the accounting type
+            ├── when the instruction proof is not valid against the merkle root set in the caliber
+            │  └── it should revert with InvalidInstructionProof
+            └── when the instruction proof is valid against the merkle root set in the caliber
+               ├── given the instruction execution fails
+               │  └── it should revert
+               └── given the instruction execution succeeds
+                  ├── given the instruction does not output a valid state
+                  │  └── it should revert with InvalidAccounting
+                  └── given the instruction outputs a valid state
+                     ├── given the new position value is zero
+                     │  └── given the position value was previously positive
+                     │     └── the position should be closed, i.e erased from storage
+                     └── given the new position value is positive
+                        ├── given the position was just created
+                        │  ├── the position ID should be stored in caliber
+                        │  ├── it should set position.lastAccountingTime to current block timestmap
+                        │  ├── it should set position.value to the computed position value converted to accounting token
+                        │  └── it should return the new value and the value change since last accounting
+                        └── given the position already existed
+                           ├── it should set position.lastAccountingTime to current block timestmap
+                           ├── it should set position.value to the computed position value converted to accounting token
+                           └── it should return the new value and the value change since last accounting
+                              

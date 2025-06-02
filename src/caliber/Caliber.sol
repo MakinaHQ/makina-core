@@ -310,7 +310,12 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
-    function accountForPosition(Instruction calldata instruction) external override returns (uint256, int256) {
+    function accountForPosition(Instruction calldata instruction)
+        external
+        override
+        nonReentrant
+        returns (uint256, int256)
+    {
         CaliberStorage storage $ = _getCaliberStorage();
         if (!$._positionIds.contains(instruction.positionId)) {
             revert Errors.PositionDoesNotExist();
@@ -325,6 +330,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     function accountForPositionBatch(Instruction[] calldata instructions, uint256[] calldata groupIds)
         external
         override
+        nonReentrant
         returns (uint256[] memory, int256[] memory)
     {
         CaliberStorage storage $ = _getCaliberStorage();

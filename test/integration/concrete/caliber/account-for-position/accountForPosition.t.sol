@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
 import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
@@ -45,6 +46,27 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
         vm.prank(mechanic);
         caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        uint256 borrowInputAmount = 1e18;
+        deal(address(baseToken), address(borrowModule), borrowInputAmount, true);
+        ICaliber.Instruction memory borrowMgmtInstruction = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
+            BORROW_POS_ID, address(borrowModule), borrowInputAmount
+        );
+        ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+        );
+
+        baseToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(caliber),
+            abi.encodeCall(ICaliber.accountForPosition, (borrowAcctInstruction))
+        );
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
     }
 
     function test_RevertWhen_ProvidedPositionNonExisting() public {
