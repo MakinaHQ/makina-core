@@ -56,6 +56,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 _lastBTSwapTimestamp;
         mapping(bytes32 => uint256) _lastExecutionTimestamp;
         mapping(uint256 posId => Position pos) _positionById;
+        mapping(uint256 groupId => EnumerableSet.UintSet _positionIds) _positionIdGroups;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
         EnumerableSet.AddressSet _instrRootGuardians;
@@ -314,19 +315,66 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         if (!$._positionIds.contains(instruction.positionId)) {
             revert Errors.PositionDoesNotExist();
         }
+        if (instruction.groupId != 0 && $._positionIdGroups[instruction.groupId].length() > 1) {
+            revert Errors.PositionIsGrouped();
+        }
         return _accountForPosition(instruction, true);
     }
 
     /// @inheritdoc ICaliber
-    function accountForPositionBatch(Instruction[] calldata instructions) external override {
+    function accountForPositionBatch(Instruction[] calldata instructions, uint256[] calldata groupIds)
+        external
+        override
+        returns (uint256[] memory, int256[] memory)
+    {
         CaliberStorage storage $ = _getCaliberStorage();
-        uint256 len = instructions.length;
-        for (uint256 i; i < len; ++i) {
-            if (!$._positionIds.contains(instructions[i].positionId)) {
+
+        uint256 groupsLen = groupIds.length;
+        uint256 instructionsLen = instructions.length;
+
+        // mark all positions in the given groups as stale
+        for (uint256 i; i < groupsLen; ++i) {
+            uint256 groupId = groupIds[i];
+            if (groupId == 0) {
+                revert Errors.ZeroGroupId();
+            }
+            uint256 groupLen = $._positionIdGroups[groupId].length();
+            for (uint256 j; j < groupLen; ++j) {
+                delete $._positionById[$._positionIdGroups[groupId].at(j)].lastAccountingTime;
+            }
+        }
+
+        uint256[] memory values = new uint256[](instructionsLen);
+        int256[] memory changes = new int256[](instructionsLen);
+
+        // run accounting instructions with adequate accounting mode
+        for (uint256 i; i < instructionsLen; ++i) {
+            uint256 positionId = instructions[i].positionId;
+            if (!$._positionIds.contains(positionId)) {
                 revert Errors.PositionDoesNotExist();
             }
-            _accountForPosition(instructions[i], true);
+            uint256 groupId = instructions[i].groupId;
+            if (groupId != 0 && $._positionIdGroups[groupId].length() > 1) {
+                if (!_includesGroupId(groupIds, groupId)) {
+                    revert Errors.GroupIdNotProvided();
+                }
+            }
+            (values[i], changes[i]) = _accountForPosition(instructions[i], true);
         }
+
+        // check that all positions in given groups were accounted for
+        for (uint256 i; i < groupsLen; ++i) {
+            uint256 groupId = groupIds[i];
+            uint256 groupLen = $._positionIdGroups[groupId].length();
+            for (uint256 j; j < groupLen; ++j) {
+                uint256 positionId = $._positionIdGroups[groupId].at(j);
+                if ($._positionById[positionId].lastAccountingTime == 0) {
+                    revert Errors.MissingInstructionForGroup(groupId);
+                }
+            }
+        }
+
+        return (values, changes);
     }
 
     /// @inheritdoc ICaliber
@@ -346,14 +394,21 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         override
         nonReentrant
         onlyOperator
+        returns (uint256[] memory, int256[] memory)
     {
         uint256 len = mgmtInstructions.length;
         if (len != acctInstructions.length) {
             revert Errors.MismatchedLengths();
         }
+
+        uint256[] memory values = new uint256[](len);
+        int256[] memory changes = new int256[](len);
+
         for (uint256 i; i < len; ++i) {
-            _managePosition(mgmtInstructions[i], acctInstructions[i]);
+            (values[i], changes[i]) = _managePosition(mgmtInstructions[i], acctInstructions[i]);
         }
+
+        return (values, changes);
     }
 
     /// @inheritdoc ICaliber
@@ -586,6 +641,8 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
 
+        _invalidateGroupedPositions(acctInstruction.groupId);
+
         uint256 affectedTokensValueAfter;
         for (uint256 i; i < atLen; ++i) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
@@ -659,8 +716,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             currentValue += _accountingValueOf(token, amounts[i]);
         }
 
+        uint256 groupId = instruction.groupId;
         if (lastValue > 0 && currentValue == 0) {
             $._positionIds.remove(posId);
+            $._positionIdGroups[groupId].remove(posId);
             delete $._positionById[posId];
             emit PositionClosed(posId);
         } else if (currentValue > 0) {
@@ -669,6 +728,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (lastValue == 0) {
                 pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
+                $._positionIdGroups[groupId].add(posId);
                 emit PositionCreated(posId, currentValue);
             } else {
                 emit PositionUpdated(posId, currentValue);
@@ -700,6 +760,29 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         }
 
         return amounts;
+    }
+
+    /// @dev Marks all positions in a given group as stale, except for the position currently being managed.
+    function _invalidateGroupedPositions(uint256 groupId) internal {
+        CaliberStorage storage $ = _getCaliberStorage();
+        uint256 groupLen = $._positionIdGroups[groupId].length();
+        for (uint256 i; i < groupLen; ++i) {
+            uint256 posId = $._positionIdGroups[groupId].at(i);
+            if (posId != $._managedPositionId) {
+                delete $._positionById[posId].lastAccountingTime;
+            }
+        }
+    }
+
+    /// @dev Checks if a given group ID is included in the provided array of group IDs.
+    function _includesGroupId(uint256[] calldata groupIds, uint256 groupId) internal pure returns (bool) {
+        uint256 len = groupIds.length;
+        for (uint256 i = 0; i < len; ++i) {
+            if (groupIds[i] == groupId) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// @dev Computes the accounting value of a given token amount.
@@ -749,6 +832,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
                         instruction.stateBitmap,
                         instruction.positionId,
                         instruction.isDebt,
+                        instruction.groupId,
                         affectedTokensHash,
                         instruction.instructionType
                     )

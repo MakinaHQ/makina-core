@@ -51,7 +51,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position in caliber
@@ -248,7 +248,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -268,7 +268,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -326,7 +326,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber

@@ -26,6 +26,8 @@ abstract contract Constants {
     uint256 internal constant POOL_POS_ID = 6;
     uint256 internal constant LOOP_POS_ID = 7;
 
+    uint256 public constant LENDING_MARKET_POS_GROUP_ID = 1;
+
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 
     uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e9;

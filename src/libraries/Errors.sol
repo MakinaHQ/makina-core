@@ -20,6 +20,7 @@ library Errors {
     error ForeignTokenNotRegistered(address _token, uint256 _foreignEvmChainId);
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
+    error GroupIdNotProvided();
     error InstructionsMismatch();
     error InsufficientBalance();
     error InsufficientOutputAmount();
@@ -44,6 +45,7 @@ library Errors {
     error MinOutputAmountExceedsInputAmount();
     error MismatchedLength();
     error MismatchedLengths();
+    error MissingInstructionForGroup(uint256 groupId);
     error NegativeTokenPrice(address priceFeed);
     error NoPendingUpdate();
     error NonZeroBalance();
@@ -63,6 +65,7 @@ library Errors {
     error PendingBridgeTransfer();
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
+    error PositionIsGrouped();
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
     error ProtectedRootGuardian();
@@ -83,6 +86,7 @@ library Errors {
     error WhChainIdNotRegistered(uint16 chainId);
     error ZeroBridgeAdapterAddress();
     error ZeroChainId();
+    error ZeroGroupId();
     error ZeroPositionId();
     error ZeroTokenAddress();
 }

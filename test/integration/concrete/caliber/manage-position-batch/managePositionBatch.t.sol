@@ -54,49 +54,61 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
     }
 
     function test_ManagePositionBatch() public withTokenAsBT(address(baseToken)) {
-        uint256 inputAmount = 3e18;
+        uint256 vaultInputAmount = 2e18;
+        uint256 borrowInputAmount = 3e18;
 
-        deal(address(baseToken), address(borrowModule), inputAmount, true);
+        deal(address(baseToken), address(caliber), vaultInputAmount, true);
+        deal(address(baseToken), address(borrowModule), borrowInputAmount, true);
 
         ICaliber.Instruction[] memory mgmtInstructions = new ICaliber.Instruction[](2);
         mgmtInstructions[0] =
-            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        mgmtInstructions[1] =
-            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
+        mgmtInstructions[1] = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
+            BORROW_POS_ID, address(borrowModule), borrowInputAmount
+        );
 
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](2);
-        acctInstructions[0] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
-        );
-        acctInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+        acctInstructions[0] =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
-        uint256 expectedBorrowPosValue = inputAmount * PRICE_B_A;
-        uint256 expectedSupplyPosValue = inputAmount * PRICE_B_A;
+        uint256 expectedVaultPosValue = vaultInputAmount * PRICE_B_A;
+        uint256 expectedBorrowPosValue = borrowInputAmount * PRICE_B_A;
 
-        vm.expectEmit(true, false, false, false, address(caliber));
+        vm.expectEmit(true, false, false, true, address(caliber));
+        emit ICaliber.PositionCreated(VAULT_POS_ID, expectedVaultPosValue);
+
+        vm.expectEmit(true, false, false, true, address(caliber));
         emit ICaliber.PositionCreated(BORROW_POS_ID, expectedBorrowPosValue);
 
-        vm.expectEmit(true, false, false, false, address(caliber));
-        emit ICaliber.PositionCreated(SUPPLY_POS_ID, expectedSupplyPosValue);
+        uint256[] memory values;
+        int256[] memory changes;
 
         vm.prank(mechanic);
-        caliber.managePositionBatch(mgmtInstructions, acctInstructions);
+        (values, changes) = caliber.managePositionBatch(mgmtInstructions, acctInstructions);
 
         assertEq(caliber.getPositionsLength(), 2);
-        assertEq(caliber.getPositionId(0), BORROW_POS_ID);
-        assertEq(caliber.getPositionId(1), SUPPLY_POS_ID);
-        assertEq(borrowModule.debtOf(address(caliber)), inputAmount);
-        assertEq(supplyModule.collateralOf(address(caliber)), inputAmount);
+        assertEq(caliber.getPositionId(0), VAULT_POS_ID);
+        assertEq(caliber.getPositionId(1), BORROW_POS_ID);
+        assertEq(vault.balanceOf(address(caliber)), vaultInputAmount);
+        assertEq(borrowModule.debtOf(address(caliber)), borrowInputAmount);
+
+        assertEq(caliber.getPosition(VAULT_POS_ID).value, expectedVaultPosValue);
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(VAULT_POS_ID).isDebt, false);
 
         assertEq(caliber.getPosition(BORROW_POS_ID).value, expectedBorrowPosValue);
         assertEq(caliber.getPosition(BORROW_POS_ID).lastAccountingTime, block.timestamp);
         assertEq(caliber.getPosition(BORROW_POS_ID).isDebt, true);
 
-        assertEq(caliber.getPosition(SUPPLY_POS_ID).value, expectedSupplyPosValue);
-        assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, block.timestamp);
-        assertEq(caliber.getPosition(SUPPLY_POS_ID).isDebt, false);
+        assertEq(values.length, 2);
+        assertEq(values[0], expectedVaultPosValue);
+        assertEq(values[1], expectedBorrowPosValue);
+        assertEq(changes.length, 2);
+        assertEq(changes[0], int256(expectedVaultPosValue));
+        assertEq(changes[1], int256(expectedBorrowPosValue));
     }
 
     function test_RevertWhen_CallerNotSC_WhileInRecoveryMode() public whileInRecoveryMode {
@@ -123,10 +135,10 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
 
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](2);
         acctInstructions[0] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
         acctInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         vm.prank(mechanic);

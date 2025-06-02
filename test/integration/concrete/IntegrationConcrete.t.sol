@@ -79,22 +79,24 @@ abstract contract Integration_Concrete_Test is Base_Test {
     ///
 
     function _setUpCaliberMerkleRoot(Caliber _caliber) internal {
+        MerkleProofs.MerkleTreeParams memory params = MerkleProofs.MerkleTreeParams({
+            caliber: address(_caliber),
+            mockAccountingToken: address(accountingToken),
+            mockBaseToken: address(baseToken),
+            mockVault: address(vault),
+            mockVaultPosId: VAULT_POS_ID,
+            mockSupplyModule: address(supplyModule),
+            mockSupplyModulePosId: SUPPLY_POS_ID,
+            mockBorrowModule: address(borrowModule),
+            mockBorrowModulePosId: BORROW_POS_ID,
+            mockPool: address(pool),
+            mockPoolPosId: POOL_POS_ID,
+            mockFlashLoanModule: address(flashLoanModule),
+            mockLoopPosId: LOOP_POS_ID,
+            lendingMarketPosGroupId: LENDING_MARKET_POS_GROUP_ID
+        });
         // generate merkle tree for instructions involving mock base token and vault
-        MerkleProofs._generateMerkleData(
-            address(_caliber),
-            address(accountingToken),
-            address(baseToken),
-            address(vault),
-            VAULT_POS_ID,
-            address(supplyModule),
-            SUPPLY_POS_ID,
-            address(borrowModule),
-            BORROW_POS_ID,
-            address(pool),
-            POOL_POS_ID,
-            address(flashLoanModule),
-            LOOP_POS_ID
-        );
+        MerkleProofs._generateMerkleData(params);
 
         vm.prank(riskManager);
         _caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
