@@ -391,5 +391,7 @@ function keccak256EncodePacked(list) {
 }
 
 function getStateHash(state) {
-  return state.length > 0 ? keccak256EncodePacked(state) : ethers.ZeroHash;
+  return state.length > 0
+    ? keccak256EncodePacked(state.map((value) => ethers.keccak256(value)))
+    : ethers.ZeroHash;
 }
