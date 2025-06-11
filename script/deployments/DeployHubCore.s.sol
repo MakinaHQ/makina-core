@@ -41,7 +41,10 @@ contract DeployHubCore is DeployCore {
         setupChainRegistry(_deployment.chainRegistry, supportedChains);
         setupSwapModule(_deployment.swapModule, swappersData);
 
-        // @TODO setup access manager
+        if (!vm.envBool("SKIP_AM_SETUP")) {
+            setupHubCoreAMFunctionRoles(_deployment);
+            setupAccessManagerRoles(_deployment.accessManager, dao, deployer);
+        }
     }
 
     function _deploySetupAfter() public override {

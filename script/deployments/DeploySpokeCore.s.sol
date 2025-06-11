@@ -39,7 +39,10 @@ contract DeploySpokeCore is DeployCore {
         setupTokenRegistry(_deployment.tokenRegistry, tokensToRegister);
         setupSwapModule(_deployment.swapModule, swappersData);
 
-        // @TODO setup access manager
+        if (!vm.envBool("SKIP_AM_SETUP")) {
+            setupSpokeCoreAMFunctionRoles(_deployment);
+            setupAccessManagerRoles(_deployment.accessManager, dao, deployer);
+        }
     }
 
     function _deploySetupAfter() public override {

@@ -84,6 +84,12 @@ abstract contract Fork_Test is Base, Test, Constants {
         setupSwapModule(isHub ? hubCore.swapModule : spokeCores[chainId].swapModule, swappersData);
 
         // setup access manager
-        setupAccessManager(isHub ? hubCore.accessManager : spokeCores[chainId].accessManager, forkData.dao);
+        if (isHub) {
+            setupHubCoreAMFunctionRoles(hubCore);
+            setupAccessManagerRoles(hubCore.accessManager, forkData.dao, address(this));
+        } else {
+            setupSpokeCoreAMFunctionRoles(spokeCores[chainId]);
+            setupAccessManagerRoles(spokeCores[chainId].accessManager, forkData.dao, address(this));
+        }
     }
 }

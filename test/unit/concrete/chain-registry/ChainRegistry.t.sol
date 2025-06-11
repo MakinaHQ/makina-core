@@ -14,7 +14,8 @@ contract ChainRegistry_Unit_Concrete_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
         HubCore memory deployment = deployHubCore(deployer, dao, address(0));
-        setupAccessManager(deployment.accessManager, dao);
         chainRegistry = deployment.chainRegistry;
+        _setupChainRegistryAMFunctionRoles(deployment.accessManager, address(chainRegistry));
+        setupAccessManagerRoles(deployment.accessManager, dao, deployer);
     }
 }

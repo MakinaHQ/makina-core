@@ -13,11 +13,23 @@ import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
+import {IBridgeController} from "../../src/interfaces/IBridgeController.sol";
+import {ICaliberMailbox} from "../../src/interfaces/ICaliberMailbox.sol";
+import {IChainRegistry} from "../../src/interfaces/IChainRegistry.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
+import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
+import {IHubCoreRegistry} from "../../src/interfaces/IHubCoreRegistry.sol";
+import {IOracleRegistry} from "../../src/interfaces/IOracleRegistry.sol";
+import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
+import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";
+import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
+import {ITokenRegistry} from "../../src/interfaces/ITokenRegistry.sol";
+import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
 import {PreDepositVault} from "../../src/pre-deposit/PreDepositVault.sol";
+import {Roles} from "../utils/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
@@ -302,9 +314,139 @@ abstract contract Base is DeployViaIr {
     /// ACCESS MANAGER SETUP
     ///
 
-    function setupAccessManager(AccessManagerUpgradeable accessManager, address dao) public {
+    function setupAccessManagerRoles(AccessManagerUpgradeable accessManager, address dao, address deployer) public {
+        // Grant roles to the DAO
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
-        accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(this));
+        accessManager.grantRole(Roles.STRATEGY_DEPLOYER_ROLE, dao, 0);
+        accessManager.grantRole(Roles.STRATEGY_CONFIG_ROLE, dao, 0);
+        accessManager.grantRole(Roles.INFRA_CONFIG_ROLE, dao, 0);
+
+        // Revoke roles from the deployer
+        accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
+    }
+
+    function setupHubCoreAMFunctionRoles(HubCore memory deployment) public {
+        // HubCoreRegistry
+        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](10);
+        hubCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
+        hubCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
+        hubCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
+        hubCoreRegistrySelectors[3] = ICoreRegistry.setSwapModule.selector;
+        hubCoreRegistrySelectors[4] = ICoreRegistry.setFlashLoanModule.selector;
+        hubCoreRegistrySelectors[5] = ICoreRegistry.setCaliberBeacon.selector;
+        hubCoreRegistrySelectors[6] = ICoreRegistry.setBridgeAdapterBeacon.selector;
+        hubCoreRegistrySelectors[7] = IHubCoreRegistry.setChainRegistry.selector;
+        hubCoreRegistrySelectors[8] = IHubCoreRegistry.setMachineBeacon.selector;
+        hubCoreRegistrySelectors[9] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.hubCoreRegistry), hubCoreRegistrySelectors, Roles.INFRA_CONFIG_ROLE
+        );
+
+        // ChainRegistry
+        _setupChainRegistryAMFunctionRoles(deployment.accessManager, address(deployment.chainRegistry));
+
+        // HubCoreFactory
+        bytes4[] memory hubCoreFactorySelectors = new bytes4[](3);
+        hubCoreFactorySelectors[0] = IHubCoreFactory.createPreDepositVault.selector;
+        hubCoreFactorySelectors[1] = IHubCoreFactory.createMachineFromPreDeposit.selector;
+        hubCoreFactorySelectors[2] = IHubCoreFactory.createMachine.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.hubCoreFactory), hubCoreFactorySelectors, Roles.STRATEGY_DEPLOYER_ROLE
+        );
+
+        // OracleRegistry
+        _setupOracleRegistryAMFunctionRoles(deployment.accessManager, address(deployment.oracleRegistry));
+
+        // TokenRegistry
+        _setupTokenRegistryAMFunctionRoles(deployment.accessManager, address(deployment.tokenRegistry));
+
+        // SwapModule
+        _setupSwapModuleAMFunctionRoles(deployment.accessManager, address(deployment.swapModule));
+    }
+
+    function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment) public {
+        // SpokeCoreRegistry
+        bytes4[] memory spokeCoreRegistrySelectors = new bytes4[](8);
+        spokeCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
+        spokeCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
+        spokeCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
+        spokeCoreRegistrySelectors[3] = ICoreRegistry.setSwapModule.selector;
+        spokeCoreRegistrySelectors[4] = ICoreRegistry.setFlashLoanModule.selector;
+        spokeCoreRegistrySelectors[5] = ICoreRegistry.setCaliberBeacon.selector;
+        spokeCoreRegistrySelectors[6] = ICoreRegistry.setBridgeAdapterBeacon.selector;
+        spokeCoreRegistrySelectors[7] = ISpokeCoreRegistry.setCaliberMailboxBeacon.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.spokeCoreRegistry), spokeCoreRegistrySelectors, Roles.INFRA_CONFIG_ROLE
+        );
+
+        // SpokeCoreFactory
+        bytes4[] memory spokeCoreFactorySelectors = new bytes4[](1);
+        spokeCoreFactorySelectors[0] = ISpokeCoreFactory.createCaliber.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.spokeCoreFactory), spokeCoreFactorySelectors, Roles.STRATEGY_DEPLOYER_ROLE
+        );
+
+        // OracleRegistry
+        _setupOracleRegistryAMFunctionRoles(deployment.accessManager, address(deployment.oracleRegistry));
+
+        // TokenRegistry
+        _setupTokenRegistryAMFunctionRoles(deployment.accessManager, address(deployment.tokenRegistry));
+
+        // SwapModule
+        _setupSwapModuleAMFunctionRoles(deployment.accessManager, address(deployment.swapModule));
+    }
+
+    function _setupOracleRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _oracleRegistry)
+        internal
+    {
+        bytes4[] memory oracleRegistrySelectors = new bytes4[](2);
+        oracleRegistrySelectors[0] = IOracleRegistry.setFeedRoute.selector;
+        oracleRegistrySelectors[1] = IOracleRegistry.setFeedStaleThreshold.selector;
+        accessManager.setTargetFunctionRole(_oracleRegistry, oracleRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupTokenRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _tokenRegistry)
+        internal
+    {
+        bytes4[] memory tokenRegistrySelectors = new bytes4[](1);
+        tokenRegistrySelectors[0] = ITokenRegistry.setToken.selector;
+        accessManager.setTargetFunctionRole(_tokenRegistry, tokenRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupSwapModuleAMFunctionRoles(AccessManagerUpgradeable accessManager, address _swapModule) internal {
+        bytes4[] memory swapModuleSelectors = new bytes4[](1);
+        swapModuleSelectors[0] = ISwapModule.setSwapperTargets.selector;
+        accessManager.setTargetFunctionRole(_swapModule, swapModuleSelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupChainRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _chainRegistry)
+        internal
+    {
+        bytes4[] memory chainRegistrySelectors = new bytes4[](1);
+        chainRegistrySelectors[0] = IChainRegistry.setChainIds.selector;
+        accessManager.setTargetFunctionRole(_chainRegistry, chainRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupMachineAMFunctionRoles(AccessManagerUpgradeable accessManager, address _machine) internal {
+        bytes4[] memory machineSelectors = new bytes4[](9);
+        machineSelectors[0] = IBridgeController.createBridgeAdapter.selector;
+        machineSelectors[1] = IBridgeController.resetBridgingState.selector;
+        machineSelectors[2] = IMachine.setSpokeCaliber.selector;
+        machineSelectors[3] = IMachine.setSpokeBridgeAdapter.selector;
+        machineSelectors[4] = IMachine.setDepositor.selector;
+        machineSelectors[5] = IMachine.setRedeemer.selector;
+        machineSelectors[6] = IMachine.setFeeManager.selector;
+        machineSelectors[7] = IMachine.setMaxFeeAccrualRate.selector;
+        machineSelectors[8] = IMachine.setFeeMintCooldown.selector;
+        accessManager.setTargetFunctionRole(_machine, machineSelectors, Roles.STRATEGY_CONFIG_ROLE);
+    }
+
+    function _setupCaliberMailboxAMFunctionRoles(AccessManagerUpgradeable accessManager, address _mailbox) internal {
+        bytes4[] memory mailboxSelectors = new bytes4[](3);
+        mailboxSelectors[0] = IBridgeController.createBridgeAdapter.selector;
+        mailboxSelectors[1] = IBridgeController.resetBridgingState.selector;
+        mailboxSelectors[2] = ICaliberMailbox.setHubBridgeAdapter.selector;
+        accessManager.setTargetFunctionRole(_mailbox, mailboxSelectors, Roles.STRATEGY_CONFIG_ROLE);
     }
 
     ///
