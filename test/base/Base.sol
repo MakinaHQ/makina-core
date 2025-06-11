@@ -293,20 +293,22 @@ abstract contract Base is DeployViaIr {
     /// BRIDGE ADAPTER BEACONS DEPLOYMENTS & SETUP
     ///
 
-    function deployAndSetupBridgeAdapterBeacon(
+    function deployAndSetupBridgeAdapterBeacons(
         ICoreRegistry makinaRegistry,
         BridgeData[] memory bridgesData,
         address dao
-    ) public {
+    ) public returns (UpgradeableBeacon[] memory bridgeAdapterBeacons) {
+        bridgeAdapterBeacons = new UpgradeableBeacon[](bridgesData.length);
         for (uint256 i; i < bridgesData.length; i++) {
             uint16 bridgeId = bridgesData[i].bridgeId;
-            address baBeacon;
+            UpgradeableBeacon baBeacon;
             if (bridgeId == 1) {
-                baBeacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget));
+                baBeacon = _deployAcrossV3BridgeAdapterBeacon(dao, bridgesData[i].executionTarget);
             } else {
                 revert("Bridge not supported");
             }
-            makinaRegistry.setBridgeAdapterBeacon(bridgeId, baBeacon);
+            bridgeAdapterBeacons[i] = baBeacon;
+            makinaRegistry.setBridgeAdapterBeacon(bridgeId, address(baBeacon));
         }
     }
 

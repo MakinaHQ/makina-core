@@ -23,5 +23,13 @@
       "approvalTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1",
       "executionTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1"
     }
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 1,
+      "approvalTarget": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+      "executionTarget": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+      "receiveSource": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64"
+    }
   ]
 }

@@ -1,5 +1,8 @@
 {
   "AccessManager": "0x90193C961A926261B756D1E5bb255e67ff9498A1",
+  "BridgeAdapterBeacons": {
+    "1": "0x6FeA640c163c624a88bb7000391EB4763A02935f"
+  },
   "CaliberBeacon": "0x8B71b41D4dBEb2b6821d44692d3fACAAf77480Bb",
   "ChainRegistry": "0xDEb1E9a6Be7Baf84208BB6E10aC9F9bbE1D70809",
   "HubCoreFactory": "0xD31598c909d9C935a9e35bA70d9a3DD47d4D5865",

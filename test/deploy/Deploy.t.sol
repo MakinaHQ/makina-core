@@ -6,6 +6,7 @@ import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
@@ -15,6 +16,7 @@ import {DeployPreDepositVault} from "script/deployments/DeployPreDepositVault.s.
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
 import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
 import {DeployTimelockController} from "script/deployments/DeployTimelockController.s.sol";
+import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -76,7 +78,8 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
 
-        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+        (HubCore memory hubCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
+            deployHubCore.deployment();
 
         // Check that OracleRegistry is correctly set up
         PriceFeedRoute[] memory _priceFeedRoutes =
@@ -124,6 +127,19 @@ contract Deploy_Scripts_Test is Base_Test {
                 ChainsInfo.getChainInfo(supportedChains[i]).wormholeChainId
             );
         }
+
+        // Check that BridgeAdapterBeacons are correctly set up
+        BridgeData[] memory _bridgesData =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
+        for (uint256 i; i < _bridgesData.length; i++) {
+            IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
+            address approvalTarget = implementation.approvalTarget();
+            address executionTarget = implementation.executionTarget();
+            address receiveSource = implementation.receiveSource();
+            assertEq(_bridgesData[i].approvalTarget, approvalTarget);
+            assertEq(_bridgesData[i].executionTarget, executionTarget);
+            assertEq(_bridgesData[i].receiveSource, receiveSource);
+        }
     }
 
     function testScript_DeployHubMachine() public {
@@ -138,7 +154,7 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
 
-        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+        (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
 
         // Machine deployment
         deployHubMachine = new DeployHubMachine();
@@ -205,7 +221,7 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
 
-        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+        (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
 
         // PreDeposit Vault deployment
         deployPreDepositVault = new DeployPreDepositVault();
@@ -251,7 +267,7 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
 
-        HubCore memory hubCoreDeployment = deployHubCore.deployment();
+        (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
 
         // PreDeposit Vault deployment
         deployPreDepositVault = new DeployPreDepositVault();
@@ -332,7 +348,8 @@ contract Deploy_Scripts_Test is Base_Test {
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCore.run();
 
-        SpokeCore memory spokeCoreDeployment = deploySpokeCore.deployment();
+        (SpokeCore memory spokeCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
+            deploySpokeCore.deployment();
 
         // Check that OracleRegistry is correctly set up
         PriceFeedRoute[] memory _priceFeedRoutes =
@@ -370,6 +387,19 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
             assertEq(_swappersData[i].executionTarget, executionTarget);
         }
+
+        // Check that BridgeAdapterBeacons are correctly set up
+        BridgeData[] memory _bridgesData =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
+        for (uint256 i; i < _bridgesData.length; i++) {
+            IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
+            address approvalTarget = implementation.approvalTarget();
+            address executionTarget = implementation.executionTarget();
+            address receiveSource = implementation.receiveSource();
+            assertEq(_bridgesData[i].approvalTarget, approvalTarget);
+            assertEq(_bridgesData[i].executionTarget, executionTarget);
+            assertEq(_bridgesData[i].receiveSource, receiveSource);
+        }
     }
 
     function testScript_DeploySpokeCaliber() public {
@@ -384,7 +414,7 @@ contract Deploy_Scripts_Test is Base_Test {
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCore.run();
 
-        SpokeCore memory spokeCoreDeployment = deploySpokeCore.deployment();
+        (SpokeCore memory spokeCoreDeployment,) = deploySpokeCore.deployment();
 
         // Caliber deployment
         deploySpokeCaliber = new DeploySpokeCaliber();

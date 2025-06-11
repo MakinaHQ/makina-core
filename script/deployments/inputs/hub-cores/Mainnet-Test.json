@@ -53,5 +53,13 @@
       "approvalTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559",
       "executionTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559"
     }
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 1,
+      "approvalTarget": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5",
+      "executionTarget": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5",
+      "receiveSource": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5"
+    }
   ]
 }
