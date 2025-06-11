@@ -5,6 +5,7 @@ import {stdJson} from "forge-std/StdJson.sol";
 import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
@@ -13,6 +14,7 @@ import {DeployHubMachineFromPreDeposit} from "script/deployments/DeployHubMachin
 import {DeployPreDepositVault} from "script/deployments/DeployPreDepositVault.s.sol";
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
 import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
+import {DeployTimelockController} from "script/deployments/DeployTimelockController.s.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -33,9 +35,14 @@ contract Deploy_Scripts_Test is Base_Test {
     DeployHubMachineFromPreDeposit public deployMachineFromPreDeposit;
     DeploySpokeCore public deploySpokeCore;
     DeploySpokeCaliber public deploySpokeCaliber;
+    DeployTimelockController public deployTimelockController;
 
-    function testLoadedState() public {
+    function test_LoadedState() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+
+        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
         vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
@@ -43,22 +50,21 @@ contract Deploy_Scripts_Test is Base_Test {
         vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
+        deployTimelockController = new DeployTimelockController();
         deployHubCore = new DeployHubCore();
         deploySpokeCore = new DeploySpokeCore();
 
+        address tcAdmin = abi.decode(vm.parseJson(deployTimelockController.inputJson(), ".initialAdmin"), (address));
+        assertTrue(tcAdmin != address(0));
+
         address hubDao = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dao"), (address));
-        address hubSecurityCouncil = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".securityCouncil"), (address));
         assertTrue(hubDao != address(0));
-        assertTrue(hubSecurityCouncil != address(0));
 
         address spokeDao = abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dao"), (address));
-        address spokeSecurityCouncil =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".securityCouncil"), (address));
         assertTrue(spokeDao != address(0));
-        assertTrue(spokeSecurityCouncil != address(0));
     }
 
-    function testScriptDeployHubCore() public {
+    function testScript_DeployHubCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -120,7 +126,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
     }
 
-    function testScriptDeployHubMachine() public {
+    function testScript_DeployHubMachine() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -187,7 +193,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(shareToken.symbol(), shareTokenSymbol);
     }
 
-    function testScriptDeployPreDepositVault() public {
+    function testScript_DeployPreDepositVault() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -233,7 +239,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(shareToken.symbol(), shareTokenSymbol);
     }
 
-    function testScripDeployHubMachineFromPreDeposit() public {
+    function testScrip_DeployHubMachineFromPreDeposit() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -314,7 +320,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(shareToken.symbol(), shareTokenSymbol);
     }
 
-    function testScriptDeploySpokeCore() public {
+    function testScript_DeploySpokeCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -366,7 +372,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
     }
 
-    function testScriptDeploySpokeCaliber() public {
+    function testScript_DeploySpokeCaliber() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
@@ -420,5 +426,32 @@ contract Deploy_Scripts_Test is Base_Test {
 
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);
+    }
+
+    function testScript_DeployTimelockController() public {
+        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+
+        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        // Timelock Controller deployment
+        deployTimelockController = new DeployTimelockController();
+        deployTimelockController.run();
+
+        // Check that Timelock Controller is correctly set up
+        SortedParams.TimelockControllerInitParamsSorted memory tcParams = abi.decode(
+            vm.parseJson(deployTimelockController.inputJson()), (SortedParams.TimelockControllerInitParamsSorted)
+        );
+        TimelockController timelockController = TimelockController(payable(deployTimelockController.deployedInstance()));
+        for (uint256 i = 0; i < tcParams.initialProposers.length; i++) {
+            assertTrue(timelockController.hasRole(timelockController.PROPOSER_ROLE(), tcParams.initialProposers[i]));
+            assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), tcParams.initialProposers[i]));
+        }
+        for (uint256 i = 0; i < tcParams.initialExecutors.length; i++) {
+            assertTrue(timelockController.hasRole(timelockController.EXECUTOR_ROLE(), tcParams.initialExecutors[i]));
+        }
+        assertTrue(timelockController.hasRole(timelockController.DEFAULT_ADMIN_ROLE(), tcParams.initialAdmin));
+        assertEq(timelockController.getMinDelay(), tcParams.initialMinDelay);
     }
 }
