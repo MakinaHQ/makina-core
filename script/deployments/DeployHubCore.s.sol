@@ -48,7 +48,7 @@ contract DeployHubCore is DeployCore {
         _bridgeAdapterBeacons =
             deployAndSetupBridgeAdapterBeacons(ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData, dao);
 
-        if (!vm.envBool("SKIP_AM_SETUP")) {
+        if (!vm.envOr("SKIP_AM_SETUP", false)) {
             setupHubCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(_core.accessManager, dao, deployer);
         }

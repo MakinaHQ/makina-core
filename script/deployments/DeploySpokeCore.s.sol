@@ -46,7 +46,7 @@ contract DeploySpokeCore is DeployCore {
         _bridgeAdapterBeacons =
             deployAndSetupBridgeAdapterBeacons(ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData, dao);
 
-        if (!vm.envBool("SKIP_AM_SETUP")) {
+        if (!vm.envOr("SKIP_AM_SETUP", false)) {
             setupSpokeCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(_core.accessManager, dao, deployer);
         }
