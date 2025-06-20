@@ -23,7 +23,7 @@ contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Conc
         assertTrue(caliber.isAccountingFresh());
 
         // skip past stale threshold
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD + 1);
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD);
 
         assertFalse(caliber.isAccountingFresh());
 

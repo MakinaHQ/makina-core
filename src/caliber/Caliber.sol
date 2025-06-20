@@ -240,8 +240,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 len = $._positionIds.length();
         uint256 currentTimestamp = block.timestamp;
         for (uint256 i; i < len; ++i) {
-            if (currentTimestamp - $._positionById[$._positionIds.at(i)].lastAccountingTime > $._positionStaleThreshold)
-            {
+            if (
+                currentTimestamp - $._positionById[$._positionIds.at(i)].lastAccountingTime >= $._positionStaleThreshold
+            ) {
                 return false;
             }
         }
