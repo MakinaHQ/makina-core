@@ -90,8 +90,9 @@ interface IBridgeAdapter {
     function sendOutBridgeTransfer(uint256 transferId, bytes calldata data) external;
 
     /// @notice Returns the default amount that must be transferred to the adapter to cancel an outgoing bridge transfer.
-    /// @dev If the transfer has not yet been sent or if the full amount was refunded by the external bridge, returns 0.
-    /// @dev If the bridge retains a fee upon cancellation, the returned value reflects that fee.
+    /// @dev If the transfer has not yet been sent, or if the full amount was refunded to this contract by the external bridge, returns 0.
+    /// @dev If the bridge retains a fee upon cancellation and only a partial refund was received, the returned value reflects that fee.
+    /// @dev In all other cases (e.g. including pending refunds or successful bridge transfers), returns the full amount of the transfer.
     /// @param transferId The ID of the transfer to check.
     /// @return The amount required to cancel the transfer.
     function outBridgeTransferCancelDefault(uint256 transferId) external view returns (uint256);
