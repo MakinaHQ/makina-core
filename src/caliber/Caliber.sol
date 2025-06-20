@@ -485,6 +485,20 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
     }
 
     /// @inheritdoc ICaliber
+    function notifyIncomingTransfer(address token, uint256 amount) external override nonReentrant {
+        CaliberStorage storage $ = _getCaliberStorage();
+        address _hubMachineEndpoint = $._hubMachineEndpoint;
+        if (msg.sender != _hubMachineEndpoint) {
+            revert Errors.NotMachineEndpoint();
+        }
+        if (!$._baseTokens.contains(token)) {
+            revert Errors.NotBaseToken();
+        }
+        IERC20(token).safeTransferFrom(_hubMachineEndpoint, address(this), amount);
+        emit IncomingTransfer(token, amount);
+    }
+
+    /// @inheritdoc ICaliber
     function setPositionStaleThreshold(uint256 newPositionStaleThreshold) external override onlyRiskManagerTimelock {
         CaliberStorage storage $ = _getCaliberStorage();
         emit PositionStaleThresholdChanged($._positionStaleThreshold, newPositionStaleThreshold);

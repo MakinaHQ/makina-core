@@ -1,0 +1,16 @@
+notifyIncomingTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── when caller is not the hub machine endpoint
+   │  └── it should revert with NotMachineEndpoint
+   └── when caller is the hub machine endpoint
+      ├── given the token is not a registered base token in the caliber
+      │  └── it should revert with NotBaseToken
+      └── given the token is a registered base token in the caliber
+         ├── given caller has insufficient token allowance or balance
+         │  └── it should revert
+         └── given caller has sufficient token allowance and balance
+            ├── it should increase the caliber's token balance by amount
+            ├── it should decrease the hub machine endpoint's token balance by amount
+            └── it should emit an IncomingTransfer event

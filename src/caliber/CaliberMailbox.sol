@@ -123,10 +123,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
             _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
         } else if (_isBridgeAdapter(msg.sender)) {
-            if (!ICaliber($._caliber).isBaseToken(token)) {
-                revert Errors.NotBaseToken();
-            }
-
             (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
 
             if (refund) {
@@ -137,7 +133,9 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
             }
 
-            IERC20(token).safeTransferFrom(msg.sender, $._caliber, amount);
+            IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+            IERC20(token).forceApprove($._caliber, amount);
+            ICaliber($._caliber).notifyIncomingTransfer(token, amount);
         } else {
             revert Errors.UnauthorizedCaller();
         }
@@ -202,10 +200,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     function resetBridgingState(address token) external override restricted {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
-        if (!ICaliber($._caliber).isBaseToken(token)) {
-            revert Errors.NotBaseToken();
-        }
-
         $._bridgesIn.remove(token);
         $._bridgesOut.remove(token);
 
@@ -215,7 +209,10 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
             address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
             IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
         }
-        IERC20(token).safeTransfer($._caliber, IERC20(token).balanceOf(address(this)));
+
+        uint256 amount = IERC20(token).balanceOf(address(this));
+        IERC20(token).forceApprove($._caliber, amount);
+        ICaliber($._caliber).notifyIncomingTransfer(token, amount);
 
         emit BridgingStateReset(token);
     }

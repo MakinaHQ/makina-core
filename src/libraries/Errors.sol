@@ -56,6 +56,7 @@ library Errors {
     error NotFactory();
     error NotFlashLoanModule();
     error NotMachine();
+    error NotMachineEndpoint();
     error NotMigrated();
     error NotPendingMachine();
     error NotPreDepositVault();

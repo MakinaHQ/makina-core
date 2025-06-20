@@ -195,10 +195,44 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), 2 * bridgeInputAmount);
     }
 
-    function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter() public {
+    function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter_NotRefund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeOutputAmount = 999e15;
+
+        deal(address(baseToken), address(bridgeAdapter), bridgeOutputAmount, true);
+
+        vm.startPrank(address(bridgeAdapter));
+        baseToken.approve(address(caliberMailbox), bridgeOutputAmount);
+
         vm.expectRevert(Errors.NotBaseToken.selector);
-        vm.prank(address(bridgeAdapter));
-        caliberMailbox.manageTransfer(address(baseToken), 0, "");
+        caliberMailbox.manageTransfer(
+            address(baseToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount, false)
+        );
+    }
+
+    function test_ManageTransfer_RevertWhen_OutputTokenNonBaseToken_FromBridgeAdapter_Refund() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeOutputAmount = 999e15;
+
+        vm.prank(dao);
+        tokenRegistry.setToken(address(baseToken), hubChainId, makeAddr("hubBaseToken"));
+
+        // transfer from caliber needed first before a refund can occur
+        deal(address(baseToken), address(caliber), bridgeInputAmount, true);
+        vm.startPrank(address(caliber));
+        baseToken.approve(address(caliberMailbox), bridgeInputAmount);
+        caliberMailbox.manageTransfer(
+            address(baseToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeInputAmount)
+        );
+        vm.stopPrank();
+
+        vm.startPrank(address(bridgeAdapter));
+        baseToken.approve(address(caliberMailbox), bridgeOutputAmount);
+
+        vm.expectRevert(Errors.NotBaseToken.selector);
+        caliberMailbox.manageTransfer(
+            address(baseToken), bridgeOutputAmount, abi.encode(hubChainId, bridgeInputAmount, true)
+        );
     }
 
     function test_ManageTransfer_FromBridgeAdapter_NotRefund() public {

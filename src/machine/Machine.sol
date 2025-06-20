@@ -309,10 +309,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
             revert Errors.UnauthorizedCaller();
         }
 
-        if (!ICaliber($._hubCaliber).isBaseToken(token)) {
-            revert Errors.NotBaseToken();
-        }
-        IERC20(token).safeTransfer($._hubCaliber, amount);
+        IERC20(token).forceApprove($._hubCaliber, amount);
+        ICaliber($._hubCaliber).notifyIncomingTransfer(token, amount);
 
         emit TransferToCaliber($._hubChainId, token, amount);
 

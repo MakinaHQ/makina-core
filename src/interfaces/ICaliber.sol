@@ -7,6 +7,7 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event IncomingTransfer(address indexed token, uint256 amount);
     event InstrRootGuardianAdded(address indexed newGuardian);
     event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
@@ -253,6 +254,11 @@ interface ICaliber {
     /// @param amount The amount of tokens to transfer.
     /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
+
+    /// @notice Instructs the Caliber to pull the specified token amount from the calling hub machine endpoint.
+    /// @param token The address of the token being transferred.
+    /// @param amount The amount of tokens being transferred.
+    function notifyIncomingTransfer(address token, uint256 amount) external;
 
     /// @notice Sets the position accounting staleness threshold.
     /// @param newPositionStaleThreshold The new threshold in seconds.
