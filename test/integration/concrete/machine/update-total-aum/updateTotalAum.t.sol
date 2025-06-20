@@ -125,6 +125,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         );
 
         // simulate the caliber transfer being cancelled by error
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
@@ -498,6 +499,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             outputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn;
@@ -615,6 +617,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             caliberToMachineOutputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn = new bytes[](1);
@@ -665,6 +668,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             caliberToMachineOutputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn = new bytes[](1);

@@ -166,7 +166,7 @@ library MachineUtils {
 
         // Validate that update is not older than current chain last update, nor stale.
         if (
-            responseTimestamp < caliberData.timestamp
+            responseTimestamp <= caliberData.timestamp
                 || (block.timestamp > responseTimestamp && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
         ) {
             revert Errors.StaleData();

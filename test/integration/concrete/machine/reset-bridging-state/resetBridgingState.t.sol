@@ -225,6 +225,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.cancelOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
 
         // simulate the machine transfer being received and claimed by spoke caliber
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
@@ -250,6 +251,8 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.updateTotalAum();
 
         // simulate caliber notifying reset counters
+        skip(1);
+        blockTime = uint64(block.timestamp);
         queriedData.bridgesIn = new bytes[](0);
         perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
