@@ -768,20 +768,17 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 len = state.length;
         uint256[] memory amounts = new uint256[](len);
 
-        uint256 count;
-        for (uint256 i; i < len; ++i) {
+        uint256 i;
+        for (; i < len; ++i) {
             if (bytes32(state[i]) == ACCOUNTING_OUTPUT_STATE_END) {
                 break;
             }
             amounts[i] = uint256(bytes32(state[i]));
-            unchecked {
-                ++count;
-            }
         }
 
         // Resize the array to the actual number of values.
         assembly {
-            mstore(amounts, count)
+            mstore(amounts, i)
         }
 
         return amounts;
