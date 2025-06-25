@@ -302,12 +302,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode {
+    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
-
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
 
         IERC20(token).forceApprove($._hubCaliber, amount);
         ICaliber($._hubCaliber).notifyIncomingTransfer(token, amount);
@@ -326,12 +322,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         address token,
         uint256 amount,
         uint256 minOutputAmount
-    ) external override notRecoveryMode nonReentrant {
+    ) external override nonReentrant notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
-
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
 
         address outputToken = ITokenRegistry(IHubCoreRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
 
@@ -369,11 +361,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         external
         override
         notRecoveryMode
+        onlyMechanic
     {
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
-
         _sendOutBridgeTransfer(bridgeId, transferId, data);
     }
 
