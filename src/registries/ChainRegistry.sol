@@ -62,9 +62,21 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     /// @inheritdoc IChainRegistry
     function setChainIds(uint256 _evmChainId, uint16 _whChainId) external restricted {
         ChainRegistryStorage storage $ = _getChainRegistryStorage();
+
         if (_evmChainId == 0 || _whChainId == 0) {
             revert Errors.ZeroChainId();
         }
+
+        uint16 oldWh = $._evmToWhChainId[_evmChainId];
+        if (oldWh != 0) {
+            delete $._whToEvmChainId[oldWh];
+        }
+
+        uint256 oldEvm = $._whToEvmChainId[_whChainId];
+        if (oldEvm != 0) {
+            delete $._evmToWhChainId[oldEvm];
+        }
+
         $._evmToWhChainId[_evmChainId] = _whChainId;
         $._whToEvmChainId[_whChainId] = _evmChainId;
         emit ChainIdsRegistered(_evmChainId, _whChainId);

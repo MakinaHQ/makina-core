@@ -51,4 +51,48 @@ contract SetChainIds_Unit_Concrete_Test is ChainRegistry_Unit_Concrete_Test {
         assertEq(chainRegistry.evmToWhChainId(2), 2);
         assertEq(chainRegistry.whToEvmChainId(2), 2);
     }
+
+    function test_SetChainIds_ReassignWhChainId() public {
+        vm.startPrank(dao);
+
+        chainRegistry.setChainIds(1, 1);
+
+        vm.expectEmit(true, true, false, false, address(chainRegistry));
+        emit IChainRegistry.ChainIdsRegistered(1, 2);
+        chainRegistry.setChainIds(1, 2);
+
+        assertTrue(chainRegistry.isEvmChainIdRegistered(1));
+        assertTrue(chainRegistry.isWhChainIdRegistered(2));
+
+        assertFalse(chainRegistry.isEvmChainIdRegistered(2));
+        assertFalse(chainRegistry.isWhChainIdRegistered(1));
+
+        assertEq(chainRegistry.evmToWhChainId(1), 2);
+        assertEq(chainRegistry.whToEvmChainId(2), 1);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.WhChainIdNotRegistered.selector, 1));
+        chainRegistry.whToEvmChainId(1);
+    }
+
+    function test_SetChainIds_ReassignEvmChainId() public {
+        vm.startPrank(dao);
+
+        chainRegistry.setChainIds(1, 1);
+
+        vm.expectEmit(true, true, false, false, address(chainRegistry));
+        emit IChainRegistry.ChainIdsRegistered(2, 1);
+        chainRegistry.setChainIds(2, 1);
+
+        assertTrue(chainRegistry.isEvmChainIdRegistered(2));
+        assertTrue(chainRegistry.isWhChainIdRegistered(1));
+
+        assertFalse(chainRegistry.isEvmChainIdRegistered(1));
+        assertFalse(chainRegistry.isWhChainIdRegistered(2));
+
+        assertEq(chainRegistry.evmToWhChainId(2), 1);
+        assertEq(chainRegistry.whToEvmChainId(1), 2);
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 1));
+        chainRegistry.evmToWhChainId(1);
+    }
 }
