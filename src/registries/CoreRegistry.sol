@@ -100,10 +100,10 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
     }
 
     /// @inheritdoc ICoreRegistry
-    function setFlashLoanModule(address _newFlashLoanModule) external restricted {
+    function setFlashLoanModule(address _flashLoanModule) external restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit FlashLoanModuleChanged($._flashLoanModule, _newFlashLoanModule);
-        $._flashLoanModule = _newFlashLoanModule;
+        emit FlashLoanModuleChanged($._flashLoanModule, _flashLoanModule);
+        $._flashLoanModule = _flashLoanModule;
     }
 
     /// @inheritdoc ICoreRegistry

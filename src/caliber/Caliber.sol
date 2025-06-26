@@ -54,9 +54,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         bool _isManagingFlashloan;
         uint256 _cooldownDuration;
         uint256 _lastBTSwapTimestamp;
-        mapping(bytes32 => uint256) _lastExecutionTimestamp;
+        mapping(bytes32 executionHash => uint256 timestamp) _lastExecutionTimestamp;
         mapping(uint256 posId => Position pos) _positionById;
-        mapping(uint256 groupId => EnumerableSet.UintSet _positionIds) _positionIdGroups;
+        mapping(uint256 groupId => EnumerableSet.UintSet positionIds) _positionIdGroups;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
         EnumerableSet.AddressSet _instrRootGuardians;
