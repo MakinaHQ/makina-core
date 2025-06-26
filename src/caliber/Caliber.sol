@@ -390,7 +390,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
     /// @inheritdoc ICaliber
     function managePosition(Instruction calldata mgmtInstruction, Instruction calldata acctInstruction)
-        public
+        external
         override
         nonReentrant
         onlyOperator
