@@ -883,7 +883,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         for (i; i < state.length; ++i) {
             // If the bit is set as 1, hash the state value.
             if (bitmap & (0x80000000000000000000000000000000 >> i) != 0) {
-                hashInput = bytes.concat(hashInput, keccak256(abi.encodePacked(state[i])));
+                hashInput = bytes.concat(hashInput, keccak256(state[i]));
             }
         }
         return keccak256(hashInput);
