@@ -539,6 +539,69 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
+    function test_GroupedPositionInvalidation() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 1e18;
+
+        // create supply position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // create borrow position
+        deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, 0);
+    }
+
+    function test_NonGroupedPositionNoInvalidation() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 1e18;
+
+        // create vault position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // create supply position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
+
+        // create pool position
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
+        acctInstruction =
+            WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), false);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, block.timestamp);
+    }
+
     function test_ManagePosition_4626_Create() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 3e18;
         uint256 previewShares = vault.previewDeposit(inputAmount);

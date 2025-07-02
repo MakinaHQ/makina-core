@@ -343,7 +343,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 groupsLen = groupIds.length;
         uint256 instructionsLen = instructions.length;
 
-        // mark all positions in the given groups as stale
+        // mark all positions in the provided groups as stale
         for (uint256 i; i < groupsLen; ++i) {
             uint256 groupId = groupIds[i];
             if (groupId == 0) {
@@ -358,7 +358,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256[] memory values = new uint256[](instructionsLen);
         int256[] memory changes = new int256[](instructionsLen);
 
-        // run accounting instructions with adequate accounting mode
+        // run accounting instructions
         for (uint256 i; i < instructionsLen; ++i) {
             uint256 positionId = instructions[i].positionId;
             if (!$._positionIds.contains(positionId)) {
@@ -373,7 +373,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             (values[i], changes[i]) = _accountForPosition(instructions[i], true);
         }
 
-        // check that all positions in given groups were accounted for
+        // check that all positions in provided groups were accounted for
         for (uint256 i; i < groupsLen; ++i) {
             uint256 groupId = groupIds[i];
             uint256 groupLen = $._positionIdGroups[groupId].length();
@@ -666,7 +666,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
 
         (uint256 value, int256 change) = _accountForPosition(acctInstruction, false);
 
-        _invalidateGroupedPositions(acctInstruction.groupId);
+        if (acctInstruction.groupId != 0) {
+            _invalidateGroupedPositions(acctInstruction.groupId);
+        }
 
         uint256 affectedTokensValueAfter;
         for (uint256 i; i < atLen; ++i) {
@@ -744,7 +746,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         uint256 groupId = instruction.groupId;
         if (lastValue > 0 && currentValue == 0) {
             $._positionIds.remove(posId);
-            $._positionIdGroups[groupId].remove(posId);
+            if (groupId != 0) {
+                $._positionIdGroups[groupId].remove(posId);
+            }
             delete $._positionById[posId];
             emit PositionClosed(posId);
         } else if (currentValue > 0) {
@@ -753,7 +757,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
             if (lastValue == 0) {
                 pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
-                $._positionIdGroups[groupId].add(posId);
+                if (groupId != 0) {
+                    $._positionIdGroups[groupId].add(posId);
+                }
                 emit PositionCreated(posId, currentValue);
             } else {
                 emit PositionUpdated(posId, currentValue);
