@@ -10,7 +10,7 @@ interface ICaliberMailbox is IMachineEndpoint {
 
     /// @notice Accounting data of the caliber.
     /// @param netAum The net assets under management.
-    /// @param positions The list of positions of the caliber, each encoded as abi.encode(positionId, value).
+    /// @param positions The list of positions of the caliber, each encoded as abi.encode(positionId, value, isDebt).
     /// @param baseTokens The list of base tokens of the caliber, each encoded as abi.encode(token, value).
     /// @param bridgesIn The list of incoming bridge amounts, each encoded as abi.encode(token, amount).
     /// @param bridgesOut The list of outgoing bridge amounts, each encoded as abi.encode(token, amount).
