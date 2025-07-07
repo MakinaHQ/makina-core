@@ -3,6 +3,10 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ERC721HolderUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
+import {ERC1155HolderUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -22,7 +26,14 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgradeable, ICaliber {
+contract Caliber is
+    MakinaContext,
+    AccessManagedUpgradeable,
+    ReentrancyGuardUpgradeable,
+    ERC721HolderUpgradeable,
+    ERC1155HolderUpgradeable,
+    ICaliber
+{
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -96,6 +107,8 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuardUpgr
         _addBaseToken(_accountingToken);
 
         __ReentrancyGuard_init();
+        __ERC721Holder_init();
+        __ERC1155Holder_init();
     }
 
     modifier onlyOperator() {
