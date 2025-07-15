@@ -7,6 +7,7 @@ interface ICaliber {
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);
+    event IncomingTransfer(address indexed token, uint256 amount);
     event InstrRootGuardianAdded(address indexed newGuardian);
     event InstrRootGuardianRemoved(address indexed guardian);
     event MaxPositionDecreaseLossBpsChanged(
@@ -51,8 +52,10 @@ interface ICaliber {
     }
 
     /// @notice Instruction parameters.
-    /// @param positionId The ID of the position concerned.
+    /// @param positionId The ID of the involved position.
     /// @param isDebt Whether the position is a debt.
+    /// @param groupId The ID of the position accounting group.
+    ///        Set to 0 if the instruction is not of type ACCOUNTING, or if the involved position is ungrouped.
     /// @param instructionType The type of the instruction.
     /// @param affectedTokens The array of affected tokens.
     /// @param commands The array of commands.
@@ -62,6 +65,7 @@ interface ICaliber {
     struct Instruction {
         uint256 positionId;
         bool isDebt;
+        uint256 groupId;
         InstructionType instructionType;
         address[] affectedTokens;
         bytes32[] commands;
@@ -177,9 +181,16 @@ interface ICaliber {
     function accountForPosition(Instruction calldata instruction) external returns (uint256 value, int256 change);
 
     /// @notice Accounts for a batch of positions.
-    /// @dev Convenience function to account for multiple positions in a single transaction.
     /// @param instructions The array of accounting instructions.
-    function accountForPositionBatch(Instruction[] calldata instructions) external;
+    /// @param groupIds The array of position group IDs.
+    ///        An accounting instruction must be provided for every open position in each specified group.
+    ///        If an instruction's groupId corresponds to a group of open positions of size greater than 1,
+    ///        the group ID must be included in this array.
+    /// @return values The new position values.
+    /// @return changes The changes in the position values.
+    function accountForPositionBatch(Instruction[] calldata instructions, uint256[] calldata groupIds)
+        external
+        returns (uint256[] memory values, int256[] memory changes);
 
     /// @notice Manages a position's state through paired management and accounting instructions
     /// @dev Performs accounting updates and modifies contract storage by:
@@ -217,8 +228,11 @@ interface ICaliber {
     /// @dev Convenience function to manage multiple positions in a single transaction.
     /// @param mgmtInstructions The array of management instructions.
     /// @param acctInstructions The array of accounting instructions.
+    /// @return values The new position values.
+    /// @return changes The changes in the position values.
     function managePositionBatch(Instruction[] calldata mgmtInstructions, Instruction[] calldata acctInstructions)
-        external;
+        external
+        returns (uint256[] memory values, int256[] memory changes);
 
     /// @notice Manages flashLoan funds.
     /// @param instruction The flashLoan management instruction.
@@ -240,6 +254,11 @@ interface ICaliber {
     /// @param amount The amount of tokens to transfer.
     /// @param data ABI-encoded parameters required for bridge-related transfers. Ignored when called from a hub caliber.
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external;
+
+    /// @notice Instructs the Caliber to pull the specified token amount from the calling hub machine endpoint.
+    /// @param token The address of the token being transferred.
+    /// @param amount The amount of tokens being transferred.
+    function notifyIncomingTransfer(address token, uint256 amount) external;
 
     /// @notice Sets the position accounting staleness threshold.
     /// @param newPositionStaleThreshold The new threshold in seconds.

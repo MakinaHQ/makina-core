@@ -2,9 +2,9 @@ setChainIds.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
-   ├── when at least one of the chain ids are equal to zero
+   ├── when at least one of the chain ids is equal to zero
    │  └── it should revert with ZeroChainId
    └── when both of the chain ids are non-zero
       ├── it should associate both provided chain ids in contract storage
-      └── it should emit a ChainIdsRegistered event
-
+      ├── it should clean up any previous associations involving either chain ID
+      └── it should emit a TokenRegistered event

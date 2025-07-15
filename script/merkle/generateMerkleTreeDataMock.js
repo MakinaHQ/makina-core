@@ -16,8 +16,9 @@ import fs from "fs";
 //  mockPoolPosId
 //  mockFlashLoanModule
 //  mockLoopPosId
+//  lendingMarketPosGroupId
 
-// Instructions format: [commandsHash, stateHash, stateBitmap, positionId, isDebt, affectedTokensHash, instructionType]
+// Instructions format: [commandsHash, stateHash, stateBitmap, positionId, isDebt, groupId, affectedTokensHash, instructionType]
 
 const caliberAddr = process.argv[2];
 const mockAccountingTokenAddr = process.argv[3];
@@ -32,6 +33,7 @@ const mockPoolAddr = process.argv[11];
 const mockPoolPosId = process.argv[12];
 const mockFlashLoanModule = process.argv[13];
 const mockLoopPosId = process.argv[14];
+const lendingMarketPosGroupId = process.argv[15];
 
 const depositMock4626Instruction = [
   keccak256EncodePacked([
@@ -45,6 +47,7 @@ const depositMock4626Instruction = [
   "0xa0000000000000000000000000000000",
   mockERC4626PosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -60,6 +63,7 @@ const redeemMock4626Instruction = [
   "0x60000000000000000000000000000000",
   mockERC4626PosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -74,6 +78,7 @@ const accountingMock4626Instruction = [
   "0x20000000000000000000000000000000",
   mockERC4626PosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -87,6 +92,7 @@ const supplyMockSupplyModuleInstruction = [
   "0x80000000000000000000000000000000",
   mockSupplyModulePosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -99,6 +105,7 @@ const withdrawMockSupplyModuleInstruction = [
   "0x00000000000000000000000000000000",
   mockSupplyModulePosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -111,6 +118,7 @@ const accountingMockSupplyModuleInstruction = [
   "0x80000000000000000000000000000000",
   mockSupplyModulePosId,
   false,
+  lendingMarketPosGroupId,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -123,6 +131,7 @@ const borrowMockBorrowModuleInstruction = [
   "0x00000000000000000000000000000000",
   mockBorrowModulePosId,
   true,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -136,6 +145,7 @@ const repayMockBorrowModuleInstruction = [
   "0x80000000000000000000000000000000",
   mockBorrowModulePosId,
   true,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -148,6 +158,7 @@ const accountingMockBorrowModuleInstruction = [
   "0x80000000000000000000000000000000",
   mockBorrowModulePosId,
   true,
+  lendingMarketPosGroupId,
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -162,6 +173,7 @@ const addLiquidityMockPoolInstruction = [
   "0x80000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([
     ethers.zeroPadValue(mockAccountingTokenAddr, 32),
     ethers.zeroPadValue(mockBaseTokenAddr, 32),
@@ -181,6 +193,7 @@ const addLiquidityOneSide0MockPoolInstruction = [
   "0xa0000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
   "0",
 ];
@@ -197,6 +210,7 @@ const addLiquidityOneSide1MockPoolInstruction = [
   "0xa0000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -209,6 +223,7 @@ const removeLiquidityOneSide0MockPoolInstruction = [
   "0x40000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
   "0",
 ];
@@ -221,6 +236,7 @@ const removeLiquidityOneSide1MockPoolInstruction = [
   "0x40000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "0",
 ];
@@ -237,6 +253,7 @@ const accounting0MockPoolInstruction = [
   "0xa0000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockAccountingTokenAddr, 32)]),
   "1",
 ];
@@ -253,6 +270,7 @@ const accounting1MockPoolInstruction = [
   "0xa0000000000000000000000000000000",
   mockPoolPosId,
   false,
+  "0",
   keccak256EncodePacked([ethers.zeroPadValue(mockBaseTokenAddr, 32)]),
   "1",
 ];
@@ -265,18 +283,20 @@ const harvestMockBaseTokenInstruction = [
   "0x80000000000000000000000000000000",
   0,
   false,
+  "0",
   keccak256EncodePacked([]),
   "2",
 ];
 
 const dummyLoopMockFlashLoanModuleInstruction = [
   keccak256EncodePacked([
-    ethers.concat(["0x76ab19f101820001ffffffff", mockFlashLoanModule]),
+    ethers.concat(["0x6022f55101820001ffffffff", mockFlashLoanModule]),
   ]),
   getStateHash([]),
   "0x00000000000000000000000000000000",
   mockLoopPosId,
   false,
+  "0",
   keccak256EncodePacked([]),
   "0",
 ];
@@ -287,6 +307,7 @@ const accountingMockFlashLoanModuleInstruction = [
   "0x00000000000000000000000000000000",
   mockLoopPosId,
   false,
+  "0",
   keccak256EncodePacked([]),
   "1",
 ];
@@ -297,6 +318,7 @@ const dummyManageFlashLoanInstruction = [
   "0x00000000000000000000000000000000",
   mockLoopPosId,
   false,
+  "0",
   keccak256EncodePacked([]),
   "3",
 ];
@@ -330,6 +352,7 @@ const tree = StandardMerkleTree.of(values, [
   "uint128",
   "uint256",
   "bool",
+  "uint256",
   "bytes32",
   "uint256",
 ]);
@@ -368,5 +391,7 @@ function keccak256EncodePacked(list) {
 }
 
 function getStateHash(state) {
-  return state.length > 0 ? keccak256EncodePacked(state) : ethers.ZeroHash;
+  return state.length > 0
+    ? keccak256EncodePacked(state.map((value) => ethers.keccak256(value)))
+    : ethers.ZeroHash;
 }

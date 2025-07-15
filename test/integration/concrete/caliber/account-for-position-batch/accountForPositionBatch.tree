@@ -1,29 +1,41 @@
 accountForPositionBatch.t.sol
-├── given one of the IDs does not reference an existing position
-│  └── it should revert with PositionDoesNotExist
-└── given all IDs each reference an existing position
-   ├── when one of the instruction is not of the accounting type
-   │  └── it should revert with InvalidInstructionType
-   └── when all the instructions are of the accounting type
-      ├── when one of the instruction proofs is not valid against the merkle root set in the caliber
-      │  └── it should revert with InvalidInstructionProof
-      └── when all the instruction proofs are valid against the merkle root set in the caliber
-         ├── given one of the instruction execution fails
-         │  └── it should revert
-         └── given all the instruction executions succeed
-            ├── given one of the instructions does not output a valid state
-            │  └── it should revert with InvalidAccounting
-            └── given all the instructions output a valid state
-               ├── for each accounted position, given the new position value is zero
-               │  └── given the position value was previously positive
-               │     └── the position should be closed, i.e erased from storage
-               └── for each accounted position, given the new position value is positive
-                  ├── given the position was just created
-                  │  ├── the position ID should be stored in caliber
-                  │  ├── it should set position.lastAccountingTime to current block timestmap
-                  │  ├── it should set position.value to the computed position value converted to accounting token
-                  │  └── it should return the new value and the value change since last accounting
-                  └── given the position already existed
-                     ├── it should set position.lastAccountingTime to current block timestmap
-                     ├── it should set position.value to the computed position value converted to accounting token
-                     └── it should return the new value and the value change since last accounting
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── when one of the group IDs is zero
+   │  └── it should revert with ZeroGroupId
+   └── when none of the group IDs is zero
+      ├── given one of the position IDs does not reference an existing position
+      │  └── it should revert with PositionDoesNotExist
+      └── given all IDs each reference an existing position
+         ├── when one of the position group IDs references an existing group of size greater than one, and is not provided in the groupdIds list
+         │  └── it should revert with GroupIdNotProvided
+         └── when all position group IDs referencing an existing group of size greater than one are provided in the groupdIds list
+            ├── when one of the instruction is not of the accounting type
+            │  └── it should revert with InvalidInstructionType
+            └── when all the instructions are of the accounting type
+               ├── when one of the instruction proofs is not valid against the merkle root set in the caliber
+               │  └── it should revert with InvalidInstructionProof
+               └── when all the instruction proofs are valid against the merkle root set in the caliber
+                  ├── given one of the instruction execution fails
+                  │  └── it should revert
+                  └── given all the instruction executions succeed
+                     ├── given one of the instructions does not output a valid state
+                     │  └── it should revert with InvalidAccounting
+                     └── given all the instructions output a valid state
+                        ├── when there is a missing instruction for one of the provided groups
+                        │  └── it should revert with MissingInstructionForGroup
+                        └── when there is no missing instruction for one of the provided groups
+                           ├── for each accounted position, given the new position value is zero
+                           │  └── given the position value was previously positive
+                           │     └── the position should be closed, i.e erased from storage
+                           └── for each accounted position, given the new position value is positive
+                              ├── given the position was just created
+                              │  ├── the position ID should be stored in caliber
+                              │  ├── it should set position.lastAccountingTime to current block timestmap
+                              │  ├── it should set position.value to the computed position value converted to accounting token
+                              │  └── it should return the new value and the value change since last accounting
+                              └── given the position already existed
+                                 ├── it should set position.lastAccountingTime to current block timestmap
+                                 ├── it should set position.value to the computed position value converted to accounting token
+                                 └── it should return the new value and the value change since last accounting

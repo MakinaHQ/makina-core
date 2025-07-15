@@ -22,10 +22,9 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
     }
 
     function test_RevertWhen_TokenNotBaseToken() public {
-        address token = makeAddr("token");
         vm.expectRevert(Errors.NotBaseToken.selector);
         vm.prank(dao);
-        caliberMailbox.resetBridgingState(token);
+        caliberMailbox.resetBridgingState(address(baseToken));
     }
 
     function test_ResetBridgingState_CountersAlreadyNull() public {

@@ -52,12 +52,24 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     /// @inheritdoc ITokenRegistry
     function setToken(address _localToken, uint256 _foreignEvmChainId, address _foreignToken) external restricted {
         TokenRegistryStorage storage $ = _getTokenRegistryStorage();
+
         if (_localToken == address(0) || _foreignToken == address(0)) {
             revert Errors.ZeroTokenAddress();
         }
         if (_foreignEvmChainId == 0) {
             revert Errors.ZeroChainId();
         }
+
+        address oldForeignToken = $._localToForeignTokens[_localToken][_foreignEvmChainId];
+        if (oldForeignToken != address(0)) {
+            delete $._foreignToLocalTokens[oldForeignToken][_foreignEvmChainId];
+        }
+
+        address oldLocalToken = $._foreignToLocalTokens[_foreignToken][_foreignEvmChainId];
+        if (oldLocalToken != address(0)) {
+            delete $._localToForeignTokens[oldLocalToken][_foreignEvmChainId];
+        }
+
         $._localToForeignTokens[_localToken][_foreignEvmChainId] = _foreignToken;
         $._foreignToLocalTokens[_foreignToken][_foreignEvmChainId] = _localToken;
         emit TokenRegistered(_localToken, _foreignEvmChainId, _foreignToken);

@@ -88,22 +88,16 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
         uint256 len = $._bridgesIn.length();
         data.bridgesIn = new bytes[](len);
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address token, uint256 amount) = $._bridgesIn.at(i);
             data.bridgesIn[i] = abi.encode(token, amount);
-            unchecked {
-                ++i;
-            }
         }
 
         len = $._bridgesOut.length();
         data.bridgesOut = new bytes[](len);
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             (address token, uint256 amount) = $._bridgesOut.at(i);
             data.bridgesOut[i] = abi.encode(token, amount);
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -129,10 +123,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
 
             _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
         } else if (_isBridgeAdapter(msg.sender)) {
-            if (!ICaliber($._caliber).isBaseToken(token)) {
-                revert Errors.NotBaseToken();
-            }
-
             (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
 
             if (refund) {
@@ -143,7 +133,9 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 $._bridgesIn.set(token, exists ? bridgeIn + inputAmount : inputAmount);
             }
 
-            IERC20(token).safeTransferFrom(msg.sender, $._caliber, amount);
+            IERC20(token).safeTransferFrom(msg.sender, address(this), amount);
+            IERC20(token).forceApprove($._caliber, amount);
+            ICaliber($._caliber).notifyIncomingTransfer(token, amount);
         } else {
             revert Errors.UnauthorizedCaller();
         }
@@ -155,7 +147,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc IBridgeController
-    function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external notRecoveryMode onlyOperator {
+    function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external notRecoveryMode onlyMechanic {
         _authorizeInBridgeTransfer(bridgeId, messageHash);
     }
 
@@ -208,23 +200,19 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     function resetBridgingState(address token) external override restricted {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
-        if (!ICaliber($._caliber).isBaseToken(token)) {
-            revert Errors.NotBaseToken();
-        }
-
         $._bridgesIn.remove(token);
         $._bridgesOut.remove(token);
 
         BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
         uint256 len = $bc._supportedBridges.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
             IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
-            unchecked {
-                ++i;
-            }
         }
-        IERC20(token).safeTransfer($._caliber, IERC20(token).balanceOf(address(this)));
+
+        uint256 amount = IERC20(token).balanceOf(address(this));
+        IERC20(token).forceApprove($._caliber, amount);
+        ICaliber($._caliber).notifyIncomingTransfer(token, amount);
 
         emit BridgingStateReset(token);
     }

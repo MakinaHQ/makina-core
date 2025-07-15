@@ -39,6 +39,13 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         __AccessManaged_init(params.initialAuthority);
     }
 
+    modifier onlyMechanic() {
+        if (msg.sender != _getMakinaGovernableStorage()._mechanic) {
+            revert Errors.UnauthorizedCaller();
+        }
+        _;
+    }
+
     modifier onlyOperator() {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {

@@ -302,17 +302,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode {
+    function transferToHubCaliber(address token, uint256 amount) external override notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
 
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
-
-        if (!ICaliber($._hubCaliber).isBaseToken(token)) {
-            revert Errors.NotBaseToken();
-        }
-        IERC20(token).safeTransfer($._hubCaliber, amount);
+        IERC20(token).forceApprove($._hubCaliber, amount);
+        ICaliber($._hubCaliber).notifyIncomingTransfer(token, amount);
 
         emit TransferToCaliber($._hubChainId, token, amount);
 
@@ -328,12 +322,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         address token,
         uint256 amount,
         uint256 minOutputAmount
-    ) external override notRecoveryMode nonReentrant {
+    ) external override nonReentrant notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
-
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
 
         address outputToken = ITokenRegistry(IHubCoreRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
 
@@ -371,11 +361,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         external
         override
         notRecoveryMode
+        onlyMechanic
     {
-        if (msg.sender != mechanic()) {
-            revert Errors.UnauthorizedCaller();
-        }
-
         _sendOutBridgeTransfer(bridgeId, transferId, data);
     }
 
@@ -395,7 +382,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function updateTotalAum() public override nonReentrant notRecoveryMode returns (uint256) {
+    function updateTotalAum() external override nonReentrant notRecoveryMode returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry());
@@ -513,12 +500,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         if (len != adapters.length) {
             revert Errors.MismatchedLength();
         }
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);
-
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -599,27 +582,20 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     function resetBridgingState(address token) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
         uint256 len = $._foreignChainIds.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             SpokeCaliberData storage caliberData = $._spokeCalibersData[$._foreignChainIds[i]];
 
             caliberData.caliberBridgesIn.remove(token);
             caliberData.caliberBridgesOut.remove(token);
             caliberData.machineBridgesIn.remove(token);
             caliberData.machineBridgesOut.remove(token);
-
-            unchecked {
-                ++i;
-            }
         }
 
         BridgeControllerStorage storage $bc = _getBridgeControllerStorage();
         len = $bc._supportedBridges.length;
-        for (uint256 i; i < len;) {
+        for (uint256 i; i < len; ++i) {
             address bridgeAdapter = $bc._bridgeAdapters[$bc._supportedBridges[i]];
             IBridgeAdapter(bridgeAdapter).withdrawPendingFunds(token);
-            unchecked {
-                ++i;
-            }
         }
 
         _notifyIdleToken(token);

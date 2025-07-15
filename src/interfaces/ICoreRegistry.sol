@@ -50,8 +50,8 @@ interface ICoreRegistry {
     function setSwapModule(address _swapModule) external;
 
     /// @notice Sets the flashLoan module address.
-    /// @param newFlashLoanModule The flashLoan module address.
-    function setFlashLoanModule(address newFlashLoanModule) external;
+    /// @param _flashLoanModule The flashLoan module address.
+    function setFlashLoanModule(address _flashLoanModule) external;
 
     /// @notice Sets the caliber beacon address.
     /// @param _caliberBeacon The caliber beacon address.

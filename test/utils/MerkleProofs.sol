@@ -9,37 +9,41 @@ library MerkleProofs {
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
-    function _generateMerkleData(
-        address _caliber,
-        address _mockAccountingToken,
-        address _mockBaseToken,
-        address _mockVault,
-        uint256 _mockVaultPosId,
-        address _mockSupplyModule,
-        uint256 _mockSupplyModulePosId,
-        address _mockBorrowModule,
-        uint256 _mockBorrowModulePosId,
-        address _mockPool,
-        uint256 _mockPoolPosId,
-        address _mockFlashLoanModule,
-        uint256 _mockLoopPosId
-    ) internal {
-        string[] memory command = new string[](15);
+    struct MerkleTreeParams {
+        address caliber;
+        address mockAccountingToken;
+        address mockBaseToken;
+        address mockVault;
+        uint256 mockVaultPosId;
+        address mockSupplyModule;
+        uint256 mockSupplyModulePosId;
+        address mockBorrowModule;
+        uint256 mockBorrowModulePosId;
+        address mockPool;
+        uint256 mockPoolPosId;
+        address mockFlashLoanModule;
+        uint256 mockLoopPosId;
+        uint256 lendingMarketPosGroupId;
+    }
+
+    function _generateMerkleData(MerkleTreeParams memory params) internal {
+        string[] memory command = new string[](16);
         command[0] = "yarn";
         command[1] = "genMerkleDataMock";
-        command[2] = vm.toString(_caliber);
-        command[3] = vm.toString(_mockAccountingToken);
-        command[4] = vm.toString(_mockBaseToken);
-        command[5] = vm.toString(_mockVault);
-        command[6] = vm.toString(_mockVaultPosId);
-        command[7] = vm.toString(_mockSupplyModule);
-        command[8] = vm.toString(_mockSupplyModulePosId);
-        command[9] = vm.toString(_mockBorrowModule);
-        command[10] = vm.toString(_mockBorrowModulePosId);
-        command[11] = vm.toString(_mockPool);
-        command[12] = vm.toString(_mockPoolPosId);
-        command[13] = vm.toString(_mockFlashLoanModule);
-        command[14] = vm.toString(_mockLoopPosId);
+        command[2] = vm.toString(params.caliber);
+        command[3] = vm.toString(params.mockAccountingToken);
+        command[4] = vm.toString(params.mockBaseToken);
+        command[5] = vm.toString(params.mockVault);
+        command[6] = vm.toString(params.mockVaultPosId);
+        command[7] = vm.toString(params.mockSupplyModule);
+        command[8] = vm.toString(params.mockSupplyModulePosId);
+        command[9] = vm.toString(params.mockBorrowModule);
+        command[10] = vm.toString(params.mockBorrowModulePosId);
+        command[11] = vm.toString(params.mockPool);
+        command[12] = vm.toString(params.mockPoolPosId);
+        command[13] = vm.toString(params.mockFlashLoanModule);
+        command[14] = vm.toString(params.mockLoopPosId);
+        command[15] = vm.toString(params.lendingMarketPosGroupId);
         vm.ffi(command);
     }
 

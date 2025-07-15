@@ -51,7 +51,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position in caliber
@@ -125,6 +125,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         );
 
         // simulate the caliber transfer being cancelled by error
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
@@ -248,7 +249,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -268,7 +269,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -326,7 +327,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -498,6 +499,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             outputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn;
@@ -615,6 +617,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             caliberToMachineOutputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn = new bytes[](1);
@@ -665,6 +668,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             caliberToMachineOutputAmount
         );
 
+        skip(1);
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
         bytes[] memory bridgesIn = new bytes[](1);

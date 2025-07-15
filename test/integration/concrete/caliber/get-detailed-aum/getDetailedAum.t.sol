@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
+
+import {MockERC20} from "test/mocks/MockERC20.sol";
 import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
@@ -27,6 +29,23 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
 
         vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, VAULT_POS_ID));
         caliber.getDetailedAum();
+    }
+
+    function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
+        uint256 supplyInputAmount = 1e18;
+        deal(address(baseToken), address(caliber), supplyInputAmount, true);
+        ICaliber.Instruction memory supplyMgmtInstruction = WeirollUtils._buildMockSupplyModuleSupplyInstruction(
+            SUPPLY_POS_ID, address(supplyModule), supplyInputAmount
+        );
+        ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+
+        baseToken.scheduleReenter(MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.getDetailedAum, ()));
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
     }
 
     function test_GetDetailedAum_WithZeroAum() public view {
@@ -78,7 +97,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         vm.prank(mechanic);
@@ -100,7 +119,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // open debt position in caliber
@@ -145,7 +164,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory borrowMgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), bInputAmount);
         ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
         vm.prank(mechanic);
         caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
@@ -154,10 +173,17 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory supplyMgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
         ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
         vm.prank(mechanic);
         caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
+
+        ICaliber.Instruction[] memory batch = new ICaliber.Instruction[](2);
+        batch[0] = supplyAcctInstruction;
+        batch[1] = borrowAcctInstruction;
+        uint256[] memory groupIds = new uint256[](1);
+        groupIds[0] = LENDING_MARKET_POS_GROUP_ID;
+        caliber.accountForPositionBatch(batch, groupIds);
 
         // check that AUM reflects all positions
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
@@ -172,8 +198,8 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // double borrowModule rate
         borrowModule.setRateBps(2 * 10_000);
 
-        (, int256 change) = caliber.accountForPosition(borrowAcctInstruction);
-        expectedNetAUM -= uint256(change);
+        caliber.accountForPositionBatch(batch, groupIds);
+        expectedNetAUM -= bInputAmount * PRICE_B_A;
 
         (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, expectedNetAUM);
@@ -187,7 +213,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         // increase borrowModule rate
         borrowModule.setRateBps(1e2 * 10_000);
 
-        caliber.accountForPosition(borrowAcctInstruction);
+        caliber.accountForPositionBatch(batch, groupIds);
         expectedNetAUM = 0;
 
         (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();

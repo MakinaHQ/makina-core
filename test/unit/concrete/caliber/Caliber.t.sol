@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
@@ -36,6 +40,22 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
+    }
+
+    function test_IERC721Receiver() public {
+        assertEq(caliber.onERC721Received(address(0), address(0), 0, ""), IERC721Receiver.onERC721Received.selector);
+    }
+
+    function test_IERC1155Receiver() public {
+        assertEq(
+            caliber.onERC1155Received(address(0), address(0), 0, 0, ""), IERC1155Receiver.onERC1155Received.selector
+        );
+        assertEq(
+            caliber.onERC1155BatchReceived(address(0), address(0), new uint256[](0), new uint256[](0), ""),
+            IERC1155Receiver.onERC1155BatchReceived.selector
+        );
+        assertTrue(caliber.supportsInterface(type(IERC1155Receiver).interfaceId));
+        assertTrue(caliber.supportsInterface(type(IERC165).interfaceId));
     }
 
     function test_SetPositionStaleThreshold_RevertWhen_CallerNotRMT() public {

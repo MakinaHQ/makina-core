@@ -15,14 +15,13 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
     }
 
     function test_RevertGiven_PositionStale() public withTokenAsBT(address(baseToken)) {
-        // create a supply position
+        // create a vault position
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
-        );
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -32,7 +31,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
 
         skip(1);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, SUPPLY_POS_ID));
+        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, VAULT_POS_ID));
         caliberMailbox.getSpokeCaliberAccountingData();
     }
 
@@ -43,13 +42,12 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         // increase accounting token position
         deal(address(accountingToken), address(caliber), aInputAmount, true);
 
-        // create supply position
+        // create vault position
         deal(address(baseToken), address(caliber), bInputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
-        );
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), bInputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -60,7 +58,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.bridgesOut.length, 0);
         assertEq(data.positions.length, 1);
         assertEq(data.baseTokens.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);
+        _checkEncodedCaliberPosValue(data.positions[0], VAULT_POS_ID, PRICE_B_A * bInputAmount, false);
         _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
         _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
 
@@ -75,7 +73,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.bridgesOut.length, 0);
         assertEq(data.positions.length, 1);
         assertEq(data.baseTokens.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], SUPPLY_POS_ID, PRICE_B_A * bInputAmount, false);
+        _checkEncodedCaliberPosValue(data.positions[0], VAULT_POS_ID, PRICE_B_A * bInputAmount, false);
         _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
         _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
     }

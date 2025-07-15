@@ -134,11 +134,19 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
+        // use wrong groupId
+        mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        mgmtInstruction.groupId = LENDING_MARKET_POS_GROUP_ID;
+        acctInstruction.isDebt = false;
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
         // use wrong affected tokens list
         mgmtInstruction =
             WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.affectedTokens[0] = address(0);
-        acctInstruction.isDebt = false;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
@@ -325,7 +333,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -350,7 +358,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -381,7 +389,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // try create position
@@ -402,7 +410,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // try create position
@@ -420,7 +428,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -454,7 +462,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         vm.prank(mechanic);
@@ -486,7 +494,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -513,7 +521,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -529,6 +537,69 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         // try increase position
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_GroupedPositionInvalidation() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 1e18;
+
+        // create supply position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // create borrow position
+        deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, 0);
+    }
+
+    function test_NonGroupedPositionNoInvalidation() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 1e18;
+
+        // create vault position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // create supply position
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
+
+        // create pool position
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+        mgmtInstruction =
+            WeirollUtils._buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
+        acctInstruction =
+            WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), false);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        assertEq(caliber.getPosition(VAULT_POS_ID).lastAccountingTime, block.timestamp);
+        assertEq(caliber.getPosition(SUPPLY_POS_ID).lastAccountingTime, block.timestamp);
     }
 
     function test_ManagePosition_4626_Create() public withTokenAsBT(address(baseToken)) {
@@ -567,7 +638,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         uint256 expectedPosValue = inputAmount * PRICE_B_A;
@@ -595,7 +666,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         uint256 expectedPosValue = inputAmount * PRICE_B_A;
@@ -694,7 +765,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -730,7 +801,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -807,7 +878,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -846,7 +917,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -917,7 +988,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -949,7 +1020,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -1063,7 +1134,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -1084,7 +1155,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position
@@ -1105,7 +1176,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -1136,7 +1207,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -1176,7 +1247,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         vm.prank(mechanic);
@@ -1214,7 +1285,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, address(supplyModule)
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
         // create position
@@ -1245,7 +1316,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         ICaliber.Instruction memory mgmtInstruction =
             WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, address(borrowModule)
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
         // create position

@@ -31,7 +31,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         address accountingToken,
         string memory tokenName,
         string memory tokenSymbol
-    ) external returns (address);
+    ) external returns (address preDepositVault);
 
     /// @notice Deploys a new Machine instance and migrates an existing PreDepositVault instance to it.
     /// @param mParams The machine initialization parameters.

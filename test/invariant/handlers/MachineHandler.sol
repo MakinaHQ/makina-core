@@ -336,6 +336,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
             spokeCaliberMailbox.getSpokeCaliberAccountingData();
 
+        skip(1);
         PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
             whChainId,
             uint64(block.number),

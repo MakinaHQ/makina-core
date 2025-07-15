@@ -68,6 +68,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -107,6 +108,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -161,6 +163,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
             commands,
@@ -207,6 +210,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -244,6 +248,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -253,11 +258,12 @@ library WeirollUtils {
         );
     }
 
-    function _buildMockSupplyModuleAccountingInstruction(address _caliber, uint256 _posId, address _supplyModule)
-        internal
-        view
-        returns (ICaliber.Instruction memory)
-    {
+    function _buildMockSupplyModuleAccountingInstruction(
+        address _caliber,
+        uint256 _posId,
+        uint256 _groupId,
+        address _supplyModule
+    ) internal view returns (ICaliber.Instruction memory) {
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = MockSupplyModule(_supplyModule).asset();
 
@@ -282,6 +288,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            _groupId,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
             commands,
@@ -317,7 +324,15 @@ library WeirollUtils {
         uint128 stateBitmap = 0x00000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, true, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            true,
+            0,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -356,15 +371,24 @@ library WeirollUtils {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, true, ICaliber.InstructionType.MANAGEMENT, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            true,
+            0,
+            ICaliber.InstructionType.MANAGEMENT,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
-    function _buildMockBorrowModuleAccountingInstruction(address _caliber, uint256 _posId, address _borrowModule)
-        internal
-        view
-        returns (ICaliber.Instruction memory)
-    {
+    function _buildMockBorrowModuleAccountingInstruction(
+        address _caliber,
+        uint256 _posId,
+        uint256 _groupId,
+        address _borrowModule
+    ) internal view returns (ICaliber.Instruction memory) {
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = MockBorrowModule(_borrowModule).asset();
 
@@ -387,7 +411,15 @@ library WeirollUtils {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            _posId, true, ICaliber.InstructionType.ACCOUNTING, affectedTokens, commands, state, stateBitmap, merkleProof
+            _posId,
+            true,
+            _groupId,
+            ICaliber.InstructionType.ACCOUNTING,
+            affectedTokens,
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -438,6 +470,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -489,6 +522,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -531,6 +565,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
             commands,
@@ -581,6 +616,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
             commands,
@@ -614,7 +650,7 @@ library WeirollUtils {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            0, false, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
+            0, false, 0, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
         );
     }
 
@@ -626,7 +662,7 @@ library WeirollUtils {
         ICaliber.Instruction memory _manageFlashloanInstruction
     ) internal view returns (ICaliber.Instruction memory) {
         bytes32[] memory commands = new bytes32[](1);
-        // "0x76ab19f141820001ffffffff" + _flashLoanModule
+        // "0x6022f55101820001ffffffff" + _flashLoanModule
         commands[0] = buildCommand(
             MockFlashLoanModule.flashLoan.selector,
             0x01, // call with extended flag
@@ -641,6 +677,7 @@ library WeirollUtils {
         state[2] = abi.encode(
             _manageFlashloanInstruction.positionId,
             _manageFlashloanInstruction.isDebt,
+            _manageFlashloanInstruction.groupId,
             _manageFlashloanInstruction.instructionType,
             _manageFlashloanInstruction.affectedTokens,
             _manageFlashloanInstruction.commands,
@@ -652,7 +689,7 @@ library WeirollUtils {
         bytes32[] memory merkleProof = MerkleProofs._getDummyLoopMockFlashLoanModuleInstrProof();
 
         return ICaliber.Instruction(
-            _posId, false, ICaliber.InstructionType.MANAGEMENT, new address[](0), commands, state, 0, merkleProof
+            _posId, false, 0, ICaliber.InstructionType.MANAGEMENT, new address[](0), commands, state, 0, merkleProof
         );
     }
 
@@ -669,6 +706,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.ACCOUNTING,
             new address[](0),
             new bytes32[](0),
@@ -688,6 +726,7 @@ library WeirollUtils {
         return ICaliber.Instruction(
             _posId,
             false,
+            0,
             ICaliber.InstructionType.FLASHLOAN_MANAGEMENT,
             new address[](0),
             new bytes32[](0),

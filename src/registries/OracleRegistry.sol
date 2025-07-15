@@ -20,7 +20,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.OracleRegistry")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant OracleRegistryStorageLocation =
-        0x1fbdc0014f4c06b2b0ff2477b8b323f2857bce3cafc75fb45bc5110cee080300;
+        0x49c7e86ce354ebbf25fac336f41752d815bcb13797a06a09b85fd6c0c68ea000;
 
     function _getOracleRegistryStorage() private pure returns (OracleRegistryStorage storage $) {
         assembly {

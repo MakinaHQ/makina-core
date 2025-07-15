@@ -288,12 +288,9 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function setWhitelistedUsers(address[] calldata users, bool whitelisted) external override restricted notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         uint256 len = users.length;
-        for (uint256 i = 0; i < len;) {
+        for (uint256 i = 0; i < len; ++i) {
             $._isWhitelistedUser[users[i]] = whitelisted;
             emit UserWhitelistingChanged(users[i], whitelisted);
-            unchecked {
-                ++i;
-            }
         }
     }
 

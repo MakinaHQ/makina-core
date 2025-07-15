@@ -234,8 +234,8 @@ interface IMachine is IMachineEndpoint {
     /// @param newCaliberStaleThreshold The new threshold in seconds.
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external;
 
-    /// @notice Sets the maximum fee accrual rate in basis points.
-    /// @param newMaxFeeAccrualRate The new maximum fee accrual rate in basis points.
+    /// @notice Sets the maximum fee accrual rate.
+    /// @param newMaxFeeAccrualRate The new maximum fee accrual rate in wei per second.
     function setMaxFeeAccrualRate(uint256 newMaxFeeAccrualRate) external;
 
     /// @notice Sets the minimum time to be elapsed between two fee minting events.
