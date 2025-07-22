@@ -89,7 +89,8 @@ abstract contract Base_Hub_Test is Base_Test {
         preDepositVaultBeacon = deployment.preDepositVaultBeacon;
 
         setupHubCoreRegistry(deployment);
-        setupAccessManager(accessManager, dao);
+        setupHubCoreAMFunctionRoles(deployment);
+        setupAccessManagerRoles(accessManager, dao, deployer);
     }
 
     function _wormholeSetup() public {
@@ -158,7 +159,8 @@ abstract contract Base_Spoke_Test is Base_Test {
         caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
         setupSpokeCoreRegistry(deployment);
-        setupAccessManager(accessManager, dao);
+        setupSpokeCoreAMFunctionRoles(deployment);
+        setupAccessManagerRoles(accessManager, dao, deployer);
     }
 
     function _deployCaliber(address _hubMachine, address _accountingToken, bytes32 _allowedInstrMerkleRoot)

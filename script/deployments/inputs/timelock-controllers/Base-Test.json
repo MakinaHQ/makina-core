@@ -1,0 +1,6 @@
+{
+  "initialAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "initialExecutors": ["0xad60446470333ad23bececceda26071bb245ef6f"],
+  "initialMinDelay": 300,
+  "initialProposers": ["0xad60446470333ad23bececceda26071bb245ef6f"]
+}

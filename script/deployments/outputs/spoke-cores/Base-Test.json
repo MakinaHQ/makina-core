@@ -1,5 +1,8 @@
 {
   "AccessManager": "0x90193C961A926261B756D1E5bb255e67ff9498A1",
+  "BridgeAdapterBeacons": {
+    "1": "0x29C66C9208f106f34754814f488FA80b6d566790"
+  },
   "CaliberBeacon": "0x4C52a6277b1B84121b3072C0c92b6Be0b7CC10F1",
   "CaliberMailboxBeacon": "0x0c8b5822b6e02CDa722174F19A1439A7495a3fA6",
   "OracleRegistry": "0xBb2180ebd78ce97360503434eD37fcf4a1Df61c3",

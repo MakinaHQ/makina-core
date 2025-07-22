@@ -36,4 +36,11 @@ contract SortedParams {
         address initialRiskManagerTimelock;
         address initialSecurityCouncil;
     }
+
+    struct TimelockControllerInitParamsSorted {
+        address initialAdmin;
+        address[] initialExecutors;
+        uint256 initialMinDelay;
+        address[] initialProposers;
+    }
 }

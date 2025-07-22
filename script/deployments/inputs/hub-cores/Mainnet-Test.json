@@ -1,7 +1,5 @@
 {
   "dao": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "governor": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "securityCouncil": "0xad60446470333ad23bececceda26071bb245ef6f",
   "wormhole": "0x98f3c9e6E3fAce36bAAd05FE09d375Ef1464288B",
   "flashLoanModule": "0x0000000000000000000000000000000000000000",
   "supportedChains": [1, 8453],
@@ -54,6 +52,14 @@
       "swapperId": 1,
       "approvalTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559",
       "executionTarget": "0xCf5540fFFCdC3d510B18bFcA6d2b9987b0772559"
+    }
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 1,
+      "approvalTarget": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5",
+      "executionTarget": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5",
+      "receiveSource": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5"
     }
   ]
 }

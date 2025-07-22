@@ -14,7 +14,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### HubCoreRegistry
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set address of OracleRegistry.
   - Can set address of TokenRegistry.
   - Can set address of ChainRegistry.
@@ -28,7 +28,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### SpokeCoreRegistry
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set address of OracleRegistry.
   - Can set address of TokenRegistry.
   - Can set address of SwapModule.
@@ -40,55 +40,53 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### OracleRegistry
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set token price feed route.
   - Can set feeds staleness threshold.
 
 ### ChainRegistry
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set mappings of EVM and WH chains IDs.
 
 ### TokenRegistry
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set mappings of local and foreign token addresses.
 
 ### HubCoreFactory
 
-- `DEPLOYER_ROLE` (roleId `2`)
+- `STRATEGY_DEPLOYER_ROLE` (roleId `1`)
   - Can deploy machine shares.
   - Can deploy pre-deposit vaults.
-  - Can deploy machines and calibers
+  - Can deploy machines and calibers.
 
 ### SpokeCoreFactory
 
-- `DEPLOYER_ROLE` (roleId `2`)
+- `STRATEGY_DEPLOYER_ROLE` (roleId `1`)
   - Can deploy calibers.
 
 ### SwapModule
 
-- `MAINTAINER_ROLE` (roleId `3`)
+- `INFRA_CONFIG_ROLE` (roleId `3`)
   - Can set approval and execution targets for a given swapper ID.
 
 ### Machine
 
-- `MAKINA_ADMIN_ROLE` (roleId `1`)
+- `STRATEGY_CONFIG_ROLE` (roleId `2`)
 
+  - Can set the address of a Spoke caliber mailbox.
+  - Can create a bridge adapter.
+  - Can reset bridging state.
+  - Can set the address of a Spoke bridge adapter.
+  - Can set the address of the depositor contract.
+  - Can set the address of the redeemer contract.
+  - Can set the address of the fee manager contract.
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
   - Can reset the bridging state for any token.
-
-- `MAINTAINER_ROLE` (roleId `3`)
-
-  - Can set the address of a Spoke caliber mailbox.
-  - Can create a bridge adapter.
-  - Can set the address of a Spoke bridge adapter.
-  - Can set the address of the depositor contract.
-  - Can set the address of the redeemer contract.
-  - Can set the address of the fee manager contract.
 
 - **Security Council**
 
@@ -118,17 +116,15 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### Caliber Mailbox
 
-- `MAKINA_ADMIN_ROLE` (roleId `1`)
+- `STRATEGY_CONFIG_ROLE` (roleId `2`)
 
+  - Can create a bridge adapter.
+  - Can reset bridging state.
+  - Can set the address of a Hub bridge adapter.
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
-
-- `MAINTAINER_ROLE` (roleId `3`)
-
-  - Can create a bridge adapter.
-  - Can set the address of a Hub bridge adapter.
 
 - **Security Council**
 
@@ -151,7 +147,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### Caliber
 
-- `MAKINA_ADMIN_ROLE` (roleId `1`)
+- `STRATEGY_CONFIG_ROLE` (roleId `2`)
 
   - Can add and remove Merkle root guardians.
 
