@@ -12,7 +12,7 @@ handleV3AcrossMessage.t.sol
          │  └── it should revert with InvalidOutputToken
          └── given the message contains a valid output token address
             ├── given the adapter received some amount of output token smaller than expected
-            │  └── it should revert with InsufficientOutputAmount
+            │  └── it should revert with MaxValueLossExceeded
             └── given the message received an amount of output token not smaller than expected
                ├── given the input amount specified in the message is smaller than received amount
                │  └── it should revert with InvalidInputAmount

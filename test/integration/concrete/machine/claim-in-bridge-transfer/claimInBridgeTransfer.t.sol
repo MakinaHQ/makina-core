@@ -33,7 +33,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
         inputAmount = 1e18;
 
-        outputAmount = 9e17;
+        outputAmount = 999e15;
 
         // authorize the transfer on recipient side
         transferId = bridgeAdapter.nextOutTransferId();

@@ -23,7 +23,6 @@ library Errors {
     error GroupIdNotProvided();
     error InstructionsMismatch();
     error InsufficientBalance();
-    error InsufficientOutputAmount();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidChainId();
