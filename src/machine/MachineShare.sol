@@ -26,7 +26,10 @@ contract MachineShare is ERC20, Ownable2Step, IMachineShare {
         _mint(to, amount);
     }
 
-    function burn(address from, uint256 amount) external onlyOwner {
+    function burn(address from, uint256 amount) external {
+        if (from != msg.sender) {
+            _checkOwner();
+        }
         _burn(from, amount);
     }
 }

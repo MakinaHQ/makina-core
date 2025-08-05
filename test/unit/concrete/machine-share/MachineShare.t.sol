@@ -9,7 +9,7 @@ import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     IMachineShare internal shareToken;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();
 
         shareToken = IMachineShare(machine.shareToken());
