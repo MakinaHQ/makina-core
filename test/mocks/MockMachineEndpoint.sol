@@ -11,6 +11,8 @@ import {IMachineEndpoint} from "../../src/interfaces/IMachineEndpoint.sol";
 contract MockMachineEndpoint is IMachineEndpoint {
     using SafeERC20 for IERC20;
 
+    mapping(uint16 bridgeId => uint256 maxBridgeLossBps) private _maxBridgeLossBps;
+
     event ManageTransfer(address token, uint256 amount, bytes data);
     event OutBridgeTransferSent(uint16 bridgeId, uint256 transferId, bytes data);
     event InBridgeTransferAuthorized(uint16 bridgeId, bytes32 messageHash);
@@ -61,8 +63,8 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return false;
     }
 
-    function getMaxBridgeLossBps(uint16) external pure returns (uint256) {
-        return 0;
+    function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256) {
+        return _maxBridgeLossBps[bridgeId];
     }
 
     function isOutTransferEnabled(uint16) external pure returns (bool) {
@@ -77,8 +79,8 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return address(0);
     }
 
-    function setMaxBridgeLossBps(uint16, uint256) external pure {
-        return;
+    function setMaxBridgeLossBps(uint16 bridgeId, uint256 newMaxBridgeLossBps) external {
+        _maxBridgeLossBps[bridgeId] = newMaxBridgeLossBps;
     }
 
     function setOutTransferEnabled(uint16, bool) external pure {
