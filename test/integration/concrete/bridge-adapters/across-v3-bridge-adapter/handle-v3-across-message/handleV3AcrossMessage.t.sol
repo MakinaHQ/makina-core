@@ -57,7 +57,8 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(token1), 0, address(0), encodedMessage);
     }
 
-    function testRevertWhen_InsufficientOutputAmount() public {
+    function test_RevertWhen_MaxValueLossExceeded() public {
+        // case 1: received amount is smaller than message's minOutputAmount
         bytes memory encodedMessage = abi.encode(
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 1)
         );
@@ -65,7 +66,19 @@ contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test i
         vm.prank(address(bridgeController1));
         acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
 
-        vm.expectRevert(Errors.InsufficientOutputAmount.selector);
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
+        vm.prank(address(acrossV3SpokePool));
+        acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
+
+        // case 2: delta between received amount and message's inputAmount is exceeds max bridge loss
+        encodedMessage = abi.encode(
+            IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 1e18, address(0), 0)
+        );
+
+        vm.prank(address(bridgeController1));
+        acrossV3BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
+
+        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
         vm.prank(address(acrossV3SpokePool));
         acrossV3BridgeAdapter1.handleV3AcrossMessage(address(0), 0, address(0), encodedMessage);
     }

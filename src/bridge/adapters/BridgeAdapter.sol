@@ -8,6 +8,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
+import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
 import {Errors} from "../../libraries/Errors.sol";
 
@@ -246,8 +247,13 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         if (receivedToken != message.outputToken) {
             revert Errors.InvalidOutputToken();
         }
-        if (receivedAmount < message.minOutputAmount) {
-            revert Errors.InsufficientOutputAmount();
+
+        uint256 _maxBridgeLossBps = IBridgeController($._controller).getMaxBridgeLossBps($._bridgeId);
+        if (
+            receivedAmount < message.minOutputAmount
+                || receivedAmount < message.inputAmount.mulDiv(MAX_BPS - _maxBridgeLossBps, MAX_BPS)
+        ) {
+            revert Errors.MaxValueLossExceeded();
         }
         if (message.inputAmount < receivedAmount) {
             revert Errors.InvalidInputAmount();

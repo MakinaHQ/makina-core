@@ -18,19 +18,19 @@ interface IBridgeController {
     /// @notice Bridge ID => Address of the associated bridge adapter.
     function getBridgeAdapter(uint16 bridgeId) external view returns (address);
 
-    /// @notice Bridge ID => Max allowed value loss in basis points for an outgoing transfer.
+    /// @notice Bridge ID => Max allowed value loss in basis points for transfers via this bridge.
     function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256);
 
     /// @notice Deploys a new BridgeAdapter instance.
     /// @param bridgeId The ID of the bridge.
-    /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for outgoing transfers via this bridge.
+    /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for transfers via this bridge.
     /// @param initData The optional initialization data for the bridge adapter.
     /// @return The address of the deployed BridgeAdapter.
     function createBridgeAdapter(uint16 bridgeId, uint256 initialMaxBridgeLossBps, bytes calldata initData)
         external
         returns (address);
 
-    /// @notice Sets the maximum allowed value loss in basis points for a bridge.
+    /// @notice Sets the maximum allowed value loss in basis points for transfers via this bridge.
     /// @param bridgeId The ID of the bridge.
     /// @param maxBridgeLossBps The maximum allowed value loss in basis points.
     function setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) external;
