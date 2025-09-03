@@ -3,12 +3,16 @@ pragma solidity 0.8.28;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
+import {Create3Factory} from "./Create3Factory.sol";
 import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-abstract contract CaliberFactory is MakinaContext, ICaliberFactory {
+abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFactory {
+    // keccak256("makina.salt.Caliber")
+    bytes32 private constant CaliberSaltDomain = 0x53f0f8ad4fe517b9d8040b0fb31dfde7b5d276d4ebc6abb801ed7f52ea0563a8;
+
     /// @custom:storage-location erc7201:makina.storage.CaliberFactory
     struct CaliberFactoryStorage {
         mapping(address caliber => bool isCaliber) _isCaliber;
@@ -29,18 +33,19 @@ abstract contract CaliberFactory is MakinaContext, ICaliberFactory {
         return _getCaliberFactoryStorage()._isCaliber[adapter];
     }
 
-    /// @dev Internal logic for caliber deployment.
+    /// @dev Internal logic for caliber deployment via create3.
     function _createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         address accountingToken,
-        address machineEndpoint
+        address machineEndpoint,
+        bytes32 salt
     ) internal returns (address) {
-        address caliber = address(
-            new BeaconProxy(
-                ICoreRegistry(registry).caliberBeacon(),
-                abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, machineEndpoint))
-            )
-        );
+        address beacon = ICoreRegistry(registry).caliberBeacon();
+
+        bytes memory initCD = abi.encodeCall(ICaliber.initialize, (cParams, accountingToken, machineEndpoint));
+        bytes memory bytecode = abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, initCD));
+
+        address caliber = _create3(CaliberSaltDomain, salt, bytecode);
 
         _getCaliberFactoryStorage()._isCaliber[caliber] = true;
 

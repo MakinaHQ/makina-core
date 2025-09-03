@@ -47,6 +47,7 @@ contract DeploySpokeCaliber is Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
+        bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
 
         ISpokeCoreFactory spokeCoreFactory =
             ISpokeCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".SpokeCoreFactory"), (address)));
@@ -71,7 +72,8 @@ contract DeploySpokeCaliber is Script, SortedParams {
                 mgParams.initialAuthority
             ),
             accountingToken,
-            hubMachine
+            hubMachine,
+            salt
         );
         vm.stopBroadcast();
 

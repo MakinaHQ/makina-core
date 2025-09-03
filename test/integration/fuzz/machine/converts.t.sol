@@ -30,7 +30,7 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
             address(accountingToken), address(aPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
 
-        (machine,) = _deployMachine(address(accountingToken), bytes32(0));
+        (machine,) = _deployMachine(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
         shareToken = MachineShare(machine.shareToken());
     }
 

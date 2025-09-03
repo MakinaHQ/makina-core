@@ -23,6 +23,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
     struct HubCoreFactoryStorage {
         mapping(address preDepositVault => bool isPreDepositVault) _isPreDepositVault;
         mapping(address machine => bool isMachine) _isMachine;
+        mapping(address machine => bytes32 salt) _instanceSalts;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.HubCoreFactory")) - 1)) & ~bytes32(uint256(0xff))
@@ -81,7 +82,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        address preDepositVault
+        address preDepositVault,
+        bytes32 salt
     ) external override restricted returns (address) {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
@@ -92,13 +94,14 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         address shareToken = IPreDepositVault(preDepositVault).shareToken();
 
         address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, accountingToken, machine);
+        address caliber = _createCaliber(cParams, accountingToken, machine, salt);
 
         IPreDepositVault(preDepositVault).setPendingMachine(machine);
 
         IMachine(machine).initialize(mParams, mgParams, preDepositVault, shareToken, accountingToken, caliber);
 
         $._isMachine[machine] = true;
+        $._instanceSalts[machine] = salt;
 
         emit MachineCreated(machine, shareToken);
 
@@ -112,19 +115,21 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address accountingToken,
         string memory tokenName,
-        string memory tokenSymbol
+        string memory tokenSymbol,
+        bytes32 salt
     ) external override restricted returns (address) {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
         address token = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, accountingToken, machine);
+        address caliber = _createCaliber(cParams, accountingToken, machine, salt);
 
         IOwnable2Step(token).transferOwnership(machine);
 
         IMachine(machine).initialize(mParams, mgParams, address(0), token, accountingToken, caliber);
 
         $._isMachine[machine] = true;
+        $._instanceSalts[machine] = salt;
 
         emit MachineCreated(machine, token);
 
@@ -132,11 +137,13 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address adapter) {
-        if (!_getHubCoreFactoryStorage()._isMachine[msg.sender]) {
+    function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address) {
+        HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
+        address caller = msg.sender;
+        if (!$._isMachine[caller]) {
             revert Errors.NotMachine();
         }
-        return _createBridgeAdapter(msg.sender, bridgeId, initData);
+        return _createBridgeAdapter(caller, bridgeId, initData, $._instanceSalts[caller]);
     }
 
     /// @dev Deploys a machine share token.

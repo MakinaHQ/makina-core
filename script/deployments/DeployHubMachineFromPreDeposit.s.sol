@@ -51,6 +51,7 @@ contract DeployHubMachineFromPreDeposit is Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
 
         IHubCoreFactory hubCoreFactory =
             IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
@@ -83,7 +84,8 @@ contract DeployHubMachineFromPreDeposit is Script, SortedParams {
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority
             ),
-            preDepositVault
+            preDepositVault,
+            salt
         );
         vm.stopBroadcast();
 

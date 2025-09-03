@@ -158,7 +158,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
         feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
-        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 
     modifier whileInRecoveryMode() {
@@ -208,7 +208,8 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
 
         hubMachineAddr = makeAddr("hubMachine");
 
-        (caliber, caliberMailbox) = _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0));
+        (caliber, caliberMailbox) =
+            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 
     modifier whileInRecoveryMode() {

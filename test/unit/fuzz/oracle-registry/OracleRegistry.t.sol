@@ -37,7 +37,10 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
 
     function setUp() public override {
         Base_Test.setUp();
-        (accessManager, oracleRegistry,) = deploySharedCore(deployer, dao);
+
+        accessManager = _deployAccessManager(deployer, dao);
+        oracleRegistry = _deployOracleRegistry(dao, address(accessManager));
+
         _setupOracleRegistryAMFunctionRoles(accessManager, address(oracleRegistry));
         setupAccessManagerRoles(accessManager, dao, deployer);
     }

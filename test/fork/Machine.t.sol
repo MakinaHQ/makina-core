@@ -82,7 +82,8 @@ contract Machine_Fork_Test is Fork_Test {
                 }),
                 ethForkData.usdc,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                TEST_DEPLOYMENT_SALT
             )
         );
         hubCaliber = Caliber(machine.hubCaliber());
@@ -140,7 +141,8 @@ contract Machine_Fork_Test is Fork_Test {
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager)
                 }),
                 baseForkData.usdc,
-                address(machine)
+                address(machine),
+                TEST_DEPLOYMENT_SALT
             )
         );
         address spokeCaliberMailbox = spokeCaliber.hubMachineEndpoint();

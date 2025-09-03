@@ -90,56 +90,14 @@ abstract contract Base is DeployViaIr {
     /// CORE DEPLOYMENTS
     ///
 
-    function deploySharedCore(address initialAMAdmin, address dao)
-        public
-        returns (AccessManagerUpgradeable accessManager, OracleRegistry oracleRegistry, TokenRegistry tokenRegistry)
-    {
-        address accessManagerImplemAddr = address(new AccessManagerUpgradeable());
-        accessManager = AccessManagerUpgradeable(
-            address(
-                new TransparentUpgradeableProxy(
-                    accessManagerImplemAddr, dao, abi.encodeCall(AccessManagerUpgradeable.initialize, (initialAMAdmin))
-                )
-            )
-        );
-
-        address oracleRegistryImplemAddr = address(new OracleRegistry());
-        oracleRegistry = OracleRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    oracleRegistryImplemAddr, dao, abi.encodeCall(OracleRegistry.initialize, (address(accessManager)))
-                )
-            )
-        );
-
-        address tokenRegistryImplemAddr = address(new TokenRegistry());
-        tokenRegistry = TokenRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    tokenRegistryImplemAddr, dao, abi.encodeCall(TokenRegistry.initialize, (address(accessManager)))
-                )
-            )
-        );
-    }
-
     function deployHubCore(address initialAMAdmin, address dao, address wormhole)
         internal
         returns (HubCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.tokenRegistry) =
-            deploySharedCore(initialAMAdmin, dao);
+        // 1. Access Manager
+        deployment.accessManager = _deployAccessManager(initialAMAdmin, dao);
 
-        address chainRegistryImplemAddr = address(new ChainRegistry());
-        deployment.chainRegistry = ChainRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    chainRegistryImplemAddr,
-                    dao,
-                    abi.encodeCall(ChainRegistry.initialize, (address(deployment.accessManager)))
-                )
-            )
-        );
-
+        // 2. Hub Core Registry
         address hubCoreRegistryImplemAddr = address(new HubCoreRegistry());
         deployment.hubCoreRegistry = HubCoreRegistry(
             address(
@@ -148,17 +106,31 @@ abstract contract Base is DeployViaIr {
                     dao,
                     abi.encodeCall(
                         HubCoreRegistry.initialize,
-                        (
-                            address(deployment.oracleRegistry),
-                            address(deployment.tokenRegistry),
-                            address(deployment.chainRegistry),
-                            address(deployment.accessManager)
-                        )
+                        (address(0), address(0), address(0), address(deployment.accessManager))
                     )
                 )
             )
         );
 
+        // 3. Hub Core Factory
+        address hubCoreFactoryImplemAddr = address(new HubCoreFactory(address(deployment.hubCoreRegistry)));
+        deployment.hubCoreFactory = HubCoreFactory(
+            address(
+                new TransparentUpgradeableProxy(
+                    hubCoreFactoryImplemAddr,
+                    dao,
+                    abi.encodeCall(HubCoreFactory.initialize, (address(deployment.accessManager)))
+                )
+            )
+        );
+
+        // 4. Oracle Registry
+        deployment.oracleRegistry = _deployOracleRegistry(dao, address(deployment.accessManager));
+
+        // 5. Token Registry
+        deployment.tokenRegistry = _deployTokenRegistry(dao, address(deployment.accessManager));
+
+        // 6. Swap Module
         address swapModuleImplemAddr = address(new SwapModule(address(deployment.hubCoreRegistry)));
         deployment.swapModule = SwapModule(
             address(
@@ -170,23 +142,29 @@ abstract contract Base is DeployViaIr {
             )
         );
 
+        // 7. Weiroll VM
         address weirollVMImplemAddr = DeployViaIr.deployWeirollVMViaIR();
+
+        // 8. Caliber Beacon
         address caliberImplemAddr = address(new Caliber(address(deployment.hubCoreRegistry), weirollVMImplemAddr));
         deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
+        // 9. Machine Beacon
         address machineImplemAddr = address(new Machine(address(deployment.hubCoreRegistry), wormhole));
         deployment.machineBeacon = new UpgradeableBeacon(machineImplemAddr, dao);
 
+        // 10. PreDeposit Vault Beacon
         address preDepositVaultImplemAddr = address(new PreDepositVault(address(deployment.hubCoreRegistry)));
         deployment.preDepositVaultBeacon = new UpgradeableBeacon(preDepositVaultImplemAddr, dao);
 
-        address hubCoreFactoryImplemAddr = address(new HubCoreFactory(address(deployment.hubCoreRegistry)));
-        deployment.hubCoreFactory = HubCoreFactory(
+        // 11. Chain Registry
+        address chainRegistryImplemAddr = address(new ChainRegistry());
+        deployment.chainRegistry = ChainRegistry(
             address(
                 new TransparentUpgradeableProxy(
-                    hubCoreFactoryImplemAddr,
+                    chainRegistryImplemAddr,
                     dao,
-                    abi.encodeCall(HubCoreFactory.initialize, (address(deployment.accessManager)))
+                    abi.encodeCall(ChainRegistry.initialize, (address(deployment.accessManager)))
                 )
             )
         );
@@ -196,16 +174,24 @@ abstract contract Base is DeployViaIr {
         internal
         returns (SpokeCore memory deployment)
     {
-        (deployment.accessManager, deployment.oracleRegistry, deployment.tokenRegistry) =
-            deploySharedCore(initialAMAdmin, dao);
+        // 1. Access Manager
+        deployment.accessManager = _deployAccessManager(initialAMAdmin, dao);
 
-        deployment.spokeCoreRegistry = _deploySpokeCoreRegistry(
-            dao,
-            address(deployment.oracleRegistry),
-            address(deployment.tokenRegistry),
-            address(deployment.accessManager)
-        );
+        // 2. Spoke Core Registry
+        deployment.spokeCoreRegistry =
+            _deploySpokeCoreRegistry(dao, address(0), address(0), address(deployment.accessManager));
 
+        // 3. Spoke Core Factory
+        deployment.spokeCoreFactory =
+            _deploySpokeCoreFactory(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
+
+        // 4. Oracle Registry
+        deployment.oracleRegistry = _deployOracleRegistry(dao, address(deployment.accessManager));
+
+        // 5. Token Registry
+        deployment.tokenRegistry = _deployTokenRegistry(dao, address(deployment.accessManager));
+
+        // 6. Swap Module
         address swapModuleImplemAddr = address(new SwapModule(address(deployment.spokeCoreRegistry)));
         deployment.swapModule = SwapModule(
             address(
@@ -217,13 +203,14 @@ abstract contract Base is DeployViaIr {
             )
         );
 
+        // 7. Weiroll VM
         address weirollVMImplemAddr = deployWeirollVMViaIR();
+
+        // 8. Caliber Beacon
         address caliberImplemAddr = address(new Caliber(address(deployment.spokeCoreRegistry), weirollVMImplemAddr));
         deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
 
-        deployment.spokeCoreFactory =
-            _deploySpokeCoreFactory(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
-
+        // 9. Caliber Mailbox Beacon
         deployment.caliberMailboxBeacon =
             _deployCaliberMailboxBeacon(dao, address(deployment.spokeCoreRegistry), hubChainId);
     }
@@ -233,6 +220,7 @@ abstract contract Base is DeployViaIr {
     ///
 
     function setupHubCoreRegistry(HubCore memory deployment) public {
+        deployment.hubCoreRegistry.setOracleRegistry(address(deployment.oracleRegistry));
         deployment.hubCoreRegistry.setSwapModule(address(deployment.swapModule));
         deployment.hubCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
         deployment.hubCoreRegistry.setChainRegistry(address(deployment.chainRegistry));
@@ -243,6 +231,7 @@ abstract contract Base is DeployViaIr {
     }
 
     function setupSpokeCoreRegistry(SpokeCore memory deployment) public {
+        deployment.spokeCoreRegistry.setOracleRegistry(address(deployment.oracleRegistry));
         deployment.spokeCoreRegistry.setSwapModule(address(deployment.swapModule));
         deployment.spokeCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
         deployment.spokeCoreRegistry.setCoreFactory(address(deployment.spokeCoreFactory));
@@ -454,6 +443,50 @@ abstract contract Base is DeployViaIr {
     ///
     /// DEPLOYMENT UTILS
     ///
+
+    function _deployAccessManager(address _initialAMAdmin, address _dao)
+        internal
+        returns (AccessManagerUpgradeable accessManager)
+    {
+        address accessManagerImplemAddr = address(new AccessManagerUpgradeable());
+        accessManager = AccessManagerUpgradeable(
+            address(
+                new TransparentUpgradeableProxy(
+                    accessManagerImplemAddr,
+                    _dao,
+                    abi.encodeCall(AccessManagerUpgradeable.initialize, (_initialAMAdmin))
+                )
+            )
+        );
+    }
+
+    function _deployOracleRegistry(address _dao, address _accessManager)
+        internal
+        returns (OracleRegistry oracleRegistry)
+    {
+        address oracleRegistryImplemAddr = address(new OracleRegistry());
+        oracleRegistry = OracleRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    oracleRegistryImplemAddr, _dao, abi.encodeCall(OracleRegistry.initialize, (_accessManager))
+                )
+            )
+        );
+    }
+
+    function _deployTokenRegistry(address _dao, address _accessManager)
+        internal
+        returns (TokenRegistry tokenRegistry)
+    {
+        address tokenRegistryImplemAddr = address(new TokenRegistry());
+        tokenRegistry = TokenRegistry(
+            address(
+                new TransparentUpgradeableProxy(
+                    tokenRegistryImplemAddr, _dao, abi.encodeCall(TokenRegistry.initialize, (_accessManager))
+                )
+            )
+        );
+    }
 
     function _deploySpokeCoreRegistry(
         address _dao,
