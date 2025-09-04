@@ -10,6 +10,7 @@ contract DeployHubLibs is Script {
 
     function run() public {
         vm.broadcast();
-        CREATE2_PROXY.call(abi.encodePacked(bytes32(0), type(MachineUtils).creationCode));
+        (bool success,) = CREATE2_PROXY.call(abi.encodePacked(bytes32(0), type(MachineUtils).creationCode));
+        require(success, "Failed to deploy MachineUtils");
     }
 }
