@@ -2,6 +2,18 @@ createMachine.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
-   ├── it should deploy a machine instance, along with a share token and a caliber instance, and initialize them with provided parameters
-   ├── it should emit a CaliberCreated event
-   └── it should emit a MachineCreated event
+   ├── when the provided salt is zero
+   │  └── it should revert with ZeroSalt
+   └── when the provided salt is not zero
+      ├── when the provided salt is already used
+      │  └── it should revert with TargetAlreadyExists
+      └── when the provided salt is not already used
+         ├── given the create3 proxy deployment fails
+         │  └── it should revert with Create3ProxyDeploymentFailed
+         └── given the create3 proxy deployment succeeds
+            ├── given the caliber deployment fails
+            │  └── it should revert with Create3ContractDeploymentFailed
+            └── given the caliber deployment succeeds
+               ├── it should deploy a machine instance, along with a share token and a caliber instance, and initialize them with provided parameters
+               ├── it should emit a CaliberCreated event
+               └── it should emit a MachineCreated event
