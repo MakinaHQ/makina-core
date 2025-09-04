@@ -52,7 +52,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         borrowModule = new MockBorrowModule(IERC20(baseToken));
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
-        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+        acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
 
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);
@@ -158,7 +158,7 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
         feeManager = new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
-        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0));
+        (machine, caliber) = _deployMachine(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 
     modifier whileInRecoveryMode() {
@@ -208,7 +208,8 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
 
         hubMachineAddr = makeAddr("hubMachine");
 
-        (caliber, caliberMailbox) = _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0));
+        (caliber, caliberMailbox) =
+            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 
     modifier whileInRecoveryMode() {

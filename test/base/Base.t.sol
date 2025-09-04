@@ -97,7 +97,7 @@ abstract contract Base_Hub_Test is Base_Test {
         wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
-    function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot)
+    function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)
         public
         returns (Machine, Caliber)
     {
@@ -131,7 +131,8 @@ abstract contract Base_Hub_Test is Base_Test {
                 }),
                 _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                _salt
             )
         );
         Caliber _caliber = Caliber(_machine.hubCaliber());
@@ -163,10 +164,12 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupAccessManagerRoles(accessManager, dao, deployer);
     }
 
-    function _deployCaliber(address _hubMachine, address _accountingToken, bytes32 _allowedInstrMerkleRoot)
-        public
-        returns (Caliber, CaliberMailbox)
-    {
+    function _deployCaliber(
+        address _hubMachine,
+        address _accountingToken,
+        bytes32 _allowedInstrMerkleRoot,
+        bytes32 _salt
+    ) public returns (Caliber, CaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             spokeCoreFactory.createCaliber(
@@ -187,7 +190,8 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialAuthority: address(accessManager)
                 }),
                 _accountingToken,
-                _hubMachine
+                _hubMachine,
+                _salt
             )
         );
         CaliberMailbox _mailbox = CaliberMailbox(_caliber.hubMachineEndpoint());

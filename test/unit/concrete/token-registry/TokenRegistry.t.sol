@@ -9,7 +9,10 @@ contract TokenRegistry_Unit_Concrete_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        (accessManager,, tokenRegistry) = deploySharedCore(deployer, dao);
+
+        accessManager = _deployAccessManager(deployer, dao);
+        tokenRegistry = _deployTokenRegistry(dao, address(accessManager));
+
         _setupTokenRegistryAMFunctionRoles(accessManager, address(tokenRegistry));
         setupAccessManagerRoles(accessManager, dao, deployer);
     }

@@ -26,5 +26,6 @@
   },
   "accountingToken": "0x0000000000000000000000000000000000000000",
   "shareTokenName": "",
-  "shareTokenSymbol": ""
+  "shareTokenSymbol": "",
+  "salt": "0x0000000000000000000000000000000000000000000000000000000000000000"
 }

@@ -12,6 +12,7 @@ library Errors {
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
+    error Create3ContractDeploymentFailed();
     error DirectManageFlashLoanCall();
     error EvmChainIdNotRegistered(uint256 chainId);
     error ExceededMaxDeposit();
@@ -69,6 +70,7 @@ library Errors {
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
     error ProtectedRootGuardian();
+    error Create3ProxyDeploymentFailed();
     error RecoveryMode();
     error SameRoot();
     error SlippageProtection();
@@ -78,6 +80,7 @@ library Errors {
     error StaleData();
     error SwapFailed();
     error SwapperTargetsNotSet();
+    error TargetAlreadyExists();
     error UnauthorizedCaller();
     error UnauthorizedSource();
     error UnexpectedMessage();
@@ -88,5 +91,6 @@ library Errors {
     error ZeroChainId();
     error ZeroGroupId();
     error ZeroPositionId();
+    error ZeroSalt();
     error ZeroTokenAddress();
 }

@@ -2,10 +2,19 @@ createMachineFromPreDeposit.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
-   ├── it should deploy a machine instance, along with a caliber instance
-   ├── it should mark the pre-deposit vault's deposit token as an idle token in the machine
-   ├── it should transfer the pre-deposit vault's asset balance to the machine
-   ├── it should set the machine as owner of the pre-deposit vault's share token
-   ├── it should emit a CaliberCreated event
-   ├── it should emit a MigrateToMachine event
-   └── it should emit a MachineCreated event
+   ├── when the provided salt is zero
+   │  └── it should revert with ZeroSalt
+   └── when the provided salt is not zero
+      ├── when the provided salt is already used
+      │  └── it should revert with TargetAlreadyExists
+      └── when the provided salt is not already used
+         ├── given the create3 proxy deployment fails
+         │  └── it should revert with Create3ProxyDeploymentFailed
+         └── given the create3 proxy deployment succeeds
+            ├── it should deploy a machine instance, along with a caliber instance
+            ├── it should mark the pre-deposit vault's deposit token as an idle token in the machine
+            ├── it should transfer the pre-deposit vault's asset balance to the machine
+            ├── it should set the machine as owner of the pre-deposit vault's share token
+            ├── it should emit a CaliberCreated event
+            ├── it should emit a MigrateToMachine event
+            └── it should emit a MachineCreated event

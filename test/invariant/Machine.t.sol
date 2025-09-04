@@ -61,7 +61,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         machineStore.addToken(address(baseToken));
 
         // deploy Across V3 spoke pool
-        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+        acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
         machineStore.setBridgeFeeBps(ACROSS_V3_BRIDGE_ID, ACROSS_V3_FEE_BPS);
 
         // set up registries
@@ -84,8 +84,10 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         vm.stopPrank();
 
         // deploy hub and spoke chain contracts
-        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0));
-        (spokeCaliber, spokeCaliberMailbox) = _deployCaliber(address(machine), address(accountingToken), bytes32(0));
+        (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
+        (spokeCaliber, spokeCaliberMailbox) = _deployCaliber(
+            address(machine), address(accountingToken), bytes32(0), bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1)
+        );
 
         // set up machine and spoke caliber
         vm.prank(riskManagerTimelock);

@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 abstract contract Constants {
+    bytes32 public constant TEST_DEPLOYMENT_SALT = keccak256("makina.salt.test");
+
     uint256 public constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";

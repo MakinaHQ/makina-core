@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {Errors} from "src/libraries/Errors.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -21,42 +22,84 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0), bytes32(0));
     }
 
     function test_RevertWhen_InvalidPreDepositVault() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
-        vm.expectRevert(Errors.NotPreDepositVault.selector);
+
         vm.prank(dao);
-        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0));
+        vm.expectRevert(Errors.NotPreDepositVault.selector);
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(0), bytes32(0));
+    }
+
+    function test_RevertWhen_ZeroSalt() public {
+        vm.prank(dao);
+        preDepositVault = _deployDepositVault();
+
+        IMachine.MachineInitParams memory mParams;
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.ZeroSalt.selector);
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(preDepositVault), bytes32(0));
+    }
+
+    function test_RevertWhen_SaltAlreadyUsed() public {
+        vm.prank(dao);
+        preDepositVault = _deployDepositVault();
+
+        IMachine.MachineInitParams memory mParams;
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.TargetAlreadyExists.selector);
+        hubCoreFactory.createMachineFromPreDeposit(
+            mParams, cParams, mgParams, address(preDepositVault), TEST_DEPLOYMENT_SALT
+        );
+    }
+
+    function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
+        // deploy a proxy to occupy the proxy CREATE2 address
+        bytes memory _proxyInitcode = hex"67363d3d37363d34f03d5260086018f3";
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+        bytes32 nSalt = keccak256(abi.encode(keccak256("makina.salt.Caliber"), salt));
+        address proxy;
+        vm.prank(address(hubCoreFactory));
+        assembly {
+            proxy := create2(0, add(_proxyInitcode, 0x20), mload(_proxyInitcode), nSalt)
+        }
+
+        vm.prank(dao);
+        preDepositVault = _deployDepositVault();
+
+        IMachine.MachineInitParams memory mParams;
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
+        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, address(preDepositVault), salt);
     }
 
     function test_CreateMachineFromPreDeposit() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
         vm.prank(dao);
-        preDepositVault = PreDepositVault(
-            hubCoreFactory.createPreDepositVault(
-                IPreDepositVault.PreDepositVaultInitParams({
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialWhitelistMode: false,
-                    initialRiskManager: address(0),
-                    initialAuthority: address(accessManager)
-                }),
-                address(baseToken),
-                address(accountingToken),
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
-            )
-        );
+        preDepositVault = _deployDepositVault();
 
         uint256 preDepositAmount = 1e18;
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
+
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
@@ -95,7 +138,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager)
                 }),
-                address(preDepositVault)
+                address(preDepositVault),
+                salt
             )
         );
 
@@ -130,5 +174,22 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertTrue(machine.isIdleToken(address(baseToken)));
         assertEq(baseToken.balanceOf(address(preDepositVault)), 0);
         assertEq(baseToken.balanceOf(address(machine)), preDepositAmount);
+    }
+
+    function _deployDepositVault() internal returns (PreDepositVault) {
+        return PreDepositVault(
+            hubCoreFactory.createPreDepositVault(
+                IPreDepositVault.PreDepositVaultInitParams({
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialWhitelistMode: false,
+                    initialRiskManager: address(0),
+                    initialAuthority: address(accessManager)
+                }),
+                address(baseToken),
+                address(accountingToken),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+            )
+        );
     }
 }

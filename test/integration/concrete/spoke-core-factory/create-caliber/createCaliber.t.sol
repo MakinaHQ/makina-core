@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
+import {Errors} from "src/libraries/Errors.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ISpokeCoreFactory} from "src/interfaces/ISpokeCoreFactory.sol";
@@ -17,12 +18,62 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0));
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0));
+    }
+
+    function test_RevertWhen_ZeroSalt() public {
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.ZeroSalt.selector);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0));
+    }
+
+    function test_RevertWhen_SaltAlreadyUsed() public {
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.TargetAlreadyExists.selector);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), TEST_DEPLOYMENT_SALT);
+    }
+
+    function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
+        // deploy a proxy to occupy the proxy CREATE2 address
+        bytes memory _proxyInitcode = hex"67363d3d37363d34f03d5260086018f3";
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+        bytes32 nSalt = keccak256(abi.encode(keccak256("makina.salt.Caliber"), salt));
+        address proxy;
+        vm.prank(address(spokeCoreFactory));
+        assembly {
+            proxy := create2(0, add(_proxyInitcode, 0x20), mload(_proxyInitcode), nSalt)
+        }
+
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt);
+    }
+
+    function test_RevertGiven_CaliberCreate3ContractDeploymentFailed() public {
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+
+        vm.prank(dao);
+        vm.expectRevert(Errors.Create3ContractDeploymentFailed.selector);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt);
     }
 
     function test_CreateCaliber() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
+
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
@@ -50,7 +101,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialAuthority: address(accessManager)
                 }),
                 address(accountingToken),
-                _hubMachine
+                _hubMachine,
+                salt
             )
         );
         assertTrue(spokeCoreFactory.isCaliber(address(caliber)));

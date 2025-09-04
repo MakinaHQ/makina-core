@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
-contract SortedParams {
+abstract contract SortedParams {
     struct PreDepositVaultInitParamsSorted {
         address initialAuthority;
         address initialRiskManager;
