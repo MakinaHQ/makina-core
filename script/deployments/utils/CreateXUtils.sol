@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.28;
 
+/// @dev Misc utils for interacting with the CreateX Factory.
+/// See https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol
+
 interface ICreateX {
     function deployCreate3(bytes32 salt, bytes memory initCode) external payable returns (address newContract);
 }
