@@ -52,7 +52,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
         borrowModule = new MockBorrowModule(IERC20(baseToken));
         pool = new MockPool(address(accountingToken), address(baseToken), "MockPool", "MP");
 
-        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+        acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
 
         aPriceFeed1 = new MockPriceFeed(18, int256(PRICE_A_E * 1e18), block.timestamp);
         bPriceFeed1 = new MockPriceFeed(18, int256(PRICE_B_E * 1e18), block.timestamp);

@@ -61,7 +61,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         machineStore.addToken(address(baseToken));
 
         // deploy Across V3 spoke pool
-        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+        acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
         machineStore.setBridgeFeeBps(ACROSS_V3_BRIDGE_ID, ACROSS_V3_FEE_BPS);
 
         // set up registries

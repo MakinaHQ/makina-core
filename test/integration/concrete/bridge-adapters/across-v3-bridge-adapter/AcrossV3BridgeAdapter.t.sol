@@ -25,7 +25,7 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
         bridgeController1.setMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS);
         bridgeController2.setMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS);
 
-        acrossV3SpokePool = IMockAcrossV3SpokePool(deployMockAcrossV3SpokePoolViaIR());
+        acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
 
         address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
         bridgeAdapter1 = IBridgeAdapter(

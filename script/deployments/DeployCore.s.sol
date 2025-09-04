@@ -4,9 +4,11 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {CreateXUtils, ICreateX} from "./utils/CreateXUtils.sol";
+
 import {Base} from "../../test/base/Base.sol";
 
-abstract contract DeployCore is Base, Script {
+abstract contract DeployCore is Base, Script, CreateXUtils {
     using stdJson for string;
 
     string public inputJson;
@@ -60,4 +62,14 @@ abstract contract DeployCore is Base, Script {
     }
 
     function _deploySetupAfter() public virtual {}
+
+    function _deployCode(bytes memory bytecode, bytes32 salt) internal virtual override returns (address) {
+        if (salt == 0) {
+            return super._deployCode(bytecode, salt);
+        }
+
+        bytes32 formattedSalt = _formatSalt(salt, deployer);
+
+        return ICreateX(CREATE_X_DEPLOYER).deployCreate3(formattedSalt, bytecode);
+    }
 }

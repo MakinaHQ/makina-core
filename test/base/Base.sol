@@ -11,7 +11,6 @@ import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
-import {DeployViaIr} from "../utils/DeployViaIR.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IBridgeController} from "../../src/interfaces/IBridgeController.sol";
 import {ICaliberMailbox} from "../../src/interfaces/ICaliberMailbox.sol";
@@ -20,6 +19,7 @@ import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IHubCoreRegistry} from "../../src/interfaces/IHubCoreRegistry.sol";
 import {IOracleRegistry} from "../../src/interfaces/IOracleRegistry.sol";
+import {IRCodeReader} from "../utils/IRCodeReader.sol";
 import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";
 import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
@@ -30,11 +30,12 @@ import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
 import {PreDepositVault} from "../../src/pre-deposit/PreDepositVault.sol";
 import {Roles} from "../utils/Roles.sol";
+import {SaltDomains} from "../utils/SaltDomains.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 
-abstract contract Base is DeployViaIr {
+abstract contract Base is IRCodeReader, SaltDomains {
     struct HubCore {
         AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
@@ -94,123 +95,84 @@ abstract contract Base is DeployViaIr {
         internal
         returns (HubCore memory deployment)
     {
-        // 1. Access Manager
+        // Access Manager
         deployment.accessManager = _deployAccessManager(initialAMAdmin, dao);
 
-        // 2. Hub Core Registry
-        address hubCoreRegistryImplemAddr = address(new HubCoreRegistry());
-        deployment.hubCoreRegistry = HubCoreRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    hubCoreRegistryImplemAddr,
-                    dao,
-                    abi.encodeCall(
-                        HubCoreRegistry.initialize,
-                        (address(0), address(0), address(0), address(deployment.accessManager))
-                    )
-                )
-            )
-        );
-
-        // 3. Hub Core Factory
-        address hubCoreFactoryImplemAddr = address(new HubCoreFactory(address(deployment.hubCoreRegistry)));
-        deployment.hubCoreFactory = HubCoreFactory(
-            address(
-                new TransparentUpgradeableProxy(
-                    hubCoreFactoryImplemAddr,
-                    dao,
-                    abi.encodeCall(HubCoreFactory.initialize, (address(deployment.accessManager)))
-                )
-            )
-        );
-
-        // 4. Oracle Registry
+        // Oracle Registry
         deployment.oracleRegistry = _deployOracleRegistry(dao, address(deployment.accessManager));
 
-        // 5. Token Registry
+        // Token Registry
         deployment.tokenRegistry = _deployTokenRegistry(dao, address(deployment.accessManager));
 
-        // 6. Swap Module
-        address swapModuleImplemAddr = address(new SwapModule(address(deployment.hubCoreRegistry)));
-        deployment.swapModule = SwapModule(
-            address(
-                new TransparentUpgradeableProxy(
-                    swapModuleImplemAddr,
-                    dao,
-                    abi.encodeCall(SwapModule.initialize, (address(deployment.accessManager)))
-                )
-            )
+        // Chain Registry
+        deployment.chainRegistry = _deployChainRegistry(dao, address(deployment.accessManager));
+
+        // Hub Core Registry
+        deployment.hubCoreRegistry = _deployHubCoreRegistry(
+            dao,
+            address(deployment.oracleRegistry),
+            address(deployment.tokenRegistry),
+            address(deployment.chainRegistry),
+            address(deployment.accessManager)
         );
 
-        // 7. Weiroll VM
-        address weirollVMImplemAddr = DeployViaIr.deployWeirollVMViaIR();
+        // Hub Core Factory
+        deployment.hubCoreFactory =
+            _deployHubCoreFactory(dao, address(deployment.hubCoreRegistry), address(deployment.accessManager));
 
-        // 8. Caliber Beacon
-        address caliberImplemAddr = address(new Caliber(address(deployment.hubCoreRegistry), weirollVMImplemAddr));
-        deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
+        // Swap Module
+        deployment.swapModule =
+            _deploySwapModule(dao, address(deployment.hubCoreRegistry), address(deployment.accessManager));
 
-        // 9. Machine Beacon
-        address machineImplemAddr = address(new Machine(address(deployment.hubCoreRegistry), wormhole));
-        deployment.machineBeacon = new UpgradeableBeacon(machineImplemAddr, dao);
+        // Weiroll VM
+        address weirollVM = _deployWeirollVM();
 
-        // 10. PreDeposit Vault Beacon
-        address preDepositVaultImplemAddr = address(new PreDepositVault(address(deployment.hubCoreRegistry)));
-        deployment.preDepositVaultBeacon = new UpgradeableBeacon(preDepositVaultImplemAddr, dao);
+        // Caliber Beacon
+        deployment.caliberBeacon = _deployCaliberBeacon(dao, address(deployment.hubCoreRegistry), weirollVM);
 
-        // 11. Chain Registry
-        address chainRegistryImplemAddr = address(new ChainRegistry());
-        deployment.chainRegistry = ChainRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    chainRegistryImplemAddr,
-                    dao,
-                    abi.encodeCall(ChainRegistry.initialize, (address(deployment.accessManager)))
-                )
-            )
-        );
+        // Machine Beacon
+        deployment.machineBeacon = _deployMachineBeacon(dao, address(deployment.hubCoreRegistry), wormhole);
+
+        // PreDeposit Vault Beacon
+        deployment.preDepositVaultBeacon = _deployPreDepositVaultBeacon(dao, address(deployment.hubCoreRegistry));
     }
 
     function deploySpokeCore(address initialAMAdmin, address dao, uint256 hubChainId)
         internal
         returns (SpokeCore memory deployment)
     {
-        // 1. Access Manager
+        // Access Manager
         deployment.accessManager = _deployAccessManager(initialAMAdmin, dao);
 
-        // 2. Spoke Core Registry
-        deployment.spokeCoreRegistry =
-            _deploySpokeCoreRegistry(dao, address(0), address(0), address(deployment.accessManager));
+        // Oracle Registry
+        deployment.oracleRegistry = _deployOracleRegistry(dao, address(deployment.accessManager));
 
-        // 3. Spoke Core Factory
+        // Token Registry
+        deployment.tokenRegistry = _deployTokenRegistry(dao, address(deployment.accessManager));
+
+        // Spoke Core Registry
+        deployment.spokeCoreRegistry = _deploySpokeCoreRegistry(
+            dao,
+            address(deployment.oracleRegistry),
+            address(deployment.tokenRegistry),
+            address(deployment.accessManager)
+        );
+
+        // Spoke Core Factory
         deployment.spokeCoreFactory =
             _deploySpokeCoreFactory(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
 
-        // 4. Oracle Registry
-        deployment.oracleRegistry = _deployOracleRegistry(dao, address(deployment.accessManager));
+        // Swap Module
+        deployment.swapModule =
+            _deploySwapModule(dao, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
 
-        // 5. Token Registry
-        deployment.tokenRegistry = _deployTokenRegistry(dao, address(deployment.accessManager));
+        // Weiroll VM
+        address weirollVM = _deployWeirollVM();
 
-        // 6. Swap Module
-        address swapModuleImplemAddr = address(new SwapModule(address(deployment.spokeCoreRegistry)));
-        deployment.swapModule = SwapModule(
-            address(
-                new TransparentUpgradeableProxy(
-                    swapModuleImplemAddr,
-                    dao,
-                    abi.encodeCall(SwapModule.initialize, (address(deployment.accessManager)))
-                )
-            )
-        );
+        // Caliber Beacon
+        deployment.caliberBeacon = _deployCaliberBeacon(dao, address(deployment.spokeCoreRegistry), weirollVM);
 
-        // 7. Weiroll VM
-        address weirollVMImplemAddr = deployWeirollVMViaIR();
-
-        // 8. Caliber Beacon
-        address caliberImplemAddr = address(new Caliber(address(deployment.spokeCoreRegistry), weirollVMImplemAddr));
-        deployment.caliberBeacon = new UpgradeableBeacon(caliberImplemAddr, dao);
-
-        // 9. Caliber Mailbox Beacon
+        // Caliber Mailbox Beacon
         deployment.caliberMailboxBeacon =
             _deployCaliberMailboxBeacon(dao, address(deployment.spokeCoreRegistry), hubChainId);
     }
@@ -448,42 +410,57 @@ abstract contract Base is DeployViaIr {
         internal
         returns (AccessManagerUpgradeable accessManager)
     {
-        address accessManagerImplemAddr = address(new AccessManagerUpgradeable());
+        address implem = _deployCode(type(AccessManagerUpgradeable).creationCode, 0);
         accessManager = AccessManagerUpgradeable(
-            address(
-                new TransparentUpgradeableProxy(
-                    accessManagerImplemAddr,
-                    _dao,
-                    abi.encodeCall(AccessManagerUpgradeable.initialize, (_initialAMAdmin))
-                )
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(AccessManagerUpgradeable.initialize, (_initialAMAdmin)))
+                ),
+                ACCESS_MANAGER_SALT_DOMAIN
             )
         );
     }
 
-    function _deployOracleRegistry(address _dao, address _accessManager)
-        internal
-        returns (OracleRegistry oracleRegistry)
-    {
-        address oracleRegistryImplemAddr = address(new OracleRegistry());
-        oracleRegistry = OracleRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    oracleRegistryImplemAddr, _dao, abi.encodeCall(OracleRegistry.initialize, (_accessManager))
-                )
+    function _deployHubCoreRegistry(
+        address _dao,
+        address _oracleRegistry,
+        address _tokenRegistry,
+        address _chainRegistry,
+        address _accessManager
+    ) internal returns (HubCoreRegistry hubCoreRegistry) {
+        address implem = _deployCode(type(HubCoreRegistry).creationCode, 0);
+        return HubCoreRegistry(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(
+                        implem,
+                        _dao,
+                        abi.encodeCall(
+                            HubCoreRegistry.initialize,
+                            (_oracleRegistry, _tokenRegistry, _chainRegistry, _accessManager)
+                        )
+                    )
+                ),
+                CORE_REGISTRY_SALT_DOMAIN
             )
         );
     }
 
-    function _deployTokenRegistry(address _dao, address _accessManager)
+    function _deployHubCoreFactory(address _dao, address _hubCoreRegistry, address _accessManager)
         internal
-        returns (TokenRegistry tokenRegistry)
+        returns (HubCoreFactory spokeCoreFactory)
     {
-        address tokenRegistryImplemAddr = address(new TokenRegistry());
-        tokenRegistry = TokenRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    tokenRegistryImplemAddr, _dao, abi.encodeCall(TokenRegistry.initialize, (_accessManager))
-                )
+        address implem =
+            _deployCode(abi.encodePacked(type(HubCoreFactory).creationCode, abi.encode(_hubCoreRegistry)), 0);
+        return HubCoreFactory(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(HubCoreFactory.initialize, (_accessManager)))
+                ),
+                CORE_FACTORY_SALT_DOMAIN
             )
         );
     }
@@ -494,14 +471,18 @@ abstract contract Base is DeployViaIr {
         address _tokenRegistry,
         address _accessManager
     ) internal returns (SpokeCoreRegistry spokeCoreRegistry) {
-        address spokeCoreRegistryImplemAddr = address(new SpokeCoreRegistry());
+        address implem = _deployCode(type(SpokeCoreRegistry).creationCode, 0);
         return SpokeCoreRegistry(
-            address(
-                new TransparentUpgradeableProxy(
-                    spokeCoreRegistryImplemAddr,
-                    _dao,
-                    abi.encodeCall(SpokeCoreRegistry.initialize, (_oracleRegistry, _tokenRegistry, _accessManager))
-                )
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(
+                        implem,
+                        _dao,
+                        abi.encodeCall(SpokeCoreRegistry.initialize, (_oracleRegistry, _tokenRegistry, _accessManager))
+                    )
+                ),
+                CORE_REGISTRY_SALT_DOMAIN
             )
         );
     }
@@ -510,12 +491,125 @@ abstract contract Base is DeployViaIr {
         internal
         returns (SpokeCoreFactory spokeCoreFactory)
     {
-        address spokeCoreFactoryImplemAddr = address(new SpokeCoreFactory(_spokeCoreRegistry));
+        address implem =
+            _deployCode(abi.encodePacked(type(SpokeCoreFactory).creationCode, abi.encode(_spokeCoreRegistry)), 0);
         return SpokeCoreFactory(
-            address(
-                new TransparentUpgradeableProxy(
-                    spokeCoreFactoryImplemAddr, _dao, abi.encodeCall(SpokeCoreFactory.initialize, (_accessManager))
-                )
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(SpokeCoreFactory.initialize, (_accessManager)))
+                ),
+                CORE_FACTORY_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployOracleRegistry(address _dao, address _accessManager)
+        internal
+        returns (OracleRegistry oracleRegistry)
+    {
+        address implem = _deployCode(type(OracleRegistry).creationCode, 0);
+        oracleRegistry = OracleRegistry(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(OracleRegistry.initialize, (_accessManager)))
+                ),
+                ORACLE_REGISTRY_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployChainRegistry(address _dao, address _accessManager)
+        internal
+        returns (ChainRegistry tokenRegistry)
+    {
+        address implem = _deployCode(type(ChainRegistry).creationCode, 0);
+        tokenRegistry = ChainRegistry(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(ChainRegistry.initialize, (_accessManager)))
+                ),
+                CHAIN_REGISTRY_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployTokenRegistry(address _dao, address _accessManager)
+        internal
+        returns (TokenRegistry tokenRegistry)
+    {
+        address implem = _deployCode(type(TokenRegistry).creationCode, 0);
+        tokenRegistry = TokenRegistry(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(TokenRegistry.initialize, (_accessManager)))
+                ),
+                TOKEN_REGISTRY_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deploySwapModule(address _dao, address _coreRegistry, address _accessManager)
+        internal
+        returns (SwapModule swapModule)
+    {
+        address implem = _deployCode(abi.encodePacked(type(SwapModule).creationCode, abi.encode(_coreRegistry)), 0);
+        swapModule = SwapModule(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _dao, abi.encodeCall(SwapModule.initialize, (_accessManager)))
+                ),
+                SWAP_MODULE_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployWeirollVM() internal returns (address weirollVM) {
+        return _deployCode(getWeirollVMCode(), WEIROLL_VM_SALT_DOMAIN);
+    }
+
+    function _deployMachineBeacon(address _dao, address _hubCoreRegistry, address _wormhole)
+        internal
+        returns (UpgradeableBeacon caliberBeacon)
+    {
+        address implem =
+            _deployCode(abi.encodePacked(type(Machine).creationCode, abi.encode(_hubCoreRegistry, _wormhole)), 0);
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _dao)),
+                MACHINE_BEACON_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployPreDepositVaultBeacon(address _dao, address _hubCoreRegistry)
+        internal
+        returns (UpgradeableBeacon preDepositVaultBeacon)
+    {
+        address implem =
+            _deployCode(abi.encodePacked(type(PreDepositVault).creationCode, abi.encode(_hubCoreRegistry)), 0);
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _dao)),
+                PRE_DEPOSIT_VAULT_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployCaliberBeacon(address _dao, address _coreRegistry, address _weirollVM)
+        internal
+        returns (UpgradeableBeacon caliberBeacon)
+    {
+        address implem =
+            _deployCode(abi.encodePacked(type(Caliber).creationCode, abi.encode(_coreRegistry, _weirollVM)), 0);
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _dao)),
+                CALIBER_BEACON_SALT_DOMAIN
             )
         );
     }
@@ -524,15 +618,39 @@ abstract contract Base is DeployViaIr {
         internal
         returns (UpgradeableBeacon caliberMailboxBeacon)
     {
-        address caliberMailboxImplemAddr = address(new CaliberMailbox(_spokeCoreRegistry, _hubChainId));
-        caliberMailboxBeacon = new UpgradeableBeacon(caliberMailboxImplemAddr, _dao);
+        address implem = _deployCode(
+            abi.encodePacked(type(CaliberMailbox).creationCode, abi.encode(_spokeCoreRegistry, _hubChainId)), 0
+        );
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _dao)),
+                CALIBER_MAILBOX_BEACON_SALT_DOMAIN
+            )
+        );
     }
 
     function _deployAcrossV3BridgeAdapterBeacon(address _dao, address _acrossV3SpokePool)
         internal
         returns (UpgradeableBeacon acrossV3BridgeAdapterBeacon)
     {
-        address acrossV3BridgeAdapterImplemAddr = address(new AcrossV3BridgeAdapter(_acrossV3SpokePool));
-        return UpgradeableBeacon(address(new UpgradeableBeacon(acrossV3BridgeAdapterImplemAddr, _dao)));
+        address implem =
+            _deployCode(abi.encodePacked(type(AcrossV3BridgeAdapter).creationCode, abi.encode(_acrossV3SpokePool)), 0);
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _dao)),
+                ACROSS_V3_BRIDGE_ADAPTER_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployCode(bytes memory bytecode, bytes32) internal virtual returns (address) {
+        address addr;
+        assembly {
+            addr := create(0, add(bytecode, 0x20), mload(bytecode))
+        }
+
+        require(addr != address(0), "Deployment failed");
+
+        return addr;
     }
 }
