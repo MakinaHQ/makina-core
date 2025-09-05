@@ -389,8 +389,9 @@ abstract contract Base is IRCodeReader, SaltDomains {
         machineSelectors[4] = IMachine.setDepositor.selector;
         machineSelectors[5] = IMachine.setRedeemer.selector;
         machineSelectors[6] = IMachine.setFeeManager.selector;
-        machineSelectors[7] = IMachine.setMaxFeeAccrualRate.selector;
-        machineSelectors[8] = IMachine.setFeeMintCooldown.selector;
+        machineSelectors[7] = IMachine.setMaxFixedFeeAccrualRate.selector;
+        machineSelectors[8] = IMachine.setMaxPerfFeeAccrualRate.selector;
+        machineSelectors[9] = IMachine.setFeeMintCooldown.selector;
         accessManager.setTargetFunctionRole(_machine, machineSelectors, Roles.STRATEGY_CONFIG_ROLE);
     }
 

@@ -14,7 +14,8 @@ interface IMachine is IMachineEndpoint {
     event FeeManagerChanged(address indexed oldFeeManager, address indexed newFeeManager);
     event FeeMintCooldownChanged(uint256 indexed oldFeeMintCooldown, uint256 indexed newFeeMintCooldown);
     event FeesMinted(uint256 shares);
-    event MaxFeeAccrualRateChanged(uint256 indexed oldMaxFeeAccrualRate, uint256 indexed newMaxFeeAccrualRate);
+    event MaxFixedFeeAccrualRateChanged(uint256 indexed oldMaxAccrualRate, uint256 indexed newMaxAccrualRate);
+    event MaxPerfFeeAccrualRateChanged(uint256 indexed oldMaxAccrualRate, uint256 indexed newMaxAccrualRate);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
@@ -28,7 +29,8 @@ interface IMachine is IMachineEndpoint {
     /// @param initialRedeemer The address of the initial redeemer.
     /// @param initialFeeManager The address of the initial fee manager.
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
-    /// @param initialMaxFeeAccrualRate The maximum fee accrual rate in basis points.
+    /// @param initialMaxFixedFeeAccrualRate The maximum fixed fee accrual rate per second, 1e18 = 100%.
+    /// @param initialMaxPerfFeeAccrualRate The maximum performance fee accrual rate per second, 1e18 = 100%.
     /// @param initialFeeMintCooldown The minimum time to be elapsed between two fee minting events in seconds.
     /// @param initialShareLimit The share cap value.
     struct MachineInitParams {
@@ -36,7 +38,8 @@ interface IMachine is IMachineEndpoint {
         address initialRedeemer;
         address initialFeeManager;
         uint256 initialCaliberStaleThreshold;
-        uint256 initialMaxFeeAccrualRate;
+        uint256 initialMaxFixedFeeAccrualRate;
+        uint256 initialMaxPerfFeeAccrualRate;
         uint256 initialFeeMintCooldown;
         uint256 initialShareLimit;
     }
@@ -105,8 +108,11 @@ interface IMachine is IMachineEndpoint {
     /// @notice Maximum duration a caliber can remain unaccounted for before it is considered stale.
     function caliberStaleThreshold() external view returns (uint256);
 
-    /// @notice Maximum fee accrual rate in basis points, used to compute an upper bound on fees amount to be minted.
-    function maxFeeAccrualRate() external view returns (uint256);
+    /// @notice Maximum fixed fee accrual rate per second used to compute an upper bound on shares to be minted, 1e18 = 100%.
+    function maxFixedFeeAccrualRate() external view returns (uint256);
+
+    /// @notice Maximum performance fee accrual rate per second used to compute an upper bound on shares to be minted, 1e18 = 100%.
+    function maxPerfFeeAccrualRate() external view returns (uint256);
 
     /// @notice Minimum time to be elapsed between two fee minting events.
     function feeMintCooldown() external view returns (uint256);
@@ -234,9 +240,13 @@ interface IMachine is IMachineEndpoint {
     /// @param newCaliberStaleThreshold The new threshold in seconds.
     function setCaliberStaleThreshold(uint256 newCaliberStaleThreshold) external;
 
-    /// @notice Sets the maximum fee accrual rate.
-    /// @param newMaxFeeAccrualRate The new maximum fee accrual rate in wei per second.
-    function setMaxFeeAccrualRate(uint256 newMaxFeeAccrualRate) external;
+    /// @notice Sets the maximum fixed fee accrual rate.
+    /// @param newMaxAccrualRate The new maximum fixed fee accrual rate per second, 1e18 = 100%.
+    function setMaxFixedFeeAccrualRate(uint256 newMaxAccrualRate) external;
+
+    /// @notice Sets the maximum performance fee accrual rate.
+    /// @param newMaxAccrualRate The new maximum performance fee accrual rate per second, 1e18 = 100%.
+    function setMaxPerfFeeAccrualRate(uint256 newMaxAccrualRate) external;
 
     /// @notice Sets the minimum time to be elapsed between two fee minting events.
     /// @param newFeeMintCooldown The new cooldown in seconds.

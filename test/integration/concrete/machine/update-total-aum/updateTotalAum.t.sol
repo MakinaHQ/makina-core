@@ -850,7 +850,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1 + fixedFee2 + perfFee2);
     }
 
-    function test_UpdateTotalAum_FixedAndPerfFees_ReducedByCap() public {
+    function test_UpdateTotalAum_FixedAndPerfFees_FixedFeeReducedByCap() public {
         uint256 inputAmount = 1e18;
         _deposit(inputAmount);
 
@@ -865,33 +865,27 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // reach end of fee mint cooldown
         vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
 
-        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        // set max fee accrual rate to low value
+        uint256 newMaxFixedFeeAccrualRate = 1;
+        vm.prank(dao);
+        machine.setMaxFixedFeeAccrualRate(newMaxFixedFeeAccrualRate);
+
+        uint256 cappedFixedFee1 = shareSupply1 * DEFAULT_MACHINE_FEE_MINT_COOLDOWN * newMaxFixedFeeAccrualRate / 1e18;
         uint256 adjustedSharePrice =
-            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + cappedFixedFee1 + 1);
         uint256 perfFee1 = feeManager.calculatePerformanceFee(
             shareSupply1, sharePrice1, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
         );
         assertGt(perfFee1, 0);
 
-        // set max fee accrual rate to 2 wei per second
-        uint256 newMaxFeeAccrualRate = 2;
-        vm.prank(dao);
-        machine.setMaxFeeAccrualRate(newMaxFeeAccrualRate);
-
-        // compute capped fees
-        uint256 totalFee = fixedFee1 + perfFee1;
-        uint256 cappedFee = newMaxFeeAccrualRate * DEFAULT_MACHINE_FEE_MINT_COOLDOWN;
-        fixedFee1 = fixedFee1 * cappedFee / totalFee;
-        perfFee1 = cappedFee - fixedFee1;
-
         // fixed fee and performance fee should be minted
         vm.expectEmit(false, false, false, true, address(machine));
-        emit IMachine.FeesMinted(fixedFee1 + perfFee1);
+        emit IMachine.FeesMinted(cappedFixedFee1 + perfFee1);
         machine.updateTotalAum();
         uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
         uint256 sharePrice2 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
-        assertEq(shareSupply2, shareSupply1 + fixedFee1 + perfFee1);
-        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1);
+        assertEq(shareSupply2, shareSupply1 + cappedFixedFee1 + perfFee1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), cappedFixedFee1 + perfFee1);
 
         // mint yield to machine
         yieldAmount = 1e16;
@@ -907,9 +901,9 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         // reach end of fee mint cooldown
         skip(1);
 
-        // set max fee accrual rate back to high value
+        // set max fixed fee accrual rate back to high value
         vm.prank(dao);
-        machine.setMaxFeeAccrualRate(DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE);
+        machine.setMaxFixedFeeAccrualRate(DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE);
 
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         adjustedSharePrice =
@@ -924,7 +918,79 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         emit IMachine.FeesMinted(fixedFee2 + perfFee2);
         machine.updateTotalAum();
         assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee2 + perfFee2);
-        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + perfFee1 + fixedFee2 + perfFee2);
+        assertEq(
+            IERC20(machine.shareToken()).balanceOf(address(dao)), cappedFixedFee1 + perfFee1 + fixedFee2 + perfFee2
+        );
+    }
+
+    function test_UpdateTotalAum_FixedAndPerfFees_PerfFeeReducedByCap() public {
+        uint256 inputAmount = 1e18;
+        _deposit(inputAmount);
+
+        uint256 shareSupply1 = IERC20(machine.shareToken()).totalSupply();
+
+        // mint yield to machine
+        uint256 yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // machine was initialized at t = 1
+        // reach end of fee mint cooldown
+        vm.warp(DEFAULT_MACHINE_FEE_MINT_COOLDOWN + 1);
+
+        // set max perf fee accrual rate to low value
+        uint256 newMaxPerfFeeAccrualRate = 1;
+        vm.prank(dao);
+        machine.setMaxPerfFeeAccrualRate(newMaxPerfFeeAccrualRate);
+
+        uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        assertGt(fixedFee1, 0);
+        uint256 adjustedSharePrice =
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply1 + fixedFee1 + 1);
+        uint256 cappedPerfFee1 = shareSupply1 * DEFAULT_MACHINE_FEE_MINT_COOLDOWN * newMaxPerfFeeAccrualRate / 1e18;
+
+        // fixed fee and performance fee should be minted
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee1 + cappedPerfFee1);
+        machine.updateTotalAum();
+        uint256 shareSupply2 = IERC20(machine.shareToken()).totalSupply();
+        uint256 sharePrice2 = DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + yieldAmount + 1) / (shareSupply2 + 1);
+        assertEq(shareSupply2, shareSupply1 + fixedFee1 + cappedPerfFee1);
+        assertEq(IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + cappedPerfFee1);
+
+        // mint yield to machine
+        yieldAmount = 1e16;
+        accountingToken.mint(address(machine), yieldAmount);
+
+        // stay within the fee mint cooldown
+        skip(DEFAULT_MACHINE_FEE_MINT_COOLDOWN - 1);
+
+        // no fees should be minted
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2);
+
+        // reach end of fee mint cooldown
+        skip(1);
+
+        // set max perf fee accrual rate back to high value
+        vm.prank(dao);
+        machine.setMaxPerfFeeAccrualRate(DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE);
+
+        uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        adjustedSharePrice =
+            DecimalsUtils.SHARE_TOKEN_UNIT * (inputAmount + 2 * yieldAmount + 1) / (shareSupply2 + fixedFee2 + 1);
+        uint256 perfFee2 = feeManager.calculatePerformanceFee(
+            shareSupply2, sharePrice2, adjustedSharePrice, DEFAULT_MACHINE_FEE_MINT_COOLDOWN
+        );
+        assertGt(perfFee2, 0);
+
+        // fixed fee and performance fee should be minted again
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.FeesMinted(fixedFee2 + perfFee2);
+        machine.updateTotalAum();
+        assertEq(IERC20(machine.shareToken()).totalSupply(), shareSupply2 + fixedFee2 + perfFee2);
+        assertEq(
+            IERC20(machine.shareToken()).balanceOf(address(dao)), fixedFee1 + cappedPerfFee1 + fixedFee2 + perfFee2
+        );
     }
 
     function test_UpdateTotalAum_FeeWithRemainingDust() public {

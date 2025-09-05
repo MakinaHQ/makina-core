@@ -28,6 +28,8 @@ library MachineUtils {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    uint256 private constant FEE_ACCRUAL_RATE_DIVISOR = 1e18;
+
     function updateTotalAum(Machine.MachineStorage storage $, address oracleRegistry) external returns (uint256) {
         $._lastTotalAum = _getTotalAum($, oracleRegistry);
         $._lastGlobalAccountingTime = block.timestamp;
@@ -43,44 +45,44 @@ library MachineUtils {
             address _shareToken = $._shareToken;
             uint256 currentShareSupply = IERC20(_shareToken).totalSupply();
 
-            uint256 fixedFee = IFeeManager(_feeManager).calculateFixedFee(currentShareSupply, elapsedTime);
+            uint256 fixedFee = Math.min(
+                IFeeManager(_feeManager).calculateFixedFee(currentShareSupply, elapsedTime),
+                (currentShareSupply * elapsedTime).mulDiv($._maxFixedFeeAccrualRate, FEE_ACCRUAL_RATE_DIVISOR)
+            );
 
             // offset fixed fee from the share price performance on which the performance fee is calculated.
-            uint256 adjustedSharePrice =
+            uint256 netSharePrice =
                 getSharePrice($._lastTotalAum, currentShareSupply + fixedFee, $._shareTokenDecimalsOffset);
-            uint256 perfFee = IFeeManager(_feeManager).calculatePerformanceFee(
-                currentShareSupply, $._lastMintedFeesSharePrice, adjustedSharePrice, elapsedTime
+            uint256 perfFee = Math.min(
+                IFeeManager(_feeManager).calculatePerformanceFee(
+                    currentShareSupply, $._lastMintedFeesSharePrice, netSharePrice, elapsedTime
+                ),
+                (currentShareSupply * elapsedTime).mulDiv($._maxPerfFeeAccrualRate, FEE_ACCRUAL_RATE_DIVISOR)
             );
 
             uint256 totalFee = fixedFee + perfFee;
             if (totalFee != 0) {
-                uint256 maxFee = $._maxFeeAccrualRate * elapsedTime;
-                if (maxFee != 0) {
-                    if (totalFee > maxFee) {
-                        fixedFee = fixedFee.mulDiv(maxFee, totalFee);
-                        perfFee = maxFee - fixedFee;
-                        totalFee = maxFee;
-                    }
-                    uint256 balBefore = IMachineShare(_shareToken).balanceOf(address(this));
+                uint256 balBefore = IMachineShare(_shareToken).balanceOf(address(this));
 
-                    IMachineShare(_shareToken).mint(address(this), totalFee);
-                    IMachineShare(_shareToken).approve(_feeManager, totalFee);
+                IMachineShare(_shareToken).mint(address(this), totalFee);
+                IMachineShare(_shareToken).approve(_feeManager, totalFee);
 
-                    IFeeManager(_feeManager).distributeFees(fixedFee, perfFee);
+                IFeeManager(_feeManager).distributeFees(fixedFee, perfFee);
 
-                    IMachineShare(_shareToken).approve(_feeManager, 0);
+                IMachineShare(_shareToken).approve(_feeManager, 0);
 
-                    uint256 balAfter = IMachineShare(_shareToken).balanceOf(address(this));
-                    if (balAfter > balBefore) {
-                        uint256 dust = balAfter - balBefore;
-                        IMachineShare(_shareToken).burn(address(this), dust);
-                        totalFee -= dust;
-                    }
+                uint256 balAfter = IMachineShare(_shareToken).balanceOf(address(this));
+                if (balAfter > balBefore) {
+                    uint256 dust = balAfter - balBefore;
+                    IMachineShare(_shareToken).burn(address(this), dust);
+                    totalFee -= dust;
                 }
-                $._lastMintedFeesTime = currentTimestamp;
-                $._lastMintedFeesSharePrice =
-                    getSharePrice($._lastTotalAum, IERC20(_shareToken).totalSupply(), $._shareTokenDecimalsOffset);
             }
+
+            $._lastMintedFeesTime = currentTimestamp;
+            $._lastMintedFeesSharePrice =
+                getSharePrice($._lastTotalAum, IERC20(_shareToken).totalSupply(), $._shareTokenDecimalsOffset);
+
             return totalFee;
         }
         return 0;

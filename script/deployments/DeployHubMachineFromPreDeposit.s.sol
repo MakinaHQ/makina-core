@@ -64,7 +64,8 @@ contract DeployHubMachineFromPreDeposit is Script, SortedParams {
                 mParams.initialRedeemer,
                 mParams.initialFeeManager,
                 mParams.initialCaliberStaleThreshold,
-                mParams.initialMaxFeeAccrualRate,
+                mParams.initialMaxFixedFeeAccrualRate,
+                mParams.initialMaxPerfFeeAccrualRate,
                 mParams.initialFeeMintCooldown,
                 mParams.initialShareLimit
             ),

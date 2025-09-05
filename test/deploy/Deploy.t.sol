@@ -187,6 +187,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.accountingToken(), accountingToken);
         assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
+        assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
+        assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
@@ -314,6 +316,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
         assertEq(machine.accountingToken(), accountingToken);
         assertTrue(machine.isIdleToken(depositToken));
+        assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
+        assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);

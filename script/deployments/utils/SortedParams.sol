@@ -14,7 +14,8 @@ abstract contract SortedParams {
         address initialDepositor;
         address initialFeeManager;
         uint256 initialFeeMintCooldown;
-        uint256 initialMaxFeeAccrualRate;
+        uint256 initialMaxFixedFeeAccrualRate;
+        uint256 initialMaxPerfFeeAccrualRate;
         address initialRedeemer;
         uint256 initialShareLimit;
     }

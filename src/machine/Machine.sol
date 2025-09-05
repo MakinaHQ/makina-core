@@ -49,7 +49,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         uint256 _lastGlobalAccountingTime;
         uint256 _lastMintedFeesTime;
         uint256 _lastMintedFeesSharePrice;
-        uint256 _maxFeeAccrualRate;
+        uint256 _maxFixedFeeAccrualRate;
+        uint256 _maxPerfFeeAccrualRate;
         uint256 _feeMintCooldown;
         uint256 _shareTokenDecimalsOffset;
         uint256 _shareLimit;
@@ -116,7 +117,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._redeemer = mParams.initialRedeemer;
         $._feeManager = mParams.initialFeeManager;
         $._caliberStaleThreshold = mParams.initialCaliberStaleThreshold;
-        $._maxFeeAccrualRate = mParams.initialMaxFeeAccrualRate;
+        $._maxFixedFeeAccrualRate = mParams.initialMaxFixedFeeAccrualRate;
+        $._maxPerfFeeAccrualRate = mParams.initialMaxPerfFeeAccrualRate;
         $._feeMintCooldown = mParams.initialFeeMintCooldown;
         $._shareLimit = mParams.initialShareLimit;
         __MakinaGovernable_init(mgParams);
@@ -158,8 +160,13 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function maxFeeAccrualRate() external view override returns (uint256) {
-        return _getMachineStorage()._maxFeeAccrualRate;
+    function maxFixedFeeAccrualRate() external view override returns (uint256) {
+        return _getMachineStorage()._maxFixedFeeAccrualRate;
+    }
+
+    /// @inheritdoc IMachine
+    function maxPerfFeeAccrualRate() external view override returns (uint256) {
+        return _getMachineStorage()._maxPerfFeeAccrualRate;
     }
 
     /// @inheritdoc IMachine
@@ -548,10 +555,17 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function setMaxFeeAccrualRate(uint256 newMaxFeeAccrualRate) external override restricted {
+    function setMaxFixedFeeAccrualRate(uint256 newMaxAccrualRate) external override restricted {
         MachineStorage storage $ = _getMachineStorage();
-        emit MaxFeeAccrualRateChanged($._maxFeeAccrualRate, newMaxFeeAccrualRate);
-        $._maxFeeAccrualRate = newMaxFeeAccrualRate;
+        emit MaxFixedFeeAccrualRateChanged($._maxFixedFeeAccrualRate, newMaxAccrualRate);
+        $._maxFixedFeeAccrualRate = newMaxAccrualRate;
+    }
+
+    /// @inheritdoc IMachine
+    function setMaxPerfFeeAccrualRate(uint256 newMaxAccrualRate) external override restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        emit MaxPerfFeeAccrualRateChanged($._maxPerfFeeAccrualRate, newMaxAccrualRate);
+        $._maxPerfFeeAccrualRate = newMaxAccrualRate;
     }
 
     /// @inheritdoc IMachine
