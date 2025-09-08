@@ -78,6 +78,13 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         __AccessManaged_init(params.initialAuthority);
     }
 
+    modifier onlyRiskManager() {
+        if (msg.sender != _getPreDepositVaultStorage()._riskManager) {
+            revert Errors.UnauthorizedCaller();
+        }
+        _;
+    }
+
     modifier notMigrated() {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         if ($._migrated) {
@@ -268,11 +275,8 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function setShareLimit(uint256 newShareLimit) external override notMigrated {
+    function setShareLimit(uint256 newShareLimit) external override onlyRiskManager notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
-        if (msg.sender != $._riskManager) {
-            revert Errors.UnauthorizedCaller();
-        }
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
     }
@@ -285,7 +289,12 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function setWhitelistedUsers(address[] calldata users, bool whitelisted) external override restricted notMigrated {
+    function setWhitelistedUsers(address[] calldata users, bool whitelisted)
+        external
+        override
+        onlyRiskManager
+        notMigrated
+    {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         uint256 len = users.length;
         for (uint256 i = 0; i < len; ++i) {
@@ -295,7 +304,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     }
 
     /// @inheritdoc IPreDepositVault
-    function setWhitelistMode(bool enabled) external override restricted notMigrated {
+    function setWhitelistMode(bool enabled) external override onlyRiskManager notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         $._whitelistMode = enabled;
         emit WhitelistModeChanged(enabled);

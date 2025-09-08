@@ -105,14 +105,14 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
         assertEq(preDepositVault.riskManager(), newRiskManager);
     }
 
-    function test_SetWhitelistedUsers_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetWhitelistedUsers_RevertWhen_CallerNotRM() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         preDepositVault.setWhitelistedUsers(new address[](0), true);
     }
 
     function test_SetWhitelistedUsers_RevertGiven_VaultMigrated() public migrated {
         vm.expectRevert(Errors.Migrated.selector);
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistedUsers(new address[](0), true);
     }
 
@@ -127,28 +127,28 @@ contract Getters_Setters_PreDepositVault_Unit_Concrete_Test is PreDepositVault_U
         vm.expectEmit(true, true, false, false, address(preDepositVault));
         emit IPreDepositVault.UserWhitelistingChanged(users[1], true);
 
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistedUsers(users, true);
 
         assertTrue(preDepositVault.isWhitelistedUser(users[0]));
         assertTrue(preDepositVault.isWhitelistedUser(users[1]));
     }
 
-    function test_SetWhitelistMode_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetWhitelistMode_RevertWhen_CallerNotRM() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         preDepositVault.setWhitelistMode(true);
     }
 
     function test_SetWhitelistMode_RevertGiven_VaultMigrated() public migrated {
         vm.expectRevert(Errors.Migrated.selector);
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistMode(true);
     }
 
     function test_SetWhitelistMode() public {
         vm.expectEmit(true, false, false, false, address(preDepositVault));
         emit IPreDepositVault.WhitelistModeChanged(true);
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistMode(true);
         assertTrue(preDepositVault.whitelistMode());
     }

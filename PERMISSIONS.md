@@ -74,7 +74,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Machine
 
 - `STRATEGY_CONFIG_ROLE` (roleId `2`)
-
   - Can set the address of a Spoke caliber mailbox.
   - Can create a bridge adapter.
   - Can reset bridging state.
@@ -114,10 +113,21 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can authorize an incoming bridge transfer from a spoke caliber.
   - Can claim an incoming bridge transfer from a spoke caliber.
 
+### Pre-Deposit Vault
+
+- `STRATEGY_CONFIG_ROLE` (roleId `2`)
+  - Can set the address of the risk manager.
+
+- **Risk Manager**
+
+  - Can set the share token supply limit that cannot be exceeded by new deposits.
+  - Can add or remove users from the whitelist for deposits and redemptions.
+  - Can enable or disable the whitelist.
+
+
 ### Caliber Mailbox
 
 - `STRATEGY_CONFIG_ROLE` (roleId `2`)
-
   - Can create a bridge adapter.
   - Can reset bridging state.
   - Can set the address of a Hub bridge adapter.
@@ -148,7 +158,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Caliber
 
 - `STRATEGY_CONFIG_ROLE` (roleId `2`)
-
   - Can add and remove Merkle root guardians.
 
 - **Risk Manager**
