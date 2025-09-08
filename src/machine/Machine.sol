@@ -555,21 +555,21 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function setMaxFixedFeeAccrualRate(uint256 newMaxAccrualRate) external override restricted {
+    function setMaxFixedFeeAccrualRate(uint256 newMaxAccrualRate) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit MaxFixedFeeAccrualRateChanged($._maxFixedFeeAccrualRate, newMaxAccrualRate);
         $._maxFixedFeeAccrualRate = newMaxAccrualRate;
     }
 
     /// @inheritdoc IMachine
-    function setMaxPerfFeeAccrualRate(uint256 newMaxAccrualRate) external override restricted {
+    function setMaxPerfFeeAccrualRate(uint256 newMaxAccrualRate) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit MaxPerfFeeAccrualRateChanged($._maxPerfFeeAccrualRate, newMaxAccrualRate);
         $._maxPerfFeeAccrualRate = newMaxAccrualRate;
     }
 
     /// @inheritdoc IMachine
-    function setFeeMintCooldown(uint256 newFeeMintCooldown) external override restricted {
+    function setFeeMintCooldown(uint256 newFeeMintCooldown) external override onlyRiskManagerTimelock {
         MachineStorage storage $ = _getMachineStorage();
         emit FeeMintCooldownChanged($._feeMintCooldown, newFeeMintCooldown);
         $._feeMintCooldown = newFeeMintCooldown;

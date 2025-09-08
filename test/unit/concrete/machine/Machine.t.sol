@@ -113,8 +113,8 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.caliberStaleThreshold(), newThreshold);
     }
 
-    function test_SetMaxFixedFeeAccrualRate_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxFixedFeeAccrualRate_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setMaxFixedFeeAccrualRate(1e18);
     }
 
@@ -122,13 +122,13 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newMaxAccrualRate = 1e18;
         vm.expectEmit(true, true, false, false, address(machine));
         emit IMachine.MaxFixedFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE, newMaxAccrualRate);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxFixedFeeAccrualRate(newMaxAccrualRate);
         assertEq(machine.maxFixedFeeAccrualRate(), newMaxAccrualRate);
     }
 
-    function test_SetMaxPerfFeeAccrualRate_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxPerfFeeAccrualRate_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setMaxPerfFeeAccrualRate(1e18);
     }
 
@@ -136,13 +136,13 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newMaxAccrualRate = 1e18;
         vm.expectEmit(true, true, false, false, address(machine));
         emit IMachine.MaxPerfFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE, newMaxAccrualRate);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxPerfFeeAccrualRate(newMaxAccrualRate);
         assertEq(machine.maxPerfFeeAccrualRate(), newMaxAccrualRate);
     }
 
-    function test_SetFeeMintCooldown_RevertWhenCallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetFeeMintCooldown_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setFeeMintCooldown(1 hours);
     }
 
@@ -150,7 +150,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newFeeMintCooldown = 1 hours;
         vm.expectEmit(true, true, false, false, address(machine));
         emit IMachine.FeeMintCooldownChanged(DEFAULT_MACHINE_FEE_MINT_COOLDOWN, newFeeMintCooldown);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setFeeMintCooldown(newFeeMintCooldown);
         assertEq(machine.feeMintCooldown(), newFeeMintCooldown);
     }

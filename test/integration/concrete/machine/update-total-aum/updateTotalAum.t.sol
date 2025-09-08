@@ -867,7 +867,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // set max fee accrual rate to low value
         uint256 newMaxFixedFeeAccrualRate = 1;
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxFixedFeeAccrualRate(newMaxFixedFeeAccrualRate);
 
         uint256 cappedFixedFee1 = shareSupply1 * DEFAULT_MACHINE_FEE_MINT_COOLDOWN * newMaxFixedFeeAccrualRate / 1e18;
@@ -902,7 +902,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         skip(1);
 
         // set max fixed fee accrual rate back to high value
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxFixedFeeAccrualRate(DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE);
 
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
@@ -939,7 +939,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // set max perf fee accrual rate to low value
         uint256 newMaxPerfFeeAccrualRate = 1;
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxPerfFeeAccrualRate(newMaxPerfFeeAccrualRate);
 
         uint256 fixedFee1 = feeManager.calculateFixedFee(shareSupply1, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
@@ -972,7 +972,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         skip(1);
 
         // set max perf fee accrual rate back to high value
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setMaxPerfFeeAccrualRate(DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE);
 
         uint256 fixedFee2 = feeManager.calculateFixedFee(shareSupply2, DEFAULT_MACHINE_FEE_MINT_COOLDOWN);

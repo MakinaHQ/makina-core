@@ -101,7 +101,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the outgoing transfer enabled status for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
   - Can set the caliber accounting staleness threshold.
-  - Can set the maximum fee accrual rate.
+  - Can set the maximum fixed and perf fee accrual rates.
   - Can set the minimum time to be elapsed between two fee minting events.
 
 - **Mechanic / Security Council**
