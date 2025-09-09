@@ -10,9 +10,8 @@ library DecimalsUtils {
     uint8 internal constant SHARE_TOKEN_DECIMALS = DEFAULT_DECIMALS;
     uint256 internal constant SHARE_TOKEN_UNIT = 10 ** SHARE_TOKEN_DECIMALS;
 
-    function _getDecimals(address asset_) internal view returns (uint8) {
-        (bool success, bytes memory encodedDecimals) =
-            address(asset_).staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
+    function _getDecimals(address asset) internal view returns (uint8) {
+        (bool success, bytes memory encodedDecimals) = asset.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
         if (success && encodedDecimals.length >= 32) {
             uint256 returnedDecimals = abi.decode(encodedDecimals, (uint256));
             if (returnedDecimals <= type(uint8).max) {
