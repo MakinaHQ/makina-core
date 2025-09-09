@@ -298,15 +298,19 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
         uint256 len = users.length;
         for (uint256 i = 0; i < len; ++i) {
-            $._isWhitelistedUser[users[i]] = whitelisted;
-            emit UserWhitelistingChanged(users[i], whitelisted);
+            if ($._isWhitelistedUser[users[i]] != whitelisted) {
+                $._isWhitelistedUser[users[i]] = whitelisted;
+                emit UserWhitelistingChanged(users[i], whitelisted);
+            }
         }
     }
 
     /// @inheritdoc IPreDepositVault
     function setWhitelistMode(bool enabled) external override onlyRiskManager notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
-        $._whitelistMode = enabled;
-        emit WhitelistModeChanged(enabled);
+        if ($._whitelistMode != enabled) {
+            $._whitelistMode = enabled;
+            emit WhitelistModeChanged(enabled);
+        }
     }
 }
