@@ -11,10 +11,10 @@ interface IChainRegistry {
     /// @notice Wormhole chain ID => Is the chain ID registered
     function isWhChainIdRegistered(uint16 _whChainId) external view returns (bool);
 
-    /// @dev EVM chain ID => Wormhole chain ID
+    /// @notice EVM chain ID => Wormhole chain ID
     function evmToWhChainId(uint256 _evmChainId) external view returns (uint16);
 
-    /// @dev Wormhole chain ID => EVM chain ID
+    /// @notice Wormhole chain ID => EVM chain ID
     function whToEvmChainId(uint16 _whChainId) external view returns (uint256);
 
     /// @notice Associates an EVM chain ID with a Wormhole chain ID in the contract storage.

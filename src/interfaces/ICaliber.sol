@@ -130,30 +130,30 @@ interface ICaliber {
     /// @notice Length of the position IDs list.
     function getPositionsLength() external view returns (uint256);
 
-    /// @dev Position index => Position ID
+    /// @notice Position index => Position ID
     /// @dev There are no guarantees on the ordering of values inside the Position ID list,
     ///      and it may change when values are added or removed.
     function getPositionId(uint256 idx) external view returns (uint256);
 
-    /// @dev Position ID => Position data
+    /// @notice Position ID => Position data
     function getPosition(uint256 id) external view returns (Position memory);
 
-    /// @dev Token => Registered as base token in this caliber
+    /// @notice Token => Registered as base token in this caliber
     function isBaseToken(address token) external view returns (bool);
 
     /// @notice Length of the base tokens list.
     function getBaseTokensLength() external view returns (uint256);
 
-    /// @dev Base token index => Base token address
+    /// @notice Base token index => Base token address
     /// @dev There are no guarantees on the ordering of values inside the base tokens list,
     ///      and it may change when values are added or removed.
     function getBaseToken(uint256 idx) external view returns (address);
 
-    /// @dev User => Whether the user is a root guardian
+    /// @notice User => Whether the user is a root guardian
     ///      Guardians have veto power over updates of the Merkle root.
     function isInstrRootGuardian(address user) external view returns (bool);
 
-    /// @dev Checks if the accounting age of each position is below the position staleness threshold.
+    /// @notice Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
 
     /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
