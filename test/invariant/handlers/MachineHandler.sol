@@ -7,6 +7,7 @@ import {StdUtils} from "forge-std/StdUtils.sol";
 import {Vm} from "forge-std/Vm.sol";
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
@@ -24,6 +25,8 @@ import {PerChainData} from "../../utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "../../utils/WormholeQueryTestHelpers.sol";
 
 contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
+    using Math for uint256;
+
     Machine public machine;
     Caliber public hubCaliber;
     Caliber public spokeCaliber;
@@ -362,6 +365,6 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
     }
 
     function _applyBridgeFee(uint16 bridgeId, uint256 amount) internal view returns (uint256) {
-        return (amount * (10_000 - machineStore.bridgeFeeBps(bridgeId))) / 10_000;
+        return amount.mulDiv(10_000 - machineStore.bridgeFeeBps(bridgeId), 10_000, Math.Rounding.Ceil);
     }
 }

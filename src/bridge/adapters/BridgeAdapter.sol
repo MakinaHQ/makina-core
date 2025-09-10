@@ -251,7 +251,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         uint256 _maxBridgeLossBps = IBridgeController($._controller).getMaxBridgeLossBps($._bridgeId);
         if (
             receivedAmount < message.minOutputAmount
-                || receivedAmount < message.inputAmount.mulDiv(MAX_BPS - _maxBridgeLossBps, MAX_BPS)
+                || receivedAmount < message.inputAmount.mulDiv(MAX_BPS - _maxBridgeLossBps, MAX_BPS, Math.Rounding.Ceil)
         ) {
             revert Errors.MaxValueLossExceeded();
         }
