@@ -6,7 +6,7 @@ import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
-contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
+abstract contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     IMachineShare internal shareToken;
 
     function setUp() public virtual override {
@@ -14,7 +14,9 @@ contract MachineShare_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
         shareToken = IMachineShare(machine.shareToken());
     }
+}
 
+contract MachineShare_Getters_Unit_Concrete_Test is MachineShare_Unit_Concrete_Test {
     function test_Getters() public view {
         assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
