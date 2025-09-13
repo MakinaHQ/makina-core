@@ -90,3 +90,15 @@ yarn lint
 ### Deployment
 
 See `script/README.md` for instructions.
+
+## Licensing
+
+The primary license for Makina Core is the Business Source License 1.1 (`BUSL-1.1`), see `LICENSE`.
+
+### Exceptions
+
+- `src-ir/WeirollVM.sol` is licensed under `GPL-3.0-only` (as indicated in their SPDX headers), see `src-ir/LICENSE`
+- All files in `src/interfaces/` are licensed under `MIT` (as indicated in its SPDX header), see `src/interfaces/LICENSE_MIT`
+- All files in `test/` remain unlicensed.
+- All files in `test-ir/` remain unlicensed.
+- All files in `script/` remain unlicensed.

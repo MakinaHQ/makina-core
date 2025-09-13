@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 /// @notice This interface is used to map EVM chain IDs to Wormhole chain IDs and vice versa.
