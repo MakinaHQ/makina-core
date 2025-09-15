@@ -123,7 +123,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Maximum amount of shares that can currently be minted through asset deposits.
     function maxMint() external view returns (uint256);
 
-    /// @notice Maximum amount of assets that can currently be withdrawn through share redemptions.
+    /// @notice Maximum amount of accounting tokens that can currently be withdrawn through share redemptions.
     function maxWithdraw() external view returns (uint256);
 
     /// @notice Last total machine AUM.
@@ -153,14 +153,14 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
     function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address);
 
-    /// @notice Returns the amount of shares that the Machine would exchange for the amount of assets provided.
-    /// @param assets The amount of assets.
+    /// @notice Returns the amount of shares that the Machine would exchange for the amount of accounting tokens provided.
+    /// @param assets The amount of accounting tokens.
     /// @return shares The amount of shares.
     function convertToShares(uint256 assets) external view returns (uint256);
 
-    /// @notice Returns the amount of assets that the Machine would exchange for the amount of shares provided.
+    /// @notice Returns the amount of accounting tokens that the Machine would exchange for the amount of shares provided.
     /// @param shares The amount of shares.
-    /// @return assets The amount of assets.
+    /// @return assets The amount of accounting tokens.
     function convertToAssets(uint256 shares) external view returns (uint256);
 
     /// @notice Initiates a token transfers to the hub caliber.
@@ -196,7 +196,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Redeems shares from the machine and transfers accounting tokens to the receiver.
     /// @param shares The amount of shares to redeem.
     /// @param receiver The receiver of the accounting tokens.
-    /// @param minAssets The minimum amount of assets to be transferred.
+    /// @param minAssets The minimum amount of accounting tokens to be transferred.
     /// @return assets The amount of accounting tokens transferred.
     function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
 

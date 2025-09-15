@@ -29,7 +29,7 @@ interface IPreDepositVault {
         address accountingToken
     ) external;
 
-    /// @notice Whether the vault has migrated to a machine instance.
+    /// @notice True if the vault has migrated to a machine instance, false otherwise.
     function migrated() external view returns (bool);
 
     /// @notice Address of the machine, set during migration.
@@ -56,33 +56,33 @@ interface IPreDepositVault {
     /// @notice Share token supply limit that cannot be exceeded by new deposits.
     function shareLimit() external view returns (uint256);
 
-    /// @notice Maximum amount of assets that can currently be deposited in the vault.
+    /// @notice Maximum amount of deposit tokens that can currently be deposited in the vault.
     function maxDeposit() external view returns (uint256);
 
-    /// @notice Total amount of depositToken managed by the vault.
+    /// @notice Total amount of deposit tokens managed by the vault.
     function totalAssets() external view returns (uint256);
 
-    /// @notice Amount of shares minted against a given amount of assets.
-    /// @param amount The amount of assets to be deposited.
-    function previewDeposit(uint256 amount) external view returns (uint256);
+    /// @notice Amount of shares minted against a given amount of deposit tokens.
+    /// @param assets The amount of deposit tokens to be deposited.
+    function previewDeposit(uint256 assets) external view returns (uint256);
 
-    /// @notice Amount of assets that can be withdrawn against a given amount of shares.
-    /// @param amount The amount of shares to be redeemed.
-    function previewRedeem(uint256 amount) external view returns (uint256);
+    /// @notice Amount of deposit tokens that can be withdrawn against a given amount of shares.
+    /// @param assets The amount of shares to be redeemed.
+    function previewRedeem(uint256 assets) external view returns (uint256);
 
-    /// @notice Deposits a given amount of assets and mints shares to the receiver.
-    /// @param amount The amount of assets to be deposited.
+    /// @notice Deposits a given amount of deposit tokens and mints shares to the receiver.
+    /// @param assets The amount of deposit tokens to be deposited.
     /// @param receiver The receiver of the shares.
     /// @param minShares The minimum amount of shares to be minted.
     /// @return shares The amount of shares minted.
-    function deposit(uint256 amount, address receiver, uint256 minShares) external returns (uint256);
+    function deposit(uint256 assets, address receiver, uint256 minShares) external returns (uint256);
 
-    /// @notice Burns exactly shares from caller and transfers the corresponding amount of assets to the receiver.
-    /// @param amount The amount of shares to be redeemed.
-    /// @param receiver The receiver of withdrawn assets.
-    /// @param minAssets The minimum amount of assets to be transferred.
-    /// @return assets The amount of assets transferred.
-    function redeem(uint256 amount, address receiver, uint256 minAssets) external returns (uint256);
+    /// @notice Burns exactly shares from caller and transfers the corresponding amount of deposit tokens to the receiver.
+    /// @param shares The amount of shares to be redeemed.
+    /// @param receiver The receiver of withdrawn deposit tokens.
+    /// @param minAssets The minimum amount of deposit tokens to be transferred.
+    /// @return assets The amount of deposit tokens transferred.
+    function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
 
     /// @notice Migrates the pre-deposit vault to the machine.
     function migrateToMachine() external;
