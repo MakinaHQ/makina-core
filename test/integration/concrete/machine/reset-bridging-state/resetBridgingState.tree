@@ -1,7 +1,7 @@
 resetBridgingState.t.sol
-├── when caller does not have the relevant role
-│  └── it should revert with AccessManagedUnauthorized
-└── when caller has the relevant role
+├── when caller is not the Security Council
+│  └── it should revert with UnauthorizedCaller
+└── when caller is the Security Council
    ├── given the machine has a resulting null token balance
    │  ├── it should erase all the existing bridge counters for the given token, in machine storage
    │  └── it should emit a BridgingStateReset event

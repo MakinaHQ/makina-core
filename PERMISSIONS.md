@@ -76,7 +76,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - `STRATEGY_CONFIG_ROLE` (roleId `2`)
   - Can set the address of a Spoke caliber mailbox.
   - Can create a bridge adapter.
-  - Can reset bridging state.
   - Can set the address of a Spoke bridge adapter.
   - Can set the address of the depositor contract.
   - Can set the address of the redeemer contract.
@@ -85,11 +84,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
-  - Can reset the bridging state for any token.
 
 - **Security Council**
 
   - Can trigger recovery mode.
+  - Can reset the bridging state for any token.
 
 - **Risk Manager**
 
@@ -129,7 +128,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `STRATEGY_CONFIG_ROLE` (roleId `2`)
   - Can create a bridge adapter.
-  - Can reset bridging state.
   - Can set the address of a Hub bridge adapter.
   - Can set the address of the mechanic.
   - Can set the address of the security council.
@@ -139,6 +137,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - **Security Council**
 
   - Can trigger recovery mode.
+  - Can reset the bridging state for any token.
 
 - **Risk Manager Timelock**
 

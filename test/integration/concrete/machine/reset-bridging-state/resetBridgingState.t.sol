@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
@@ -24,8 +22,8 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
-    function test_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_RevertWhen_CallerNotSC() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.resetBridgingState(address(0));
     }
 
@@ -36,7 +34,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     {
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.BridgingStateReset(address(accountingToken));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(accountingToken));
     }
 
@@ -49,7 +47,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.BridgingStateReset(address(baseToken2));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(baseToken2));
         assertFalse(machine.isIdleToken(address(baseToken2)));
     }
@@ -61,7 +59,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
     {
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.BridgingStateReset(address(accountingToken));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(accountingToken));
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
@@ -76,7 +74,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         deal(address(baseToken2), address(bridgeAdapterAddr), 1, true);
 
         vm.expectRevert(abi.encodeWithSelector(Errors.PriceFeedRouteNotRegistered.selector, address(baseToken2)));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(baseToken2));
     }
 
@@ -90,7 +88,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         vm.expectEmit(true, false, false, false, address(machine));
         emit IBridgeController.BridgingStateReset(address(baseToken));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(baseToken));
         assertTrue(machine.isIdleToken(address(baseToken)));
     }
@@ -141,7 +139,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         // mint some extra tokens to the bridge adapter
         accountingToken.mint(bridgeAdapterAddr, amount3);
 
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(accountingToken));
         assertEq(accountingToken.balanceOf(address(machine)), amount1 + amount2 + amount3);
         assertEq(accountingToken.balanceOf(bridgeAdapterAddr), 0);
@@ -193,7 +191,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         // mint some extra tokens to the bridge adapter
         baseToken.mint(bridgeAdapterAddr, amount3);
 
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(baseToken));
         assertEq(baseToken.balanceOf(address(machine)), amount1 + amount2 + amount3);
         assertEq(baseToken.balanceOf(bridgeAdapterAddr), 0);
@@ -244,7 +242,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.updateTotalAum();
 
         // reset bridge-related state in machine
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         machine.resetBridgingState(address(accountingToken));
 
         // aum update now works

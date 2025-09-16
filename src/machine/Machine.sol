@@ -593,7 +593,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IBridgeController
-    function resetBridgingState(address token) external override restricted {
+    function resetBridgingState(address token) external override onlySecurityCouncil {
         MachineStorage storage $ = _getMachineStorage();
         uint256 len = $._foreignChainIds.length;
         for (uint256 i; i < len; ++i) {

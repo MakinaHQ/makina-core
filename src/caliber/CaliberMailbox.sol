@@ -197,7 +197,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc IBridgeController
-    function resetBridgingState(address token) external override restricted {
+    function resetBridgingState(address token) external override onlySecurityCouncil {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
         $._bridgesIn.remove(token);
