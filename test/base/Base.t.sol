@@ -90,7 +90,7 @@ abstract contract Base_Hub_Test is Base_Test {
 
         setupHubCoreRegistry(deployment);
         setupHubCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
     }
 
     function _wormholeSetup() public {
@@ -162,7 +162,7 @@ abstract contract Base_Spoke_Test is Base_Test {
 
         setupSpokeCoreRegistry(deployment);
         setupSpokeCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
     }
 
     function _deployCaliber(

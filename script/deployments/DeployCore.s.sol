@@ -19,8 +19,13 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     SwapperData[] public swappersData;
     BridgeData[] public bridgesData;
 
-    address public dao;
     address public deployer;
+    address public upgradeAdmin;
+    address public superAdmin;
+    address public infraSetupAdmin;
+    address public stratDeployAdmin;
+    address public stratCompSetupAdmin;
+    address public stratMgmtSetupAdmin;
 
     function run() public {
         _deploySetupBefore();
@@ -53,7 +58,12 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
             bridgesData.push(_bridgesData[i]);
         }
 
-        dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));
+        upgradeAdmin = abi.decode(vm.parseJson(inputJson, ".upgradeAdmin"), (address));
+        superAdmin = abi.decode(vm.parseJson(inputJson, ".superAdmin"), (address));
+        infraSetupAdmin = abi.decode(vm.parseJson(inputJson, ".infraSetupAdmin"), (address));
+        stratDeployAdmin = abi.decode(vm.parseJson(inputJson, ".stratDeployAdmin"), (address));
+        stratCompSetupAdmin = abi.decode(vm.parseJson(inputJson, ".stratCompSetupAdmin"), (address));
+        stratMgmtSetupAdmin = abi.decode(vm.parseJson(inputJson, ".stratMgmtSetupAdmin"), (address));
 
         // start broadcasting transactions
         vm.startBroadcast();

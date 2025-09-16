@@ -10,7 +10,9 @@ import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeployHubMachine is Script, SortedParams {
+import {Base} from "../../test/base/Base.sol";
+
+contract DeployHubMachine is Base, Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -58,6 +60,7 @@ contract DeployHubMachine is Script, SortedParams {
 
         // Deploy machine
         vm.startBroadcast();
+
         deployedInstance = hubCoreFactory.createMachine(
             IMachine.MachineInitParams(
                 mParams.initialDepositor,
@@ -90,6 +93,12 @@ contract DeployHubMachine is Script, SortedParams {
             shareTokenSymbol,
             salt
         );
+
+        if (!vm.envOr("SKIP_AM_SETUP", false)) {
+            _setupMachineAMFunctionRoles(mgParams.initialAuthority, deployedInstance);
+            _setupCaliberAMFunctionRoles(mgParams.initialAuthority, IMachine(deployedInstance).hubCaliber());
+        }
+
         vm.stopBroadcast();
 
         // Write to file

@@ -142,6 +142,7 @@ Contracts in this repository implement the [OpenZeppelin AccessManagerUpgradeabl
 Roles use in makina core contracts are defined as follows:
 
 - `ADMIN_ROLE` - roleId `0` - the Access Manager super admin. Can grant and revoke any role. Set by default in the Access Manager constructor.
-- `STRATEGY_DEPLOYER_ROLE` - roleId `1` - the address allowed to deploy new strategies.
-- `STRATEGY_CONFIG_ROLE` - roleId `2` - the address allowed to set the entities that manage strategies.
-- `INFRA_CONFIG_ROLE` - roleId `3` - the address allowed to perform setup and maintenance on shared core contracts.
+- `INFRA_SETUP_ROLE` - roleId `1` - the address allowed to perform setup and maintenance on shared core contracts.
+- `STRATEGY_DEPLOYMENT_ROLE` - roleId `2` - the address allowed to deploy new strategies.
+- `STRATEGY_COMPONENTS_SETUP_ROLE` - roleId `3` - the address allowed to link strategy contracts together.
+- `STRATEGY_MANAGEMENT_SETUP_ROLE` - roleId `4` - the address allowed to set the entities that manage strategies.

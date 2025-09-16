@@ -9,7 +9,9 @@ import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeploySpokeCaliber is Script, SortedParams {
+import {Base} from "../../test/base/Base.sol";
+
+contract DeploySpokeCaliber is Base, Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -54,6 +56,7 @@ contract DeploySpokeCaliber is Script, SortedParams {
 
         // Deploy caliber
         vm.startBroadcast();
+
         deployedInstance = spokeCoreFactory.createCaliber(
             ICaliber.CaliberInitParams(
                 cParams.initialPositionStaleThreshold,
@@ -75,6 +78,14 @@ contract DeploySpokeCaliber is Script, SortedParams {
             hubMachine,
             salt
         );
+
+        if (!vm.envOr("SKIP_AM_SETUP", false)) {
+            _setupCaliberAMFunctionRoles(mgParams.initialAuthority, deployedInstance);
+            _setupCaliberMailboxAMFunctionRoles(
+                mgParams.initialAuthority, ICaliber(deployedInstance).hubMachineEndpoint()
+            );
+        }
+
         vm.stopBroadcast();
 
         // Write to file

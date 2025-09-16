@@ -14,6 +14,6 @@ contract TokenRegistry_Unit_Concrete_Test is Base_Test {
         tokenRegistry = _deployTokenRegistry(dao, address(accessManager));
 
         _setupTokenRegistryAMFunctionRoles(accessManager, address(tokenRegistry));
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
     }
 }

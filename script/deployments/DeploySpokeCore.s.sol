@@ -37,18 +37,27 @@ contract DeploySpokeCore is DeployCore {
 
     function _coreSetup() public override {
         uint256 hubChainId = abi.decode(vm.parseJson(inputJson, ".hubChainId"), (uint256));
-        _core = deploySpokeCore(deployer, dao, hubChainId);
+        _core = deploySpokeCore(deployer, upgradeAdmin, hubChainId);
 
         setupSpokeCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
         setupSwapModule(_core.swapModule, swappersData);
-        _bridgeAdapterBeacons =
-            deployAndSetupBridgeAdapterBeacons(ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData, dao);
+        _bridgeAdapterBeacons = deployAndSetupBridgeAdapterBeacons(
+            ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData, upgradeAdmin
+        );
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
             setupSpokeCoreAMFunctionRoles(_core);
-            setupAccessManagerRoles(_core.accessManager, dao, deployer);
+            setupAccessManagerRoles(
+                _core.accessManager,
+                superAdmin,
+                infraSetupAdmin,
+                stratDeployAdmin,
+                stratCompSetupAdmin,
+                stratMgmtSetupAdmin,
+                deployer
+            );
         }
     }
 

@@ -1,5 +1,10 @@
 {
-  "dao": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "upgradeAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "superAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "infraSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "stratDeployAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "stratCompSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "stratMgmtSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
   "hubChainId": 1,
   "priceFeedRoutes": [
     {

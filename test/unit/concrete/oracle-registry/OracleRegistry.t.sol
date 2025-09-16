@@ -16,6 +16,6 @@ contract OracleRegistry_Unit_Concrete_Test is Base_Test {
         oracleRegistry = _deployOracleRegistry(dao, address(accessManager));
 
         _setupOracleRegistryAMFunctionRoles(accessManager, address(oracleRegistry));
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
     }
 }
