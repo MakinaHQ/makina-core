@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 abstract contract Constants {
@@ -9,7 +9,8 @@ abstract contract Constants {
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
     string public constant DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL = "MS";
     uint256 public constant DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD = 30 minutes;
-    uint256 public constant DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE = 1e17;
+    uint256 public constant DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE = 317097920; // ≈ 1% annualized
+    uint256 public constant DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE = 634195840; // ≈ 2% annualized
     uint256 public constant DEFAULT_MACHINE_FEE_MINT_COOLDOWN = 8 hours;
     uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
 
@@ -32,8 +33,8 @@ abstract contract Constants {
 
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 
-    uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e9;
-    uint256 public constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 1e10;
+    uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e8;
+    uint256 public constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 2e8;
 
     uint16 public constant ZEROX_SWAPPER_ID = 1;
 

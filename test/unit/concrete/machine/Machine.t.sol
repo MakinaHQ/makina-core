@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
@@ -41,7 +41,8 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.hubCaliber(), address(caliber));
         assertEq(machine.feeManager(), address(feeManager));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
-        assertEq(machine.maxFeeAccrualRate(), DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE);
+        assertEq(machine.maxFixedFeeAccrualRate(), DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE);
+        assertEq(machine.maxPerfFeeAccrualRate(), DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE);
         assertEq(machine.feeMintCooldown(), DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
@@ -112,22 +113,36 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.caliberStaleThreshold(), newThreshold);
     }
 
-    function test_SetMaxFeeAccrualRate_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        machine.setMaxFeeAccrualRate(1e18);
+    function test_SetMaxFixedFeeAccrualRate_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.setMaxFixedFeeAccrualRate(1e18);
     }
 
-    function test_SetMaxFeeAccrualRate() public {
-        uint256 newMaxFeeAccrualRate = 1e18;
+    function test_SetMaxFixedFeeAccrualRate() public {
+        uint256 newMaxAccrualRate = 1e18;
         vm.expectEmit(true, true, false, false, address(machine));
-        emit IMachine.MaxFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE, newMaxFeeAccrualRate);
-        vm.prank(dao);
-        machine.setMaxFeeAccrualRate(newMaxFeeAccrualRate);
-        assertEq(machine.maxFeeAccrualRate(), newMaxFeeAccrualRate);
+        emit IMachine.MaxFixedFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE, newMaxAccrualRate);
+        vm.prank(riskManagerTimelock);
+        machine.setMaxFixedFeeAccrualRate(newMaxAccrualRate);
+        assertEq(machine.maxFixedFeeAccrualRate(), newMaxAccrualRate);
     }
 
-    function test_SetFeeMintCooldown_RevertWhenCallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_SetMaxPerfFeeAccrualRate_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.setMaxPerfFeeAccrualRate(1e18);
+    }
+
+    function test_SetMaxPerfFeeAccrualRate() public {
+        uint256 newMaxAccrualRate = 1e18;
+        vm.expectEmit(true, true, false, false, address(machine));
+        emit IMachine.MaxPerfFeeAccrualRateChanged(DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE, newMaxAccrualRate);
+        vm.prank(riskManagerTimelock);
+        machine.setMaxPerfFeeAccrualRate(newMaxAccrualRate);
+        assertEq(machine.maxPerfFeeAccrualRate(), newMaxAccrualRate);
+    }
+
+    function test_SetFeeMintCooldown_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.setFeeMintCooldown(1 hours);
     }
 
@@ -135,7 +150,7 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         uint256 newFeeMintCooldown = 1 hours;
         vm.expectEmit(true, true, false, false, address(machine));
         emit IMachine.FeeMintCooldownChanged(DEFAULT_MACHINE_FEE_MINT_COOLDOWN, newFeeMintCooldown);
-        vm.prank(dao);
+        vm.prank(riskManagerTimelock);
         machine.setFeeMintCooldown(newFeeMintCooldown);
         assertEq(machine.feeMintCooldown(), newFeeMintCooldown);
     }

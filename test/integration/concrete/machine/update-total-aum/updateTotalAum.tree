@@ -17,6 +17,8 @@ updateTotalAum.t.sol
    │           └── given no transfer appears as as received by a caliber but not sent by the machine
    │              ├── it should sum up the last reported aum from each caliber plus all the notified idle token balances held by the machine, and store result as last reported total AUM
    │              ├── it should store the update timestamp
-   │              └── it should emit a TotalAumUpdated event
+   │              ├── it should emit a TotalAumUpdated event
+   │              ├── it should mint relevant fees
+   │              └── it should emit a FeesMinted event
    └── given recovery mode is on
       └── it should revert with RecoveryMode

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";

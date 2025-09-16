@@ -59,11 +59,11 @@ contract Deploy_Scripts_Test is Base_Test {
         address tcAdmin = abi.decode(vm.parseJson(deployTimelockController.inputJson(), ".initialAdmin"), (address));
         assertTrue(tcAdmin != address(0));
 
-        address hubDao = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".dao"), (address));
-        assertTrue(hubDao != address(0));
+        address hubSuperAdmin = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdmin"), (address));
+        assertTrue(hubSuperAdmin != address(0));
 
-        address spokeDao = abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".dao"), (address));
-        assertTrue(spokeDao != address(0));
+        address spokeSuperAdmin = abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".superAdmin"), (address));
+        assertTrue(spokeSuperAdmin != address(0));
     }
 
     function testScript_DeployHubCore() public {
@@ -187,6 +187,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.accountingToken(), accountingToken);
         assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
+        assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
+        assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
@@ -314,6 +316,8 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
         assertEq(machine.accountingToken(), accountingToken);
         assertTrue(machine.isIdleToken(depositToken));
+        assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
+        assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);

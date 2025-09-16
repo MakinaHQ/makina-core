@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -14,18 +14,22 @@ contract MachineShare is ERC20, Ownable2Step, IMachineShare {
         Ownable(_initialMinter)
     {}
 
+    /// @inheritdoc IERC20Metadata
     function decimals() public pure override(ERC20, IERC20Metadata) returns (uint8) {
         return DecimalsUtils.SHARE_TOKEN_DECIMALS;
     }
 
+    /// @inheritdoc IMachineShare
     function minter() external view override returns (address) {
         return owner();
     }
 
+    /// @inheritdoc IMachineShare
     function mint(address to, uint256 amount) external onlyOwner {
         _mint(to, amount);
     }
 
+    /// @inheritdoc IMachineShare
     function burn(address from, uint256 amount) external {
         if (from != msg.sender) {
             _checkOwner();

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -42,7 +42,7 @@ contract OracleRegistry_Unit_Fuzz_Test is Base_Test {
         oracleRegistry = _deployOracleRegistry(dao, address(accessManager));
 
         _setupOracleRegistryAMFunctionRoles(accessManager, address(oracleRegistry));
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {

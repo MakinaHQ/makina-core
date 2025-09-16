@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
@@ -129,7 +129,8 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if (!$._isOutTransferEnabled[bridgeId]) {
             revert Errors.OutTransferDisabled();
         }
-        if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS)) {
+        if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS, Math.Rounding.Ceil))
+        {
             revert Errors.MaxValueLossExceeded();
         }
         if (minOutputAmount > inputAmount) {

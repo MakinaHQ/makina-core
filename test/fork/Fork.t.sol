@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
@@ -86,10 +86,26 @@ abstract contract Fork_Test is Base, Test, Constants {
         // setup access manager
         if (isHub) {
             setupHubCoreAMFunctionRoles(hubCore);
-            setupAccessManagerRoles(hubCore.accessManager, forkData.dao, address(this));
+            setupAccessManagerRoles(
+                hubCore.accessManager,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                address(this)
+            );
         } else {
             setupSpokeCoreAMFunctionRoles(spokeCores[chainId]);
-            setupAccessManagerRoles(spokeCores[chainId].accessManager, forkData.dao, address(this));
+            setupAccessManagerRoles(
+                spokeCores[chainId].accessManager,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                forkData.dao,
+                address(this)
+            );
         }
     }
 }

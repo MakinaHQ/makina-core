@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
@@ -32,7 +32,7 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
     }
 
     modifier whitelistMode() {
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistMode(true);
 
         _;
@@ -41,7 +41,7 @@ abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concr
     modifier whitelistedUser(address user) {
         address[] memory whitelist = new address[](1);
         whitelist[0] = user;
-        vm.prank(dao);
+        vm.prank(riskManager);
         preDepositVault.setWhitelistedUsers(whitelist, true);
 
         _;

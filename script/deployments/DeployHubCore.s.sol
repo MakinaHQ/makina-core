@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {stdJson} from "forge-std/StdJson.sol";
@@ -38,7 +38,7 @@ contract DeployHubCore is DeployCore {
     function _coreSetup() public override {
         address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
         uint256[] memory supportedChains = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
-        _core = deployHubCore(deployer, dao, wormhole);
+        _core = deployHubCore(deployer, upgradeAdmin, wormhole);
 
         setupHubCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
@@ -46,11 +46,19 @@ contract DeployHubCore is DeployCore {
         setupChainRegistry(_core.chainRegistry, supportedChains);
         setupSwapModule(_core.swapModule, swappersData);
         _bridgeAdapterBeacons =
-            deployAndSetupBridgeAdapterBeacons(ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData, dao);
+            deployAndSetupBridgeAdapterBeacons(ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData, upgradeAdmin);
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
             setupHubCoreAMFunctionRoles(_core);
-            setupAccessManagerRoles(_core.accessManager, dao, deployer);
+            setupAccessManagerRoles(
+                _core.accessManager,
+                superAdmin,
+                infraSetupAdmin,
+                stratDeployAdmin,
+                stratCompSetupAdmin,
+                stratMgmtSetupAdmin,
+                deployer
+            );
         }
     }
 

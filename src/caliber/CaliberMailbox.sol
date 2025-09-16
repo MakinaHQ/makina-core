@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
@@ -197,7 +197,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     }
 
     /// @inheritdoc IBridgeController
-    function resetBridgingState(address token) external override restricted {
+    function resetBridgingState(address token) external override onlySecurityCouncil {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
 
         $._bridgesIn.remove(token);

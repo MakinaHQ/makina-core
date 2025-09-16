@@ -1,7 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
-
-import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
@@ -16,21 +14,21 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         CaliberMailbox_Integration_Concrete_Test.setUp();
     }
 
-    function test_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+    function test_RevertWhen_CallerNotSC() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliberMailbox.resetBridgingState(address(0));
     }
 
     function test_RevertWhen_TokenNotBaseToken() public {
         vm.expectRevert(Errors.NotBaseToken.selector);
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliberMailbox.resetBridgingState(address(baseToken));
     }
 
     function test_ResetBridgingState_CountersAlreadyNull() public {
         vm.expectEmit(true, false, false, false, address(caliberMailbox));
         emit IBridgeController.BridgingStateReset(address(accountingToken));
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliberMailbox.resetBridgingState(address(accountingToken));
     }
 
@@ -60,7 +58,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         _checkBridgeCounterValue(accountingData.bridgesOut[0], address(accountingToken), inputAmount);
 
         // reset the bridge counters
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliberMailbox.resetBridgingState(address(accountingToken));
 
         accountingData = caliberMailbox.getSpokeCaliberAccountingData();
@@ -111,7 +109,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         _checkBridgeCounterValue(accountingData.bridgesIn[0], address(accountingToken), inputAmount);
 
         // reset the bridge counters
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliberMailbox.resetBridgingState(address(accountingToken));
 
         accountingData = caliberMailbox.getSpokeCaliberAccountingData();
@@ -163,7 +161,7 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         // mint some extra tokens to the bridge adapter
         accountingToken.mint(bridgeAdapterAddr, amount3);
 
-        vm.prank(dao);
+        vm.prank(securityCouncil);
         caliberMailbox.resetBridgingState(address(accountingToken));
         assertEq(accountingToken.balanceOf(address(caliber)), amount1 + amount2 + amount3);
         assertEq(accountingToken.balanceOf(bridgeAdapterAddr), 0);

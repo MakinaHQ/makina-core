@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -251,7 +251,7 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, IBridgeAdapter {
         uint256 _maxBridgeLossBps = IBridgeController($._controller).getMaxBridgeLossBps($._bridgeId);
         if (
             receivedAmount < message.minOutputAmount
-                || receivedAmount < message.inputAmount.mulDiv(MAX_BPS - _maxBridgeLossBps, MAX_BPS)
+                || receivedAmount < message.inputAmount.mulDiv(MAX_BPS - _maxBridgeLossBps, MAX_BPS, Math.Rounding.Ceil)
         ) {
             revert Errors.MaxValueLossExceeded();
         }

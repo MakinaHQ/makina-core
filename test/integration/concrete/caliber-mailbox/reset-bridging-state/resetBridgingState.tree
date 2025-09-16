@@ -1,7 +1,7 @@
 resetBridgingState.t.sol
-├── when caller does not have the relevant role
-│  └── it should revert with AccessManagedUnauthorized
-└── when caller has the relevant role
+├── when caller is not the Security Council
+│  └── it should revert with UnauthorizedCaller
+└── when caller is the Security Council
    ├── given the token is not a registered base token in associated caliber
    │  └── it should revert with NotBaseToken
    └── given the token is a registered base token in associated caliber

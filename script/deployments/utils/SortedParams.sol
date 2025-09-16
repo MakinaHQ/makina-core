@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 abstract contract SortedParams {
@@ -14,7 +14,8 @@ abstract contract SortedParams {
         address initialDepositor;
         address initialFeeManager;
         uint256 initialFeeMintCooldown;
-        uint256 initialMaxFeeAccrualRate;
+        uint256 initialMaxFixedFeeAccrualRate;
+        uint256 initialMaxPerfFeeAccrualRate;
         address initialRedeemer;
         uint256 initialShareLimit;
     }

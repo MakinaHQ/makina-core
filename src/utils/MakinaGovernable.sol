@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
@@ -39,6 +39,14 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         __AccessManaged_init(params.initialAuthority);
     }
 
+    modifier onlyOperator() {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
+            revert Errors.UnauthorizedCaller();
+        }
+        _;
+    }
+
     modifier onlyMechanic() {
         if (msg.sender != _getMakinaGovernableStorage()._mechanic) {
             revert Errors.UnauthorizedCaller();
@@ -46,9 +54,8 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         _;
     }
 
-    modifier onlyOperator() {
-        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
+    modifier onlySecurityCouncil() {
+        if (msg.sender != _getMakinaGovernableStorage()._securityCouncil) {
             revert Errors.UnauthorizedCaller();
         }
         _;
@@ -129,11 +136,8 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
-    function setRecoveryMode(bool enabled) external {
+    function setRecoveryMode(bool enabled) external onlySecurityCouncil {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
-        if (msg.sender != $._securityCouncil) {
-            revert Errors.UnauthorizedCaller();
-        }
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);

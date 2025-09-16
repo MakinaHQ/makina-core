@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
@@ -841,7 +841,7 @@ contract Caliber is
         internal
         pure
     {
-        uint256 minChange = affectedTokensValChange.mulDiv(MAX_BPS - maxLossBps, MAX_BPS);
+        uint256 minChange = affectedTokensValChange.mulDiv(MAX_BPS - maxLossBps, MAX_BPS, Math.Rounding.Ceil);
         if (positionValChange < minChange) {
             revert Errors.MaxValueLossExceeded();
         }
@@ -944,7 +944,7 @@ contract Caliber is
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);
-            if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS)) {
+            if (valAfter < valBefore.mulDiv(MAX_BPS - $._maxSwapLossBps, MAX_BPS, Math.Rounding.Ceil)) {
                 revert Errors.MaxValueLossExceeded();
             }
             $._lastBTSwapTimestamp = block.timestamp;

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {Script} from "forge-std/Script.sol";
@@ -8,7 +8,9 @@ import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IPreDepositVault} from "../../src/interfaces/IPreDepositVault.sol";
 import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeployPreDepositVault is Script, SortedParams {
+import {Base} from "../../test/base/Base.sol";
+
+contract DeployPreDepositVault is Base, Script, SortedParams {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -52,6 +54,7 @@ contract DeployPreDepositVault is Script, SortedParams {
 
         // Deploy pre-deposit vault
         vm.startBroadcast();
+
         deployedInstance = hubCoreFactory.createPreDepositVault(
             IPreDepositVault.PreDepositVaultInitParams(
                 pdvParams.initialShareLimit,
@@ -64,6 +67,11 @@ contract DeployPreDepositVault is Script, SortedParams {
             shareTokenName,
             shareTokenSymbol
         );
+
+        if (!vm.envOr("SKIP_AM_SETUP", false)) {
+            _setupPreDepositVaultAMFunctionRoles(pdvParams.initialAuthority, deployedInstance);
+        }
+
         vm.stopBroadcast();
 
         // Write to file

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
 interface IBridgeAdapter {
@@ -46,25 +46,25 @@ interface IBridgeAdapter {
     /// @param initData The optional initialization data.
     function initialize(address controller, bytes calldata initData) external;
 
-    /// @notice Returns the address of the bridge controller contract.
+    /// @notice Address of the bridge controller contract.
     function controller() external view returns (address);
 
-    /// @notice Returns the ID of the adapted external bridge.
+    /// @notice ID of the adapted external bridge.
     function bridgeId() external view returns (uint16);
 
-    /// @notice Returns the address of the external bridge approval target contract.
+    /// @notice Address of the external bridge approval target contract.
     function approvalTarget() external view returns (address);
 
-    /// @notice Returns the address of the external bridge execution target contract.
+    /// @notice Address of the external bridge execution target contract.
     function executionTarget() external view returns (address);
 
-    /// @notice Returns the address of the external bridge contract responsible for sending output funds.
+    /// @notice Address of the external bridge contract responsible for sending output funds.
     function receiveSource() external view returns (address);
 
-    /// @notice Returns the ID of the next outgoing transfer.
+    /// @notice ID of the next outgoing transfer.
     function nextOutTransferId() external view returns (uint256);
 
-    /// @notice Returns the ID of the next incoming transfer.
+    /// @notice ID of the next incoming transfer.
     function nextInTransferId() external view returns (uint256);
 
     /// @notice Schedules an outgoing bridge transfer and returns the message hash.

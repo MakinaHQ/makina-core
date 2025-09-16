@@ -6,23 +6,14 @@ This README outlines the steps to deploy the Makina Core contracts.
 
 - Copy `.env.example` to `.env` and fill in the required RPC URLs, Etherscan API URLs, and API keys.
 - Some networks are preconfigured in `foundry.toml` and only require the corresponding environment variables. More networks can be added following similar configuration.
-- In the commands below:
-  - `<keystore-name>` is the name of a Foundry keystore containing the deployer’s private key.<br>
-  - `<network-alias>` must match a network name declared in `foundry.toml`.
+- The commands below use a foundry keystore to specify the deployment wallet (`--account <keystore-name>`). For other options, refer to the [Foundry docs](https://getfoundry.sh/forge/reference/script/).
+- Notation used in the commands:
+  - `<keystore-name>` - the name of a Foundry keystore containing the deployer’s private key
+  - `<network-alias>` - must match a network name declared in `foundry.toml`
 
 ## Hub Chain Deployments
 
 Set the `HUB_INPUT_FILE` and `HUB_OUTPUT_FILE` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Ethereum Mainnet, both of these files can be named `Mainnet.json`.
-
-### Shared libraries
-
-In order to keep the deployer’s nonces intact and maintain consistent contract addresses across chains, the custom libraries used by the protocol on the Hub chain can be deployed separately, from a different wallet.
-
-1. Run the following command to initiate the deployment.
-
-```
-forge script script/deployments/DeployHubLibs.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
-```
 
 ### Shared contracts
 
@@ -32,6 +23,8 @@ forge script script/deployments/DeployHubLibs.s.sol --rpc-url <network-alias> --
 ```
 forge script script/deployments/DeployHubCore.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
 ```
+
+Note: This script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
 
 ### Hub Machine instance
 
@@ -72,6 +65,8 @@ Set the `SPOKE_INPUT_FILE` and `SPOKE_OUTPUT_FILE` values in your `.env` file to
 ```
 forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
 ```
+
+Note: Same as for Hub Chain shared contacts deployment, this script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
 
 ### Spoke Caliber instance
 

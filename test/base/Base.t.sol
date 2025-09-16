@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
@@ -90,7 +90,7 @@ abstract contract Base_Hub_Test is Base_Test {
 
         setupHubCoreRegistry(deployment);
         setupHubCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
     }
 
     function _wormholeSetup() public {
@@ -109,7 +109,8 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialRedeemer: machineRedeemer,
                     initialFeeManager: address(feeManager),
                     initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                    initialMaxFeeAccrualRate: DEFAULT_MACHINE_MAX_FEE_ACCRUAL_RATE,
+                    initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
+                    initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
                     initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
                 }),
@@ -161,7 +162,7 @@ abstract contract Base_Spoke_Test is Base_Test {
 
         setupSpokeCoreRegistry(deployment);
         setupSpokeCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, deployer);
+        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
     }
 
     function _deployCaliber(
