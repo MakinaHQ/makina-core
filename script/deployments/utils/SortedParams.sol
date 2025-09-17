@@ -39,7 +39,6 @@ abstract contract SortedParams {
     }
 
     struct TimelockControllerInitParamsSorted {
-        address initialAdmin;
         address[] initialExecutors;
         uint256 initialMinDelay;
         address[] initialProposers;

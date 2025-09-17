@@ -4,7 +4,7 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
-import {CreateXUtils, ICreateXMinimal} from "./utils/CreateXUtils.sol";
+import {CreateXUtils} from "./utils/CreateXUtils.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
@@ -74,12 +74,6 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     function _deploySetupAfter() public virtual {}
 
     function _deployCode(bytes memory bytecode, bytes32 salt) internal virtual override returns (address) {
-        if (salt == 0) {
-            return ICreateXMinimal(CREATE_X_DEPLOYER).deployCreate2(bytecode);
-        }
-
-        bytes32 formattedSalt = _formatSalt(salt, deployer);
-
-        return ICreateXMinimal(CREATE_X_DEPLOYER).deployCreate3(formattedSalt, bytecode);
+        return _deployCodeCreateX(bytecode, salt, deployer);
     }
 }

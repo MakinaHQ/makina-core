@@ -56,8 +56,11 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubCore = new DeployHubCore();
         deploySpokeCore = new DeploySpokeCore();
 
-        address tcAdmin = abi.decode(vm.parseJson(deployTimelockController.inputJson(), ".initialAdmin"), (address));
-        assertTrue(tcAdmin != address(0));
+        address[] memory initialExecutors = abi.decode(
+            vm.parseJson(deployTimelockController.inputJson(), ".timelockControllerInitParams.initialExecutors"),
+            (address[])
+        );
+        assertTrue(initialExecutors.length != 0);
 
         address hubSuperAdmin = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdmin"), (address));
         assertTrue(hubSuperAdmin != address(0));
@@ -475,8 +478,12 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Check that Timelock Controller is correctly set up
         SortedParams.TimelockControllerInitParamsSorted memory tcParams = abi.decode(
-            vm.parseJson(deployTimelockController.inputJson()), (SortedParams.TimelockControllerInitParamsSorted)
+            vm.parseJson(deployTimelockController.inputJson(), ".timelockControllerInitParams"),
+            (SortedParams.TimelockControllerInitParamsSorted)
         );
+        address[] memory additionalCancellers =
+            abi.decode(vm.parseJson(deployTimelockController.inputJson(), ".additionalCancellers"), (address[]));
+
         TimelockController timelockController = TimelockController(payable(deployTimelockController.deployedInstance()));
         for (uint256 i = 0; i < tcParams.initialProposers.length; i++) {
             assertTrue(timelockController.hasRole(timelockController.PROPOSER_ROLE(), tcParams.initialProposers[i]));
@@ -485,7 +492,9 @@ contract Deploy_Scripts_Test is Base_Test {
         for (uint256 i = 0; i < tcParams.initialExecutors.length; i++) {
             assertTrue(timelockController.hasRole(timelockController.EXECUTOR_ROLE(), tcParams.initialExecutors[i]));
         }
-        assertTrue(timelockController.hasRole(timelockController.DEFAULT_ADMIN_ROLE(), tcParams.initialAdmin));
+        for (uint256 i = 0; i < additionalCancellers.length; i++) {
+            assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), additionalCancellers[i]));
+        }
         assertEq(timelockController.getMinDelay(), tcParams.initialMinDelay);
     }
 }
