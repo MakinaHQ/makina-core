@@ -20,12 +20,22 @@ via_ir = true
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}"
 base = "${BASE_RPC_URL}"
+arbitrum_one = "${ARBITRUM_RPC_URL}"
+optimism = "${OPTIMISM_RPC_URL}"
 ink = "${INK_RPC_URL}"
+avalanche = "${AVALANCHE_RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
+unichain = "${UNICHAIN_RPC_URL}"
 
 [etherscan]
 1 = { key = "${MAINNET_ETHERSCAN_API_KEY}", url = "${MAINNET_ETHERSCAN_API_URL}" }
 8453 = { key = "${BASE_ETHERSCAN_API_KEY}", url = "${BASE_ETHERSCAN_API_URL}" }
+42161 = { key = "${ARBITRUM_ETHERSCAN_API_KEY}", url = "${ARBITRUM_ETHERSCAN_API_URL}" }
+10 = { key = "${OPTIMISM_ETHERSCAN_API_KEY}", url = "${OPTIMISM_ETHERSCAN_API_URL}" }
 57073 = { key = "${INK_ETHERSCAN_API_KEY}", url = "${INK_ETHERSCAN_API_URL}" }
+43114 = { key = "${AVALANCHE_ETHERSCAN_API_KEY}", url = "${AVALANCHE_ETHERSCAN_API_URL}" }
+137 = { key = "${POLYGON_ETHERSCAN_API_KEY}", url = "${POLYGON_ETHERSCAN_API_URL}" }
+130 = { key = "${UNICHAIN_ETHERSCAN_API_KEY}", url = "${UNICHAIN_ETHERSCAN_API_URL}" }
 
 [fuzz]
 runs = 1024
