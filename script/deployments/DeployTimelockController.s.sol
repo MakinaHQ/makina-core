@@ -4,17 +4,24 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {CreateXUtils} from "./utils/CreateXUtils.sol";
+
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
 import {SortedParams} from "./utils/SortedParams.sol";
 
-contract DeployTimelockController is Script, SortedParams {
+contract DeployTimelockController is Script, SortedParams, CreateXUtils {
     using stdJson for string;
 
     string public inputJson;
     string public outputPath;
 
-    address public deployedInstance;
+    address public deployer;
+
+    address payable public deployedInstance;
+
+    bytes32 public constant TIMELOCK_CANCELLER_ROLE = keccak256("CANCELLER_ROLE");
+    bytes32 public constant TIMELOCK_ADMIN_ROLE = 0x00;
 
     constructor() {
         string memory inputFilename = vm.envString("TIMELOCK_CONTROLLER_INPUT_FILENAME");
@@ -33,17 +40,40 @@ contract DeployTimelockController is Script, SortedParams {
     }
 
     function run() public {
-        TimelockControllerInitParamsSorted memory params =
-            abi.decode(vm.parseJson(inputJson), (TimelockControllerInitParamsSorted));
+        TimelockControllerInitParamsSorted memory tcParams =
+            abi.decode(vm.parseJson(inputJson, ".timelockControllerInitParams"), (TimelockControllerInitParamsSorted));
+
+        address[] memory additionalCancellers =
+            abi.decode(vm.parseJson(inputJson, ".additionalCancellers"), (address[]));
 
         // start broadcasting transactions
         vm.startBroadcast();
 
-        deployedInstance = address(
-            new TimelockController(
-                params.initialMinDelay, params.initialProposers, params.initialExecutors, params.initialAdmin
+        (, deployer,) = vm.readCallers();
+
+        address initialAdmin = additionalCancellers.length > 0 ? deployer : address(0);
+
+        deployedInstance = payable(
+            _deployCodeCreateX(
+                abi.encodePacked(
+                    type(TimelockController).creationCode,
+                    abi.encode(
+                        tcParams.initialMinDelay, tcParams.initialProposers, tcParams.initialExecutors, initialAdmin
+                    )
+                ),
+                0,
+                deployer
             )
         );
+
+        if (additionalCancellers.length > 0) {
+            // Grant additional cancellers the CANCELLER_ROLE
+            for (uint256 i; i < additionalCancellers.length; i++) {
+                TimelockController(deployedInstance).grantRole(TIMELOCK_CANCELLER_ROLE, additionalCancellers[i]);
+            }
+            // Renounce the admin role
+            TimelockController(deployedInstance).renounceRole(TIMELOCK_ADMIN_ROLE, deployer);
+        }
 
         vm.stopBroadcast();
 
