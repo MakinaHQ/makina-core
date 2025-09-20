@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -15,12 +14,10 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
         deal(address(baseToken), address(caliber), 3e18, true);
 
         ICaliber.Instruction[] memory mgmtInstructions = new ICaliber.Instruction[](1);
-        mgmtInstructions[0] =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        mgmtInstructions[0] = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
 
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](1);
-        acctInstructions[0] =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
 
         baseToken.scheduleReenter(
             MockERC20.Type.Before,
@@ -62,15 +59,13 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
 
         ICaliber.Instruction[] memory mgmtInstructions = new ICaliber.Instruction[](2);
         mgmtInstructions[0] =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
-        mgmtInstructions[1] = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
-            BORROW_POS_ID, address(borrowModule), borrowInputAmount
-        );
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
+        mgmtInstructions[1] =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
 
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](2);
-        acctInstructions[0] =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        acctInstructions[1] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        acctInstructions[0] = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstructions[1] = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -128,16 +123,14 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
         ICaliber.Instruction[] memory mgmtInstructions = new ICaliber.Instruction[](2);
-        mgmtInstructions[0] =
-            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        mgmtInstructions[1] =
-            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        mgmtInstructions[0] = _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        mgmtInstructions[1] = _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
 
         ICaliber.Instruction[] memory acctInstructions = new ICaliber.Instruction[](2);
-        acctInstructions[0] = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        acctInstructions[0] = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
-        acctInstructions[1] = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        acctInstructions[1] = _buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
@@ -147,9 +140,8 @@ contract ManagePositionBatch_Integration_Concrete_Test is Caliber_Integration_Co
         _setRecoveryMode();
 
         mgmtInstructions[0] =
-            WeirollUtils._buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        mgmtInstructions[1] =
-            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+            _buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        mgmtInstructions[1] = _buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         ICaliber.Instruction memory temp = acctInstructions[0];
         acctInstructions[0] = acctInstructions[1];

@@ -3,11 +3,14 @@ pragma solidity 0.8.28;
 
 import {stdJson} from "forge-std/StdJson.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {console} from "forge-std/console.sol";
 
-library MerkleProofs {
+abstract contract MerkleProofHelper {
     using stdJson for string;
 
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+
+    bytes32 internal allowedInstrMerkleRoot;
 
     struct MerkleTreeParams {
         address caliber;
@@ -26,29 +29,36 @@ library MerkleProofs {
         uint256 lendingMarketPosGroupId;
     }
 
-    function _generateMerkleData(MerkleTreeParams memory params) internal {
-        string[] memory command = new string[](16);
+    function _generateMerkleData(MerkleTreeParams memory params) internal returns (bytes32) {
+        string[] memory command = new string[](17);
         command[0] = "yarn";
-        command[1] = "genMerkleDataMock";
-        command[2] = vm.toString(params.caliber);
-        command[3] = vm.toString(params.mockAccountingToken);
-        command[4] = vm.toString(params.mockBaseToken);
-        command[5] = vm.toString(params.mockVault);
-        command[6] = vm.toString(params.mockVaultPosId);
-        command[7] = vm.toString(params.mockSupplyModule);
-        command[8] = vm.toString(params.mockSupplyModulePosId);
-        command[9] = vm.toString(params.mockBorrowModule);
-        command[10] = vm.toString(params.mockBorrowModulePosId);
-        command[11] = vm.toString(params.mockPool);
-        command[12] = vm.toString(params.mockPoolPosId);
-        command[13] = vm.toString(params.mockFlashLoanModule);
-        command[14] = vm.toString(params.mockLoopPosId);
-        command[15] = vm.toString(params.lendingMarketPosGroupId);
-        vm.ffi(command);
+        command[1] = "--silent";
+        command[2] = "genMerkleDataMock";
+        command[3] = vm.toString(params.caliber);
+        command[4] = vm.toString(params.mockAccountingToken);
+        command[5] = vm.toString(params.mockBaseToken);
+        command[6] = vm.toString(params.mockVault);
+        command[7] = vm.toString(params.mockVaultPosId);
+        command[8] = vm.toString(params.mockSupplyModule);
+        command[9] = vm.toString(params.mockSupplyModulePosId);
+        command[10] = vm.toString(params.mockBorrowModule);
+        command[11] = vm.toString(params.mockBorrowModulePosId);
+        command[12] = vm.toString(params.mockPool);
+        command[13] = vm.toString(params.mockPoolPosId);
+        command[14] = vm.toString(params.mockFlashLoanModule);
+        command[15] = vm.toString(params.mockLoopPosId);
+        command[16] = vm.toString(params.lendingMarketPosGroupId);
+
+        bytes memory out = vm.ffi(command);
+        bytes32 root = bytes32(out);
+
+        return root;
     }
 
     function _getMerkleData() internal view returns (string memory) {
-        return vm.readFile(string.concat(vm.projectRoot(), "/script/merkle/merkleTreeData.json"));
+        return vm.readFile(
+            string.concat(vm.projectRoot(), "/script/merkle/", vm.toString(allowedInstrMerkleRoot), ".json")
+        );
     }
 
     function _getAllowedInstrMerkleRoot() internal view returns (bytes32) {

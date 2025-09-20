@@ -7,8 +7,6 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -29,18 +27,17 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
         // create vault position
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
         ICaliber.Instruction memory acctInstruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
 
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // create supply position
-        ICaliber.Instruction memory supplyMgmtInstruction = WeirollUtils._buildMockSupplyModuleSupplyInstruction(
-            SUPPLY_POS_ID, address(supplyModule), supplyInputAmount
-        );
-        ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory supplyMgmtInstruction =
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), supplyInputAmount);
+        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
@@ -51,10 +48,9 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
     function test_RevertWhen_ReentrantCall() public {
         uint256 borrowInputAmount = 1e18;
         deal(address(baseToken), address(borrowModule), borrowInputAmount, true);
-        ICaliber.Instruction memory borrowMgmtInstruction = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
-            BORROW_POS_ID, address(borrowModule), borrowInputAmount
-        );
-        ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory borrowMgmtInstruction =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
+        ICaliber.Instruction memory borrowAcctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -70,8 +66,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
     }
 
     function test_RevertWhen_ProvidedPositionNonExisting() public {
-        ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), 0, address(vault));
+        ICaliber.Instruction memory instruction = _build4626AccountingInstruction(address(caliber), 0, address(vault));
 
         vm.expectRevert(Errors.PositionDoesNotExist.selector);
         caliber.accountForPosition(instruction);
@@ -79,7 +74,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
     function test_RevertWhen_ProvidedInstructionNonAccountingType() public {
         ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), vaultInputAmount);
 
         vm.expectRevert(Errors.InvalidInstructionType.selector);
         caliber.accountForPosition(instruction);
@@ -89,48 +84,47 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         // use wrong vault
         MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
         ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong posId
-        instruction =
-            WeirollUtils._buildMockPoolAccountingInstruction(address(caliber), VAULT_POS_ID, address(pool), true);
+        instruction = _buildMockPoolAccountingInstruction(address(caliber), VAULT_POS_ID, address(pool), true);
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong isDebt
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.isDebt = true;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong groupId
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.groupId = LENDING_MARKET_POS_GROUP_ID;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong affected tokens list
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.affectedTokens[0] = address(0);
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong commands
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.commands[2] = instruction.commands[1];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong state
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.state[2] = instruction.state[0];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
 
         // use wrong bitmap
-        instruction = WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        instruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         instruction.stateBitmap = 0;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.accountForPosition(instruction);
@@ -138,7 +132,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
     function test_RevertGiven_AccountingOutputStateInvalid() public {
         ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         // replace end flag with null value in accounting output state
         delete instruction.state[1];
         vm.expectRevert(Errors.InvalidAccounting.selector);
@@ -149,10 +143,9 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         // create borrow module position
         uint256 borrowInputAmount = 1e18;
         deal(address(baseToken), address(borrowModule), borrowInputAmount, true);
-        ICaliber.Instruction memory borrowMgmtInstruction = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
-            BORROW_POS_ID, address(borrowModule), borrowInputAmount
-        );
-        ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory borrowMgmtInstruction =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
+        ICaliber.Instruction memory borrowAcctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -162,7 +155,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         vm.expectRevert(Errors.PositionIsGrouped.selector);
         caliber.accountForPosition(borrowAcctInstruction);
 
-        ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
         vm.expectRevert(Errors.PositionIsGrouped.selector);
@@ -181,7 +174,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         uint256 previewAssets = vault.previewRedeem(vault.balanceOf(address(caliber)));
 
         ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         caliber.accountForPosition(instruction);
 
         assertEq(vault.balanceOf(address(caliber)), previewShares);
@@ -193,7 +186,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         assertEq(caliber.getPosition(SUPPLY_POS_ID).value, supplyInputAmount * PRICE_B_A);
 
         // call succeeds as group is of size 1
-        ICaliber.Instruction memory supplyAcctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
         caliber.accountForPosition(supplyAcctInstruction);
@@ -209,10 +202,9 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         // create borrow position
         uint256 borrowInputAmount = 1e18;
         deal(address(baseToken), address(borrowModule), borrowInputAmount, true);
-        ICaliber.Instruction memory borrowMgmtInstruction = WeirollUtils._buildMockBorrowModuleBorrowInstruction(
-            BORROW_POS_ID, address(borrowModule), borrowInputAmount
-        );
-        ICaliber.Instruction memory borrowAcctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+        ICaliber.Instruction memory borrowMgmtInstruction =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
+        ICaliber.Instruction memory borrowAcctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -222,7 +214,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         // close borrow position
         vm.prank(mechanic);
         ICaliber.Instruction memory repayMgmtInstruction =
-            WeirollUtils._buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
+            _buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), borrowInputAmount);
         vm.prank(mechanic);
         caliber.managePosition(repayMgmtInstruction, borrowAcctInstruction);
 
@@ -240,7 +232,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
         // accounting can still be executed while the update is pending
         ICaliber.Instruction memory instruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         caliber.accountForPosition(instruction);
 
         skip(caliber.timelockDuration());
@@ -251,7 +243,7 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
 
         // schedule root update with the correct root
         vm.prank(riskManager);
-        caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
+        caliber.scheduleAllowedInstrRootUpdate(allowedInstrMerkleRoot);
 
         // accounting cannot be executed while the update is pending
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
