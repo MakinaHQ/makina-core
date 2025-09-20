@@ -15,7 +15,6 @@ import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
@@ -49,8 +48,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1e18;
         deal(address(baseToken), address(caliber), inputAmount);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockSupplyModuleAccountingInstruction(
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
             address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
         );
 
@@ -247,8 +246,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
 
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -267,8 +266,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 
@@ -325,8 +324,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
 
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
-        ICaliber.Instruction memory acctInstruction = WeirollUtils._buildMockBorrowModuleAccountingInstruction(
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount2);
+        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
             address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
         );
 

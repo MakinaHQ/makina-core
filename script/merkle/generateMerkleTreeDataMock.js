@@ -382,9 +382,11 @@ const treeData = {
 };
 
 fs.writeFileSync(
-  "script/merkle/merkleTreeData.json",
+  "script/merkle/" + tree.root + ".json",
   JSON.stringify(treeData, null, 2) + "\n",
 );
+
+process.stdout.write(tree.root);
 
 function keccak256EncodePacked(list) {
   return ethers.keccak256(ethers.concat(list));

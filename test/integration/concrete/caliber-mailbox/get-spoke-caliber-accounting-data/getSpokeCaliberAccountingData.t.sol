@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
@@ -19,9 +18,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -45,9 +44,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         // create vault position
         deal(address(baseToken), address(caliber), bInputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), bInputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), bInputAmount);
         ICaliber.Instruction memory acctInstruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 

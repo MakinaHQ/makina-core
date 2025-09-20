@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {WeirollUtils} from "test/utils/WeirollUtils.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -14,9 +13,9 @@ contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Conc
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            WeirollUtils._build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         ICaliber.Instruction memory acctInstruction =
-            WeirollUtils._build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 

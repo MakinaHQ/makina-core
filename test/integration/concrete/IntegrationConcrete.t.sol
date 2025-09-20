@@ -12,14 +12,14 @@ import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
+import {VMInstructionHelper} from "test/utils/VMInstructionHelper.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
-abstract contract Integration_Concrete_Test is Base_Test {
+abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
     /// @dev A denotes the accounting token, B denotes the base token
     /// and E is the reference currency of the oracle registry.
     uint256 internal constant PRICE_A_E = 150;
@@ -79,7 +79,7 @@ abstract contract Integration_Concrete_Test is Base_Test {
     ///
 
     function _setUpCaliberMerkleRoot(Caliber _caliber) internal {
-        MerkleProofs.MerkleTreeParams memory params = MerkleProofs.MerkleTreeParams({
+        MerkleTreeParams memory params = MerkleTreeParams({
             caliber: address(_caliber),
             mockAccountingToken: address(accountingToken),
             mockBaseToken: address(baseToken),
@@ -95,11 +95,11 @@ abstract contract Integration_Concrete_Test is Base_Test {
             mockLoopPosId: LOOP_POS_ID,
             lendingMarketPosGroupId: LENDING_MARKET_POS_GROUP_ID
         });
-        // generate merkle tree for instructions involving mock base token and vault
-        MerkleProofs._generateMerkleData(params);
+        // generate merkle tree for instructions involving mock contracts
+        allowedInstrMerkleRoot = _generateMerkleData(params);
 
         vm.prank(riskManager);
-        _caliber.scheduleAllowedInstrRootUpdate(MerkleProofs._getAllowedInstrMerkleRoot());
+        _caliber.scheduleAllowedInstrRootUpdate(allowedInstrMerkleRoot);
         skip(_caliber.timelockDuration());
     }
 

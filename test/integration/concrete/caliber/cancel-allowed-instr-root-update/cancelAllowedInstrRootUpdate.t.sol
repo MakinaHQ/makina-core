@@ -3,7 +3,6 @@ pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Errors} from "src/libraries/Errors.sol";
-import {MerkleProofs} from "test/utils/MerkleProofs.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
@@ -51,7 +50,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
     }
 
     function _test_CancelAllowedInstrRootUpdate(address caller) internal {
-        bytes32 currentRoot = MerkleProofs._getAllowedInstrMerkleRoot();
+        bytes32 currentRoot = allowedInstrMerkleRoot;
 
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();
