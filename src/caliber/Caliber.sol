@@ -690,7 +690,7 @@ contract Caliber is
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
         }
 
-        bool isPositionIncrease = change >= 0;
+        bool isPositionIncrease = change > 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
@@ -704,12 +704,12 @@ contract Caliber is
         }
 
         if (affectedTokensValueAfter < affectedTokensValueBefore) {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
+            if (change != 0 && mgmtInstruction.isDebt == isPositionIncrease) {
                 revert Errors.InvalidPositionChangeDirection();
             }
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         } else {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
+            if (change != 0 && mgmtInstruction.isDebt == isPositionIncrease) {
                 _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
             }
         }

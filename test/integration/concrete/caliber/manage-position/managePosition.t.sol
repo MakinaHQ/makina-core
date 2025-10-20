@@ -525,6 +525,52 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
+    // no base tokens flow nor non-debt position change
+    function test_NeutralMove_NonDebt() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        mgmtInstruction = _buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), 0);
+
+        // try neutral move
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    // no base tokens flow nor debt position change
+    function test_NeutralMove_Debt() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        mgmtInstruction = _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), 0);
+
+        // try neutral move
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
     function test_GroupedPositionInvalidation() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
 
@@ -1307,6 +1353,58 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         mgmtInstruction = _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
 
         // try increase position
+        vm.prank(securityCouncil);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    // no base tokens flow nor non-debt position change
+    function test_NeutralMove_NonDebt_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // turn on recovery mode
+        _setRecoveryMode();
+
+        mgmtInstruction = _buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), 0);
+
+        // try neutral move
+        vm.prank(securityCouncil);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    // no base tokens flow nor debt position change
+    function test_NeutralMove_Debt_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(borrowModule), 2 * inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
+            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+        );
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // turn on recovery mode
+        _setRecoveryMode();
+
+        mgmtInstruction = _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), 0);
+
+        // try neutral move
         vm.prank(securityCouncil);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
