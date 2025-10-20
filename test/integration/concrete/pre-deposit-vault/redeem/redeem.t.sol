@@ -1,14 +1,25 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 import {Errors} from "src/libraries/Errors.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {PreDepositVault_Integration_Concrete_Test} from "../PreDepositVault.t.sol";
 
 contract Redeem_Integration_Concrete_Test is PreDepositVault_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public {
+        baseToken.scheduleReenter(
+            MockERC20.Type.Before, address(preDepositVault), abi.encodeCall(IPreDepositVault.redeem, (0, address(0), 0))
+        );
+
+        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        preDepositVault.redeem(0, address(1), 0);
+    }
+
     function test_RevertGiven_VaultMigrated() public migrated {
         vm.expectRevert(Errors.Migrated.selector);
         preDepositVault.redeem(0, address(0), 0);
