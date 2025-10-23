@@ -29,6 +29,12 @@ See `SPECIFICATION.md` and `PERMISSIONS.MD` for more details.
 
 Follow [this link](https://book.getfoundry.sh/getting-started/installation) to install the Foundry toolchain.
 
+Run below commands to install and use Foundry v1.3.6:
+```shell
+foundryup -i v1.3.6
+foundryup -u v1.3.6
+```
+
 ## Submodules
 
 Run below command to include/update all git submodules like forge-std, openzeppelin contracts etc (`lib/`)
