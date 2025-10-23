@@ -59,7 +59,7 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     ) external override restricted returns (address) {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
 
-        address mailbox = _createCaliberMailbox(mgParams, hubMachine, salt);
+        address mailbox = _createCaliberMailbox(mgParams, cParams.initialCooldownDuration, hubMachine, salt);
         address caliber = _createCaliber(cParams, accountingToken, mailbox, salt);
 
         ICaliberMailbox(mailbox).setCaliber(caliber);
@@ -85,12 +85,14 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     /// This function only performs the deployment. It does not update factory storage nor emit an event.
     function _createCaliberMailbox(
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        uint256 initialCooldownDuration,
         address hubMachine,
         bytes32 salt
     ) internal returns (address) {
         address beacon = ISpokeCoreRegistry(registry).caliberMailboxBeacon();
 
-        bytes memory initCD = abi.encodeCall(ICaliberMailbox.initialize, (mgParams, hubMachine));
+        bytes memory initCD =
+            abi.encodeCall(ICaliberMailbox.initialize, (mgParams, initialCooldownDuration, hubMachine));
         bytes memory bytecode = abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, initCD));
 
         return _create3(CaliberMailboxSaltDomain, salt, bytecode);

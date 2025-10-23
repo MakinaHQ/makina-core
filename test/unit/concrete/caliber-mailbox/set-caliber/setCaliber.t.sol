@@ -20,7 +20,8 @@ contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
         caliberMailbox2 = CaliberMailbox(
             address(
                 new BeaconProxy(
-                    address(caliberMailboxBeacon), abi.encodeCall(ICaliberMailbox.initialize, (params, address(0)))
+                    address(caliberMailboxBeacon),
+                    abi.encodeCall(ICaliberMailbox.initialize, (params, DEFAULT_CALIBER_COOLDOWN_DURATION, address(0)))
                 )
             )
         );

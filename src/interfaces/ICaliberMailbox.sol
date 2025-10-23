@@ -6,6 +6,7 @@ import {IMakinaGovernable} from "./IMakinaGovernable.sol";
 
 interface ICaliberMailbox is IMachineEndpoint {
     event CaliberSet(address indexed caliber);
+    event CooldownDurationChanged(uint256 oldDuration, uint256 newDuration);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 
     /// @notice Accounting data of the caliber.
@@ -24,11 +25,19 @@ interface ICaliberMailbox is IMachineEndpoint {
 
     /// @notice Initializer of the contract.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param initialCooldownDuration The duration of the cooldown period for outgoing bridge transfers.
     /// @param hubMachine The foreign address of the hub machine.
-    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, address hubMachine) external;
+    function initialize(
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        uint256 initialCooldownDuration,
+        address hubMachine
+    ) external;
 
     /// @notice Address of the associated caliber.
     function caliber() external view returns (address);
+
+    /// @notice Duration of the cooldown period for outgoing bridge transfers.
+    function cooldownDuration() external view returns (uint256);
 
     /// @notice Returns the foreign address of the Hub bridge adapter for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
@@ -44,6 +53,10 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @notice Sets the associated caliber address.
     /// @param caliber The address of the associated caliber.
     function setCaliber(address caliber) external;
+
+    /// @notice Sets the duration of the cooldown period for outgoing bridge transfers.
+    /// @param newCooldownDuration The new duration in seconds.
+    function setCooldownDuration(uint256 newCooldownDuration) external;
 
     /// @notice Registers a hub bridge adapter.
     /// @param bridgeId The ID of the bridge.

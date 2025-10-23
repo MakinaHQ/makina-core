@@ -32,6 +32,8 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         mapping(uint16 bridgeId => address adapter) _hubBridgeAdapters;
         EnumerableMap.AddressToUintMap _bridgesIn;
         EnumerableMap.AddressToUintMap _bridgesOut;
+        uint256 _cooldownDuration;
+        mapping(uint16 bridgeId => uint256 timestamp) _lastBridgeOutTimestamp;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.CaliberMailbox")) - 1)) & ~bytes32(uint256(0xff))
@@ -49,13 +51,14 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         _disableInitializers();
     }
 
-    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, address _hubMachine)
-        external
-        override
-        initializer
-    {
+    function initialize(
+        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        uint256 _initialCooldownDuration,
+        address _hubMachine
+    ) external override initializer {
         CaliberMailboxStorage storage $ = _getCaliberStorage();
         $._hubMachine = _hubMachine;
+        $._cooldownDuration = _initialCooldownDuration;
         __ReentrancyGuard_init();
         __MakinaGovernable_init(mgParams);
     }
@@ -70,6 +73,11 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
     /// @inheritdoc ICaliberMailbox
     function caliber() external view override returns (address) {
         return _getCaliberStorage()._caliber;
+    }
+
+    /// @inheritdoc ICaliberMailbox
+    function cooldownDuration() external view override returns (uint256) {
+        return _getCaliberStorage()._cooldownDuration;
     }
 
     /// @inheritdoc ICaliberMailbox
@@ -110,6 +118,12 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
                 ITokenRegistry(ISpokeCoreRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
 
             (uint16 bridgeId, uint256 minOutputAmount) = abi.decode(data, (uint16, uint256));
+
+            uint256 currentTimestamp = block.timestamp;
+            if (currentTimestamp - $._lastBridgeOutTimestamp[bridgeId] < $._cooldownDuration) {
+                revert Errors.OngoingCooldown();
+            }
+            $._lastBridgeOutTimestamp[bridgeId] = currentTimestamp;
 
             address recipient = $._hubBridgeAdapters[bridgeId];
             if (recipient == address(0)) {
@@ -184,6 +198,13 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         $._hubBridgeAdapters[bridgeId] = adapter;
 
         emit HubBridgeAdapterSet(uint256(bridgeId), adapter);
+    }
+
+    /// @inheritdoc ICaliberMailbox
+    function setCooldownDuration(uint256 newCooldownDuration) external override onlyRiskManagerTimelock {
+        CaliberMailboxStorage storage $ = _getCaliberStorage();
+        emit CooldownDurationChanged($._cooldownDuration, newCooldownDuration);
+        $._cooldownDuration = newCooldownDuration;
     }
 
     /// @inheritdoc IBridgeController

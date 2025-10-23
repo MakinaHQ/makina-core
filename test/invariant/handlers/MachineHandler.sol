@@ -158,6 +158,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
             return;
         }
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         vm.startPrank(_mechanic());
 
         address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);

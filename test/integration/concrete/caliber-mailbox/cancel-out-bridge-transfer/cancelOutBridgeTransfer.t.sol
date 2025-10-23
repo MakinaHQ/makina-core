@@ -32,6 +32,8 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         vm.prank(mechanic);
         caliber.transferToHubMachine(
             address(accountingToken), inputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, inputAmount)

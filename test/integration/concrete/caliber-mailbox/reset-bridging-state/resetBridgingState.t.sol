@@ -12,6 +12,8 @@ import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol"
 contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integration_Concrete_Test {
     function setUp() public virtual override {
         CaliberMailbox_Integration_Concrete_Test.setUp();
+
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
     }
 
     function test_RevertWhen_CallerNotSC() public {

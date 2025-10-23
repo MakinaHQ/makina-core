@@ -24,6 +24,8 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         uint256 inputAmount = 2e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
 
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
+
         // schedule the transfer
         transferId = bridgeAdapter.nextOutTransferId();
         vm.prank(mechanic);
