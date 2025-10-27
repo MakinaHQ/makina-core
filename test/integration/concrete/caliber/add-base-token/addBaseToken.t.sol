@@ -13,16 +13,32 @@ contract AddBaseToken_Integration_Concrete_Test is Caliber_Integration_Concrete_
         caliber.addBaseToken(address(baseToken));
     }
 
-    function test_RevertWhen_AlreadyExistingBaseToken() public withTokenAsBT(address(baseToken)) {
-        vm.expectRevert(Errors.AlreadyBaseToken.selector);
-        vm.prank(riskManagerTimelock);
-        caliber.addBaseToken(address(baseToken));
-    }
-
     function test_RevertWhen_TokenAddressZero() public {
         vm.expectRevert(Errors.ZeroTokenAddress.selector);
         vm.prank(riskManagerTimelock);
         caliber.addBaseToken(address(0));
+    }
+
+    function test_RevertWhen_AlreadyExistingPositionToken() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        vm.expectRevert(Errors.AlreadyPositionToken.selector);
+        vm.prank(riskManagerTimelock);
+        caliber.addBaseToken(address(vault));
+    }
+
+    function test_RevertWhen_AlreadyExistingBaseToken() public withTokenAsBT(address(baseToken)) {
+        vm.expectRevert(Errors.AlreadyBaseToken.selector);
+        vm.prank(riskManagerTimelock);
+        caliber.addBaseToken(address(baseToken));
     }
 
     function test_RevertGiven_PriceFeedRouteNotRegistered() public {

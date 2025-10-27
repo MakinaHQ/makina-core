@@ -145,6 +145,13 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
+        // use wrong position tokens list
+        mgmtInstruction = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        mgmtInstruction.positionTokens = new address[](1);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
         // use wrong commands
         mgmtInstruction = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
         mgmtInstruction.commands[1] = mgmtInstruction.commands[0];
@@ -242,24 +249,35 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong affected tokens list
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         acctInstruction.affectedTokens[0] = address(0);
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
+        // use wrong position tokens list
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstruction.positionTokens[0] = address(0);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
         // use wrong commands
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         delete acctInstruction.commands[0];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong state
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         delete acctInstruction.state[2];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
         // use wrong bitmap
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
         acctInstruction.stateBitmap = 0;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         vm.prank(mechanic);
@@ -293,6 +311,56 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         vm.prank(mechanic);
         vm.expectRevert(Errors.InvalidAffectedToken.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertWhen_ProvidedSecondInstructionPositionTokenIsBaseToken()
+        public
+        withTokenAsBT(address(baseToken))
+    {
+        // register vault as base token
+        vm.prank(dao);
+        oracleRegistry.setFeedRoute(address(vault), address(bPriceFeed1), DEFAULT_PF_STALE_THRSHLD, address(0), 0);
+        vm.prank(riskManagerTimelock);
+        caliber.addBaseToken(address(vault));
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.PositionTokenIsBaseToken.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertWhen_ProvidedSecondInstructionPositionTokenIsAlreadyPositionToken()
+        public
+        withTokenAsBT(address(baseToken))
+    {
+        // manually set vault as position token
+        bytes32 caliberStorageLocation =
+            keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff));
+        bytes32 vaultKey = bytes32(uint256(uint160(address(vault))));
+        vm.store(
+            address(caliber),
+            keccak256(abi.encode(vaultKey, bytes32(uint256(caliberStorageLocation) + 24))),
+            bytes32(uint256(1))
+        );
+
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.AlreadyPositionToken.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
@@ -643,6 +711,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         uint256 expectedPosValue = inputAmount * PRICE_B_A;
 
+        // create position
         vm.expectEmit(true, false, false, true, address(caliber));
         emit ICaliber.PositionCreated(VAULT_POS_ID, expectedPosValue);
         vm.prank(mechanic);
@@ -671,6 +740,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         uint256 expectedPosValue = inputAmount * PRICE_B_A;
 
+        // create position
         vm.expectEmit(true, false, false, true, address(caliber));
         emit ICaliber.PositionCreated(SUPPLY_POS_ID, expectedPosValue);
         vm.prank(mechanic);
@@ -699,6 +769,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
 
         uint256 expectedPosValue = inputAmount * PRICE_B_A;
 
+        // create position
         vm.expectEmit(true, false, false, true, address(caliber));
         emit ICaliber.PositionCreated(BORROW_POS_ID, expectedPosValue);
         vm.prank(mechanic);

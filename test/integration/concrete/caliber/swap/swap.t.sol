@@ -42,6 +42,24 @@ contract Swap_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
         caliber.swap(order);
     }
 
+    function test_RevertWhen_InputTokenPositionToken() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        ISwapModule.SwapOrder memory order;
+        order.inputToken = address(vault);
+        vm.expectRevert(Errors.InvalidInputToken.selector);
+        vm.prank(mechanic);
+        caliber.swap(order);
+    }
+
     function test_RevertWhen_OutputTokenNonBaseToken() public {
         ISwapModule.SwapOrder memory order;
         vm.expectRevert(Errors.InvalidOutputToken.selector);

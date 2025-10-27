@@ -2,11 +2,17 @@ addBaseToken.t.sol
 ├── when caller is not the risk manager timelock
 │  └── it should revert with UnauthorizedCaller
 └── when caller is the risk manager timelock
-   ├── given the base token is already registered in the Caliber
-   │  └── it should revert with AlreadyBaseToken
-   └── given the base token is not already registered in the Caliber
-      ├── given the base token does not have corresponding registered feeds in oracle registry
-      │  └── it should revert with PriceFeedRouteNotRegistered
-      └── given the base token has corresponding registered feeds in oracle registry
-         ├── it should register the position ID in the Caliber
-         └── it should emit a BaseTokenAdded event
+   ├── given the base token address is equal to zero
+   │  └── it should revert with ZeroTokenAddress
+   └── given the base token address is non-zero
+      ├── given the base token is already registered as a position token in the caliber
+      │  └── it should revert with AlreadyPositionToken
+      └── given the base token is not already registered as a position token in the caliber
+         ├── given the base token is already registered in the Caliber
+         │  └── it should revert with AlreadyBaseToken
+         └── given the base token is not already registered in the Caliber
+            ├── given the base token does not have corresponding registered feeds in oracle registry
+            │  └── it should revert with PriceFeedRouteNotRegistered
+            └── given the base token has corresponding registered feeds in oracle registry
+               ├── it should register the base token in the Caliber
+               └── it should emit a BaseTokenAdded event

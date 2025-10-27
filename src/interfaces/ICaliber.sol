@@ -58,6 +58,7 @@ interface ICaliber {
     ///        Set to 0 if the instruction is not of type ACCOUNTING, or if the involved position is ungrouped.
     /// @param instructionType The type of the instruction.
     /// @param affectedTokens The array of affected tokens.
+    /// @param positionTokens The array of position tokens.
     /// @param commands The array of commands.
     /// @param state The array of state.
     /// @param stateBitmap The state bitmap.
@@ -68,6 +69,7 @@ interface ICaliber {
         uint256 groupId;
         InstructionType instructionType;
         address[] affectedTokens;
+        address[] positionTokens;
         bytes32[] commands;
         bytes[] state;
         uint128 stateBitmap;

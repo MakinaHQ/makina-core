@@ -71,6 +71,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -111,6 +112,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -125,6 +127,9 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
     {
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = IERC4626(_vault).asset();
+
+        address[] memory positionTokens = new address[](1);
+        positionTokens[0] = _vault;
 
         bytes32[] memory commands = new bytes32[](3);
         // "0x38d52e0f02ffffffffffff00" + _vault
@@ -166,6 +171,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
+            positionTokens,
             commands,
             state,
             stateBitmap,
@@ -213,6 +219,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -251,6 +258,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -266,6 +274,9 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
     ) internal view returns (ICaliber.Instruction memory) {
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = MockSupplyModule(_supplyModule).asset();
+
+        address[] memory positionTokens = new address[](1);
+        positionTokens[0] = _supplyModule;
 
         bytes32[] memory commands = new bytes32[](1);
         // "0x1aefb1070200ffffffffff00" + _supplyModule
@@ -291,6 +302,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             _groupId,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
+            positionTokens,
             commands,
             state,
             stateBitmap,
@@ -329,6 +341,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -376,6 +389,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -391,6 +405,9 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
     ) internal view returns (ICaliber.Instruction memory) {
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = MockBorrowModule(_borrowModule).asset();
+
+        address[] memory positionTokens = new address[](1);
+        positionTokens[0] = _borrowModule;
 
         bytes32[] memory commands = new bytes32[](1);
         // "0xd283e75f0200ffffffffff00" + _borrowModule
@@ -416,6 +433,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             _groupId,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
+            positionTokens,
             commands,
             state,
             stateBitmap,
@@ -473,6 +491,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -524,6 +543,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -566,6 +586,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.MANAGEMENT,
             affectedTokens,
+            new address[](0),
             commands,
             state,
             stateBitmap,
@@ -582,6 +603,9 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         address token = _side ? MockPool(_pool).token1() : MockPool(_pool).token0();
         address[] memory affectedTokens = new address[](1);
         affectedTokens[0] = token;
+
+        address[] memory positionTokens = new address[](1);
+        positionTokens[0] = _pool;
 
         bytes32[] memory commands = new bytes32[](2);
         // "0x70a082310202ffffffffff02" + _pool
@@ -616,6 +640,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             0,
             ICaliber.InstructionType.ACCOUNTING,
             affectedTokens,
+            positionTokens,
             commands,
             state,
             stateBitmap,
@@ -647,7 +672,16 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         uint128 stateBitmap = 0x80000000000000000000000000000000;
 
         return ICaliber.Instruction(
-            0, false, 0, ICaliber.InstructionType.HARVEST, new address[](0), commands, state, stateBitmap, merkleProof
+            0,
+            false,
+            0,
+            ICaliber.InstructionType.HARVEST,
+            new address[](0),
+            new address[](0),
+            commands,
+            state,
+            stateBitmap,
+            merkleProof
         );
     }
 
@@ -659,7 +693,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         ICaliber.Instruction memory _manageFlashloanInstruction
     ) internal view returns (ICaliber.Instruction memory) {
         bytes32[] memory commands = new bytes32[](1);
-        // "0x6022f55101820001ffffffff" + _flashLoanModule
+        // "0xa3b14e5101820001ffffffff" + _flashLoanModule
         commands[0] = _buildCommand(
             MockFlashLoanModule.flashLoan.selector,
             0x01, // call with extended flag
@@ -677,6 +711,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             _manageFlashloanInstruction.groupId,
             _manageFlashloanInstruction.instructionType,
             _manageFlashloanInstruction.affectedTokens,
+            _manageFlashloanInstruction.positionTokens,
             _manageFlashloanInstruction.commands,
             _manageFlashloanInstruction.state,
             _manageFlashloanInstruction.stateBitmap,
@@ -686,7 +721,16 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         bytes32[] memory merkleProof = _getDummyLoopMockFlashLoanModuleInstrProof();
 
         return ICaliber.Instruction(
-            _posId, false, 0, ICaliber.InstructionType.MANAGEMENT, new address[](0), commands, state, 0, merkleProof
+            _posId,
+            false,
+            0,
+            ICaliber.InstructionType.MANAGEMENT,
+            new address[](0),
+            new address[](0),
+            commands,
+            state,
+            0,
+            merkleProof
         );
     }
 
@@ -705,6 +749,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             false,
             0,
             ICaliber.InstructionType.ACCOUNTING,
+            new address[](0),
             new address[](0),
             new bytes32[](0),
             state,
@@ -725,6 +770,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
             false,
             0,
             ICaliber.InstructionType.FLASHLOAN_MANAGEMENT,
+            new address[](0),
             new address[](0),
             new bytes32[](0),
             new bytes[](0),
