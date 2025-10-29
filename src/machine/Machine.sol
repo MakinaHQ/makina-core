@@ -257,6 +257,16 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
+    function getIdleTokensLength() external view override returns (uint256) {
+        return _getMachineStorage()._idleTokens.length();
+    }
+
+    /// @inheritdoc IMachine
+    function getIdleToken(uint256 idx) external view override returns (address) {
+        return _getMachineStorage()._idleTokens.at(idx);
+    }
+
+    /// @inheritdoc IMachine
     function convertToShares(uint256 assets) public view override returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
         return

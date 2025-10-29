@@ -300,7 +300,6 @@ contract Deploy_Scripts_Test is Base_Test {
         );
         address accountingToken =
             abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".accountingToken"), (address));
-        address depositToken = abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".depositToken"), (address));
         string memory shareTokenName =
             abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenName"), (string));
         string memory shareTokenSymbol =
@@ -318,7 +317,9 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.caliberStaleThreshold(), mParams.initialCaliberStaleThreshold);
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
         assertEq(machine.accountingToken(), accountingToken);
-        assertTrue(machine.isIdleToken(depositToken));
+        assertTrue(machine.isIdleToken(accountingToken));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), accountingToken);
         assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
         assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
 

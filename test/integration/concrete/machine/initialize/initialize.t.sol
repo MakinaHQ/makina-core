@@ -87,12 +87,14 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
         assertEq(shareToken.owner(), address(machine));
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(machine.hubCaliber(), hubCaliberAddr);
     }
 
-    function test_Initialize_WithPreDeposit() public {
+    function test_Initialize_WithPreDeposit_ZeroBalance() public {
         machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
 
         // deploy caliber to be called in machine initializer
@@ -121,6 +123,80 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             )
         );
 
+        vm.prank(address(hubCoreFactory));
+        preDepositVault.setPendingMachine(address(machine));
+
+        shareToken = MachineShare(preDepositVault.shareToken());
+
+        vm.prank(address(preDepositVault));
+        shareToken.transferOwnership(address(machine));
+
+        IMachine(machine).initialize(
+            _getMachineInitParams(),
+            mgParams,
+            address(preDepositVault),
+            address(shareToken),
+            address(accountingToken),
+            hubCaliberAddr
+        );
+
+        assertTrue(preDepositVault.migrated());
+
+        assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.depositor(), machineDepositor);
+        assertEq(machine.redeemer(), machineRedeemer);
+        assertEq(machine.accountingToken(), address(accountingToken));
+        assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
+        assertEq(machine.authority(), address(accessManager));
+        assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertFalse(machine.isIdleToken(address(baseToken)));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
+        assertEq(shareToken.owner(), address(machine));
+        assertEq(machine.getSpokeCalibersLength(), 0);
+        assertEq(machine.hubCaliber(), hubCaliberAddr);
+
+        assertEq(address(shareToken), machine.shareToken());
+        assertEq(shareToken.minter(), address(machine));
+        assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
+        assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
+        assertEq(shareToken.totalSupply(), 0);
+
+        assertEq(baseToken.balanceOf(address(preDepositVault)), 0);
+        assertEq(baseToken.balanceOf(address(machine)), 0);
+    }
+
+    function test_Initialize_WithPreDeposit_PositiveBalance() public {
+        machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
+
+        // deploy caliber to be called in machine initializer
+        ICaliber.CaliberInitParams memory cParams;
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
+        hubCaliberAddr = address(
+            new BeaconProxy(
+                IHubCoreRegistry(hubCoreRegistry).caliberBeacon(),
+                abi.encodeCall(ICaliber.initialize, (cParams, address(accountingToken), address(machine)))
+            )
+        );
+
+        vm.prank(dao);
+        preDepositVault = PreDepositVault(
+            hubCoreFactory.createPreDepositVault(
+                IPreDepositVault.PreDepositVaultInitParams({
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialWhitelistMode: false,
+                    initialRiskManager: address(0),
+                    initialAuthority: address(accessManager)
+                }),
+                address(baseToken),
+                address(accountingToken),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+            )
+        );
+
+        // deposit funds into pre-deposit vault
         uint256 preDepositAmount = 1e18;
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
@@ -153,6 +229,10 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.authority(), address(accessManager));
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertTrue(machine.isIdleToken(address(baseToken)));
+        assertEq(machine.getIdleTokensLength(), 2);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
+        assertEq(machine.getIdleToken(1), address(baseToken));
         assertEq(shareToken.owner(), address(machine));
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(machine.hubCaliber(), hubCaliberAddr);
@@ -163,7 +243,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
         assertEq(shareToken.totalSupply(), shares);
 
-        assertTrue(machine.isIdleToken(address(baseToken)));
         assertEq(baseToken.balanceOf(address(preDepositVault)), 0);
         assertEq(baseToken.balanceOf(address(machine)), preDepositAmount);
     }
