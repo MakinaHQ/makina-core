@@ -1,4 +1,4 @@
-setToken.t.sol
+setForeignToken.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
@@ -10,4 +10,4 @@ setToken.t.sol
       └── when the provided chain id is not equal to zero
          ├── it should associate both provided token addresses and the chain id in contract storage
          ├── it should clean up any previous associations involving either token addresses and the chain id
-         └── it should emit a TokenRegistered event
+         └── it should emit a ForeignTokenRegistered event

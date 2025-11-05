@@ -1,0 +1,5 @@
+getForeignToken.t.sol
+├── when the foreign token on the provided foreign chain corresponding to the provided local token is not registered
+│  └── it should revert with ForeignTokenNotRegistered
+└── when the foreign token on the provided foreign chain corresponding to the provided local token is registered
+   └── it should return the foreign token address
