@@ -8,5 +8,5 @@ removeBaseToken.t.sol
       ├── given the base token is not registered in the Caliber
       │  └── it should revert with NotBaseToken
       └── given the base token is registered in the Caliber
-         ├── it should unregister the position ID from the Caliber
+         ├── it should unregister the base token from the Caliber
          └── it should emit a BaseTokenRemoved event

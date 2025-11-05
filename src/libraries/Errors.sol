@@ -5,6 +5,7 @@ library Errors {
     error AccountingToken();
     error ActiveUpdatePending();
     error AlreadyBaseToken();
+    error AlreadyPositionToken();
     error AlreadyRootGuardian();
     error AmountOutTooLow();
     error BridgeAdapterAlreadyExists();
@@ -31,6 +32,7 @@ library Errors {
     error InvalidDecimals();
     error InvalidFeedRoute();
     error InvalidInputAmount();
+    error InvalidInputToken();
     error InvalidInstructionProof();
     error InvalidInstructionType();
     error InvalidOutputToken();
@@ -67,6 +69,7 @@ library Errors {
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
     error PositionIsGrouped();
+    error PositionTokenIsBaseToken();
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
     error ProtectedRootGuardian();

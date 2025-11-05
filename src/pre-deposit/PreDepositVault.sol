@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -15,7 +16,7 @@ import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDepositVault {
+contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, MakinaContext, IPreDepositVault {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -198,6 +199,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function deposit(uint256 assets, address receiver, uint256 minShares)
         external
         override
+        nonReentrant
         notMigrated
         returns (uint256)
     {
@@ -228,6 +230,7 @@ contract PreDepositVault is AccessManagedUpgradeable, MakinaContext, IPreDeposit
     function redeem(uint256 shares, address receiver, uint256 minAssets)
         external
         override
+        nonReentrant
         notMigrated
         returns (uint256)
     {

@@ -71,6 +71,7 @@ contract Caliber is
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
         EnumerableSet.AddressSet _instrRootGuardians;
+        EnumerableSet.AddressSet _positionTokens;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff))
@@ -628,6 +629,9 @@ contract Caliber is
         if (token == address(0)) {
             revert Errors.ZeroTokenAddress();
         }
+        if ($._positionTokens.contains(token)) {
+            revert Errors.AlreadyPositionToken();
+        }
         if (!$._baseTokens.add(token)) {
             revert Errors.AlreadyBaseToken();
         }
@@ -690,7 +694,7 @@ contract Caliber is
                 _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
         }
 
-        bool isPositionIncrease = change >= 0;
+        bool isPositionIncrease = change > 0;
         uint256 absChange = isPositionIncrease ? uint256(change) : uint256(-change);
         uint256 maxLossBps = isPositionIncrease ? $._maxPositionIncreaseLossBps : $._maxPositionDecreaseLossBps;
 
@@ -704,12 +708,12 @@ contract Caliber is
         }
 
         if (affectedTokensValueAfter < affectedTokensValueBefore) {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
+            if (change != 0 && mgmtInstruction.isDebt == isPositionIncrease) {
                 revert Errors.InvalidPositionChangeDirection();
             }
             _checkPositionMinDelta(absChange, affectedTokensValueBefore - affectedTokensValueAfter, maxLossBps);
         } else {
-            if (mgmtInstruction.isDebt == isPositionIncrease) {
+            if (change != 0 && mgmtInstruction.isDebt == isPositionIncrease) {
                 _checkPositionMaxDelta(absChange, affectedTokensValueAfter - affectedTokensValueBefore, maxLossBps);
             }
         }
@@ -763,16 +767,34 @@ contract Caliber is
                 $._positionIdGroups[groupId].remove(posId);
             }
             delete $._positionById[posId];
+
+            len = instruction.positionTokens.length;
+            for (uint256 i; i < len; ++i) {
+                $._positionTokens.remove(instruction.positionTokens[i]);
+            }
+
             emit PositionClosed(posId);
         } else if (currentValue > 0) {
             pos.value = currentValue;
             pos.lastAccountingTime = block.timestamp;
+
             if (lastValue == 0) {
                 pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
                 if (groupId != 0) {
                     $._positionIdGroups[groupId].add(posId);
                 }
+
+                len = instruction.positionTokens.length;
+                for (uint256 i; i < len; ++i) {
+                    if ($._baseTokens.contains(instruction.positionTokens[i])) {
+                        revert Errors.PositionTokenIsBaseToken();
+                    }
+                    if (!$._positionTokens.add(instruction.positionTokens[i])) {
+                        revert Errors.AlreadyPositionToken();
+                    }
+                }
+
                 emit PositionCreated(posId, currentValue);
             } else {
                 emit PositionUpdated(posId, currentValue);
@@ -861,20 +883,18 @@ contract Caliber is
     /// @dev Checks if the given instruction is allowed by verifying its Merkle proof against the allowed instructions root.
     /// @param instruction The instruction to check.
     function _checkInstructionIsAllowed(Instruction calldata instruction) internal {
-        bytes32 commandsHash = keccak256(abi.encodePacked(instruction.commands));
-        bytes32 stateHash = _getStateHash(instruction.state, instruction.stateBitmap);
-        bytes32 affectedTokensHash = keccak256(abi.encodePacked(instruction.affectedTokens));
         bytes32 instructionLeaf = keccak256(
             abi.encode(
                 keccak256(
                     abi.encode(
-                        commandsHash,
-                        stateHash,
+                        keccak256(abi.encodePacked(instruction.commands)),
+                        _getStateHash(instruction.state, instruction.stateBitmap),
                         instruction.stateBitmap,
                         instruction.positionId,
                         instruction.isDebt,
                         instruction.groupId,
-                        affectedTokensHash,
+                        keccak256(abi.encodePacked(instruction.affectedTokens)),
+                        keccak256(abi.encodePacked(instruction.positionTokens)),
                         instruction.instructionType
                     )
                 )
@@ -924,6 +944,8 @@ contract Caliber is
         CaliberStorage storage $ = _getCaliberStorage();
         if (IMachineEndpoint($._hubMachineEndpoint).recoveryMode() && order.outputToken != $._accountingToken) {
             revert Errors.RecoveryMode();
+        } else if ($._positionTokens.contains(order.inputToken)) {
+            revert Errors.InvalidInputToken();
         } else if (!$._baseTokens.contains(order.outputToken)) {
             revert Errors.InvalidOutputToken();
         }

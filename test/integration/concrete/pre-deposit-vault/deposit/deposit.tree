@@ -1,26 +1,29 @@
 deposit.t.sol
-├── given pre-deposit vault was migrated
-│  └── it should revert with Migrated
-└── given pre-deposit vault was not migrated
-   ├── given pre-deposit vault is in whitelist mode
-   │  ├── when caller is not whitelisted
-   │  │  └── it should revert with UnauthorizedCaller
-   │  └── when caller is whitelisted
-   │     ├── given the deposited assets exceed the maximum allowed deposit amount
-   │     │  └── it should revert with ExceededMaxMint
-   │     └── given the deposited assets do not exceed the maximum allowed deposit amount
-   │        ├── given output share amount is lower than provided minShares
-   │        │  └── it should revert with SlippageProtection
-   │        └── given output share amount is not lower than provided minShares
-   │           ├── it should transfer assets from caller to vault
-   │           ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
-   │           ├── it should increase the totalAssets value by assets
-   │           └── it should emit a Deposit event
-   └── given pre-deposit vault is not in whitelist mode
-      ├── given output share amount is lower than provided minShares
-      │  └── it should revert with SlippageProtection
-      └── given output share amount is not lower than provided minShares
-         ├── it should transfer assets from caller to vault
-         ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
-         ├── it should increase the totalAssets value by assets
-         └── it should emit a Deposit event
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── given pre-deposit vault was migrated
+   │  └── it should revert with Migrated
+   └── given pre-deposit vault was not migrated
+      ├── given pre-deposit vault is in whitelist mode
+      │  ├── when caller is not whitelisted
+      │  │  └── it should revert with UnauthorizedCaller
+      │  └── when caller is whitelisted
+      │     ├── given the deposited assets exceed the maximum allowed deposit amount
+      │     │  └── it should revert with ExceededMaxMint
+      │     └── given the deposited assets do not exceed the maximum allowed deposit amount
+      │        ├── given output share amount is lower than provided minShares
+      │        │  └── it should revert with SlippageProtection
+      │        └── given output share amount is not lower than provided minShares
+      │           ├── it should transfer assets from caller to vault
+      │           ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
+      │           ├── it should increase the totalAssets value by assets
+      │           └── it should emit a Deposit event
+      └── given pre-deposit vault is not in whitelist mode
+         ├── given output share amount is lower than provided minShares
+         │  └── it should revert with SlippageProtection
+         └── given output share amount is not lower than provided minShares
+            ├── it should transfer assets from caller to vault
+            ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by previewDeposit
+            ├── it should increase the totalAssets value by assets
+            └── it should emit a Deposit event
