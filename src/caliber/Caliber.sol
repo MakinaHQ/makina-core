@@ -205,7 +205,7 @@ contract Caliber is
     }
 
     /// @inheritdoc ICaliber
-    function cooldownDuration() external view returns (uint256) {
+    function cooldownDuration() external view override returns (uint256) {
         return _getCaliberStorage()._cooldownDuration;
     }
 
@@ -247,7 +247,7 @@ contract Caliber is
     }
 
     /// @inheritdoc ICaliber
-    function isAccountingFresh() external view returns (bool) {
+    function isAccountingFresh() external view override returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 len = $._positionIds.length();

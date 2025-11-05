@@ -28,6 +28,8 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
 
         vm.stopPrank();
+
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
     }
 
     function test_RevertWhen_ReentrantCall() public {
@@ -61,6 +63,22 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         );
         vm.prank(address(caliber));
         caliberMailbox.manageTransfer(address(baseToken), 0, "");
+    }
+
+    function test_RevertGiven_OngoingCooldown_FromCaliber() public {
+        uint256 bridgeInputAmount = 1e18;
+
+        deal(address(accountingToken), address(caliber), bridgeInputAmount, true);
+
+        vm.startPrank(address(caliber));
+
+        accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
+        caliberMailbox.manageTransfer(
+            address(accountingToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeInputAmount)
+        );
+
+        vm.expectRevert(Errors.OngoingCooldown.selector);
+        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(ACROSS_V3_BRIDGE_ID, 0));
     }
 
     function test_RevertGiven_HubBridgeAdapterNotSet_FromCaliber() public {
@@ -176,6 +194,8 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(
             address(accountingToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeInputAmount)
         );
+
+        skip(DEFAULT_CALIBER_COOLDOWN_DURATION);
 
         accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
         caliberMailbox.manageTransfer(
