@@ -12,6 +12,7 @@
     "prettier": "3.3.3",
     "solhint": "5.0.5"
   },
+  "dependencies": {},
   "scripts": {
     "build:ir": "FOUNDRY_PROFILE=ir forge build",
     "lint": "yarn lint:sol && yarn prettier:check",

@@ -11,3 +11,9 @@
 [submodule "lib/enso-weiroll"]
 	path = lib/enso-weiroll
 	url = https://github.com/EnsoBuild/enso-weiroll
+[submodule "lib/devtools"]
+	path = lib/devtools
+	url = https://github.com/LayerZero-Labs/devtools
+[submodule "lib/LayerZero-v2"]
+	path = lib/LayerZero-v2
+	url = https://github.com/LayerZero-Labs/LayerZero-v2

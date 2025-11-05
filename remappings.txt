@@ -2,3 +2,6 @@
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @wormhole/sdk/=lib/wormhole-solidity-sdk/src/
 @enso-weiroll/=lib/enso-weiroll/contracts/
+@layerzerolabs/oft-evm/=lib/devtools/packages/oft-evm/
+@layerzerolabs/oapp-evm/=lib/devtools/packages/oapp-evm/
+@layerzerolabs/lz-evm-protocol-v2/=lib/LayerZero-v2/packages/layerzero-v2/evm/protocol/
