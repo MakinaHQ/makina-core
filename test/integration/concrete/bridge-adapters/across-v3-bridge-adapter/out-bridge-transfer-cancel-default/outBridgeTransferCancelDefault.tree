@@ -1,8 +1,8 @@
 outBridgeTransferCancelDefault.t.sol
-├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
+├── given the provided transfer ID does not corresponds to an outgoing transfer in adapter's storage
 │  └── it should revert with InvalidTransferStatus
-└── given the provided transfer ID corresponds to a outgoing transfer in adapter's storage
+└── given the provided transfer ID corresponds to an outgoing transfer in adapter's storage
    ├── given the corresponding transfer has not been already sent
-   │  └── it should return the corresponding transfer's input amount
+   │  └── it should return 0
    └── given the corresponding transfer has not been already sent
       └── it should return the missing input token amount in the adapter, necessary to proccess the cancellation of corresponding transfer

@@ -1,4 +1,4 @@
-sendOutBridgeTransfer.t.sol
+cancelOutBridgeTransfer.t.sol
 ├── when call is reentrant
 │  └── it should revert
 └── when call is not reentrant
@@ -8,6 +8,6 @@ sendOutBridgeTransfer.t.sol
       ├── given the provided transfer ID does not corresponds to a scheduled, unsent outgoing transfer in adapter's storage
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to a scheduled, unsent outgoing transfer in adapter's storage
-         ├── it should decrease the adapter's token balance by amount
-         ├── it should initiate the Across transfer
-         └── it should emit a OutBridgeTransferSent event
+         ├── it should decrease the adapter's token balance by bridge transfer input amount
+         ├── it should increase the controller's token balance by bridge transfer input amount
+         └── it should emit a OutBridgeTransferCancelled event

@@ -1,0 +1,27 @@
+sendOutBridgeTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── when caller is not the controller contract
+   │  └── it should revert with NotController
+   └── when caller is the controller contract
+      ├── given the provided transfer ID does not corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+      │  └── it should revert with InvalidTransferStatus
+      └── given the provided transfer ID corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+         ├── given the quoted gas fee exceeds the provided max value
+         │  └── it should revert with ExceededMaxFee
+         └── given the quoted gas fee does not exceed the provided max value
+            ├── given the contract does not have enough balance to cover the quoted fee
+            │  └── it should revert
+            └── given the contract has enough balance to cover the quoted fee
+               ├── given the OFT receipt indicates a sent amount not equal to intended bridge transfer input amount
+               │  └── it should revert with InvalidLzSentAmount
+               └── given the OFT receipt indicates a sent amount equal to intended bridge transfer input amount
+                  ├── given the OFT receipt indicates a received amount lower than intended bridge transfer min output amount
+                  │  └── it should revert with InvalidLzSentAmount
+                  └── given the OFT receipt indicates a received amount not lower than intended bridge transfer min output amount
+                     ├── it should decrease the adapter's token balance by amount
+                     ├── it should initiate the LayerZero transfer
+                     ├── it should emit a OutBridgeTransferSent event
+                     └── it should emit a LzGuidCreated event
+

@@ -32,6 +32,7 @@ import {ITokenRegistry} from "../../src/interfaces/ITokenRegistry.sol";
 import {IntegrationIds} from "../utils/IntegrationIds.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {LayerZeroV2BridgeAdapter} from "../../src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
 import {LayerZeroV2Config} from "../../src/bridge/configs/LayerZeroV2Config.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
@@ -277,6 +278,14 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
                     payable(address(_deployAcrossV3BridgeConfig(proxyOwner, address(accessManager))))
                 );
                 _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
+            } else if (bridgeId == LAYER_ZERO_V2_BRIDGE_ID) {
+                baBeacon = _deployLayerZeroV2BridgeAdapterBeacon(
+                    proxyOwner, address(coreRegistry), bridgesData[i].receiveSource
+                );
+                bc = TransparentUpgradeableProxy(
+                    payable(address(_deployLayerZeroV2Config(proxyOwner, address(accessManager))))
+                );
+                _setupLayerZeroV2ConfigAMFunctionRoles(address(accessManager), address(bc));
             } else {
                 revert("Bridge not supported");
             }
@@ -313,7 +322,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
 
     function setupHubCoreAMFunctionRoles(HubCore memory deployment) public {
         // HubCoreRegistry
-        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](10);
+        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](11);
         hubCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
         hubCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
         hubCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
@@ -321,9 +330,10 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         hubCoreRegistrySelectors[4] = ICoreRegistry.setFlashLoanModule.selector;
         hubCoreRegistrySelectors[5] = ICoreRegistry.setCaliberBeacon.selector;
         hubCoreRegistrySelectors[6] = ICoreRegistry.setBridgeAdapterBeacon.selector;
-        hubCoreRegistrySelectors[7] = IHubCoreRegistry.setChainRegistry.selector;
-        hubCoreRegistrySelectors[8] = IHubCoreRegistry.setMachineBeacon.selector;
-        hubCoreRegistrySelectors[9] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
+        hubCoreRegistrySelectors[7] = ICoreRegistry.setBridgeConfig.selector;
+        hubCoreRegistrySelectors[8] = IHubCoreRegistry.setChainRegistry.selector;
+        hubCoreRegistrySelectors[9] = IHubCoreRegistry.setMachineBeacon.selector;
+        hubCoreRegistrySelectors[10] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
         deployment.accessManager.setTargetFunctionRole(
             address(deployment.hubCoreRegistry), hubCoreRegistrySelectors, Roles.INFRA_SETUP_ROLE
         );
@@ -352,7 +362,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
 
     function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment) public {
         // SpokeCoreRegistry
-        bytes4[] memory spokeCoreRegistrySelectors = new bytes4[](8);
+        bytes4[] memory spokeCoreRegistrySelectors = new bytes4[](9);
         spokeCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
         spokeCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
         spokeCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
@@ -360,7 +370,8 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         spokeCoreRegistrySelectors[4] = ICoreRegistry.setFlashLoanModule.selector;
         spokeCoreRegistrySelectors[5] = ICoreRegistry.setCaliberBeacon.selector;
         spokeCoreRegistrySelectors[6] = ICoreRegistry.setBridgeAdapterBeacon.selector;
-        spokeCoreRegistrySelectors[7] = ISpokeCoreRegistry.setCaliberMailboxBeacon.selector;
+        spokeCoreRegistrySelectors[7] = ICoreRegistry.setBridgeConfig.selector;
+        spokeCoreRegistrySelectors[8] = ISpokeCoreRegistry.setCaliberMailboxBeacon.selector;
         deployment.accessManager.setTargetFunctionRole(
             address(deployment.spokeCoreRegistry), spokeCoreRegistrySelectors, Roles.INFRA_SETUP_ROLE
         );
@@ -770,6 +781,23 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
                     abi.encode(implem, _proxyOwner, abi.encodeCall(LayerZeroV2Config.initialize, (_accessManager)))
                 ),
                 LAYER_ZERO_V2_CONFIG_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployLayerZeroV2BridgeAdapterBeacon(
+        address _beaconOwner,
+        address _coreRegistry,
+        address _layerZeroEndpoint
+    ) internal returns (UpgradeableBeacon layerZeroV2BridgeAdapterBeacon) {
+        address implem = _deployCode(
+            abi.encodePacked(type(LayerZeroV2BridgeAdapter).creationCode, abi.encode(_coreRegistry, _layerZeroEndpoint)),
+            0
+        );
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _beaconOwner)),
+                LAYER_ZERO_V2_BRIDGE_ADAPTER_SALT_DOMAIN
             )
         );
     }

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: LZBL-1.2
 pragma solidity 0.8.28;
 
 import {EndpointV2Mock} from "@layerzerolabs/test-evm/contracts/mocks/EndpointV2Mock.sol";

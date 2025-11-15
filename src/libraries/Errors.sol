@@ -18,6 +18,7 @@ library Errors {
     error DirectManageFlashLoanCall();
     error EvmChainIdNotRegistered(uint256 chainId);
     error ExceededMaxDeposit();
+    error ExceededMaxFee(uint256 fee, uint256 max);
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
     error ForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
@@ -28,11 +29,13 @@ library Errors {
     error InsufficientBalance();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidBridgeRoute();
     error InvalidChainId();
     error InvalidDebtFlag();
     error InvalidDecimals();
     error InvalidFeedRoute();
     error InvalidInputAmount();
+    error InvalidLzSentAmount();
     error InvalidInputToken();
     error InvalidInstructionProof();
     error InvalidInstructionType();

@@ -30,5 +30,8 @@ abstract contract SaltDomains {
 
     bytes32 internal constant ACROSS_V3_BRIDGE_CONFIG_SALT_DOMAIN = keccak256("makina.salt.AcrossV3BridgeConfig");
 
+    bytes32 internal constant LAYER_ZERO_V2_BRIDGE_ADAPTER_SALT_DOMAIN =
+        keccak256("makina.salt.LayerZeroV2BridgeAdapter");
+
     bytes32 internal constant LAYER_ZERO_V2_CONFIG_SALT_DOMAIN = keccak256("makina.salt.LayerZeroV2Config");
 }
