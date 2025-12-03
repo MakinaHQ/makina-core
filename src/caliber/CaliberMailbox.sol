@@ -13,7 +13,6 @@ import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.s
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
-import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -114,9 +113,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         CaliberMailboxStorage storage $ = _getCaliberMailboxStorage();
 
         if (msg.sender == $._caliber) {
-            address outputToken =
-                ITokenRegistry(ISpokeCoreRegistry(registry).tokenRegistry()).getForeignToken(token, hubChainId);
-
             (uint16 bridgeId, uint256 minOutputAmount) = abi.decode(data, (uint16, uint256));
 
             uint256 currentTimestamp = block.timestamp;
@@ -135,7 +131,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
             (bool exists, uint256 bridgeOut) = $._bridgesOut.tryGet(token);
             $._bridgesOut.set(token, exists ? bridgeOut + amount : amount);
 
-            _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, outputToken, minOutputAmount);
+            _scheduleOutBridgeTransfer(bridgeId, hubChainId, recipient, token, amount, minOutputAmount);
         } else if (_isBridgeAdapter(msg.sender)) {
             (, uint256 inputAmount, bool refund) = abi.decode(data, (uint256, uint256, bool));
 
