@@ -24,6 +24,7 @@ See `SPECIFICATION.md` and `PERMISSIONS.MD` for more details.
 | `CaliberMailbox.sol`        | Spoke            | Handles communication between a spoke caliber and the hub machine.                                                                                  |
 | `SwapModule.sol`            | Hub + Spoke      | Standalone module used by calibers to execute swap transactions through external protocols.                                                         |
 | `AcrossV3BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via Across V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain. |
+| `AcrossV3BridgeConfig.sol`  | Hub + Spoke      | Stores various configuration data required for Across V3 bridge transfers.                                                                          |
 
 ## Installation
 

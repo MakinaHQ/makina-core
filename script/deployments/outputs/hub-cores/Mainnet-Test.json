@@ -3,6 +3,9 @@
   "BridgeAdapterBeacons": {
     "1": "0x081bAea8ab05978B677Bebe8217DB8F3dc958440"
   },
+  "BridgeConfigs": {
+    "1": "0xA2346fcAC891208a4465ECCdEDE8E5B0ddeB7c85"
+  },
   "CaliberBeacon": "0x6f1082bB7aeeeBc25ECB605B5E9751094Cbd55fE",
   "ChainRegistry": "0x24bf8648Fbe0208470ECe82C4Cf7f3e855fb01E8",
   "HubCoreFactory": "0xA80F73DFEeC386e24e5a65d65f5acdC0c07EB45a",

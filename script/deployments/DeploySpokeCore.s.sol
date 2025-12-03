@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 import {DeployCore} from "./DeployCore.s.sol";
@@ -14,6 +15,7 @@ contract DeploySpokeCore is DeployCore {
 
     SpokeCore private _core;
     UpgradeableBeacon[] private _bridgeAdapterBeacons;
+    TransparentUpgradeableProxy[] private _bridgeConfigs;
 
     constructor() {
         string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
@@ -43,8 +45,8 @@ contract DeploySpokeCore is DeployCore {
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
         setupSwapModule(_core.swapModule, swappersData);
-        _bridgeAdapterBeacons = deployAndSetupBridgeAdapterBeacons(
-            ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData, upgradeAdmin
+        (_bridgeAdapterBeacons, _bridgeConfigs) = deployAndSetupBridges(
+            upgradeAdmin, ICoreRegistry(address(_core.spokeCoreRegistry)), _core.accessManager, bridgesData
         );
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
@@ -78,10 +80,15 @@ contract DeploySpokeCore is DeployCore {
         vm.serializeAddress(key, "SwapModule", address(_core.swapModule));
         string memory bridgeAdapterBeaconList;
         string memory babKey = "key-bridge-adapter-beacon-list";
+        string memory bridgeConfigList;
+        string memory bcKey = "key-bridge-config-list";
         for (uint256 i; i < bridgesData.length; ++i) {
             bridgeAdapterBeaconList =
                 vm.serializeAddress(babKey, vm.toString(bridgesData[i].bridgeId), address(_bridgeAdapterBeacons[i]));
+            bridgeConfigList =
+                vm.serializeAddress(bcKey, vm.toString(bridgesData[i].bridgeId), address(_bridgeConfigs[i]));
         }
-        vm.writeJson(vm.serializeString(key, "BridgeAdapterBeacons", bridgeAdapterBeaconList), outputPath);
+        vm.serializeString(key, "BridgeAdapterBeacons", bridgeAdapterBeaconList);
+        vm.writeJson(vm.serializeString(key, "BridgeConfigs", bridgeConfigList), outputPath);
     }
 }

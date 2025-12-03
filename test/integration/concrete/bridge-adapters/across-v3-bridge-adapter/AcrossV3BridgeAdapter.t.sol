@@ -5,6 +5,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 
@@ -27,7 +28,8 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
 
         acrossV3SpokePool = IMockAcrossV3SpokePool(_deployCode(getMockAcrossV3SpokePoolCode(), 0));
 
-        address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)));
+        address beacon =
+            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(coreRegistry), address(acrossV3SpokePool)));
         bridgeAdapter1 = IBridgeAdapter(
             address(
                 new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController1), "")))
@@ -38,6 +40,12 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
                 new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController2), "")))
             )
         );
+
+        vm.startPrank(address(dao));
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        coreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
+        config.setForeignChainSupported(chainId2, true);
+        vm.stopPrank();
     }
 
     function _receiveInBridgeTransfer(

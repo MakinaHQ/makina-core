@@ -71,6 +71,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set approval and execution targets for a given swapper ID.
 
+### AcrossV2BridgeConfig
+
+- `INFRA_SETUP_ROLE` (roleId `1`)
+  - Can set supported status of EVM chains.
+
 ### Machine
 
 - `STRATEGY_COMPONENTS_SETUP_ROLE` (roleId `3`)

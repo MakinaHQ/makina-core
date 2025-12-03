@@ -5,6 +5,9 @@ interface ICoreRegistry {
     event BridgeAdapterBeaconChanged(
         uint256 indexed bridgeId, address indexed oldBridgeAdapterBeacon, address indexed newBridgeAdapterBeacon
     );
+    event BridgeConfigChanged(
+        uint256 indexed bridgeId, address indexed oldBridgeConfig, address indexed newBridgeConfig
+    );
     event CaliberBeaconChanged(address indexed oldCaliberBeacon, address indexed newCaliberBeacon);
     event CoreFactoryChanged(address indexed oldCoreFactory, address indexed newCoreFactory);
     event FlashLoanModuleChanged(address indexed oldFlashLoanModule, address indexed newFlashLoanModule);
@@ -32,6 +35,9 @@ interface ICoreRegistry {
 
     /// @notice Bridge ID => Address of the bridge adapter beacon contract.
     function bridgeAdapterBeacon(uint16 bridgeId) external view returns (address);
+
+    /// @notice Bridge ID => Address of the bridge config contract.
+    function bridgeConfig(uint16 bridgeId) external view returns (address);
 
     /// @notice Sets the core factory address.
     /// @param _coreFactory The core factory address.
@@ -61,4 +67,9 @@ interface ICoreRegistry {
     /// @param bridgeId The bridge ID.
     /// @param _bridgeAdapter The bridge adapter beacon address.
     function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external;
+
+    /// @notice Sets the bridge config address.
+    /// @param bridgeId The bridge ID.
+    /// @param _bridgeConfig The bridge config address.
+    function setBridgeConfig(uint16 bridgeId, address _bridgeConfig) external;
 }

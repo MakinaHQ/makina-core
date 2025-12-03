@@ -11,20 +11,21 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
-import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
+import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
+import {IMockAcrossV3SpokePool} from "../../mocks/IMockAcrossV3SpokePool.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {Constants} from "../../utils/Constants.sol";
+import {IntegrationIds} from "../../utils/IntegrationIds.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineStore} from "../stores/MachineStore.sol";
-import {IMockAcrossV3SpokePool} from "../../mocks/IMockAcrossV3SpokePool.sol";
 import {PerChainData} from "../../utils/WormholeQueryTestHelpers.sol";
 import {WormholeQueryTestHelpers} from "../../utils/WormholeQueryTestHelpers.sol";
 
-contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants {
+contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, IntegrationIds {
     using Math for uint256;
 
     Machine public machine;

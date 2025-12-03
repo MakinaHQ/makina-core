@@ -10,6 +10,7 @@ library Errors {
     error AmountOutTooLow();
     error BridgeAdapterAlreadyExists();
     error BridgeAdapterDoesNotExist();
+    error BridgeConfigNotSet();
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
@@ -19,7 +20,7 @@ library Errors {
     error ExceededMaxDeposit();
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
-    error ForeignTokenNotRegistered(address _token, uint256 _foreignEvmChainId);
+    error ForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
     error GroupIdNotProvided();
@@ -35,11 +36,15 @@ library Errors {
     error InvalidInputToken();
     error InvalidInstructionProof();
     error InvalidInstructionType();
+    error InvalidBridgeTransferRoute();
     error InvalidOutputToken();
     error InvalidPositionChangeDirection();
     error InvalidRecipientChainId();
     error InvalidTransferStatus();
-    error LocalTokenNotRegistered(address _token, uint256 _foreignEvmChainId);
+    error LocalTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error LzChainIdNotRegistered(uint32 chainId);
+    error LzForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error OftNotRegistered(address token);
     error ManageFlashLoanReentrantCall();
     error MaxValueLossExceeded();
     error MessageAlreadyAuthorized();
@@ -93,6 +98,7 @@ library Errors {
     error ZeroBridgeAdapterAddress();
     error ZeroChainId();
     error ZeroGroupId();
+    error ZeroOftAddress();
     error ZeroPositionId();
     error ZeroSalt();
     error ZeroTokenAddress();

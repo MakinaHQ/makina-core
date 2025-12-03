@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
@@ -76,11 +77,17 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
             address(baseToken), address(bPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
         hubCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID,
+            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(hubCoreRegistry), address(acrossV3SpokePool)))
         );
         spokeCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID,
+            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(spokeCoreRegistry), address(acrossV3SpokePool)))
         );
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
+        spokeCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
+        config.setForeignChainSupported(machineStore.spokeChainId(), true);
         vm.stopPrank();
 
         // deploy hub and spoke chain contracts

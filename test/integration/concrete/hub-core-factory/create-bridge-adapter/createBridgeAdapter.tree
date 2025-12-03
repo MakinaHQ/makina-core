@@ -1,0 +1,8 @@
+createBridgeAdapter.t.sol
+├── when caller is not a registered machine
+│  └── it should revert with NotMachine
+└── when caller is a registered machine
+   ├── when the provided bridge ID is not supported
+   │  └── it should revert with InvalidBridgeId
+   └── when the provided bridge ID is supported
+      └── it should deploy a bridge adapter instance

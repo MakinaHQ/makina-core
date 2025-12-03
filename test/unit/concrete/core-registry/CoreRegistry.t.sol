@@ -94,15 +94,29 @@ abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
 
     function test_SetBridgeAdapterBeacon_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        registry.setBridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID, address(0));
+        registry.setBridgeAdapterBeacon(DUMMY_BRIDGE_ID, address(0));
     }
 
     function test_SetBridgeAdapterBeacon() public {
         address newBridgeAdapterBeacon = makeAddr("newBridgeAdapterBeacon");
         vm.expectEmit(false, true, false, false, address(registry));
-        emit ICoreRegistry.BridgeAdapterBeaconChanged(ACROSS_V3_BRIDGE_ID, address(0), newBridgeAdapterBeacon);
+        emit ICoreRegistry.BridgeAdapterBeaconChanged(DUMMY_BRIDGE_ID, address(0), newBridgeAdapterBeacon);
         vm.prank(dao);
-        registry.setBridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID, newBridgeAdapterBeacon);
-        assertEq(registry.bridgeAdapterBeacon(ACROSS_V3_BRIDGE_ID), newBridgeAdapterBeacon);
+        registry.setBridgeAdapterBeacon(DUMMY_BRIDGE_ID, newBridgeAdapterBeacon);
+        assertEq(registry.bridgeAdapterBeacon(DUMMY_BRIDGE_ID), newBridgeAdapterBeacon);
+    }
+
+    function test_SetBridgeConfig_RevertWhen_CallerWithoutRole() public {
+        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
+        registry.setBridgeConfig(DUMMY_BRIDGE_ID, address(0));
+    }
+
+    function test_SetBridgeConfig() public {
+        address newBridgeConfig = makeAddr("newBridgeConfig");
+        vm.expectEmit(false, true, false, false, address(registry));
+        emit ICoreRegistry.BridgeConfigChanged(DUMMY_BRIDGE_ID, address(0), newBridgeConfig);
+        vm.prank(dao);
+        registry.setBridgeConfig(DUMMY_BRIDGE_ID, newBridgeConfig);
+        assertEq(registry.bridgeConfig(DUMMY_BRIDGE_ID), newBridgeConfig);
     }
 }
