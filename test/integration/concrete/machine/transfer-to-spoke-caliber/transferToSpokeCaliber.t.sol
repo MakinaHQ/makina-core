@@ -62,14 +62,6 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, 0, address(0), 0, 0);
     }
 
-    function test_RevertGiven_ForeignTokenNotRegistered_FromCaliber() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.ForeignTokenNotRegistered.selector, address(baseToken), SPOKE_CHAIN_ID)
-        );
-        vm.prank(mechanic);
-        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(baseToken), 0, 0);
-    }
-
     function test_RevertWhen_InvalidChainId() public {
         vm.prank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID + 1, spokeAccountingTokenAddr);
@@ -176,6 +168,14 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(
             ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), inputAmount, minOutputAmount
         );
+    }
+
+    function test_RevertGiven_ForeignTokenNotRegistered_FromCaliber() public {
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.ForeignTokenNotRegistered.selector, address(baseToken), SPOKE_CHAIN_ID)
+        );
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(baseToken), 0, 0);
     }
 
     function test_TransferToSpokeCaliber_AccountingToken_FullBalance() public {

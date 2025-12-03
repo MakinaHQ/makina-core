@@ -20,7 +20,6 @@ import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
-import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
@@ -341,9 +340,6 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         uint256 minOutputAmount
     ) external override nonReentrant notRecoveryMode onlyMechanic {
         MachineStorage storage $ = _getMachineStorage();
-
-        address outputToken = ITokenRegistry(IHubCoreRegistry(registry).tokenRegistry()).getForeignToken(token, chainId);
-
         SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
 
         if (caliberData.mailbox == address(0)) {
@@ -364,7 +360,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         }
         caliberData.machineBridgesOut.set(token, exists ? mOut + amount : amount);
 
-        _scheduleOutBridgeTransfer(bridgeId, chainId, recipient, token, amount, outputToken, minOutputAmount);
+        _scheduleOutBridgeTransfer(bridgeId, chainId, recipient, token, amount, minOutputAmount);
 
         emit TransferToCaliber(chainId, token, amount);
 

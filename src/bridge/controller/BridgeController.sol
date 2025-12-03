@@ -10,6 +10,7 @@ import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../../interfaces/IBridgeController.sol";
 import {IBridgeAdapterFactory} from "../../interfaces/IBridgeAdapterFactory.sol";
+import {ITokenRegistry} from "../../interfaces/ITokenRegistry.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
@@ -121,7 +122,6 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         address recipient,
         address inputToken,
         uint256 inputAmount,
-        address outputToken,
         uint256 minOutputAmount
     ) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
@@ -136,6 +136,8 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if (minOutputAmount > inputAmount) {
             revert Errors.MinOutputAmountExceedsInputAmount();
         }
+        address outputToken =
+            ITokenRegistry(ICoreRegistry(registry).tokenRegistry()).getForeignToken(inputToken, destinationChainId);
         IERC20(inputToken).forceApprove(adapter, inputAmount);
         IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
             destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount

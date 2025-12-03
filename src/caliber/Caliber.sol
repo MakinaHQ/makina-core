@@ -915,11 +915,11 @@ contract Caliber is
             return bytes32(0);
         }
 
-        uint8 i;
+        uint256 len = state.length;
         bytes memory hashInput;
 
         // Iterate through the state and hash values corresponding to indices marked in the bitmap.
-        for (i; i < state.length; ++i) {
+        for (uint256 i; i < len; ++i) {
             // If the bit is set as 1, hash the state value.
             if (bitmap & (0x80000000000000000000000000000000 >> i) != 0) {
                 hashInput = bytes.concat(hashInput, keccak256(state[i]));

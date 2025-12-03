@@ -261,6 +261,6 @@ interface IMachine is IMachineEndpoint {
     function setFeeMintCooldown(uint256 newFeeMintCooldown) external;
 
     /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
-    /// @param newShareLimit The new share limit
+    /// @param newShareLimit The new share limit.
     function setShareLimit(uint256 newShareLimit) external;
 }

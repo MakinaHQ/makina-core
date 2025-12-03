@@ -57,14 +57,6 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(address(0), 0, "");
     }
 
-    function test_RevertGiven_ForeignTokenNotRegistered_FromCaliber() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(Errors.ForeignTokenNotRegistered.selector, address(baseToken), hubChainId)
-        );
-        vm.prank(address(caliber));
-        caliberMailbox.manageTransfer(address(baseToken), 0, "");
-    }
-
     function test_RevertGiven_OngoingCooldown_FromCaliber() public {
         uint256 bridgeInputAmount = 1e18;
 
@@ -134,6 +126,24 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         vm.expectRevert(Errors.MinOutputAmountExceedsInputAmount.selector);
         caliberMailbox.manageTransfer(
             address(accountingToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeMinOutputAmount)
+        );
+    }
+
+    function test_RevertGiven_ForeignTokenNotRegistered_FromCaliber() public {
+        uint256 bridgeInputAmount = 1e18;
+        uint256 bridgeMinOutputAmount = 999e15;
+
+        deal(address(baseToken), address(caliber), bridgeInputAmount, true);
+
+        vm.startPrank(address(caliber));
+
+        baseToken.approve(address(caliberMailbox), bridgeInputAmount);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(Errors.ForeignTokenNotRegistered.selector, address(baseToken), hubChainId)
+        );
+        caliberMailbox.manageTransfer(
+            address(baseToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeMinOutputAmount)
         );
     }
 

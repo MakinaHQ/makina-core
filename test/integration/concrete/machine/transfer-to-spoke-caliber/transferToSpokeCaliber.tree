@@ -6,34 +6,37 @@ transferToSpokeCaliber.t.sol
    │  ├── when caller is not the Mechanic
    │  │  └── it should revert with UnauthorizedCaller
    │  └── when caller is the Mechanic
-   │     ├── given no foreign token is registered in token registry for given input token and destination chain ID
-   │     │  └── it should revert with ForeignTokenNotRegistered
-   │     └── given a foreign token is registered in token registry for given input token and destination chain ID
-   │        ├── given no spoke caliber is registered for the provided chain ID
-   │        │  └── it should revert with InvalidChainId
-   │        └── given a spoke caliber is registered for the provided chain ID
-   │           ├── given no spoke bridge adapter is set for the provided bridge ID
-   │           │  └── it should revert with SpokeBridgeAdapterNotSet
-   │           └── given a spoke bridge adapter is set for the provided bridge ID
-   │              ├── given an outgoing transfer involving the given input token towards the given spoke chain has not yet been declared as received
-   │              │  └── it should revert with PendingBridgeTransfer
-   │              └── given all outgoing transfers involving the given input token towards the given spoke chain have been declared as received
-   │                 ├── given some transfers appear as received by the caliber on the given spoke chain but not sent by the machine
-   │                 │  └── it should revert with BridgeStateMismatch
-   │                 └── given no transfer appears as received by the caliber on the given spoke chain but not sent by the machine
-   │                    ├── given no local bridge adapter is set for the provided bridge ID
+   │     ├── given no spoke caliber is registered for the provided chain ID
+   │     │  └── it should revert with InvalidChainId
+   │     └── given a spoke caliber is registered for the provided chain ID
+   │        ├── given no spoke bridge adapter is set for the provided bridge ID
+   │        │  └── it should revert with SpokeBridgeAdapterNotSet
+   │        └── given a spoke bridge adapter is set for the provided bridge ID
+   │           ├── given an outgoing transfer involving the given input token towards the given spoke chain has not yet been declared as received
+   │           │  └── it should revert with PendingBridgeTransfer
+   │           └── given all outgoing transfers involving the given input token towards the given spoke chain have been declared as received
+   │              ├── given some transfers appear as received by the caliber on the given spoke chain but not sent by the machine
+   │              │  └── it should revert with BridgeStateMismatch
+   │              └── given no transfer appears as received by the caliber on the given spoke chain but not sent by the machine
+   │                 ├── given no local bridge adapter is set for the provided bridge ID
+   │                 │  └── it should revert with BridgeAdapterDoesNotExist
+   │                 └── given a local bridge adapter is set for the provided bridge ID
+   │                    ├── given outgoing bridge transfers through the given bridge are marked as disabled
    │                    │  └── it should revert with BridgeAdapterDoesNotExist
-   │                    └── given a local bridge adapter is set for the provided bridge ID
-   │                       ├── given outgoing bridge transfers through the given bridge are marked as disabled
-   │                       │  └── it should revert with BridgeAdapterDoesNotExist
-   │                       └── given outgoing bridge transfers through the given bridge are marked as enabled
-   │                          ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
-   │                          │  └── it should revert with MaxValueLossExceeded
-   │                          └── given the maximum allowed value loss induced by the bridge transfer is not higher than maxBridgeLossBps
-   │                             ├── it should decrease the machine's token balance by amount
-   │                             ├── it should increase the local bridge adapter's token balance by amount
-   │                             ├── it should increase the machine's bridgeOut value by amount for the input token and destination chain ID
-   │                             ├── it should emit a TransferToCaliber event
-   │                             └── it should emit a OutBridgeTransferScheduled event
+   │                    └── given outgoing bridge transfers through the given bridge are marked as enabled
+   │                       ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
+   │                       │  └── it should revert with MaxValueLossExceeded
+   │                       └── given the maximum allowed value loss induced by the bridge transfer is not higher than maxBridgeLossBps
+   │                          ├── given the minimum expected output amount is greater than input amount
+   │                          │  └── it should revert with MinOutputAmountExceedsInputAmount
+   │                          └── given the minimum expected output amount is not greater than input amount
+   │                             ├── given no foreign token is registered in token registry for given input token and destination chain ID
+   │                             │  └── it should revert with ForeignTokenNotRegistered
+   │                             └── given a foreign token is registered in token registry for given input token and destination chain ID
+   │                                ├── it should decrease the machine's token balance by amount
+   │                                ├── it should increase the local bridge adapter's token balance by amount
+   │                                ├── it should increase the machine's bridgeOut value by amount for the input token and destination chain ID
+   │                                ├── it should emit a TransferToCaliber event
+   │                                └── it should emit a OutBridgeTransferScheduled event
    └── given recovery mode is on
       └── it should revert with RecoveryMode
