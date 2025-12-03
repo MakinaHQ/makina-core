@@ -206,6 +206,8 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         assertEq(accountingToken.balanceOf(address(machine)), 0);
         assertEq(accountingToken.balanceOf(address(bridgeAdapter)), inputAmount);
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
     }
 
     function test_TransferToSpokeCaliber_AccountingToken_PartialBalance() public {
@@ -271,6 +273,8 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         assertEq(baseToken.balanceOf(address(machine)), 0);
         assertEq(baseToken.balanceOf(address(bridgeAdapter)), inputAmount);
         assertFalse(machine.isIdleToken(address(baseToken)));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
     }
 
     function test_TransferToSpokeCaliber_BaseToken_PartialBalance() public withTokenAsBT(address(baseToken)) {
@@ -312,6 +316,9 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         assertEq(baseToken.balanceOf(address(machine)), inputAmount - transferAmount);
         assertEq(baseToken.balanceOf(address(bridgeAdapter)), transferAmount);
         assertTrue(machine.isIdleToken(address(baseToken)));
+        assertEq(machine.getIdleTokensLength(), 2);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
+        assertEq(machine.getIdleToken(1), address(baseToken));
     }
 
     function test_TransferToSpokeCaliber_AfterPreviousTransferCompletion() public {

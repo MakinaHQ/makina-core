@@ -122,11 +122,12 @@ library MachineUtils {
         IPreDepositVault(preDepositVault).migrateToMachine();
 
         address preDepositToken = IPreDepositVault(preDepositVault).depositToken();
-        $._idleTokens.add(preDepositToken);
+        uint256 pdtBal = IERC20(preDepositToken).balanceOf(address(this));
+        if (pdtBal != 0) {
+            $._idleTokens.add(preDepositToken);
+            $._lastTotalAum = _accountingValueOf(oracleRegistry, $._accountingToken, preDepositToken, pdtBal);
+        }
 
-        $._lastTotalAum = _accountingValueOf(
-            oracleRegistry, $._accountingToken, preDepositToken, IERC20(preDepositToken).balanceOf(address(this))
-        );
         $._lastGlobalAccountingTime = block.timestamp;
     }
 

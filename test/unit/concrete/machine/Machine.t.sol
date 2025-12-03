@@ -49,6 +49,9 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.lastGlobalAccountingTime(), 0);
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getIdleTokensLength(), 1);
+        assertEq(machine.getIdleToken(0), address(accountingToken));
+
         assertEq(machine.getSpokeCalibersLength(), 0);
     }
 

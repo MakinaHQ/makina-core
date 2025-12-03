@@ -132,8 +132,16 @@ interface IMachine is IMachineEndpoint {
     /// @notice Timestamp of the last global machine accounting.
     function lastGlobalAccountingTime() external view returns (uint256);
 
-    /// @notice Token => Is the token an idle token.
+    /// @notice Token => Is the token registered as an idle token in this machine.
     function isIdleToken(address token) external view returns (bool);
+
+    /// @notice Length of the idle tokens list.
+    function getIdleTokensLength() external view returns (uint256);
+
+    /// @notice Idle token index => Idle token address.
+    /// @dev There are no guarantees on the ordering of values inside the idle tokens list,
+    ///      and it may change when values are added or removed.
+    function getIdleToken(uint256 idx) external view returns (address);
 
     /// @notice Number of calibers associated with the machine.
     function getSpokeCalibersLength() external view returns (uint256);
