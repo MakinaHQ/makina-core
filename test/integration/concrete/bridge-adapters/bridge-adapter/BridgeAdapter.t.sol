@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockMachineEndpoint} from "test/mocks/MockMachineEndpoint.sol";
 
@@ -20,6 +21,8 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
     uint256 public chainId1;
     uint256 public chainId2;
 
+    ICoreRegistry public coreRegistry;
+
     function setUp() public virtual override {
         Base_Test.setUp();
 
@@ -31,6 +34,11 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
 
         token1 = new MockERC20("Token1", "T1", 18);
         token2 = new MockERC20("Token2", "T2", 18);
+
+        accessManager = _deployAccessManager(dao, dao);
+        coreRegistry = ICoreRegistry(
+            address(_deployHubCoreRegistry(dao, address(0), address(0), address(0), address(accessManager)))
+        );
     }
 
     ///

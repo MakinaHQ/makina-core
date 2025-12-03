@@ -84,9 +84,6 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
-        emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
-
         vm.expectEmit(true, true, true, true, address(acrossV3SpokePool));
         emit IMockAcrossV3SpokePool.FundsDeposited(
             bytes32(uint256(uint160(address(token1)))),
@@ -103,6 +100,9 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             bytes32(0),
             encodedMessage
         );
+
+        vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
+        emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
 
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
 

@@ -1,0 +1,8 @@
+createBridgeAdapter.t.sol
+├── when caller is not a registered caliber mailbox
+│  └── it should revert with NotCaliberMailbox
+└── when caller is a registered caliber mailbox
+   ├── when the provided bridge ID is not supported
+   │  └── it should revert with InvalidBridgeId
+   └── when the provided bridge ID is supported
+      └── it should deploy a bridge adapter instance

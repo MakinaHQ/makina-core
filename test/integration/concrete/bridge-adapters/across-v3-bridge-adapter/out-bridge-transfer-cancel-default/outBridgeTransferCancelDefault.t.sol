@@ -24,7 +24,7 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
         vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(0), 0);
 
         assertEq(bridgeAdapter1.outBridgeTransferCancelDefault(nextOutTransferId), 0);
     }
@@ -40,7 +40,7 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
         vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(0), 0);
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(1 hours));
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);
@@ -63,7 +63,7 @@ contract OutBridgeTransferCancelDefault_AcrossV3BridgeAdapter_Integration_Concre
         vm.startPrank(address(bridgeController1));
 
         token1.approve(address(bridgeAdapter1), inputAmount);
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(0), 0);
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(1 hours));
 
         acrossV3SpokePool.cancelTransfer(acrossV3DepositId);

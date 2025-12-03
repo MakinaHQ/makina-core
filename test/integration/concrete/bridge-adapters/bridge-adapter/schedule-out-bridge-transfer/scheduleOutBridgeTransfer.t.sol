@@ -26,11 +26,29 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
         token1.approve(address(bridgeAdapter1), 1000);
 
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), 1000, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), 1000, address(0), 0);
     }
 
     function test_RevertWhen_CallerNotController() public {
         vm.expectRevert(Errors.NotController.selector);
+        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(0), 0, address(0), 0);
+    }
+
+    function test_RevertWhen_BridgeConfigNotSet() public {
+        uint16 bridgeId = IBridgeAdapter(address(bridgeAdapter1)).bridgeId();
+        vm.prank(address(dao));
+        coreRegistry.setBridgeConfig(bridgeId, address(0));
+
+        vm.startPrank(address(bridgeController1));
+
+        vm.expectRevert(Errors.BridgeConfigNotSet.selector);
+        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(0), 0, address(0), 0);
+    }
+
+    function test_RevertWhen_InvalidBridgeTransferRoute() public virtual {
+        vm.startPrank(address(bridgeController1));
+
+        vm.expectRevert(Errors.InvalidBridgeTransferRoute.selector);
         bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(0), 0, address(0), 0);
     }
 
@@ -43,7 +61,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
             )
         );
         vm.prank(address(bridgeController1));
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(0), 0);
     }
 
     function test_RevertGiven_InsufficientBalance() public {
@@ -57,7 +75,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
                 IERC20Errors.ERC20InsufficientBalance.selector, address(bridgeController1), 0, inputAmount
             )
         );
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), inputAmount, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(0), 0);
     }
 
     function test_ScheduleOutBridgeTransfer() public {

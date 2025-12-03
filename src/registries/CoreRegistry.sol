@@ -13,7 +13,8 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
         address _swapModule;
         address _flashLoanModule;
         address _caliberBeacon;
-        mapping(uint16 => address) _bridgeAdapters;
+        mapping(uint16 => address) _bridgeAdapterBeacons;
+        mapping(uint16 => address) _bridgeConfigs;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.CoreRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -68,7 +69,12 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
 
     /// @inheritdoc ICoreRegistry
     function bridgeAdapterBeacon(uint16 bridgeId) external view override returns (address) {
-        return _getCoreRegistryStorage()._bridgeAdapters[bridgeId];
+        return _getCoreRegistryStorage()._bridgeAdapterBeacons[bridgeId];
+    }
+
+    /// @inheritdoc ICoreRegistry
+    function bridgeConfig(uint16 bridgeId) external view override returns (address) {
+        return _getCoreRegistryStorage()._bridgeConfigs[bridgeId];
     }
 
     /// @inheritdoc ICoreRegistry
@@ -114,9 +120,16 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
     }
 
     /// @inheritdoc ICoreRegistry
-    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external override restricted {
+    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapterBeacon) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
-        emit BridgeAdapterBeaconChanged(uint256(bridgeId), $._bridgeAdapters[bridgeId], _bridgeAdapter);
-        $._bridgeAdapters[bridgeId] = _bridgeAdapter;
+        emit BridgeAdapterBeaconChanged(uint256(bridgeId), $._bridgeAdapterBeacons[bridgeId], _bridgeAdapterBeacon);
+        $._bridgeAdapterBeacons[bridgeId] = _bridgeAdapterBeacon;
+    }
+
+    /// @inheritdoc ICoreRegistry
+    function setBridgeConfig(uint16 bridgeId, address _bridgeConfig) external override restricted {
+        CoreRegistryStorage storage $ = _getCoreRegistryStorage();
+        emit BridgeConfigChanged(uint256(bridgeId), $._bridgeConfigs[bridgeId], _bridgeConfig);
+        $._bridgeConfigs[bridgeId] = _bridgeConfig;
     }
 }

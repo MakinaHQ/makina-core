@@ -3,6 +3,9 @@
   "BridgeAdapterBeacons": {
     "1": "0x081bAea8ab05978B677Bebe8217DB8F3dc958440"
   },
+  "BridgeConfigs": {
+    "1": "0xA2346fcAC891208a4465ECCdEDE8E5B0ddeB7c85"
+  },
   "CaliberBeacon": "0x6f1082bB7aeeeBc25ECB605B5E9751094Cbd55fE",
   "CaliberMailboxBeacon": "0xDEf858025F7C795d4FDe5a384ea509bce5E332bA",
   "OracleRegistry": "0xF7Ef3B9F7cf837525498dAE75422ECc955Db8BF1",

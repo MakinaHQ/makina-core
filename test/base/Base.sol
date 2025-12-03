@@ -7,12 +7,14 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
 import {AcrossV3BridgeAdapter} from "../../src/bridge/adapters/AcrossV3BridgeAdapter.sol";
+import {AcrossV3BridgeConfig} from "../../src/bridge/configs/AcrossV3BridgeConfig.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
+import {IAcrossV3BridgeConfig} from "../../src/interfaces/IAcrossV3BridgeConfig.sol";
 import {IBridgeController} from "../../src/interfaces/IBridgeController.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../../src/interfaces/ICaliberMailbox.sol";
@@ -26,6 +28,7 @@ import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";
 import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
 import {ITokenRegistry} from "../../src/interfaces/ITokenRegistry.sol";
+import {IntegrationIds} from "../utils/IntegrationIds.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
@@ -38,7 +41,7 @@ import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 
-abstract contract Base is IRCodeReader, SaltDomains {
+abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     struct HubCore {
         AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
@@ -249,22 +252,36 @@ abstract contract Base is IRCodeReader, SaltDomains {
     /// BRIDGE ADAPTER BEACONS DEPLOYMENTS & SETUP
     ///
 
-    function deployAndSetupBridgeAdapterBeacons(
-        ICoreRegistry makinaRegistry,
-        BridgeData[] memory bridgesData,
-        address beaconOwner
-    ) public returns (UpgradeableBeacon[] memory bridgeAdapterBeacons) {
+    function deployAndSetupBridges(
+        address proxyOwner,
+        ICoreRegistry coreRegistry,
+        AccessManagerUpgradeable accessManager,
+        BridgeData[] memory bridgesData
+    )
+        public
+        returns (UpgradeableBeacon[] memory bridgeAdapterBeacons, TransparentUpgradeableProxy[] memory bridgeConfigs)
+    {
+        bridgeConfigs = new TransparentUpgradeableProxy[](bridgesData.length);
         bridgeAdapterBeacons = new UpgradeableBeacon[](bridgesData.length);
         for (uint256 i; i < bridgesData.length; i++) {
             uint16 bridgeId = bridgesData[i].bridgeId;
+            TransparentUpgradeableProxy bc;
             UpgradeableBeacon baBeacon;
-            if (bridgeId == 1) {
-                baBeacon = _deployAcrossV3BridgeAdapterBeacon(beaconOwner, bridgesData[i].executionTarget);
+            if (bridgeId == ACROSS_V3_BRIDGE_ID) {
+                baBeacon = _deployAcrossV3BridgeAdapterBeacon(
+                    proxyOwner, address(coreRegistry), bridgesData[i].executionTarget
+                );
+                bc = TransparentUpgradeableProxy(
+                    payable(address(_deployAcrossV3BridgeConfig(proxyOwner, address(accessManager))))
+                );
+                _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
             } else {
                 revert("Bridge not supported");
             }
             bridgeAdapterBeacons[i] = baBeacon;
-            makinaRegistry.setBridgeAdapterBeacon(bridgeId, address(baBeacon));
+            bridgeConfigs[i] = bc;
+            coreRegistry.setBridgeAdapterBeacon(bridgeId, address(baBeacon));
+            coreRegistry.setBridgeConfig(bridgeId, address(bc));
         }
     }
 
@@ -456,6 +473,16 @@ abstract contract Base is IRCodeReader, SaltDomains {
         mgmtSetupSelectors[1] = ICaliber.removeInstrRootGuardian.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
             _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
+        );
+    }
+
+    function _setupAcrossV3BridgeConfigAMFunctionRoles(address _accessManager, address _acrossV3BridgeConfig)
+        internal
+    {
+        bytes4[] memory acrossV3BridgeConfigSelectors = new bytes4[](1);
+        acrossV3BridgeConfigSelectors[0] = IAcrossV3BridgeConfig.setForeignChainSupported.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _acrossV3BridgeConfig, acrossV3BridgeConfigSelectors, Roles.INFRA_SETUP_ROLE
         );
     }
 
@@ -688,12 +715,29 @@ abstract contract Base is IRCodeReader, SaltDomains {
         );
     }
 
-    function _deployAcrossV3BridgeAdapterBeacon(address _beaconOwner, address _acrossV3SpokePool)
+    function _deployAcrossV3BridgeConfig(address _proxyOwner, address _accessManager)
+        internal
+        returns (AcrossV3BridgeConfig acrossV3BridgeConfig)
+    {
+        address implem = _deployCode(type(AcrossV3BridgeConfig).creationCode, 0);
+        return AcrossV3BridgeConfig(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _proxyOwner, abi.encodeCall(AcrossV3BridgeConfig.initialize, (_accessManager)))
+                ),
+                ACROSS_V3_BRIDGE_CONFIG_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployAcrossV3BridgeAdapterBeacon(address _beaconOwner, address _coreRegistry, address _acrossV3SpokePool)
         internal
         returns (UpgradeableBeacon acrossV3BridgeAdapterBeacon)
     {
-        address implem =
-            _deployCode(abi.encodePacked(type(AcrossV3BridgeAdapter).creationCode, abi.encode(_acrossV3SpokePool)), 0);
+        address implem = _deployCode(
+            abi.encodePacked(type(AcrossV3BridgeAdapter).creationCode, abi.encode(_coreRegistry, _acrossV3SpokePool)), 0
+        );
         return UpgradeableBeacon(
             _deployCode(
                 abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _beaconOwner)),

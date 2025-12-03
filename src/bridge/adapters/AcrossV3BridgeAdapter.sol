@@ -17,7 +17,9 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
 
     uint16 private constant ACROSS_V3_BRIDGE_ID = 1;
 
-    constructor(address _acrossV3SpokePool) BridgeAdapter(_acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool) {
+    constructor(address _registry, address _acrossV3SpokePool)
+        BridgeAdapter(_registry, _acrossV3SpokePool, _acrossV3SpokePool, _acrossV3SpokePool)
+    {
         _disableInitializers();
     }
 
@@ -26,41 +28,19 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         __BridgeAdapter_init(_controller, ACROSS_V3_BRIDGE_ID);
     }
 
-    /// @inheritdoc IBridgeAdapter
-    function sendOutBridgeTransfer(uint256 transferId, bytes calldata data)
+    /// @inheritdoc IAcrossV3MessageHandler
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address, /*relayer*/ bytes memory encodedMessage)
         external
         override
-        nonReentrant
-        onlyController
     {
-        _beforeSendOutBridgeTransfer(transferId);
-
-        (uint32 fillDeadlineOffset) = abi.decode(data, (uint32));
-        OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
-
-        IERC20(receipt.inputToken).forceApprove(executionTarget, receipt.inputAmount);
-        IAcrossV3SpokePool(executionTarget).depositV3Now(
-            address(this),
-            receipt.recipient,
-            receipt.inputToken,
-            receipt.outputToken,
-            receipt.inputAmount,
-            receipt.minOutputAmount,
-            receipt.destinationChainId,
-            address(0),
-            fillDeadlineOffset,
-            0,
-            receipt.encodedMessage
-        );
+        if (msg.sender != receiveSource) {
+            revert Errors.UnauthorizedSource();
+        }
+        _receiveInBridgeTransfer(encodedMessage, tokenSent, amount);
     }
 
-    /// @inheritdoc IBridgeAdapter
-    function cancelOutBridgeTransfer(uint256 transferId) external override nonReentrant onlyController {
-        _cancelOutBridgeTransfer(transferId);
-    }
-
-    /// @inheritdoc IBridgeAdapter
-    function outBridgeTransferCancelDefault(uint256 transferId) public view returns (uint256) {
+    /// @inheritdoc BridgeAdapter
+    function _outBridgeTransferCancelDefault(uint256 transferId) internal view override returns (uint256) {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
         OutBridgeTransfer storage receipt = $._outgoingTransfers[transferId];
 
@@ -78,14 +58,43 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         return 0;
     }
 
-    /// @inheritdoc IAcrossV3MessageHandler
-    function handleV3AcrossMessage(address tokenSent, uint256 amount, address, /*relayer*/ bytes memory encodedMessage)
-        external
-        override
-    {
-        if (msg.sender != receiveSource) {
-            revert Errors.UnauthorizedSource();
+    /// @inheritdoc BridgeAdapter
+    function _checkOutBridgeTransferIsCancellable(uint256 transferId) internal override {
+        BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
+        OutBridgeTransfer storage receipt = $._outgoingTransfers[transferId];
+
+        if (_getSet($._sentOutTransferIds[receipt.inputToken]).remove(transferId)) {
+            if (
+                IERC20(receipt.inputToken).balanceOf(address(this))
+                    < $._reservedBalances[receipt.inputToken] + receipt.inputAmount
+            ) {
+                revert Errors.InsufficientBalance();
+            }
+        } else if (_getSet($._pendingOutTransferIds[receipt.inputToken]).remove(transferId)) {
+            $._reservedBalances[receipt.inputToken] -= receipt.inputAmount;
+        } else {
+            revert Errors.InvalidTransferStatus();
         }
-        _receiveInBridgeTransfer(encodedMessage, tokenSent, amount);
+    }
+
+    /// @inheritdoc BridgeAdapter
+    function _sendOutBridgeTransfer(uint256 transferId, bytes calldata data) internal override {
+        (uint32 fillDeadlineOffset) = abi.decode(data, (uint32));
+        OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
+
+        IERC20(receipt.inputToken).forceApprove(executionTarget, receipt.inputAmount);
+        IAcrossV3SpokePool(executionTarget).depositV3Now(
+            address(this),
+            receipt.recipient,
+            receipt.inputToken,
+            receipt.outputToken,
+            receipt.inputAmount,
+            receipt.minOutputAmount,
+            receipt.destinationChainId,
+            address(0),
+            fillDeadlineOffset,
+            0,
+            receipt.encodedMessage
+        );
     }
 }

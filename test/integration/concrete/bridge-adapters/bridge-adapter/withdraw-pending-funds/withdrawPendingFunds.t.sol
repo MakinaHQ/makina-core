@@ -26,7 +26,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
 
         // try reentrant call via claimInBridgeTransfer
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
-        bridgeAdapter1.scheduleOutBridgeTransfer(0, address(0), address(token1), 1000, address(0), 0);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), 1000, address(0), 0);
     }
 
     function test_RevertWhen_CallerNotController() public {

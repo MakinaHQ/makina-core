@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol";
 import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
@@ -55,8 +56,12 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
 
         vm.startPrank(address(dao));
         hubCoreRegistry.setBridgeAdapterBeacon(
-            ACROSS_V3_BRIDGE_ID, address(_deployAcrossV3BridgeAdapterBeacon(dao, address(acrossV3SpokePool)))
+            ACROSS_V3_BRIDGE_ID,
+            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(hubCoreRegistry), address(acrossV3SpokePool)))
         );
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
+        config.setForeignChainSupported(SPOKE_CHAIN_ID, true);
         vm.stopPrank();
     }
 
