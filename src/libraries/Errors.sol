@@ -29,7 +29,6 @@ library Errors {
     error InsufficientBalance();
     error InvalidAccounting();
     error InvalidAffectedToken();
-    error InvalidBridgeRoute();
     error InvalidChainId();
     error InvalidDebtFlag();
     error InvalidDecimals();
