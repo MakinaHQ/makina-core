@@ -95,7 +95,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
 
                 // deposit assets into the preDepositVault
                 depositToken.approve(address(preDepositVault), assets);
-                preDepositVault.deposit(assets, address(this), 0);
+                preDepositVault.deposit(assets, address(this), 0, 0);
             } else {
                 uint256 maxRedeem = shareToken.balanceOf(address(this));
                 if (maxRedeem == 0) {

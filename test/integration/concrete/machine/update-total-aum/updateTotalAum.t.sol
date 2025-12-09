@@ -312,7 +312,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(address(machineDepositor));
         accountingToken.approve(address(machine), inputAmount);
-        machine.deposit(inputAmount, address(this), 0);
+        machine.deposit(inputAmount, address(this), 0, 0);
         vm.stopPrank();
 
         vm.expectEmit(false, false, false, true, address(machine));
@@ -1172,7 +1172,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         deal(address(accountingToken), address(machineDepositor), inputAmount, true);
         vm.startPrank(address(machineDepositor));
         accountingToken.approve(address(machine), inputAmount);
-        machine.deposit(inputAmount, address(this), 0);
+        machine.deposit(inputAmount, address(this), 0, 0);
         vm.stopPrank();
     }
 }

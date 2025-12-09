@@ -200,7 +200,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         uint256 preDepositAmount = 1e18;
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
-        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
+        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0, 0);
 
         vm.prank(address(hubCoreFactory));
         preDepositVault.setPendingMachine(address(machine));

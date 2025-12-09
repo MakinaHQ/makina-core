@@ -94,7 +94,7 @@ contract Machine_Fork_Test is Fork_Test {
         deal({token: ethForkData.usdc, to: machineDepositor, give: depositAmount});
         vm.startPrank(machineDepositor);
         IERC20(ethForkData.usdc).approve(address(machine), depositAmount);
-        uint256 receivedShares = machine.deposit(depositAmount, machineDepositor, 0);
+        uint256 receivedShares = machine.deposit(depositAmount, machineDepositor, 0, 0);
         vm.stopPrank();
 
         // mechanic transfers 2000 usdc to caliber

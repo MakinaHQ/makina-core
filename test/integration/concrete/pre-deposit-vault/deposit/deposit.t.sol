@@ -15,20 +15,24 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         baseToken.scheduleReenter(
             MockERC20.Type.Before,
             address(preDepositVault),
-            abi.encodeCall(IPreDepositVault.deposit, (0, address(0), 0))
+            abi.encodeCall(IPreDepositVault.deposit, (0, address(0), 0, 0))
         );
 
         vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
-        preDepositVault.deposit(0, address(0), 0);
+        preDepositVault.deposit(0, address(0), 0, 0);
     }
 
     function test_RevertGiven_VaultMigrated() public migrated {
         vm.expectRevert(Errors.Migrated.selector);
-        preDepositVault.deposit(0, address(0), 0);
+        preDepositVault.deposit(0, address(0), 0, 0);
     }
 
     function test_Deposit() public {
         _test_Deposit();
+    }
+
+    function test_Deposit_WithReferral() public {
+        _test_Deposit_WithReferral();
     }
 
     function test_RevertGiven_MaxDepositExceeded() public {
@@ -43,7 +47,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
 
         accountingToken.approve(address(preDepositVault), inputAmount);
         vm.expectRevert(Errors.ExceededMaxDeposit.selector);
-        preDepositVault.deposit(inputAmount, address(this), 0);
+        preDepositVault.deposit(inputAmount, address(this), 0, 0);
     }
 
     function test_RevertWhen_SlippageProtectionTriggered() public {
@@ -52,7 +56,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
 
     function test_RevertWhen_CallerNotWhitelisted_WhitelistMode() public whitelistMode {
         vm.expectRevert(Errors.UnauthorizedCaller.selector);
-        preDepositVault.deposit(0, address(0), 0);
+        preDepositVault.deposit(0, address(0), 0, 0);
     }
 
     function test_RevertWhen_SlippageProtectionTriggered_WhitelistMode()
@@ -67,6 +71,10 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         _test_Deposit();
     }
 
+    function test_Deposit_WhitelistMode_WithReferral() public whitelistMode whitelistedUser(address(this)) {
+        _test_Deposit_WithReferral();
+    }
+
     function _test_RevertWhen_SlippageProtectionTriggered() internal {
         uint256 inputAmount = 1e18;
         uint256 expectedShares = preDepositVault.previewDeposit(inputAmount);
@@ -76,7 +84,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         baseToken.approve(address(preDepositVault), inputAmount);
 
         vm.expectRevert(Errors.SlippageProtection.selector);
-        preDepositVault.deposit(inputAmount, address(this), expectedShares + 1);
+        preDepositVault.deposit(inputAmount, address(this), expectedShares + 1, 0);
     }
 
     function _test_Deposit() public {
@@ -86,9 +94,27 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
         deal(address(baseToken), address(this), inputAmount, true);
 
         baseToken.approve(address(preDepositVault), inputAmount);
-        vm.expectEmit(true, true, false, true, address(preDepositVault));
-        emit IPreDepositVault.Deposit(address(this), address(this), inputAmount, expectedShares);
-        preDepositVault.deposit(inputAmount, address(this), 0);
+        vm.expectEmit(true, true, true, true, address(preDepositVault));
+        emit IPreDepositVault.Deposit(address(this), address(this), inputAmount, expectedShares, 0);
+        preDepositVault.deposit(inputAmount, address(this), 0, 0);
+
+        assertEq(baseToken.balanceOf(address(this)), 0);
+        assertEq(baseToken.balanceOf(address(preDepositVault)), inputAmount);
+        assertEq(IERC20(preDepositVault.shareToken()).balanceOf(address(this)), expectedShares);
+        assertEq(preDepositVault.totalAssets(), inputAmount);
+    }
+
+    function _test_Deposit_WithReferral() public {
+        uint256 inputAmount = 1e18;
+        uint256 expectedShares = preDepositVault.previewDeposit(inputAmount);
+        bytes32 referralKey = keccak256("referrer");
+
+        deal(address(baseToken), address(this), inputAmount, true);
+
+        baseToken.approve(address(preDepositVault), inputAmount);
+        vm.expectEmit(true, true, true, true, address(preDepositVault));
+        emit IPreDepositVault.Deposit(address(this), address(this), inputAmount, expectedShares, referralKey);
+        preDepositVault.deposit(inputAmount, address(this), 0, referralKey);
 
         assertEq(baseToken.balanceOf(address(this)), 0);
         assertEq(baseToken.balanceOf(address(preDepositVault)), inputAmount);
