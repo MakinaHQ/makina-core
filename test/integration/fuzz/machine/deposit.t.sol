@@ -46,8 +46,8 @@ contract Deposit_Integration_Fuzz_Test is Base_Hub_Test {
         uint256 expectedShares1 = machine.convertToShares(assets1);
         accountingToken.approve(address(machine), assets1);
         vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.Deposit(machineDepositor, address(this), assets1, expectedShares1);
-        machine.deposit(assets1, address(this), expectedShares1);
+        emit IMachine.Deposit(machineDepositor, address(this), assets1, expectedShares1, 0);
+        machine.deposit(assets1, address(this), expectedShares1, 0);
 
         assertEq(accountingToken.balanceOf(address(this)), 0);
         assertEq(accountingToken.balanceOf(address(machine)), assets1);
@@ -71,8 +71,8 @@ contract Deposit_Integration_Fuzz_Test is Base_Hub_Test {
         // 2nd deposit
         accountingToken.approve(address(machine), assets2);
         vm.expectEmit(true, true, false, true, address(machine));
-        emit IMachine.Deposit(machineDepositor, address(this), assets2, expectedShares2);
-        machine.deposit(assets2, address(this), expectedShares2);
+        emit IMachine.Deposit(machineDepositor, address(this), assets2, expectedShares2, 0);
+        machine.deposit(assets2, address(this), expectedShares2, 0);
 
         uint256 expectedTotalAssets = yieldDirection ? assets1 + assets2 + yield : assets1 + assets2 - yield;
 

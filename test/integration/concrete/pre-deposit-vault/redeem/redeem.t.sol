@@ -57,7 +57,7 @@ contract Redeem_Integration_Concrete_Test is PreDepositVault_Integration_Concret
 
         // deposit assets
         baseToken.approve(address(preDepositVault), inputAmount);
-        uint256 shares = preDepositVault.deposit(inputAmount, address(this), 0);
+        uint256 shares = preDepositVault.deposit(inputAmount, address(this), 0, 0);
         vm.stopPrank();
 
         uint256 sharesToRedeem = shares / 3;
@@ -76,7 +76,7 @@ contract Redeem_Integration_Concrete_Test is PreDepositVault_Integration_Concret
 
         // deposit assets
         baseToken.approve(address(preDepositVault), inputAmount);
-        uint256 shares = preDepositVault.deposit(inputAmount, address(this), 0);
+        uint256 shares = preDepositVault.deposit(inputAmount, address(this), 0, 0);
         vm.stopPrank();
 
         uint256 balAssetsReceiverBefore = baseToken.balanceOf(receiver);

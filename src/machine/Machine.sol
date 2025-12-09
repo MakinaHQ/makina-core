@@ -410,7 +410,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
     }
 
     /// @inheritdoc IMachine
-    function deposit(uint256 assets, address receiver, uint256 minShares)
+    function deposit(uint256 assets, address receiver, uint256 minShares, bytes32 referralKey)
         external
         nonReentrant
         notRecoveryMode
@@ -434,7 +434,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         IERC20($._accountingToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
         $._lastTotalAum += assets;
-        emit Deposit(msg.sender, receiver, assets, shares);
+        emit Deposit(msg.sender, receiver, assets, shares, referralKey);
 
         return shares;
     }

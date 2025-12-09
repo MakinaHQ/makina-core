@@ -196,7 +196,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable
     }
 
     /// @inheritdoc IPreDepositVault
-    function deposit(uint256 assets, address receiver, uint256 minShares)
+    function deposit(uint256 assets, address receiver, uint256 minShares, bytes32 referralKey)
         external
         override
         nonReentrant
@@ -221,7 +221,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable
         IERC20($._depositToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
 
-        emit Deposit(msg.sender, receiver, assets, shares);
+        emit Deposit(msg.sender, receiver, assets, shares, referralKey);
 
         return shares;
     }

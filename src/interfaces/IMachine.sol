@@ -9,7 +9,9 @@ import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
-    event Deposit(address indexed sender, address indexed receiver, uint256 assets, uint256 shares);
+    event Deposit(
+        address indexed sender, address indexed receiver, uint256 assets, uint256 shares, bytes32 indexed referralKey
+    );
     event DepositorChanged(address indexed oldDepositor, address indexed newDepositor);
     event FeeManagerChanged(address indexed oldFeeManager, address indexed newFeeManager);
     event FeeMintCooldownChanged(uint256 indexed oldFeeMintCooldown, uint256 indexed newFeeMintCooldown);
@@ -198,8 +200,11 @@ interface IMachine is IMachineEndpoint {
     /// @param assets The amount of accounting tokens to deposit.
     /// @param receiver The receiver of minted shares.
     /// @param minShares The minimum amount of shares to be minted.
+    /// @param referralKey The optional identifier used to track a referral source.
     /// @return shares The amount of shares minted.
-    function deposit(uint256 assets, address receiver, uint256 minShares) external returns (uint256);
+    function deposit(uint256 assets, address receiver, uint256 minShares, bytes32 referralKey)
+        external
+        returns (uint256);
 
     /// @notice Redeems shares from the machine and transfers accounting tokens to the receiver.
     /// @param shares The amount of shares to redeem.

@@ -39,7 +39,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
         // deposit assets
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), inputAmount);
-        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0);
+        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0, 0);
         vm.stopPrank();
 
         // move assets to caliber
@@ -61,7 +61,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
         // deposit assets
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), inputAmount);
-        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0);
+        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0, 0);
         vm.stopPrank();
 
         // try redeeming shares
@@ -79,7 +79,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
         // deposit assets
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), inputAmount);
-        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0);
+        uint256 shares = machine.deposit(inputAmount, machineRedeemer, 0, 0);
         vm.stopPrank();
 
         uint256 balAssetsReceiverBefore = accountingToken.balanceOf(address(this));

@@ -97,7 +97,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         uint256 preDepositAmount = 1e18;
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
-        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0);
+        uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0, 0);
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 

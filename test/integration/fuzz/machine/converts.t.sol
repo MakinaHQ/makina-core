@@ -49,7 +49,7 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
                 // deposit assets into the machine
                 vm.startPrank(machineDepositor);
                 accountingToken.approve(address(machine), assets);
-                machine.deposit(assets, machineRedeemer, 0);
+                machine.deposit(assets, machineRedeemer, 0, 0);
                 vm.stopPrank();
             } else {
                 uint256 maxRedeem = shareToken.balanceOf(machineRedeemer);

@@ -52,7 +52,7 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
         // deposit
         vm.startPrank(machineDepositor);
         accountingToken.approve(address(machine), data.assetsToDeposit);
-        uint256 mintedShares = machine.deposit(data.assetsToDeposit, machineRedeemer, 0);
+        uint256 mintedShares = machine.deposit(data.assetsToDeposit, machineRedeemer, 0, 0);
         vm.stopPrank();
 
         uint256 expectedTotalAssets = data.assetsToDeposit;
