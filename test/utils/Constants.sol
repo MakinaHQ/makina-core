@@ -33,6 +33,9 @@ abstract contract Constants {
 
     uint16 public constant WORMHOLE_HUB_CHAIN_ID = 2;
 
+    uint32 public constant LAYER_ZERO_V2_HUB_CHAIN_ID = 30101;
+    uint32 public constant LAYER_ZERO_V2_SPOKE_CHAIN_ID = 30184;
+
     uint256 public constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e8;
     uint256 public constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 2e8;
 

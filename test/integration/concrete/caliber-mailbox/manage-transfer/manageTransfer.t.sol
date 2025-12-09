@@ -76,16 +76,16 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
     function test_RevertGiven_HubBridgeAdapterNotSet_FromCaliber() public {
         vm.expectRevert(Errors.HubBridgeAdapterNotSet.selector);
         vm.prank(address(caliber));
-        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(CIRCLE_CCTP_BRIDGE_ID, 0));
+        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(DUMMY_BRIDGE_ID, 0));
     }
 
     function test_RevertGiven_BridgeAdapterDoesNotExist_FromCaliber()
         public
-        withHubBridgeAdapter(CIRCLE_CCTP_BRIDGE_ID, hubBridgeAdapterAddr)
+        withHubBridgeAdapter(DUMMY_BRIDGE_ID, hubBridgeAdapterAddr)
     {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(address(caliber));
-        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(CIRCLE_CCTP_BRIDGE_ID, 0));
+        caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(DUMMY_BRIDGE_ID, 0));
     }
 
     function test_RevertGiven_OutTransferDisabled_FromCaliber() public {

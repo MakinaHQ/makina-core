@@ -13,4 +13,8 @@ abstract contract IRCodeReader {
     function getMockAcrossV3SpokePoolCode() public view returns (bytes memory creationBytecode) {
         return vm.getCode("out-ir-based/MockAcrossV3SpokePool.sol/MockAcrossV3SpokePool.json");
     }
+
+    function getMockLayerZeroEndpointV2Code() public view returns (bytes memory creationBytecode) {
+        return vm.getCode("out-ir-based/MockLayerZeroEndpointV2.sol/MockLayerZeroEndpointV2.json");
+    }
 }

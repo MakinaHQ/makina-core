@@ -1,0 +1,5 @@
+tokenToOft.t.sol
+├── when the OFT corresponding to the provided local token is not registered
+│  └── it should revert with OftNotRegistered
+└── when the OFT corresponding to the provided local token is registered
+   └── it should return the foreign token address

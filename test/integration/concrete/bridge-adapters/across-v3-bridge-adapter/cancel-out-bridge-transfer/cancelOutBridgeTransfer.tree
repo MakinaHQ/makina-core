@@ -5,7 +5,7 @@ cancelOutBridgeTransfer.t.sol
    ├── when caller is not the controller contract
    │  └── it should revert with NotController
    └── when caller is the controller contract
-      ├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
+      ├── given the provided transfer ID does not corresponds to an outgoing transfer in adapter's storage
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to a outgoing transfer in adapter's storage
          ├── given the corresponding transfer has not been already sent
@@ -14,7 +14,7 @@ cancelOutBridgeTransfer.t.sol
          │  └── it should emit a OutBridgeTransferCancelled event
          └── given the corresponding transfer has been already sent
             ├── given the bridge adapter does not have a sufficient balance, excluding any balance related to another pending transfer
-            │  └── it should emit a InsufficientBalance event
+            │  └── it should revert with InsufficientBalance
             └── given the bridge adapter has a sufficient balance, excluding any balance related to another pending transfer
                ├── it should decrease the adapter's token balance by bridge transfer input amount
                ├── it should increase the controller's token balance by bridge transfer input amount

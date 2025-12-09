@@ -47,7 +47,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### ChainRegistry
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
-  - Can set mappings of EVM and WH chains IDs.
+  - Can set mappings of EVM and WH chain IDs.
 
 ### TokenRegistry
 
@@ -75,10 +75,17 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set supported status of EVM chains.
+  
+### LayerZeroV2Config
+
+- `INFRA_SETUP_ROLE` (roleId `1`)
+  - Can set mappings of EVM and LZ chain IDs.
+  - Can set mappings of tokens to corresponding LZ OFTs.
 
 ### Machine
 
 - `STRATEGY_COMPONENTS_SETUP_ROLE` (roleId `3`)
+
   - Can set the address of a Spoke caliber mailbox.
   - Can create a bridge adapter.
   - Can set the address of a Spoke bridge adapter.
@@ -87,19 +94,23 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the fee manager contract.
 
 - `STRATEGY_MANAGEMENT_SETUP_ROLE` (roleId `4`)
+
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
 
 - **Security Council**
+
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
 - **Risk Manager**
+
   - Can set the share token supply limit that cannot be exceeded by new deposits.
 
 - **Risk Manager Timelock**
+
   - Can set the outgoing transfer enabled status for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
   - Can set the caliber accounting staleness threshold.
@@ -119,6 +130,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Pre-Deposit Vault
 
 - `STRATEGY_MANAGEMENT_SETUP_ROLE` (roleId `4`)
+
   - Can set the address of the risk manager.
 
 - **Risk Manager**
@@ -126,30 +138,34 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can add or remove users from the whitelist for deposits and redemptions.
   - Can enable or disable the whitelist.
 
-
 ### Caliber Mailbox
 
 - `STRATEGY_COMPONENTS_SETUP_ROLE` (roleId `3`)
+
   - Can create a bridge adapter.
   - Can set the address of a Hub bridge adapter.
 
 - `STRATEGY_MANAGEMENT_SETUP_ROLE` (roleId `4`)
+
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
 
 - **Security Council**
+
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
 - **Risk Manager Timelock**
+
   - Can set the outgoing transfer enabled status for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
+
   - Can schedule outgoing bridge transfer towards the Hub Machine.
   - Can cancel outgoing bridge transfer.
   - Can send outgoing bridge transfer.
@@ -159,15 +175,19 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Caliber
 
 - `STRATEGY_MANAGEMENT_SETUP_ROLE` (roleId `4`)
+
   - Can add and remove Merkle root guardians.
 
 - **Risk Manager**
+
   - Can schedule an update of the root of the Merkle tree containing allowed instructions.
 
 - **Root Guardians**
+
   - Can veto an update of the root of the Merkle tree containing allowed instructions.
 
 - **Risk Manager Timelock**
+
   - Can register and unregister base tokens.
   - Can set the position accounting staleness threshold.
   - Can set the timelock duration for the allowed instruction merkle root update.
@@ -176,8 +196,9 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the max allowed loss for base token swaps.
 
 - **Mechanic / Security Council**
-  
+
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
+
   - Can open, manage and close positions (position increases allowed only when not in recovery mode).
   - Can harvest external rewards.
   - Can swap tokens towards any base token.

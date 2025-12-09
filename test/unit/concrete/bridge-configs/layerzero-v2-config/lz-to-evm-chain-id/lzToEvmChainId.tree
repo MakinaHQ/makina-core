@@ -1,0 +1,5 @@
+whToEvmChainId.t.sol
+├── when the provided LayerZero endpoint ID is not registered
+│  └── it should revert with ChainIdNotRegistered
+└── when the provided LayerZero chain ID is registered
+   └── it should return the associated EVM chain ID

@@ -74,7 +74,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
     function test_RevertWhen_SpokeBridgeAdapterNotSet() public {
         vm.expectRevert(Errors.SpokeBridgeAdapterNotSet.selector);
         vm.prank(mechanic);
-        machine.transferToSpokeCaliber(CIRCLE_CCTP_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
+        machine.transferToSpokeCaliber(DUMMY_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
 
     function test_RevertGiven_PendingBridgeTransfer() public {
@@ -128,11 +128,11 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
 
     function test_RevertWhen_BridgeAdapterDoesNotExist()
         public
-        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, CIRCLE_CCTP_BRIDGE_ID, spokeBridgeAdapterAddr)
+        withSpokeBridgeAdapter(SPOKE_CHAIN_ID, DUMMY_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
-        machine.transferToSpokeCaliber(CIRCLE_CCTP_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
+        machine.transferToSpokeCaliber(DUMMY_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
 
     function test_RevertGiven_OutTransferDisabled() public {

@@ -1,0 +1,10 @@
+setOft.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when the provided oft address is equal to zero
+   │  └── it should revert with ZeroTokenAddress
+   └── when the provided oft address is not equal to zero
+      ├── it should associate the provided oft address with its corresponding token
+      ├── it should clean up any previous associations involving either addresses
+      └── it should emit a OftRegistered event

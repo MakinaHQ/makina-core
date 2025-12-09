@@ -11,5 +11,5 @@ abstract contract IntegrationIds {
                                 BRIDGE IDS
     //////////////////////////////////////////////////////////////////////////*/
     uint16 public constant ACROSS_V3_BRIDGE_ID = 1;
-    uint16 public constant CIRCLE_CCTP_BRIDGE_ID = 2;
+    uint16 public constant LAYER_ZERO_V2_BRIDGE_ID = 2;
 }

@@ -1,0 +1,5 @@
+isRouteSupported.t.sol
+├── when the provided route is invalid
+│  └── it should return false
+└── when the provided route is valid
+   └── it should return true

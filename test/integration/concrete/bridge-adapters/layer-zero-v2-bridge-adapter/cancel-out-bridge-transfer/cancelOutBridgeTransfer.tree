@@ -1,0 +1,13 @@
+cancelOutBridgeTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── when caller is not the controller contract
+   │  └── it should revert with NotController
+   └── when caller is the controller contract
+      ├── given the provided transfer ID does not corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+      │  └── it should revert with InvalidTransferStatus
+      └── given the provided transfer ID corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+         ├── it should decrease the adapter's token balance by bridge transfer input amount
+         ├── it should increase the controller's token balance by bridge transfer input amount
+         └── it should emit a OutBridgeTransferCancelled event

@@ -10,4 +10,4 @@ setToken.t.sol
       └── when the provided chain id is not equal to zero
          ├── it should associate both provided token addresses and the chain id in contract storage
          ├── it should clean up any previous associations involving either token addresses and the chain id
-         └── it should emit a ChainIdsRegistered event
+         └── it should emit a TokenRegistered event

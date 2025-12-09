@@ -20,6 +20,8 @@ abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
         assertEq(registry.tokenRegistry(), address(tokenRegistry));
         assertEq(registry.swapModule(), address(swapModule));
         assertEq(registry.flashLoanModule(), address(0));
+        assertEq(registry.bridgeAdapterBeacon(DUMMY_BRIDGE_ID), address(0));
+        assertEq(registry.bridgeConfig(DUMMY_BRIDGE_ID), address(0));
     }
 
     function test_SetCoreFactory_RevertWhen_CallerWithoutRole() public {

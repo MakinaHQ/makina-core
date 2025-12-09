@@ -46,7 +46,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     function test_RevertWhen_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
-        caliberMailbox.sendOutBridgeTransfer(CIRCLE_CCTP_BRIDGE_ID, 0, "");
+        caliberMailbox.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_OutTransferDisabled() public {
@@ -86,7 +86,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
     function test_RevertWhen_BridgeAdapterDoesNotExist_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(securityCouncil);
-        caliberMailbox.sendOutBridgeTransfer(CIRCLE_CCTP_BRIDGE_ID, 0, "");
+        caliberMailbox.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_OutTransferDisabled_WhileInRecoveryMode() public whileInRecoveryMode {

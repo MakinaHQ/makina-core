@@ -50,7 +50,7 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
     function test_RevertGiven_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         vm.prank(mechanic);
-        machine.sendOutBridgeTransfer(CIRCLE_CCTP_BRIDGE_ID, 0, "");
+        machine.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
     function test_RevertGiven_OutTransferDisabled() public {

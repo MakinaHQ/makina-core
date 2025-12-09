@@ -131,7 +131,8 @@ Bridging is a four-step process, executed by the operator, and functions symmetr
 1. Schedule the outgoing transfer on the sender side.
 2. Authorize the incoming transfer on the recipient side by registering the message hash.
 3. Send the outgoing transfer through the bridge protocol from the sender side.
-4. Claim the transfer on the recipient side to finalize fund delivery.
+4. Receive the incoming transfer from the bridge protocol on the recipient side.
+5. Claim the transfer on the recipient side to finalize fund delivery.
 
 The protocol assumes that the input and output tokens involved in a bridge transfer are homologous and share the same number of decimals. This assumption relies on the Token Registry, which maintains the mapping between local and equivalent foreign token addresses and must be correctly configured on all chains.
 
