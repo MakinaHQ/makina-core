@@ -59,6 +59,11 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         address tokenSent = IOFT(_from).token();
         uint256 amount = OFTComposeMsgCodec.amountLD(_message);
 
+        address config = ICoreRegistry(registry).bridgeConfig(LAYER_ZERO_V2_BRIDGE_ID);
+        if (ILayerZeroV2Config(config).tokenToOft(tokenSent) != _from) {
+            revert Errors.InvalidOft();
+        }
+
         // ensure there is enough non-reserved balance to cover the incoming transfer
         if (
             IERC20(tokenSent).balanceOf(address(this))
