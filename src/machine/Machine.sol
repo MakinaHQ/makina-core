@@ -120,6 +120,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuardUpgradeab
         $._maxPerfFeeAccrualRate = mParams.initialMaxPerfFeeAccrualRate;
         $._feeMintCooldown = mParams.initialFeeMintCooldown;
         $._shareLimit = mParams.initialShareLimit;
+        __ReentrancyGuard_init();
         __MakinaGovernable_init(mgParams);
     }
 
