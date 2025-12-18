@@ -494,6 +494,9 @@ contract Caliber is
     /// @inheritdoc ICaliber
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
+        if ($._positionTokens.contains(token)) {
+            revert Errors.PositionToken();
+        }
         IERC20(token).forceApprove($._hubMachineEndpoint, amount);
         IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
         emit TransferToHubMachine(token, amount);

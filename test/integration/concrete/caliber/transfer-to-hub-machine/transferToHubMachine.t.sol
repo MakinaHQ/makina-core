@@ -19,6 +19,25 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
     }
 
+    function test_RevertWhen_TokenIsPositionToken() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.PositionToken.selector);
+        caliber.transferToHubMachine(address(vault), 0, "");
+    }
+
     function test_RevertWhen_TokenNonPriceable() public {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
         uint256 inputAmount = 1e18;
@@ -59,6 +78,29 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
         vm.prank(mechanic);
         vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.transferToHubMachine(address(accountingToken), 1e18, "");
+    }
+
+    function test_RevertWhen_TokenIsPositionToken_WhileInRecoveryMode() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        // create position
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // turn on recovery mode
+        vm.prank(securityCouncil);
+        machine.setRecoveryMode(true);
+
+        vm.prank(securityCouncil);
+        vm.expectRevert(Errors.PositionToken.selector);
+        caliber.transferToHubMachine(address(vault), 0, "");
     }
 
     function test_RevertWhen_TokenNonPriceable_WhileInRecoveryMode() public whileInRecoveryMode {

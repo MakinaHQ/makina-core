@@ -77,6 +77,7 @@ library Errors {
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
     error PositionIsGrouped();
+    error PositionToken();
     error PositionTokenIsBaseToken();
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
