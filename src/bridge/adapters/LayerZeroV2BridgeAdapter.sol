@@ -17,7 +17,7 @@ import {
 
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
-import {ILayerZeroV2Config} from "../../interfaces/ILayerZeroV2Config.sol";
+import {ILayerZeroV2BridgeConfig} from "../../interfaces/ILayerZeroV2BridgeConfig.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {LzOptionsBuilder} from "../../libraries/LzOptionsBuilder.sol";
@@ -59,6 +59,11 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         address tokenSent = IOFT(_from).token();
         uint256 amount = OFTComposeMsgCodec.amountLD(_message);
 
+        address config = ICoreRegistry(registry).bridgeConfig(LAYER_ZERO_V2_BRIDGE_ID);
+        if (ILayerZeroV2BridgeConfig(config).tokenToOft(tokenSent) != _from) {
+            revert Errors.InvalidOft();
+        }
+
         // ensure there is enough non-reserved balance to cover the incoming transfer
         if (
             IERC20(tokenSent).balanceOf(address(this))
@@ -98,8 +103,8 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
 
         address config = ICoreRegistry(registry).bridgeConfig(LAYER_ZERO_V2_BRIDGE_ID);
-        uint32 lzChainId = ILayerZeroV2Config(config).evmToLzChainId(receipt.destinationChainId);
-        address oft = ILayerZeroV2Config(config).tokenToOft(receipt.inputToken);
+        uint32 lzChainId = ILayerZeroV2BridgeConfig(config).evmToLzChainId(receipt.destinationChainId);
+        address oft = ILayerZeroV2BridgeConfig(config).tokenToOft(receipt.inputToken);
 
         if (IOFT(oft).approvalRequired()) {
             IERC20(receipt.inputToken).forceApprove(oft, receipt.inputAmount);

@@ -26,7 +26,7 @@ See `SPECIFICATION.md` and `PERMISSIONS.MD` for more details.
 | `AcrossV3BridgeAdapter.sol`    | Hub + Spoke      | Handles bidirectional bridge transfers via Across V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain.    |
 | `AcrossV3BridgeConfig.sol`     | Hub + Spoke      | Stores various configuration data required for Across V3 bridge transfers.                                                                             |
 | `LayerZeroV2BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via LayerZero V2, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain. |
-| `LayerZeroV2Config.sol`        | Hub + Spoke      | Stores various configuration data required for LayerZero V2 bridge transfers.                                                                          |
+| `LayerZeroV2BridgeConfig.sol`  | Hub + Spoke      | Stores various configuration data required for LayerZero V2 bridge transfers.                                                                          |
 
 ## Installation
 

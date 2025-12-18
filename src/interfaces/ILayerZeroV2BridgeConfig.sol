@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IBridgeConfig} from "./IBridgeConfig.sol";
 
-interface ILayerZeroV2Config is IBridgeConfig {
+interface ILayerZeroV2BridgeConfig is IBridgeConfig {
     event ForeignTokenRegistered(address indexed localToken, uint256 indexed evmChainId, address indexed foreignToken);
     event LzChainIdRegistered(uint256 indexed evmChainId, uint32 indexed lzChainId);
     event OftRegistered(address indexed oft, address indexed token);

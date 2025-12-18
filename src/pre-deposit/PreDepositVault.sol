@@ -67,15 +67,15 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable
         uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
 
         $._shareToken = _shareToken;
+        IOwnable2Step(_shareToken).acceptOwnership();
+
         $._depositToken = _depositToken;
         $._accountingToken = _accountingToken;
         $._shareTokenDecimalsOffset = DecimalsUtils.SHARE_TOKEN_DECIMALS - atDecimals;
         $._shareLimit = params.initialShareLimit;
-        IOwnable2Step(_shareToken).acceptOwnership();
-
         $._riskManager = params.initialRiskManager;
         $._whitelistMode = params.initialWhitelistMode;
-
+        __ReentrancyGuard_init();
         __AccessManaged_init(params.initialAuthority);
     }
 

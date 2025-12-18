@@ -76,7 +76,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set supported status of EVM chains.
   
-### LayerZeroV2Config
+### LayerZeroV2BridgeConfig
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set mappings of EVM and LZ chain IDs.
