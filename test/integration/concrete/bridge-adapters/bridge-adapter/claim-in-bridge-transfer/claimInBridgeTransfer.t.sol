@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -43,7 +43,7 @@ abstract contract ClaimInBridgeTransfer_Integration_Concrete_Test is BridgeAdapt
             MockERC20.Type.Before, address(bridgeAdapter1), abi.encodeCall(bridgeAdapter1.claimInBridgeTransfer, (0))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         vm.prank(address(bridgeController1));
         bridgeAdapter1.claimInBridgeTransfer(nextInTransferId);
     }

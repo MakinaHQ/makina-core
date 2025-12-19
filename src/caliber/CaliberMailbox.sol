@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -18,7 +18,7 @@ import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
 
-contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeController, ICaliberMailbox {
+contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, ICaliberMailbox {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using SafeERC20 for IERC20;
 
@@ -58,7 +58,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuardUpgradeable, BridgeC
         CaliberMailboxStorage storage $ = _getCaliberMailboxStorage();
         $._hubMachine = _hubMachine;
         $._cooldownDuration = _initialCooldownDuration;
-        __ReentrancyGuard_init();
         __MakinaGovernable_init(mgParams);
     }
 

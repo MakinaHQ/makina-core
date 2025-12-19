@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -16,7 +16,7 @@ contract Redeem_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
             MockERC20.Type.Before, address(machine), abi.encodeCall(IMachine.redeem, (0, address(0), 0))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         vm.prank(machineRedeemer);
         machine.redeem(0, address(1), 0);
     }

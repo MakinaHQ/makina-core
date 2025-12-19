@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
@@ -25,7 +25,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
         token1.approve(address(bridgeAdapter1), 1000);
 
         // try reentrant call via claimInBridgeTransfer
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), 1000, address(token2), 0);
     }
 

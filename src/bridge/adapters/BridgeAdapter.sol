@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
@@ -15,7 +16,7 @@ import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {IMachineEndpoint} from "../../interfaces/IMachineEndpoint.sol";
 import {Errors} from "../../libraries/Errors.sol";
 
-abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, MakinaContext, IBridgeAdapter {
+abstract contract BridgeAdapter is Initializable, ReentrancyGuard, MakinaContext, IBridgeAdapter {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.UintSet;
     using SafeERC20 for IERC20;
@@ -77,7 +78,6 @@ abstract contract BridgeAdapter is ReentrancyGuardUpgradeable, MakinaContext, IB
         $._bridgeId = _bridgeId;
         $._nextOutTransferId = 1;
         $._nextInTransferId = 1;
-        __ReentrancyGuard_init();
     }
 
     modifier onlyController() {
