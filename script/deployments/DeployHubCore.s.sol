@@ -75,6 +75,7 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "AccessManager", address(_core.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_core.caliberBeacon));
         vm.serializeAddress(key, "MachineBeacon", address(_core.machineBeacon));
+        vm.serializeAddress(key, "PreDepositVaultBeacon", address(_core.preDepositVaultBeacon));
         vm.serializeAddress(key, "HubCoreFactory", address(_core.hubCoreFactory));
         vm.serializeAddress(key, "ChainRegistry", address(_core.chainRegistry));
         vm.serializeAddress(key, "HubCoreRegistry", address(_core.hubCoreRegistry));
