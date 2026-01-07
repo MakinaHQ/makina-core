@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 
 import {LayerZeroV2BridgeAdapter} from "src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
+import {MockOFTAdapter} from "test/mocks/MockOFTAdapter.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
 import {LayerZeroV2BridgeAdapter_Integration_Concrete_Test} from "../LayerZeroV2BridgeAdapter.t.sol";
@@ -24,6 +25,22 @@ contract LzCompose_LayerZeroV2BridgeAdapter_Integration_Concrete_Test is
     function test_RevertWhen_CallerNotAuthorizedSource() public {
         vm.expectRevert(Errors.UnauthorizedSource.selector);
         layerZeroV2BridgeAdapter1.lzCompose(address(mockOftAdapter), bytes32(0), "", address(0), "");
+    }
+
+    function test_RevertWhen_InvalidOft() public {
+        address mockOftAdapter2 = address(new MockOFTAdapter(address(token1), address(mockLzEndpointV2), address(this)));
+
+        bytes memory encodedMessage = abi.encode(
+            IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(0), 0)
+        );
+        bytes memory oftComposeMsg = _encodeComposeMsg(0, encodedMessage);
+
+        vm.prank(address(bridgeController1));
+        layerZeroV2BridgeAdapter1.authorizeInBridgeTransfer(keccak256(encodedMessage));
+
+        vm.expectRevert(Errors.InvalidOft.selector);
+        vm.prank(address(mockLzEndpointV2));
+        layerZeroV2BridgeAdapter1.lzCompose(mockOftAdapter2, bytes32(0), oftComposeMsg, address(0), "");
     }
 
     function test_RevertWhen_InsufficientBalance() public {

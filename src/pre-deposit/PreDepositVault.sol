@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
@@ -16,7 +16,7 @@ import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable, MakinaContext, IPreDepositVault {
+contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaContext, IPreDepositVault {
     using SafeERC20 for IERC20;
     using Math for uint256;
 
@@ -67,15 +67,14 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuardUpgradeable
         uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
 
         $._shareToken = _shareToken;
+        IOwnable2Step(_shareToken).acceptOwnership();
+
         $._depositToken = _depositToken;
         $._accountingToken = _accountingToken;
         $._shareTokenDecimalsOffset = DecimalsUtils.SHARE_TOKEN_DECIMALS - atDecimals;
         $._shareLimit = params.initialShareLimit;
-        IOwnable2Step(_shareToken).acceptOwnership();
-
         $._riskManager = params.initialRiskManager;
         $._whitelistMode = params.initialWhitelistMode;
-
         __AccessManaged_init(params.initialAuthority);
     }
 

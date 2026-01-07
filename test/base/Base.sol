@@ -22,7 +22,7 @@ import {IChainRegistry} from "../../src/interfaces/IChainRegistry.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IHubCoreRegistry} from "../../src/interfaces/IHubCoreRegistry.sol";
-import {ILayerZeroV2Config} from "../../src/interfaces/ILayerZeroV2Config.sol";
+import {ILayerZeroV2BridgeConfig} from "../../src/interfaces/ILayerZeroV2BridgeConfig.sol";
 import {IOracleRegistry} from "../../src/interfaces/IOracleRegistry.sol";
 import {IRCodeReader} from "../utils/IRCodeReader.sol";
 import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
@@ -33,7 +33,7 @@ import {IntegrationIds} from "../utils/IntegrationIds.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {LayerZeroV2BridgeAdapter} from "../../src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
-import {LayerZeroV2Config} from "../../src/bridge/configs/LayerZeroV2Config.sol";
+import {LayerZeroV2BridgeConfig} from "../../src/bridge/configs/LayerZeroV2BridgeConfig.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
@@ -283,9 +283,9 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
                     proxyOwner, address(coreRegistry), bridgesData[i].receiveSource
                 );
                 bc = TransparentUpgradeableProxy(
-                    payable(address(_deployLayerZeroV2Config(proxyOwner, address(accessManager))))
+                    payable(address(_deployLayerZeroV2BridgeConfig(proxyOwner, address(accessManager))))
                 );
-                _setupLayerZeroV2ConfigAMFunctionRoles(address(accessManager), address(bc));
+                _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
             } else {
                 revert("Bridge not supported");
             }
@@ -499,13 +499,15 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         );
     }
 
-    function _setupLayerZeroV2ConfigAMFunctionRoles(address _accessManager, address _layerZeroV2Config) internal {
-        bytes4[] memory layerZeroV2ConfigSelectors = new bytes4[](3);
-        layerZeroV2ConfigSelectors[0] = ILayerZeroV2Config.setLzChainId.selector;
-        layerZeroV2ConfigSelectors[1] = ILayerZeroV2Config.setOft.selector;
-        layerZeroV2ConfigSelectors[2] = ILayerZeroV2Config.setForeignToken.selector;
+    function _setupLayerZeroV2BridgeConfigAMFunctionRoles(address _accessManager, address _layerZeroV2BridgeConfig)
+        internal
+    {
+        bytes4[] memory layerZeroV2BridgeConfigSelectors = new bytes4[](3);
+        layerZeroV2BridgeConfigSelectors[0] = ILayerZeroV2BridgeConfig.setLzChainId.selector;
+        layerZeroV2BridgeConfigSelectors[1] = ILayerZeroV2BridgeConfig.setOft.selector;
+        layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
-            _layerZeroV2Config, layerZeroV2ConfigSelectors, Roles.INFRA_SETUP_ROLE
+            _layerZeroV2BridgeConfig, layerZeroV2BridgeConfigSelectors, Roles.INFRA_SETUP_ROLE
         );
     }
 
@@ -769,16 +771,18 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         );
     }
 
-    function _deployLayerZeroV2Config(address _proxyOwner, address _accessManager)
+    function _deployLayerZeroV2BridgeConfig(address _proxyOwner, address _accessManager)
         internal
-        returns (LayerZeroV2Config layerZeroV2Config)
+        returns (LayerZeroV2BridgeConfig layerZeroV2BridgeConfig)
     {
-        address implem = _deployCode(type(LayerZeroV2Config).creationCode, 0);
-        return LayerZeroV2Config(
+        address implem = _deployCode(type(LayerZeroV2BridgeConfig).creationCode, 0);
+        return LayerZeroV2BridgeConfig(
             _deployCode(
                 abi.encodePacked(
                     type(TransparentUpgradeableProxy).creationCode,
-                    abi.encode(implem, _proxyOwner, abi.encodeCall(LayerZeroV2Config.initialize, (_accessManager)))
+                    abi.encode(
+                        implem, _proxyOwner, abi.encodeCall(LayerZeroV2BridgeConfig.initialize, (_accessManager))
+                    )
                 ),
                 LAYER_ZERO_V2_CONFIG_SALT_DOMAIN
             )

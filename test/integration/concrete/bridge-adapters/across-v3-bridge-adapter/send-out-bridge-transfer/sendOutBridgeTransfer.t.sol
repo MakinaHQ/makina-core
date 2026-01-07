@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
@@ -36,7 +36,7 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
             abi.encodeCall(bridgeAdapter1.sendOutBridgeTransfer, (0, ""))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(DEFAULT_FILL_DEADLINE_OFFSET));
     }
 

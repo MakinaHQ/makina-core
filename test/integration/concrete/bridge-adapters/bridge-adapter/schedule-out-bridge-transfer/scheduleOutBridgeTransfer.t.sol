@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {Errors} from "src/libraries/Errors.sol";
@@ -25,7 +25,7 @@ abstract contract ScheduleOutBridgeTransfer_Integration_Concrete_Test is BridgeA
 
         token1.approve(address(bridgeAdapter1), 1000);
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), 1000, address(token2), 0);
     }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20Errors} from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
@@ -25,7 +25,7 @@ contract NotifyIncomingTransfer_Integration_Concrete_Test is Caliber_Integration
             MockERC20.Type.Before, address(caliber), abi.encodeCall(caliber.notifyIncomingTransfer, (address(0), 0))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         caliber.notifyIncomingTransfer(address(accountingToken), 0);
     }
 

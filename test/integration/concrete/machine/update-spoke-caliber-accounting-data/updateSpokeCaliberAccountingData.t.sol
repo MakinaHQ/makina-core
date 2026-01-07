@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
@@ -33,7 +33,7 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
             abi.encodeCall(IMachine.updateSpokeCaliberAccountingData, (response, signatures))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         vm.prank(machineDepositor);
         machine.deposit(0, address(0), 0, 0);
     }

@@ -9,7 +9,7 @@ import {ILayerZeroEndpointV2} from "@layerzerolabs/lz-evm-protocol-v2/contracts/
 import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {LayerZeroV2BridgeAdapter} from "src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
-import {LayerZeroV2Config} from "src/bridge/configs/LayerZeroV2Config.sol";
+import {LayerZeroV2BridgeConfig} from "src/bridge/configs/LayerZeroV2BridgeConfig.sol";
 import {OFTComposeMsgCodec} from "@layerzerolabs/oft-evm/contracts/libs/OFTComposeMsgCodec.sol";
 import {MockLzSendLib} from "test/mocks/MockLzSendLib.sol";
 import {MockOFTAdapter} from "test/mocks/MockOFTAdapter.sol";
@@ -27,7 +27,7 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
     MockLzSendLib internal mockLzSendLib;
     ILayerZeroEndpointV2 internal mockLzEndpointV2;
 
-    LayerZeroV2Config internal lzConfig;
+    LayerZeroV2BridgeConfig internal lzConfig;
 
     MockOFTAdapter internal mockOftAdapter;
     MockOFT internal mockOft;
@@ -51,7 +51,7 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
         mockOft = new MockOFT("Mock OFT", "MOFT", address(mockLzEndpointV2), address(this));
         mockOft.setPeer(LAYER_ZERO_V2_SPOKE_CHAIN_ID, OFTComposeMsgCodec.addressToBytes32(address(0x2)));
 
-        lzConfig = _deployLayerZeroV2Config(dao, address(accessManager));
+        lzConfig = _deployLayerZeroV2BridgeConfig(dao, address(accessManager));
 
         vm.startPrank(dao);
         lzConfig.setLzChainId(chainId2, LAYER_ZERO_V2_SPOKE_CHAIN_ID);

@@ -29,16 +29,17 @@ library Errors {
     error InsufficientBalance();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidBridgeTransferRoute();
     error InvalidChainId();
     error InvalidDebtFlag();
     error InvalidDecimals();
     error InvalidFeedRoute();
     error InvalidInputAmount();
-    error InvalidLzSentAmount();
     error InvalidInputToken();
     error InvalidInstructionProof();
     error InvalidInstructionType();
-    error InvalidBridgeTransferRoute();
+    error InvalidLzSentAmount();
+    error InvalidOft();
     error InvalidOutputToken();
     error InvalidPositionChangeDirection();
     error InvalidRecipientChainId();
@@ -76,6 +77,7 @@ library Errors {
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
     error PositionIsGrouped();
+    error PositionToken();
     error PositionTokenIsBaseToken();
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
@@ -46,7 +46,7 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
 
         accountingToken.approve(address(caliberMailbox), bridgeInputAmount);
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         caliberMailbox.manageTransfer(
             address(accountingToken), bridgeInputAmount, abi.encode(ACROSS_V3_BRIDGE_ID, bridgeInputAmount)
         );

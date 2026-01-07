@@ -2,11 +2,9 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {ERC721HolderUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC721/utils/ERC721HolderUpgradeable.sol";
-import {ERC1155HolderUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155HolderUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -26,14 +24,7 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract Caliber is
-    MakinaContext,
-    AccessManagedUpgradeable,
-    ReentrancyGuardUpgradeable,
-    ERC721HolderUpgradeable,
-    ERC1155HolderUpgradeable,
-    ICaliber
-{
+contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ERC721Holder, ERC1155Holder, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -106,10 +97,6 @@ contract Caliber is
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
         _addBaseToken(_accountingToken);
-
-        __ReentrancyGuard_init();
-        __ERC721Holder_init();
-        __ERC1155Holder_init();
     }
 
     modifier onlyOperator() {
@@ -265,11 +252,13 @@ contract Caliber is
     }
 
     /// @inheritdoc ICaliber
-    function getDetailedAum() external view override returns (uint256, bytes[] memory, bytes[] memory) {
-        if (_reentrancyGuardEntered()) {
-            revert ReentrancyGuardReentrantCall();
-        }
-
+    function getDetailedAum()
+        external
+        view
+        override
+        nonReentrantView
+        returns (uint256, bytes[] memory, bytes[] memory)
+    {
         CaliberStorage storage $ = _getCaliberStorage();
 
         uint256 currentTimestamp = block.timestamp;
@@ -494,6 +483,9 @@ contract Caliber is
     /// @inheritdoc ICaliber
     function transferToHubMachine(address token, uint256 amount, bytes calldata data) external override onlyOperator {
         CaliberStorage storage $ = _getCaliberStorage();
+        if ($._positionTokens.contains(token)) {
+            revert Errors.PositionToken();
+        }
         IERC20(token).forceApprove($._hubMachineEndpoint, amount);
         IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
         emit TransferToHubMachine(token, amount);

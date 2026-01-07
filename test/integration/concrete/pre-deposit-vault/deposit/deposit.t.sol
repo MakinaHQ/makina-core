@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
@@ -18,7 +18,7 @@ contract Deposit_Integration_Concrete_Test is PreDepositVault_Integration_Concre
             abi.encodeCall(IPreDepositVault.deposit, (0, address(0), 0, 0))
         );
 
-        vm.expectRevert(ReentrancyGuardUpgradeable.ReentrancyGuardReentrantCall.selector);
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
         preDepositVault.deposit(0, address(0), 0, 0);
     }
 
