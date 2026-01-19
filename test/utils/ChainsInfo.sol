@@ -20,8 +20,11 @@ library ChainsInfo {
     uint256 public constant CHAIN_ID_OPTIMISM = 10;
     uint256 public constant CHAIN_ID_INK = 57073;
     uint256 public constant CHAIN_ID_AVALANCHE = 43114;
-    uint256 public constant CHAIN_ID_POLYGON = 137;
     uint256 public constant CHAIN_ID_UNICHAIN = 130;
+    uint256 public constant CHAIN_ID_WORLDCHAIN = 480;
+    uint256 public constant CHAIN_ID_MONAD = 143;
+    uint256 public constant CHAIN_ID_PLASMA = 9745;
+    uint256 public constant CHAIN_ID_HYPER_EVM = 999;
 
     function getChainInfo(uint256 chainId) internal pure returns (ChainInfo memory) {
         if (chainId == CHAIN_ID_ETHEREUM) {
@@ -72,14 +75,6 @@ library ChainsInfo {
                 foundryAlias: "avalanche",
                 constantsFilename: "Avalanche-Test.json"
             });
-        } else if (chainId == CHAIN_ID_POLYGON) {
-            return ChainInfo({
-                evmChainId: CHAIN_ID_POLYGON,
-                wormholeChainId: WormholeChains.CHAIN_ID_POLYGON,
-                name: "Polygon",
-                foundryAlias: "polygon",
-                constantsFilename: "Polygon-Test.json"
-            });
         } else if (chainId == CHAIN_ID_UNICHAIN) {
             return ChainInfo({
                 evmChainId: CHAIN_ID_UNICHAIN,
@@ -87,6 +82,38 @@ library ChainsInfo {
                 name: "Unichain",
                 foundryAlias: "unichain",
                 constantsFilename: "Unichain-Test.json"
+            });
+        } else if (chainId == CHAIN_ID_WORLDCHAIN) {
+            return ChainInfo({
+                evmChainId: CHAIN_ID_WORLDCHAIN,
+                wormholeChainId: WormholeChains.CHAIN_ID_WORLDCHAIN,
+                name: "Worldchain",
+                foundryAlias: "worldchain",
+                constantsFilename: "Worldchain-Test.json"
+            });
+        } else if (chainId == CHAIN_ID_MONAD) {
+            return ChainInfo({
+                evmChainId: CHAIN_ID_MONAD,
+                wormholeChainId: WormholeChains.CHAIN_ID_MONAD,
+                name: "Monad",
+                foundryAlias: "monad",
+                constantsFilename: "Monad-Test.json"
+            });
+        } else if (chainId == CHAIN_ID_PLASMA) {
+            return ChainInfo({
+                evmChainId: CHAIN_ID_PLASMA,
+                wormholeChainId: 58,
+                name: "Plasma",
+                foundryAlias: "plasma",
+                constantsFilename: "Plasma-Test.json"
+            });
+        } else if (chainId == CHAIN_ID_HYPER_EVM) {
+            return ChainInfo({
+                evmChainId: CHAIN_ID_HYPER_EVM,
+                wormholeChainId: WormholeChains.CHAIN_ID_HYPER_E_V_M,
+                name: "HyperEVM",
+                foundryAlias: "hyper_evm",
+                constantsFilename: "HyperEVM-Test.json"
             });
         } else {
             revert InvalidChainId();

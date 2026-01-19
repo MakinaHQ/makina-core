@@ -25,8 +25,11 @@ arbitrum_one = "${ARBITRUM_RPC_URL}"
 optimism = "${OPTIMISM_RPC_URL}"
 ink = "${INK_RPC_URL}"
 avalanche = "${AVALANCHE_RPC_URL}"
-polygon = "${POLYGON_RPC_URL}"
 unichain = "${UNICHAIN_RPC_URL}"
+worldchain = "${WORLDCHAIN_RPC_URL}"
+monad = "${MONAD_RPC_URL}"
+plasma = "${PLASMA_RPC_URL}"
+hyper_evm = "${HYPER_EVM_RPC_URL}"
 
 [etherscan]
 1 = { key = "${MAINNET_ETHERSCAN_API_KEY}", url = "${MAINNET_ETHERSCAN_API_URL}" }
@@ -35,8 +38,11 @@ unichain = "${UNICHAIN_RPC_URL}"
 10 = { key = "${OPTIMISM_ETHERSCAN_API_KEY}", url = "${OPTIMISM_ETHERSCAN_API_URL}" }
 57073 = { key = "${INK_ETHERSCAN_API_KEY}", url = "${INK_ETHERSCAN_API_URL}" }
 43114 = { key = "${AVALANCHE_ETHERSCAN_API_KEY}", url = "${AVALANCHE_ETHERSCAN_API_URL}" }
-137 = { key = "${POLYGON_ETHERSCAN_API_KEY}", url = "${POLYGON_ETHERSCAN_API_URL}" }
 130 = { key = "${UNICHAIN_ETHERSCAN_API_KEY}", url = "${UNICHAIN_ETHERSCAN_API_URL}" }
+480 = { key = "${WORLDCHAIN_ETHERSCAN_API_KEY}", url = "${WORLDCHAIN_ETHERSCAN_API_URL}" }
+143 = { key = "${MONAD_ETHERSCAN_API_KEY}", url = "${MONAD_ETHERSCAN_API_URL}" }
+9745 = { key = "${PLASMA_ETHERSCAN_API_KEY}", url = "${PLASMA_ETHERSCAN_API_URL}" }
+999 = { key = "${HYPER_EVM_ETHERSCAN_API_KEY}", url = "${HYPER_EVM_ETHERSCAN_API_URL}" }
 
 [fuzz]
 runs = 1024
