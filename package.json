@@ -4,8 +4,7 @@
   "description": "Makina core smart contracts",
   "repository": "https://github.com/MakinaHQ/makina-core.git",
   "author": "MakinaHQ",
-  "license": "Unlicense",
-  "type": "module",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@openzeppelin/merkle-tree": "1.0.8",
     "ethers": "6.14.0",
