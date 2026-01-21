@@ -50,6 +50,7 @@ library Errors {
     error LzForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
     error OftNotRegistered(address token);
     error ManageFlashLoanReentrantCall();
+    error MaxAuthorizedPriceChangeExceeded();
     error MaxValueLossExceeded();
     error MessageAlreadyAuthorized();
     error Migrated();

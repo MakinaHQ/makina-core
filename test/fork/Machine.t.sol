@@ -63,7 +63,8 @@ contract Machine_Fork_Test is Fork_Test {
                     initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
                     initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
                     initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialMaxSharePriceChangeRate: type(uint256).max
                 }),
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -184,6 +185,7 @@ contract Machine_Fork_Test is Fork_Test {
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // check machine aum
+        skip(1);
         assertEq(machine.updateTotalAum(), depositAmount + spokeCaliberAum);
 
         // machineDepositor transfers some shares to machineRedeemer

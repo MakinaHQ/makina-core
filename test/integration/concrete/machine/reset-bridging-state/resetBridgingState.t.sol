@@ -261,6 +261,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         // aum update still works
+        skip(1);
         machine.updateTotalAum();
     }
 }

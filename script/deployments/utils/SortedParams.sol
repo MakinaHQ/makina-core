@@ -16,6 +16,7 @@ abstract contract SortedParams {
         uint256 initialFeeMintCooldown;
         uint256 initialMaxFixedFeeAccrualRate;
         uint256 initialMaxPerfFeeAccrualRate;
+        uint256 initialMaxSharePriceChangeRate;
         address initialRedeemer;
         uint256 initialShareLimit;
     }

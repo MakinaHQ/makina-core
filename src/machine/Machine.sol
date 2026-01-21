@@ -58,6 +58,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         uint256[] _foreignChainIds;
         mapping(uint256 foreignChainId => SpokeCaliberData data) _spokeCalibersData;
         EnumerableSet.AddressSet _idleTokens;
+        uint256 _maxSharePriceChangeRate;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Machine")) - 1)) & ~bytes32(uint256(0xff))
@@ -111,6 +112,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
         IOwnable2Step(_shareToken).acceptOwnership();
 
+        $._lastGlobalAccountingTime = block.timestamp;
         $._lastMintedFeesTime = block.timestamp;
         $._depositor = mParams.initialDepositor;
         $._redeemer = mParams.initialRedeemer;
@@ -120,6 +122,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         $._maxPerfFeeAccrualRate = mParams.initialMaxPerfFeeAccrualRate;
         $._feeMintCooldown = mParams.initialFeeMintCooldown;
         $._shareLimit = mParams.initialShareLimit;
+        $._maxSharePriceChangeRate = mParams.initialMaxSharePriceChangeRate;
         __MakinaGovernable_init(mgParams);
     }
 
@@ -176,6 +179,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     /// @inheritdoc IMachine
     function shareLimit() external view override returns (uint256) {
         return _getMachineStorage()._shareLimit;
+    }
+
+    /// @inheritdoc IMachine
+    function maxSharePriceChangeRate() external view override returns (uint256) {
+        return _getMachineStorage()._maxSharePriceChangeRate;
     }
 
     /// @inheritdoc IMachine
@@ -398,7 +406,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     function updateTotalAum() external override nonReentrant onlyAccountingAuthorized returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
-        uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry());
+        uint256 _lastTotalAum =
+            MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry(), msg.sender != securityCouncil());
         emit TotalAumUpdated(_lastTotalAum);
 
         uint256 _mintedFees = MachineUtils.manageFees($);
@@ -586,6 +595,13 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         MachineStorage storage $ = _getMachineStorage();
         emit ShareLimitChanged($._shareLimit, newShareLimit);
         $._shareLimit = newShareLimit;
+    }
+
+    /// @inheritdoc IMachine
+    function setMaxSharePriceChangeRate(uint256 newMaxSharePriceChangeRate) external override onlyRiskManagerTimelock {
+        MachineStorage storage $ = _getMachineStorage();
+        emit MaxSharePriceChangeRateChanged($._maxSharePriceChangeRate, newMaxSharePriceChangeRate);
+        $._maxSharePriceChangeRate = newMaxSharePriceChangeRate;
     }
 
     /// @inheritdoc IBridgeController

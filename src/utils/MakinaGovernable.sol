@@ -100,7 +100,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
-    function securityCouncil() external view override returns (address) {
+    function securityCouncil() public view override returns (address) {
         return _getMakinaGovernableStorage()._securityCouncil;
     }
 

@@ -6,7 +6,7 @@
 
 - Can run authorized accounting instructions in Calibers, provided the Calibers are neither in restricted accounting mode nor recovery mode.
 - Can submit accounting data from a Spoke Caliber to its corresponding Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
-- Can update a Machine’s total AUM, provided all Caliber accounting data is up to date and the Machine is neither in restricted accounting mode nor recovery mode.
+- Can update a Machine’s total AUM, provided all Caliber accounting data is up to date, the Machine is neither in restricted accounting mode nor recovery mode, and the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
 
 ## Roles Permissions List
 
@@ -119,12 +119,13 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the caliber accounting staleness threshold.
   - Can set the maximum fixed and perf fee accrual rates.
   - Can set the minimum time to be elapsed between two fee minting events.
+  - Can set the maximum share price change rate.
 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
 
-  - Can update total AUM.
+  - Can trigger total AUM update, provided the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
   - Can schedule an outgoing bridge transfer towards a spoke caliber (only when not in recovery mode).
   - Can cancel an outgoing bridge transfer.
   - Can send an outgoing bridge transfer (only when not in recovery mode).

@@ -127,6 +127,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         uint256 totalATBridgeFee = machineStore.totalAccountedBridgeFee(address(accountingToken));
         uint256 totalBTBridgeFee = machineStore.totalAccountedBridgeFee(address(baseToken));
 
+        skip(1);
+
         assertEq(
             machine.updateTotalAum(),
             A_START_BALANCE - totalATBridgeFee + ((B_START_BALANCE - totalBTBridgeFee) * PRICE_B_A),
