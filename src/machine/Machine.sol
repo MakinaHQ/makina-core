@@ -395,7 +395,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function updateTotalAum() external override nonReentrant notRecoveryMode returns (uint256) {
+    function updateTotalAum() external override nonReentrant onlyAccountingAuthorized returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
         uint256 _lastTotalAum = MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry());

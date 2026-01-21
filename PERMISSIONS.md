@@ -102,6 +102,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - **Security Council**
 
+  - Can trigger total AUM update at any time.
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
@@ -121,11 +122,16 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
 
+  - Can update total AUM.
   - Can schedule an outgoing bridge transfer towards a spoke caliber (only when not in recovery mode).
   - Can cancel an outgoing bridge transfer.
   - Can send an outgoing bridge transfer (only when not in recovery mode).
   - Can authorize an incoming bridge transfer from a spoke caliber.
   - Can claim an incoming bridge transfer from a spoke caliber.
+
+- **Accounting Agents**
+
+  - Can update total AUM (only when not in recovery mode).
 
 ### Pre-Deposit Vault
 
@@ -178,6 +184,10 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can add and remove Merkle root guardians.
 
+- **Security Council**
+
+  - Can account for positions. at any time.
+
 - **Risk Manager**
 
   - Can schedule an update of the root of the Merkle tree containing allowed instructions.
@@ -200,6 +210,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
 
   - Can open, manage and close positions (position increases allowed only when not in recovery mode).
+  - Can account for positions.
   - Can harvest external rewards.
   - Can swap tokens towards any base token.
   - Can initiate a transfer towards hub machine endpoint.
+
+- **Accounting Agents**
+
+  - Can account for positions (only when not in recovery mode).

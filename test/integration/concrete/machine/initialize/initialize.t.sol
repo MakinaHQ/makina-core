@@ -270,7 +270,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialSecurityCouncil: securityCouncil,
             initialRiskManager: riskManager,
             initialRiskManagerTimelock: riskManagerTimelock,
-            initialAuthority: address(accessManager)
+            initialAuthority: address(accessManager),
+            initialRestrictedAccountingMode: false
         });
     }
 }

@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
@@ -51,6 +52,81 @@ contract AccountForPositionBatch_Integration_Concrete_Test is Caliber_Integratio
         vm.expectRevert();
         vm.prank(mechanic);
         caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
+    }
+
+    function test_AccountForPositionBatch_Permissions() public {
+        ICaliber.Instruction[] memory instructions = new ICaliber.Instruction[](0);
+        uint256[] memory groupIds = new uint256[](0);
+
+        IMakinaGovernable hubMachineEndpoint = IMakinaGovernable(caliber.hubMachineEndpoint());
+
+        address accountingAgent = makeAddr("accountingAgent");
+        vm.prank(dao);
+        hubMachineEndpoint.addAccountingAgent(accountingAgent);
+
+        // RecoveryMode off, RestrictedAccountingMode off
+        vm.prank(mechanic);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(accountingAgent);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        // RecoveryMode off, RestrictedAccountingMode on
+        vm.prank(dao);
+        hubMachineEndpoint.setRestrictedAccountingMode(true);
+
+        vm.prank(mechanic);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(accountingAgent);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        // RecoveryMode on, RestrictedAccountingMode on
+        vm.prank(securityCouncil);
+        hubMachineEndpoint.setRecoveryMode(true);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        // RecoveryMode on, RestrictedAccountingMode off
+        vm.prank(dao);
+        hubMachineEndpoint.setRestrictedAccountingMode(false);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPositionBatch(instructions, groupIds);
     }
 
     function test_RevertWhen_ZeroGroupId() public {

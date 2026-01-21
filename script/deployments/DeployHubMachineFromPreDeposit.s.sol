@@ -86,7 +86,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 mgParams.initialSecurityCouncil,
                 mgParams.initialRiskManager,
                 mgParams.initialRiskManagerTimelock,
-                mgParams.initialAuthority
+                mgParams.initialAuthority,
+                mgParams.initialRestrictedAccountingMode
             ),
             preDepositVault,
             salt

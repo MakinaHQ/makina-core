@@ -452,11 +452,14 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
             _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
         );
 
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](4);
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
         mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
         mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
         mgmtSetupSelectors[3] = IMakinaGovernable.setRiskManagerTimelock.selector;
+        mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
+        mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
+        mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
             _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
         );
@@ -470,11 +473,14 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
             _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
         );
 
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](4);
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
         mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
         mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
         mgmtSetupSelectors[3] = IMakinaGovernable.setRiskManagerTimelock.selector;
+        mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
+        mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
+        mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
             _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
         );

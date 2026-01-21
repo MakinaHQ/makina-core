@@ -2,23 +2,20 @@ updateTotalAum.t.sol
 ├── when call is reentrant
 │  └── it should revert with ReentrancyGuardReentrantCall
 └── when call is not reentrant
-   ├── given recovery mode is off
-   │  ├── when caller is not the Mechanic
-   │  │  └── it should revert with UnauthorizedCaller
-   │  └── when caller is the Mechanic
-   │     ├── given one of the calibers accounting is stale
-   │     │  └── it should revert with CaliberAccountingStale
-   │     └── given none of the calibers accounting is stale
-   │        ├── given some transfers appear as received by the machine but not sent by the corresponding caliber
-   │        │  └── it should revert with BridgeStateMismatch
-   │        └── given no transfer appears as received by the machine but not sent by the corresponding caliber
-   │           ├── given some transfers appear as received by a caliber but not sent by the machine
-   │           │  └── it should revert with BridgeStateMismatch
-   │           └── given no transfer appears as as received by a caliber but not sent by the machine
-   │              ├── it should sum up the last reported aum from each caliber plus all the notified idle token balances held by the machine, and store result as last reported total AUM
-   │              ├── it should store the update timestamp
-   │              ├── it should emit a TotalAumUpdated event
-   │              ├── it should mint relevant fees
-   │              └── it should emit a FeesMinted event
-   └── given recovery mode is on
-      └── it should revert with RecoveryMode
+   ├── when caller is not authorized to perform accounting operations
+   │  └── it should revert with UnauthorizedCaller
+   └── when caller is authorized to perform accounting operations
+      ├── given one of the calibers accounting is stale
+      │  └── it should revert with CaliberAccountingStale
+      └── given none of the calibers accounting is stale
+         ├── given some transfers appear as received by the machine but not sent by the corresponding caliber
+         │  └── it should revert with BridgeStateMismatch
+         └── given no transfer appears as received by the machine but not sent by the corresponding caliber
+            ├── given some transfers appear as received by a caliber but not sent by the machine
+            │  └── it should revert with BridgeStateMismatch
+            └── given no transfer appears as as received by a caliber but not sent by the machine
+               ├── it should sum up the last reported aum from each caliber plus all the notified idle token balances held by the machine, and store result as last reported total AUM
+               ├── it should store the update timestamp
+               ├── it should emit a TotalAumUpdated event
+               ├── it should mint relevant fees
+               └── it should emit a FeesMinted event

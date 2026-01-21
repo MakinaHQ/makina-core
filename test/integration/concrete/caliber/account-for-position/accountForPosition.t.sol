@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockERC4626} from "test/mocks/MockERC4626.sol";
@@ -63,6 +64,81 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         vm.expectRevert();
         vm.prank(mechanic);
         caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
+    }
+
+    function test_AccountForPosition_Permissions() public {
+        ICaliber.Instruction memory instruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        IMakinaGovernable hubMachineEndpoint = IMakinaGovernable(caliber.hubMachineEndpoint());
+
+        address accountingAgent = makeAddr("accountingAgent");
+        vm.prank(dao);
+        hubMachineEndpoint.addAccountingAgent(accountingAgent);
+
+        // RecoveryMode off, RestrictedAccountingMode off
+        vm.prank(mechanic);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(accountingAgent);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPosition(instruction);
+
+        caliber.accountForPosition(instruction);
+
+        // RecoveryMode off, RestrictedAccountingMode on
+        vm.prank(dao);
+        hubMachineEndpoint.setRestrictedAccountingMode(true);
+
+        vm.prank(mechanic);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(accountingAgent);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPosition(instruction);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        // RecoveryMode on, RestrictedAccountingMode on
+        vm.prank(securityCouncil);
+        hubMachineEndpoint.setRecoveryMode(true);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        // RecoveryMode on, RestrictedAccountingMode off
+        vm.prank(dao);
+        hubMachineEndpoint.setRestrictedAccountingMode(false);
+
+        vm.prank(securityCouncil);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        caliber.accountForPosition(instruction);
     }
 
     function test_RevertWhen_ProvidedPositionNonExisting() public {

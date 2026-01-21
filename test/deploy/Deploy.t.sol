@@ -198,6 +198,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.riskManager(), mgParams.initialRiskManager);
         assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+        assertEq(machine.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
         assertEq(hubCaliber.accountingToken(), accountingToken);
@@ -328,6 +329,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.riskManager(), mgParams.initialRiskManager);
         assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+        assertEq(machine.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
         assertEq(hubCaliber.accountingToken(), accountingToken);
@@ -461,6 +463,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(mailbox.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(mailbox)).authority(), mgParams.initialAuthority);
         assertEq(IAccessManaged(address(spokeCaliber)).authority(), mgParams.initialAuthority);
+        assertEq(mailbox.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);

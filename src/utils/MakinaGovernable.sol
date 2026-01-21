@@ -2,11 +2,14 @@
 pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {Errors} from "../libraries/Errors.sol";
 
 abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
     /// @custom:storage-location erc7201:makina.storage.MakinaGovernable
     struct MakinaGovernableStorage {
         address _mechanic;
@@ -14,6 +17,8 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         address _riskManager;
         address _riskManagerTimelock;
         bool _recoveryMode;
+        bool _restrictedAccountingMode;
+        mapping(address user => bool isAccountingAgent) _isAccountingAgent;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.MakinaGovernable")) - 1)) & ~bytes32(uint256(0xff))
@@ -36,12 +41,12 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         $._securityCouncil = params.initialSecurityCouncil;
         $._riskManager = params.initialRiskManager;
         $._riskManagerTimelock = params.initialRiskManagerTimelock;
+        $._restrictedAccountingMode = params.initialRestrictedAccountingMode;
         __AccessManaged_init(params.initialAuthority);
     }
 
     modifier onlyOperator() {
-        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
-        if (msg.sender != ($._recoveryMode ? $._securityCouncil : $._mechanic)) {
+        if (!isOperator(msg.sender)) {
             revert Errors.UnauthorizedCaller();
         }
         _;
@@ -82,29 +87,60 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         _;
     }
 
+    modifier onlyAccountingAuthorized() {
+        if (!isAccountingAuthorized(msg.sender)) {
+            revert Errors.UnauthorizedCaller();
+        }
+        _;
+    }
+
     /// @inheritdoc IMakinaGovernable
-    function mechanic() public view override returns (address) {
+    function mechanic() external view override returns (address) {
         return _getMakinaGovernableStorage()._mechanic;
     }
 
     /// @inheritdoc IMakinaGovernable
-    function securityCouncil() public view override returns (address) {
+    function securityCouncil() external view override returns (address) {
         return _getMakinaGovernableStorage()._securityCouncil;
     }
 
     /// @inheritdoc IMakinaGovernable
-    function riskManager() public view override returns (address) {
+    function riskManager() external view override returns (address) {
         return _getMakinaGovernableStorage()._riskManager;
     }
 
     /// @inheritdoc IMakinaGovernable
-    function riskManagerTimelock() public view override returns (address) {
+    function riskManagerTimelock() external view override returns (address) {
         return _getMakinaGovernableStorage()._riskManagerTimelock;
     }
 
     /// @inheritdoc IMakinaGovernable
-    function recoveryMode() public view returns (bool) {
+    function recoveryMode() external view returns (bool) {
         return _getMakinaGovernableStorage()._recoveryMode;
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function restrictedAccountingMode() external view override returns (bool) {
+        return _getMakinaGovernableStorage()._restrictedAccountingMode;
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function isAccountingAgent(address user) external view override returns (bool) {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        return user == $._mechanic || user == $._securityCouncil || $._isAccountingAgent[user];
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function isOperator(address user) public view override returns (bool) {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        return user == ($._recoveryMode ? $._securityCouncil : $._mechanic);
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function isAccountingAuthorized(address user) public view override returns (bool) {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        return (!$._recoveryMode && (!$._restrictedAccountingMode || user == $._mechanic || $._isAccountingAgent[user]))
+            || user == $._securityCouncil;
     }
 
     /// @inheritdoc IMakinaGovernable
@@ -142,5 +178,37 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
             $._recoveryMode = enabled;
             emit RecoveryModeChanged(enabled);
         }
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function setRestrictedAccountingMode(bool enabled) external restricted {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        if ($._restrictedAccountingMode != enabled) {
+            $._restrictedAccountingMode = enabled;
+            emit RestrictedAccountingModeChanged(enabled);
+        }
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function addAccountingAgent(address newAgent) external override restricted {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        if (newAgent == $._mechanic || newAgent == $._securityCouncil || $._isAccountingAgent[newAgent]) {
+            revert Errors.AlreadyAccountingAgent();
+        }
+        $._isAccountingAgent[newAgent] = true;
+        emit AccountingAgentAdded(newAgent);
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function removeAccountingAgent(address agent) external override restricted {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        if (agent == $._mechanic || agent == $._securityCouncil) {
+            revert Errors.ProtectedAccountingAgent();
+        }
+        if (!$._isAccountingAgent[agent]) {
+            revert Errors.NotAccountingAgent();
+        }
+        $._isAccountingAgent[agent] = false;
+        emit AccountingAgentRemoved(agent);
     }
 }

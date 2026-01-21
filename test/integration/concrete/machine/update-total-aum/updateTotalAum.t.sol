@@ -39,8 +39,73 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.manageTransfer(address(accountingToken), 0, "");
     }
 
-    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(Errors.RecoveryMode.selector);
+    function test_UpdateTotalAum_Permissions() public {
+        address accountingAgent = makeAddr("accountingAgent");
+        vm.prank(dao);
+        machine.addAccountingAgent(accountingAgent);
+
+        // RecoveryMode off, RestrictedAccountingMode off
+        vm.prank(mechanic);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        machine.updateTotalAum();
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        machine.updateTotalAum();
+
+        // RecoveryMode off, RestrictedAccountingMode on
+        vm.prank(dao);
+        machine.setRestrictedAccountingMode(true);
+
+        vm.prank(mechanic);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        machine.updateTotalAum();
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        // RecoveryMode on, RestrictedAccountingMode on
+        vm.prank(securityCouncil);
+        machine.setRecoveryMode(true);
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        // RecoveryMode on, RestrictedAccountingMode off
+        vm.prank(dao);
+        machine.setRestrictedAccountingMode(false);
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.updateTotalAum();
     }
 
