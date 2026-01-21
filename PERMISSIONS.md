@@ -4,9 +4,9 @@
 
 ### Anyone
 
-- Can run authorized accounting instructions in calibers.
-- Can submit accounting data from a Spoke Caliber to the Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
-- Can update the total AUM of the Machine, as long as all Caliber accounting data is up to date.
+- Can run authorized accounting instructions in Calibers, provided the Calibers are neither in restricted accounting mode nor recovery mode.
+- Can submit accounting data from a Spoke Caliber to its corresponding Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
+- Can update a Machine’s total AUM, provided all Caliber accounting data is up to date and the Machine is neither in restricted accounting mode nor recovery mode.
 
 ## Roles Permissions List
 
@@ -75,7 +75,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set supported status of EVM chains.
-  
+
 ### LayerZeroV2BridgeConfig
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
@@ -99,6 +99,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
+  - Can trigger the restricted accounting mode.
+  - Can add and remove accounting agents.
 
 - **Security Council**
 
@@ -157,6 +159,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
+  - Can trigger the restricted accounting mode.
+  - Can add and remove accounting agents.
 
 - **Security Council**
 
