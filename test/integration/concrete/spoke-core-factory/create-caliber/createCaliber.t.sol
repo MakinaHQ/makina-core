@@ -98,7 +98,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialSecurityCouncil: securityCouncil,
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
-                    initialAuthority: address(accessManager)
+                    initialAuthority: address(accessManager),
+                    initialRestrictedAccountingMode: false
                 }),
                 address(accountingToken),
                 _hubMachine,
@@ -125,6 +126,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertEq(caliberMailbox.riskManagerTimelock(), riskManagerTimelock);
         assertEq(caliberMailbox.authority(), address(accessManager));
         assertEq(caliber.authority(), address(accessManager));
+        assertFalse(caliberMailbox.restrictedAccountingMode());
 
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);

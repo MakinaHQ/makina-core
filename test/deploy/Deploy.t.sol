@@ -192,12 +192,14 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.shareLimit(), mParams.initialShareLimit);
         assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
         assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
+        assertEq(machine.maxSharePriceChangeRate(), mParams.initialMaxSharePriceChangeRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
         assertEq(machine.riskManager(), mgParams.initialRiskManager);
         assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+        assertEq(machine.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
         assertEq(hubCaliber.accountingToken(), accountingToken);
@@ -322,12 +324,14 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(machine.getIdleToken(0), accountingToken);
         assertEq(machine.maxFixedFeeAccrualRate(), mParams.initialMaxFixedFeeAccrualRate);
         assertEq(machine.maxPerfFeeAccrualRate(), mParams.initialMaxPerfFeeAccrualRate);
+        assertEq(machine.maxSharePriceChangeRate(), mParams.initialMaxSharePriceChangeRate);
 
         assertEq(machine.mechanic(), mgParams.initialMechanic);
         assertEq(machine.securityCouncil(), mgParams.initialSecurityCouncil);
         assertEq(machine.riskManager(), mgParams.initialRiskManager);
         assertEq(machine.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(machine)).authority(), mgParams.initialAuthority);
+        assertEq(machine.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(hubCaliber.hubMachineEndpoint(), address(machine));
         assertEq(hubCaliber.accountingToken(), accountingToken);
@@ -461,6 +465,7 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(mailbox.riskManagerTimelock(), mgParams.initialRiskManagerTimelock);
         assertEq(IAccessManaged(address(mailbox)).authority(), mgParams.initialAuthority);
         assertEq(IAccessManaged(address(spokeCaliber)).authority(), mgParams.initialAuthority);
+        assertEq(mailbox.restrictedAccountingMode(), mgParams.initialRestrictedAccountingMode);
 
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);

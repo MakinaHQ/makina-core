@@ -39,6 +39,22 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return false;
     }
 
+    function restrictedAccountingMode() external pure returns (bool) {
+        return false;
+    }
+
+    function isAccountingAgent(address) external pure returns (bool) {
+        return false;
+    }
+
+    function isOperator(address) external pure returns (bool) {
+        return false;
+    }
+
+    function isAccountingAuthorized(address) external pure returns (bool) {
+        return false;
+    }
+
     function setMechanic(address) external pure {
         return;
     }
@@ -56,6 +72,18 @@ contract MockMachineEndpoint is IMachineEndpoint {
     }
 
     function setRecoveryMode(bool) external pure {
+        return;
+    }
+
+    function setRestrictedAccountingMode(bool) external pure {
+        return;
+    }
+
+    function addAccountingAgent(address) external pure {
+        return;
+    }
+
+    function removeAccountingAgent(address) external pure {
         return;
     }
 

@@ -4,9 +4,9 @@
 
 ### Anyone
 
-- Can run authorized accounting instructions in calibers.
-- Can submit accounting data from a Spoke Caliber to the Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
-- Can update the total AUM of the Machine, as long as all Caliber accounting data is up to date.
+- Can run authorized accounting instructions in Calibers, provided the Calibers are neither in restricted accounting mode nor recovery mode.
+- Can submit accounting data from a Spoke Caliber to its corresponding Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
+- Can update a Machine’s total AUM, provided all Caliber accounting data is up to date, the Machine is neither in restricted accounting mode nor recovery mode, and the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
 
 ## Roles Permissions List
 
@@ -75,7 +75,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
   - Can set supported status of EVM chains.
-  
+
 ### LayerZeroV2BridgeConfig
 
 - `INFRA_SETUP_ROLE` (roleId `1`)
@@ -99,9 +99,12 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
+  - Can trigger the restricted accounting mode.
+  - Can add and remove accounting agents.
 
 - **Security Council**
 
+  - Can trigger total AUM update at any time.
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
@@ -116,16 +119,22 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the caliber accounting staleness threshold.
   - Can set the maximum fixed and perf fee accrual rates.
   - Can set the minimum time to be elapsed between two fee minting events.
+  - Can set the maximum share price change rate.
 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
 
+  - Can trigger total AUM update, provided the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
   - Can schedule an outgoing bridge transfer towards a spoke caliber (only when not in recovery mode).
   - Can cancel an outgoing bridge transfer.
   - Can send an outgoing bridge transfer (only when not in recovery mode).
   - Can authorize an incoming bridge transfer from a spoke caliber.
   - Can claim an incoming bridge transfer from a spoke caliber.
+
+- **Accounting Agents**
+
+  - Can update total AUM (only when not in recovery mode).
 
 ### Pre-Deposit Vault
 
@@ -151,6 +160,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the security council.
   - Can set the address of the risk manager.
   - Can set the address of the risk manager timelock.
+  - Can trigger the restricted accounting mode.
+  - Can add and remove accounting agents.
 
 - **Security Council**
 
@@ -178,6 +189,10 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can add and remove Merkle root guardians.
 
+- **Security Council**
+
+  - Can account for positions. at any time.
+
 - **Risk Manager**
 
   - Can schedule an update of the root of the Merkle tree containing allowed instructions.
@@ -200,6 +215,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
 
   - Can open, manage and close positions (position increases allowed only when not in recovery mode).
+  - Can account for positions.
   - Can harvest external rewards.
   - Can swap tokens towards any base token.
   - Can initiate a transfer towards hub machine endpoint.
+
+- **Accounting Agents**
+
+  - Can account for positions (only when not in recovery mode).

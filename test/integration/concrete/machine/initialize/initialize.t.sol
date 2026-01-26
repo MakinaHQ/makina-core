@@ -256,7 +256,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
             initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
             initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
-            initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+            initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+            initialMaxSharePriceChangeRate: DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE
         });
     }
 
@@ -270,7 +271,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialSecurityCouncil: securityCouncil,
             initialRiskManager: riskManager,
             initialRiskManagerTimelock: riskManagerTimelock,
-            initialAuthority: address(accessManager)
+            initialAuthority: address(accessManager),
+            initialRestrictedAccountingMode: false
         });
     }
 }

@@ -98,7 +98,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
                     initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
                     initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialMaxSharePriceChangeRate: DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE
                 }),
                 ICaliber.CaliberInitParams({
                     initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -114,7 +115,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialSecurityCouncil: securityCouncil,
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
-                    initialAuthority: address(accessManager)
+                    initialAuthority: address(accessManager),
+                    initialRestrictedAccountingMode: false
                 }),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -137,7 +139,14 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(machine.accountingToken(), address(accountingToken));
         assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
         assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
+
+        assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.riskManager(), riskManager);
+        assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
+        assertFalse(machine.restrictedAccountingMode());
+
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
 

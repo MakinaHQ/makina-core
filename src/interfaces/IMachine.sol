@@ -18,6 +18,7 @@ interface IMachine is IMachineEndpoint {
     event FeesMinted(uint256 shares);
     event MaxFixedFeeAccrualRateChanged(uint256 indexed oldMaxAccrualRate, uint256 indexed newMaxAccrualRate);
     event MaxPerfFeeAccrualRateChanged(uint256 indexed oldMaxAccrualRate, uint256 indexed newMaxAccrualRate);
+    event MaxSharePriceChangeRateChanged(uint256 indexed oldMaxChangeRate, uint256 indexed newMaxChangeRate);
     event Redeem(address indexed owner, address indexed receiver, uint256 assets, uint256 shares);
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
@@ -35,6 +36,7 @@ interface IMachine is IMachineEndpoint {
     /// @param initialMaxPerfFeeAccrualRate The maximum performance fee accrual rate per second, 1e18 = 100%.
     /// @param initialFeeMintCooldown The minimum time to be elapsed between two fee minting events in seconds.
     /// @param initialShareLimit The share cap value.
+    /// @param initialMaxSharePriceChangeRate The maximum relative share price change rate per second during total AUM updates, 1e18 = 100%.
     struct MachineInitParams {
         address initialDepositor;
         address initialRedeemer;
@@ -44,6 +46,7 @@ interface IMachine is IMachineEndpoint {
         uint256 initialMaxPerfFeeAccrualRate;
         uint256 initialFeeMintCooldown;
         uint256 initialShareLimit;
+        uint256 initialMaxSharePriceChangeRate;
     }
 
     /// @dev Internal state structure for a spoke caliber data.
@@ -121,6 +124,9 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Share token supply limit that cannot be exceeded by new deposits.
     function shareLimit() external view returns (uint256);
+
+    /// @notice Maximum relative share price change rate per second during total AUM updates, 1e18 = 100%.
+    function maxSharePriceChangeRate() external view returns (uint256);
 
     /// @notice Maximum amount of shares that can currently be minted through asset deposits.
     function maxMint() external view returns (uint256);
@@ -268,4 +274,8 @@ interface IMachine is IMachineEndpoint {
     /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
     /// @param newShareLimit The new share limit.
     function setShareLimit(uint256 newShareLimit) external;
+
+    /// @notice Sets the new maximum relative share price change rate per second during total AUM updates, 1e18 = 100%.
+    /// @param newMaxSharePriceChangeRate The new maximum relative share price change rate.
+    function setMaxSharePriceChangeRate(uint256 newMaxSharePriceChangeRate) external;
 }

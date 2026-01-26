@@ -44,9 +44,12 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         assertEq(machine.maxFixedFeeAccrualRate(), DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE);
         assertEq(machine.maxPerfFeeAccrualRate(), DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE);
         assertEq(machine.feeMintCooldown(), DEFAULT_MACHINE_FEE_MINT_COOLDOWN);
+        assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
+        assertEq(machine.maxSharePriceChangeRate(), DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE);
+
         assertEq(machine.maxMint(), DEFAULT_MACHINE_SHARE_LIMIT);
         assertEq(machine.lastTotalAum(), 0);
-        assertEq(machine.lastGlobalAccountingTime(), 0);
+        assertEq(machine.lastGlobalAccountingTime(), 1);
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getIdleTokensLength(), 1);
@@ -170,5 +173,21 @@ contract Getters_Setters_Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
         vm.prank(riskManager);
         machine.setShareLimit(newShareLimit);
         assertEq(machine.shareLimit(), newShareLimit);
+    }
+
+    function test_SetMaxSharePriceChangeRate_RevertWhen_CallerNotRMT() public {
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.setMaxSharePriceChangeRate(1e18);
+    }
+
+    function test_SetMaxSharePriceChangeRate() public {
+        uint256 newMaxSharePriceChangeRate = 1e18;
+        vm.expectEmit(true, true, false, false, address(machine));
+        emit IMachine.MaxSharePriceChangeRateChanged(
+            DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE, newMaxSharePriceChangeRate
+        );
+        vm.prank(riskManagerTimelock);
+        machine.setMaxSharePriceChangeRate(newMaxSharePriceChangeRate);
+        assertEq(machine.maxSharePriceChangeRate(), newMaxSharePriceChangeRate);
     }
 }

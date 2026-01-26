@@ -70,7 +70,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 mParams.initialMaxFixedFeeAccrualRate,
                 mParams.initialMaxPerfFeeAccrualRate,
                 mParams.initialFeeMintCooldown,
-                mParams.initialShareLimit
+                mParams.initialShareLimit,
+                mParams.initialMaxSharePriceChangeRate
             ),
             ICaliber.CaliberInitParams(
                 cParams.initialPositionStaleThreshold,
@@ -86,7 +87,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 mgParams.initialSecurityCouncil,
                 mgParams.initialRiskManager,
                 mgParams.initialRiskManagerTimelock,
-                mgParams.initialAuthority
+                mgParams.initialAuthority,
+                mgParams.initialRestrictedAccountingMode
             ),
             preDepositVault,
             salt

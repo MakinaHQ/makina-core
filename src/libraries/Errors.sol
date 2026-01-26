@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 library Errors {
     error AccountingToken();
     error ActiveUpdatePending();
+    error AlreadyAccountingAgent();
     error AlreadyBaseToken();
     error AlreadyPositionToken();
     error AlreadyRootGuardian();
@@ -49,6 +50,7 @@ library Errors {
     error LzForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
     error OftNotRegistered(address token);
     error ManageFlashLoanReentrantCall();
+    error MaxAuthorizedPriceChangeExceeded();
     error MaxValueLossExceeded();
     error MessageAlreadyAuthorized();
     error Migrated();
@@ -59,6 +61,7 @@ library Errors {
     error NegativeTokenPrice(address priceFeed);
     error NoPendingUpdate();
     error NonZeroBalance();
+    error NotAccountingAgent();
     error NotBaseToken();
     error NotCaliber();
     error NotCaliberMailbox();
@@ -81,6 +84,7 @@ library Errors {
     error PositionTokenIsBaseToken();
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
+    error ProtectedAccountingAgent();
     error ProtectedRootGuardian();
     error Create3ProxyDeploymentFailed();
     error RecoveryMode();

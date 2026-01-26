@@ -100,15 +100,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
     }
 
     modifier onlyOperator() {
-        IMakinaGovernable _hubMachineEndpoint = IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint);
-        if (
-            msg.sender
-                != (
-                    _hubMachineEndpoint.recoveryMode()
-                        ? _hubMachineEndpoint.securityCouncil()
-                        : _hubMachineEndpoint.mechanic()
-                )
-        ) {
+        if (!IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).isOperator(msg.sender)) {
             revert Errors.UnauthorizedCaller();
         }
         _;
@@ -123,6 +115,13 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
 
     modifier onlyRiskManagerTimelock() {
         if (msg.sender != IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).riskManagerTimelock()) {
+            revert Errors.UnauthorizedCaller();
+        }
+        _;
+    }
+
+    modifier onlyAccountingAuthorized() {
+        if (!IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).isAccountingAuthorized(msg.sender)) {
             revert Errors.UnauthorizedCaller();
         }
         _;
@@ -322,6 +321,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         external
         override
         nonReentrant
+        onlyAccountingAuthorized
         returns (uint256, int256)
     {
         CaliberStorage storage $ = _getCaliberStorage();
@@ -339,6 +339,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         external
         override
         nonReentrant
+        onlyAccountingAuthorized
         returns (uint256[] memory, int256[] memory)
     {
         CaliberStorage storage $ = _getCaliberStorage();

@@ -39,8 +39,73 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.manageTransfer(address(accountingToken), 0, "");
     }
 
-    function test_RevertGiven_WhileInRecoveryMode() public whileInRecoveryMode {
-        vm.expectRevert(Errors.RecoveryMode.selector);
+    function test_UpdateTotalAum_Permissions() public {
+        address accountingAgent = makeAddr("accountingAgent");
+        vm.prank(dao);
+        machine.addAccountingAgent(accountingAgent);
+
+        // RecoveryMode off, RestrictedAccountingMode off
+        vm.prank(mechanic);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        machine.updateTotalAum();
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        machine.updateTotalAum();
+
+        // RecoveryMode off, RestrictedAccountingMode on
+        vm.prank(dao);
+        machine.setRestrictedAccountingMode(true);
+
+        vm.prank(mechanic);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        machine.updateTotalAum();
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        // RecoveryMode on, RestrictedAccountingMode on
+        vm.prank(securityCouncil);
+        machine.setRecoveryMode(true);
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        // RecoveryMode on, RestrictedAccountingMode off
+        vm.prank(dao);
+        machine.setRestrictedAccountingMode(false);
+
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.prank(accountingAgent);
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
+        machine.updateTotalAum();
+
+        vm.expectRevert(Errors.UnauthorizedCaller.selector);
         machine.updateTotalAum();
     }
 
@@ -184,6 +249,87 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
     }
 
+    function test_RevertGiven_MaxAuthorizedPriceChangeExceeded_PositiveChange() public {
+        // update last accounting timestamp
+        machine.updateTotalAum();
+
+        // reverts as no time has elapsed
+        machine.updateTotalAum();
+
+        // add 1 wei to aum, which corresponds to a +100% price change
+        uint256 aum = 1;
+        deal(address(accountingToken), address(machine), aum);
+
+        // set max change rate just under 100%
+        vm.prank(riskManagerTimelock);
+        machine.setMaxSharePriceChangeRate(1e18 - 1);
+
+        skip(1);
+
+        vm.expectRevert(Errors.MaxAuthorizedPriceChangeExceeded.selector);
+        machine.updateTotalAum();
+
+        // set max change rate to 100%
+        vm.prank(riskManagerTimelock);
+        machine.setMaxSharePriceChangeRate(1e18);
+
+        machine.updateTotalAum();
+
+        // generate 3 wei to aum, which corresponds to a +150% price change
+        aum += 3;
+        deal(address(accountingToken), address(machine), aum);
+
+        skip(1);
+
+        vm.expectRevert(Errors.MaxAuthorizedPriceChangeExceeded.selector);
+        machine.updateTotalAum();
+
+        // SecurityCouncil can bypass the limit
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+    }
+
+    function test_RevertGiven_MaxAuthorizedPriceChangeExceeded_NegativeChange() public {
+        // add 4 wei to aum, which corresponds to +400% price change
+        uint256 aum = 4;
+        deal(address(accountingToken), address(machine), aum);
+
+        // update last accounting timestamp
+        machine.updateTotalAum();
+
+        // remove 1 wei from aum, which corresponds to a -20% price change
+        aum -= 1;
+        deal(address(accountingToken), address(machine), aum);
+
+        // set max change rate just under 20%
+        vm.prank(riskManagerTimelock);
+        machine.setMaxSharePriceChangeRate(2e17 - 1);
+
+        skip(1);
+
+        vm.expectRevert(Errors.MaxAuthorizedPriceChangeExceeded.selector);
+        machine.updateTotalAum();
+
+        // set max change rate to 20%
+        vm.prank(riskManagerTimelock);
+        machine.setMaxSharePriceChangeRate(2e17);
+
+        machine.updateTotalAum();
+
+        // remove 1 wei from aum, which corresponds to a -25% price change
+        aum -= 1;
+        deal(address(accountingToken), address(machine), aum);
+
+        skip(1);
+
+        vm.expectRevert(Errors.MaxAuthorizedPriceChangeExceeded.selector);
+        machine.updateTotalAum();
+
+        // SecurityCouncil can bypass the limit
+        vm.prank(securityCouncil);
+        machine.updateTotalAum();
+    }
+
     function test_UpdateTotalAum_WithZeroAum() public {
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0);
@@ -298,6 +444,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // fund caliber with accountingToken
         deal(address(accountingToken), address(caliber), inputAmount);
+
+        skip(1);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(2 * inputAmount);

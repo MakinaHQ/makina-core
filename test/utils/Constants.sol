@@ -13,6 +13,7 @@ abstract contract Constants {
     uint256 public constant DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE = 634195840; // ≈ 2% annualized
     uint256 public constant DEFAULT_MACHINE_FEE_MINT_COOLDOWN = 8 hours;
     uint256 public constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
+    uint256 public constant DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE = type(uint256).max;
 
     uint256 public constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
     uint256 public constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;

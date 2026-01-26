@@ -168,6 +168,13 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
         _;
     }
 
+    modifier whileInRestrictedAccountingMode() {
+        vm.startPrank(securityCouncil);
+        machine.setRestrictedAccountingMode(true);
+        vm.stopPrank();
+        _;
+    }
+
     modifier withTokenAsBT(address _token) {
         vm.prank(riskManagerTimelock);
         caliber.addBaseToken(_token);

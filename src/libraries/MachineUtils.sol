@@ -28,14 +28,41 @@ library MachineUtils {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    uint256 private constant FEE_ACCRUAL_RATE_DIVISOR = 1e18;
+    uint256 private constant RATE_SCALE = 1e18;
 
-    function updateTotalAum(Machine.MachineStorage storage $, address oracleRegistry) external returns (uint256) {
+    /// @dev Updates the total AUM of the machine and performs share price change check.
+    /// @param $ The machine storage struct.
+    /// @param oracleRegistry The address of the oracle registry.
+    /// @param sharePriceChangeCheck True to perform share price change check, false to bypass it.
+    /// @return The updated total AUM.
+    function updateTotalAum(Machine.MachineStorage storage $, address oracleRegistry, bool sharePriceChangeCheck)
+        external
+        returns (uint256)
+    {
+        uint256 _supply = IERC20($._shareToken).totalSupply();
+        uint256 _previousSharePrice = getSharePrice($._lastTotalAum, _supply, $._shareTokenDecimalsOffset);
+
         $._lastTotalAum = _getTotalAum($, oracleRegistry);
+
+        uint256 _newSharePrice = getSharePrice($._lastTotalAum, _supply, $._shareTokenDecimalsOffset);
+
+        if (sharePriceChangeCheck) {
+            _checkMaxRelativeChange(
+                _previousSharePrice,
+                _newSharePrice,
+                $._maxSharePriceChangeRate,
+                block.timestamp - $._lastGlobalAccountingTime
+            );
+        }
+
         $._lastGlobalAccountingTime = block.timestamp;
+
         return $._lastTotalAum;
     }
 
+    /// @dev Manages the fee minting process, including calculating and minting fixed and performance fees.
+    /// @param $ The machine storage struct.
+    /// @return The fees minted in share tokens.
     function manageFees(Machine.MachineStorage storage $) external returns (uint256) {
         uint256 currentTimestamp = block.timestamp;
         uint256 elapsedTime = currentTimestamp - $._lastMintedFeesTime;
@@ -47,7 +74,7 @@ library MachineUtils {
 
             uint256 fixedFee = Math.min(
                 IFeeManager(_feeManager).calculateFixedFee(currentShareSupply, elapsedTime),
-                (currentShareSupply * elapsedTime).mulDiv($._maxFixedFeeAccrualRate, FEE_ACCRUAL_RATE_DIVISOR)
+                (currentShareSupply * elapsedTime).mulDiv($._maxFixedFeeAccrualRate, RATE_SCALE)
             );
 
             // offset fixed fee from the share price performance on which the performance fee is calculated.
@@ -57,7 +84,7 @@ library MachineUtils {
                 IFeeManager(_feeManager).calculatePerformanceFee(
                     currentShareSupply, $._lastMintedFeesSharePrice, netSharePrice, elapsedTime
                 ),
-                (currentShareSupply * elapsedTime).mulDiv($._maxPerfFeeAccrualRate, FEE_ACCRUAL_RATE_DIVISOR)
+                (currentShareSupply * elapsedTime).mulDiv($._maxPerfFeeAccrualRate, RATE_SCALE)
             );
 
             uint256 totalFee = fixedFee + perfFee;
@@ -127,8 +154,6 @@ library MachineUtils {
             $._idleTokens.add(preDepositToken);
             $._lastTotalAum = _accountingValueOf(oracleRegistry, $._accountingToken, preDepositToken, pdtBal);
         }
-
-        $._lastGlobalAccountingTime = block.timestamp;
     }
 
     /// @dev Calculates the share price based on given AUM, share supply and share token decimals offset.
@@ -287,5 +312,24 @@ library MachineUtils {
         }
         uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, accountingToken);
         return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
+    }
+
+    /// @dev Checks that the relative change between two values does not exceed the maximum allowed rate over elapsed time.
+    function _checkMaxRelativeChange(
+        uint256 previousValue,
+        uint256 newValue,
+        uint256 maxPercentDeltaPerSecond,
+        uint256 elapsedTime
+    ) internal pure {
+        if (previousValue == 0) {
+            return;
+        }
+
+        uint256 absChange = previousValue > newValue ? previousValue - newValue : newValue - previousValue;
+        uint256 relChange = absChange.mulDiv(RATE_SCALE, previousValue);
+
+        if (relChange > maxPercentDeltaPerSecond.saturatingMul(elapsedTime)) {
+            revert Errors.MaxAuthorizedPriceChangeExceeded();
+        }
     }
 }
