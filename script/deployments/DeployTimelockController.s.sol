@@ -53,17 +53,12 @@ contract DeployTimelockController is Script, SortedParams, CreateXUtils {
 
         address initialAdmin = additionalCancellers.length > 0 ? deployer : address(0);
 
+        bytes memory constructorArgs =
+            abi.encode(tcParams.initialMinDelay, tcParams.initialProposers, tcParams.initialExecutors, initialAdmin);
+        bytes32 salt = keccak256(constructorArgs);
+
         deployedInstance = payable(
-            _deployCodeCreateX(
-                abi.encodePacked(
-                    type(TimelockController).creationCode,
-                    abi.encode(
-                        tcParams.initialMinDelay, tcParams.initialProposers, tcParams.initialExecutors, initialAdmin
-                    )
-                ),
-                0,
-                deployer
-            )
+            _deployCodeCreateX(abi.encodePacked(type(TimelockController).creationCode, constructorArgs), salt, deployer)
         );
 
         if (additionalCancellers.length > 0) {
