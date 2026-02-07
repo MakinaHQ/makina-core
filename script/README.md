@@ -13,12 +13,12 @@ This README outlines the steps to deploy the Makina Core contracts.
 
 ## Hub Chain Deployments
 
-Set the `HUB_INPUT_FILE` and `HUB_OUTPUT_FILE` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Ethereum Mainnet, both of these files can be named `Mainnet.json`.
+Set the `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Ethereum Mainnet, both of these files can be named `Mainnet.json`.
 
 ### Shared contracts
 
-1. Copy `script/deployments/inputs/hub-cores/TEMPLATE.json` to `script/deployments/inputs/hub-cores/{HUB_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-cores/{HUB_INPUT_FILENAME}` containing the deployed contract addresses.
+1. Copy `script/deployments/inputs/hub-cores/TEMPLATE.json` to `script/deployments/inputs/hub-cores/{HUB_CORE_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-cores/{HUB_CORE_OUTPUT_FILENAME}` containing the deployed contract addresses.
 
 ```
 forge script script/deployments/DeployHubCore.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
@@ -26,28 +26,32 @@ forge script script/deployments/DeployHubCore.s.sol --rpc-url <network-alias> --
 
 Note: This script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
 
-### Hub Machine instance
+### Strategy instances
 
-1. Copy `script/deployments/inputs/hub-machines/TEMPLATE.json` to `script/deployments/inputs/hub-machines/{HUB_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-machines/{HUB_INPUT_FILENAME}`.
+In addition to `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` set above for shared contracts deployments, set the `HUB_STRAT_INPUT_FILENAME` and `HUB_STRAT_OUTPUT_FILENAME` values in your `.env` file.
+
+#### Hub Machine instance
+
+1. Copy `script/deployments/inputs/hub-machines/TEMPLATE.json` to `script/deployments/inputs/hub-machines/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-machines/{HUB_STRAT_OUTPUT_FILENAME}`.
 
 ```
 forge script script/deployments/DeployHubMachine.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
 ```
 
-### Pre-Deposit Vault instance
+#### Pre-Deposit Vault instance
 
-1. Copy `script/deployments/inputs/pre-deposit-vaults/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-vaults/{HUB_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-vaults/{HUB_INPUT_FILENAME}`.
+1. Copy `script/deployments/inputs/pre-deposit-vaults/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-vaults/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-vaults/{HUB_STRAT_OUTPUT_FILENAME}`.
 
 ```
 forge script script/deployments/DeployPreDepositVault.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
 ```
 
-### Pre-Deposit Vault instance migration into Hub Machine instance
+#### Pre-Deposit Vault instance migration into Hub Machine instance
 
-1. Copy `script/deployments/inputs/pre-deposit-migrations/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-migrations/{HUB_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-migrations/{HUB_INPUT_FILENAME}`.
+1. Copy `script/deployments/inputs/pre-deposit-migrations/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-migrations/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-migrations/{HUB_STRAT_OUTPUT_FILENAME}`.
 
 ```
 forge script script/deployments/DeployHubMachineFromPreDeposit.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
@@ -55,12 +59,12 @@ forge script script/deployments/DeployHubMachineFromPreDeposit.s.sol --rpc-url <
 
 ## Spoke Chain Deployments
 
-Set the `SPOKE_INPUT_FILE` and `SPOKE_OUTPUT_FILE` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Base Mainnet, both of these files can be named `Base.json`.
+Set the `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Base Mainnet, both of these files can be named `Base.json`.
 
 ### Shared contracts
 
-1. Copy `script/deployments/inputs/spoke-cores/TEMPLATE.json` to `script/deployments/inputs/spoke-cores/{SPOKE_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-cores/{SPOKE_INPUT_FILENAME}`.
+1. Copy `script/deployments/inputs/spoke-cores/TEMPLATE.json` to `script/deployments/inputs/spoke-cores/{SPOKE_CORE_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-cores/{SPOKE_CORE_OUTPUT_FILENAME}`.
 
 ```
 forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
@@ -68,10 +72,14 @@ forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> 
 
 Note: Same as for Hub Chain shared contacts deployment, this script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
 
-### Spoke Caliber instance
+### Strategy instances
 
-1. Copy `script/deployments/inputs/spoke-calibers/TEMPLATE.json` to `script/deployments/inputs/spoke-calibers/{SPOKE_INPUT_FILENAME}` and fill in the required variables.
-2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-calibers/{SPOKE_INPUT_FILENAME}`.
+In addition to `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` set above for shared contracts deployments, set the `SPOKE_STRAT_INPUT_FILENAME` and `SPOKE_STRAT_OUTPUT_FILENAME` values in your `.env` file.
+
+#### Spoke Caliber instance
+
+1. Copy `script/deployments/inputs/spoke-calibers/TEMPLATE.json` to `script/deployments/inputs/spoke-calibers/{SPOKE_STRAT_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-calibers/{SPOKE_STRAT_OUTPUT_FILENAME}`.
 
 ```
 forge script script/deployments/DeploySpokeCaliber.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
