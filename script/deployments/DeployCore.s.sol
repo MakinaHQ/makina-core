@@ -14,18 +14,14 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     string public inputJson;
     string public outputPath;
 
+    AMRoleGrant public superAdminRoleGrant;
+    AMRoleGrant[] public otherRoleGrants;
     PriceFeedRoute[] public priceFeedRoutes;
     TokenToRegister[] public tokensToRegister;
     SwapperData[] public swappersData;
     BridgeData[] public bridgesData;
 
     address public deployer;
-    address public upgradeAdmin;
-    address public superAdmin;
-    address public infraSetupAdmin;
-    address public stratDeployAdmin;
-    address public stratCompSetupAdmin;
-    address public stratMgmtSetupAdmin;
 
     function run() public {
         _deploySetupBefore();
@@ -36,6 +32,17 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     function _coreSetup() public virtual {}
 
     function _deploySetupBefore() public {
+        superAdminRoleGrant = AMRoleGrant({
+            roleId: 0,
+            account: abi.decode(vm.parseJson(inputJson, ".superAdminRoleGrant.account"), (address)),
+            executionDelay: abi.decode(vm.parseJson(inputJson, ".superAdminRoleGrant.executionDelay"), (uint32))
+        });
+
+        AMRoleGrant[] memory _otherRoleGrants = abi.decode(vm.parseJson(inputJson, ".otherRoleGrants"), (AMRoleGrant[]));
+        for (uint256 i; i < _otherRoleGrants.length; i++) {
+            otherRoleGrants.push(_otherRoleGrants[i]);
+        }
+
         PriceFeedRoute[] memory _priceFeedRoutes =
             abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
         for (uint256 i; i < _priceFeedRoutes.length; i++) {
@@ -57,13 +64,6 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
         for (uint256 i; i < _bridgesData.length; i++) {
             bridgesData.push(_bridgesData[i]);
         }
-
-        upgradeAdmin = abi.decode(vm.parseJson(inputJson, ".upgradeAdmin"), (address));
-        superAdmin = abi.decode(vm.parseJson(inputJson, ".superAdmin"), (address));
-        infraSetupAdmin = abi.decode(vm.parseJson(inputJson, ".infraSetupAdmin"), (address));
-        stratDeployAdmin = abi.decode(vm.parseJson(inputJson, ".stratDeployAdmin"), (address));
-        stratCompSetupAdmin = abi.decode(vm.parseJson(inputJson, ".stratCompSetupAdmin"), (address));
-        stratMgmtSetupAdmin = abi.decode(vm.parseJson(inputJson, ".stratMgmtSetupAdmin"), (address));
 
         // start broadcasting transactions
         vm.startBroadcast();

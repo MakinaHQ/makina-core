@@ -57,9 +57,13 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         vm.startPrank(address(dao));
         hubCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID,
-            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(hubCoreRegistry), address(acrossV3SpokePool)))
+            address(
+                _deployAcrossV3BridgeAdapterBeacon(
+                    address(accessManager), address(hubCoreRegistry), address(acrossV3SpokePool)
+                )
+            )
         );
-        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
         hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         config.setForeignChainSupported(SPOKE_CHAIN_ID, true);
         vm.stopPrank();

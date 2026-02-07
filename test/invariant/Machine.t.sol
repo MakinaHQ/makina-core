@@ -78,13 +78,21 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         );
         hubCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID,
-            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(hubCoreRegistry), address(acrossV3SpokePool)))
+            address(
+                _deployAcrossV3BridgeAdapterBeacon(
+                    address(accessManager), address(hubCoreRegistry), address(acrossV3SpokePool)
+                )
+            )
         );
         spokeCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID,
-            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(spokeCoreRegistry), address(acrossV3SpokePool)))
+            address(
+                _deployAcrossV3BridgeAdapterBeacon(
+                    address(accessManager), address(spokeCoreRegistry), address(acrossV3SpokePool)
+                )
+            )
         );
-        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
         hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         spokeCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         config.setForeignChainSupported(machineStore.spokeChainId(), true);

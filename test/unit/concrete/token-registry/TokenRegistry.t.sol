@@ -10,10 +10,10 @@ abstract contract TokenRegistry_Unit_Concrete_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
 
-        accessManager = _deployAccessManager(deployer, dao);
-        tokenRegistry = _deployTokenRegistry(dao, address(accessManager));
+        accessManager = _deployAccessManager(deployer, deployer);
+        tokenRegistry = _deployTokenRegistry(address(accessManager), address(accessManager));
 
         _setupTokenRegistryAMFunctionRoles(accessManager, address(tokenRegistry));
-        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
+        setupAccessManagerRolesAndOwnership();
     }
 }
