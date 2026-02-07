@@ -45,16 +45,27 @@ contract Deploy_Scripts_Test is Base_Test {
         vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
-        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
-        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+
+        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         deployTimelockController = new DeployTimelockController();
         deployHubCore = new DeployHubCore();
+        deployHubMachine = new DeployHubMachine();
+        deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
+        deployPreDepositVault = new DeployPreDepositVault();
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCaliber = new DeploySpokeCaliber();
 
         address[] memory initialExecutors = abi.decode(
             vm.parseJson(deployTimelockController.inputJson(), ".timelockControllerInitParams.initialExecutors"),
@@ -66,17 +77,38 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdminRoleGrant.account"), (address));
         assertTrue(hubSuperAdmin != address(0));
 
+        address machineMechanic = abi.decode(
+            vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams.initialMechanic"), (address)
+        );
+        assertTrue(machineMechanic != address(0));
+
+        machineMechanic = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams.initialMechanic"),
+            (address)
+        );
+        assertTrue(machineMechanic != address(0));
+
+        address pdvRiskManager = abi.decode(
+            vm.parseJson(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams.initialRiskManager"), (address)
+        );
+        assertTrue(pdvRiskManager != address(0));
+
         address spokeSuperAdmin =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".superAdminRoleGrant.account"), (address));
         assertTrue(spokeSuperAdmin != address(0));
+
+        address caliberMechanic = abi.decode(
+            vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams.initialMechanic"), (address)
+        );
+        assertTrue(caliberMechanic != address(0));
     }
 
     function testScript_DeployHubCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Core deployment
@@ -151,8 +183,10 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Core deployment
@@ -222,8 +256,10 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Core deployment
@@ -268,8 +304,10 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Core deployment
@@ -354,8 +392,8 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Spoke Core deployment
@@ -420,8 +458,10 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Spoke Core deployment

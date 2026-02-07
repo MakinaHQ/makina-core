@@ -18,8 +18,8 @@ contract DeploySpokeCore is DeployCore {
     TransparentUpgradeableProxy[] private _bridgeConfigs;
 
     constructor() {
-        string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("SPOKE_OUTPUT_FILENAME");
+        string memory inputFilename = vm.envString("SPOKE_CORE_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("SPOKE_CORE_OUTPUT_FILENAME");
 
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
