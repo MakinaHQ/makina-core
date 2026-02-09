@@ -30,6 +30,7 @@ worldchain = "${WORLDCHAIN_RPC_URL}"
 monad = "${MONAD_RPC_URL}"
 plasma = "${PLASMA_RPC_URL}"
 hyper_evm = "${HYPER_EVM_RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
 
 [etherscan]
 1 = { key = "${MAINNET_ETHERSCAN_API_KEY}", url = "${MAINNET_ETHERSCAN_API_URL}" }
@@ -43,6 +44,7 @@ hyper_evm = "${HYPER_EVM_RPC_URL}"
 143 = { key = "${MONAD_ETHERSCAN_API_KEY}", url = "${MONAD_ETHERSCAN_API_URL}" }
 9745 = { key = "${PLASMA_ETHERSCAN_API_KEY}", url = "${PLASMA_ETHERSCAN_API_URL}" }
 999 = { key = "${HYPER_EVM_ETHERSCAN_API_KEY}", url = "${HYPER_EVM_ETHERSCAN_API_URL}" }
+137 = { key = "${POLYGON_ETHERSCAN_API_KEY}", url = "${POLYGON_ETHERSCAN_API_URL}" }
 
 [fuzz]
 runs = 1024
