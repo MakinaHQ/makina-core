@@ -140,10 +140,12 @@ The protocol assumes that the input and output tokens involved in a bridge trans
 
 Contracts in this repository implement the [OpenZeppelin AccessManagerUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/manager/AccessManagerUpgradeable.sol). The Makina protocol provides an instance of `AccessManagerUpgradeable` with addresses defined by the Makina DAO, but institutions that require it can deploy machines with their own `AccessManagerUpgradeable`. See [PERMISSIONS.md](https://github.com/makinaHQ/makina-core/blob/main/PERMISSIONS.md) for full list of permissions.
 
-Roles use in makina core contracts are defined as follows:
+Roles use in Makina Core contracts are defined as follows:
 
-- `ADMIN_ROLE` - roleId `0` - the Access Manager super admin. Can grant and revoke any role. Set by default in the Access Manager constructor.
-- `INFRA_SETUP_ROLE` - roleId `1` - the address allowed to perform setup and maintenance on shared core contracts.
-- `STRATEGY_DEPLOYMENT_ROLE` - roleId `2` - the address allowed to deploy new strategies.
-- `STRATEGY_COMPONENTS_SETUP_ROLE` - roleId `3` - the address allowed to link strategy contracts together.
-- `STRATEGY_MANAGEMENT_SETUP_ROLE` - roleId `4` - the address allowed to set the entities that manage strategies.
+- `ADMIN_ROLE` - roleId `0` - Super admin of the Access Manager. Authorized to perform Access Manager configuration actions.
+- `INFRA_CONFIG_ROLE` - roleId `1` - Authorized to configure shared core contracts.
+- `STRATEGY_DEPLOYMENT_ROLE` - roleId `2` - Authorized to deploy new strategies.
+- `STRATEGY_COMPONENTS_SETUP_ROLE` - roleId `3` - Authorized to link strategy contracts together.
+- `STRATEGY_MANAGEMENT_CONFIG_ROLE` - roleId `4` - Authorized to designate the entities responsible for managing strategies.
+- `INFRA_UPGRADE_ROLE` - roleId `5` - Authorized to upgrade proxys and beacons, and register contracts in the core registry.
+- `GUARDIAN_ROLE` - roleId `6` - Authorized to cancel operations scheduled with the roles above.

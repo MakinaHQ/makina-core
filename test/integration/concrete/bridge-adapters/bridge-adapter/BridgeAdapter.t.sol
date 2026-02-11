@@ -37,9 +37,13 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
         token2 = new MockERC20("Token2", "T2", 18);
         token3 = new MockERC20("Token3", "T3", 18);
 
-        accessManager = _deployAccessManager(dao, dao);
+        accessManager = _deployAccessManager(deployer, deployer);
         coreRegistry = ICoreRegistry(
-            address(_deployHubCoreRegistry(dao, address(0), address(0), address(0), address(accessManager)))
+            address(
+                _deployHubCoreRegistry(
+                    address(accessManager), address(0), address(0), address(0), address(accessManager)
+                )
+            )
         );
     }
 

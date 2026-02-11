@@ -1,10 +1,35 @@
 {
-  "upgradeAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "superAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "infraSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "stratDeployAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "stratCompSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
-  "stratMgmtSetupAdmin": "0xad60446470333ad23bececceda26071bb245ef6f",
+  "superAdminRoleGrant": {
+    "account": "0x0000000000000000000000000000000000000DA0",
+    "executionDelay": 86400
+  },
+  "otherRoleGrants": [
+    {
+      "roleId": 1,
+      "account": "0x0000000000000000000000000000000000000DA0",
+      "executionDelay": 60
+    },
+    {
+      "roleId": 2,
+      "account": "0x0000000000000000000000000000000000000ZA9",
+      "executionDelay": 0
+    },
+    {
+      "roleId": 3,
+      "account": "0x0000000000000000000000000000000000000DA0",
+      "executionDelay": 10
+    },
+    {
+      "roleId": 4,
+      "account": "0x0000000000000000000000000000000000000DA0",
+      "executionDelay": 3600
+    },
+    {
+      "roleId": 5,
+      "account": "0x000000000000000000000000000000000000005C",
+      "executionDelay": 0
+    }
+  ],
   "hubChainId": 1,
   "priceFeedRoutes": [
     {

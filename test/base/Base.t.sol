@@ -23,6 +23,7 @@ import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
+import {Roles} from "../utils/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
@@ -55,6 +56,25 @@ abstract contract Base_Test is Base, Constants, Test {
         riskManager = makeAddr("RiskManager");
         riskManagerTimelock = makeAddr("RiskManagerTimelock");
     }
+
+    function setupAccessManagerRoles() public {
+        // Grant roles to the relevant accounts
+        accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
+        accessManager.grantRole(Roles.INFRA_CONFIG_ROLE, dao, 0);
+        accessManager.grantRole(Roles.STRATEGY_DEPLOYMENT_ROLE, dao, 0);
+        accessManager.grantRole(Roles.STRATEGY_COMPONENTS_SETUP_ROLE, dao, 0);
+        accessManager.grantRole(Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE, dao, 0);
+        accessManager.grantRole(Roles.INFRA_UPGRADE_ROLE, dao, 0);
+        accessManager.grantRole(Roles.GUARDIAN_ROLE, securityCouncil, 0);
+
+        // Revoke roles from the deployer
+        accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
+    }
+
+    function setupAccessManagerRolesAndOwnership() public {
+        setupAccessManagerRoles();
+        transferAccessManagerOwnership(accessManager, vm);
+    }
 }
 
 abstract contract Base_Hub_Test is Base_Test {
@@ -76,7 +96,7 @@ abstract contract Base_Hub_Test is Base_Test {
         hubChainId = block.chainid;
         _wormholeSetup();
 
-        HubCore memory deployment = deployHubCore(deployer, dao, address(wormhole));
+        HubCore memory deployment = deployHubCore(deployer, address(wormhole));
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
@@ -89,8 +109,9 @@ abstract contract Base_Hub_Test is Base_Test {
         preDepositVaultBeacon = deployment.preDepositVaultBeacon;
 
         setupHubCoreRegistry(deployment);
-        setupHubCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
+        setupHubCoreAMFunctionRoles(deployment, vm);
+
+        setupAccessManagerRolesAndOwnership();
     }
 
     function _wormholeSetup() public {
@@ -152,7 +173,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         Base_Test.setUp();
         hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
 
-        SpokeCore memory deployment = deploySpokeCore(deployer, dao, hubChainId);
+        SpokeCore memory deployment = deploySpokeCore(deployer, hubChainId);
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         tokenRegistry = deployment.tokenRegistry;
@@ -163,8 +184,9 @@ abstract contract Base_Spoke_Test is Base_Test {
         caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
         setupSpokeCoreRegistry(deployment);
-        setupSpokeCoreAMFunctionRoles(deployment);
-        setupAccessManagerRoles(accessManager, dao, dao, dao, dao, dao, deployer);
+        setupSpokeCoreAMFunctionRoles(deployment, vm);
+
+        setupAccessManagerRolesAndOwnership();
     }
 
     function _deployCaliber(
@@ -208,12 +230,15 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
         Base_Test.setUp();
         Base_Hub_Test.setUp();
 
-        spokeCoreRegistry =
-            _deploySpokeCoreRegistry(dao, address(oracleRegistry), address(tokenRegistry), address(accessManager));
+        spokeCoreRegistry = _deploySpokeCoreRegistry(
+            address(accessManager), address(oracleRegistry), address(tokenRegistry), address(accessManager)
+        );
 
-        spokeCoreFactory = _deploySpokeCoreFactory(dao, address(spokeCoreRegistry), address(accessManager));
+        spokeCoreFactory =
+            _deploySpokeCoreFactory(address(accessManager), address(spokeCoreRegistry), address(accessManager));
 
-        caliberMailboxBeacon = _deployCaliberMailboxBeacon(dao, address(spokeCoreRegistry), hubChainId);
+        caliberMailboxBeacon =
+            _deployCaliberMailboxBeacon(address(accessManager), address(spokeCoreRegistry), hubChainId);
 
         vm.startPrank(dao);
         setupSpokeCoreRegistry(

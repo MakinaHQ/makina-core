@@ -62,10 +62,12 @@ contract Deploy_Scripts_Test is Base_Test {
         );
         assertTrue(initialExecutors.length != 0);
 
-        address hubSuperAdmin = abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdmin"), (address));
+        address hubSuperAdmin =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdminRoleGrant.account"), (address));
         assertTrue(hubSuperAdmin != address(0));
 
-        address spokeSuperAdmin = abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".superAdmin"), (address));
+        address spokeSuperAdmin =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".superAdminRoleGrant.account"), (address));
         assertTrue(spokeSuperAdmin != address(0));
     }
 

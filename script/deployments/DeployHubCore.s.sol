@@ -40,28 +40,20 @@ contract DeployHubCore is DeployCore {
     function _coreSetup() public override {
         address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
         uint256[] memory supportedChains = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
-        _core = deployHubCore(deployer, upgradeAdmin, wormhole);
+        _core = deployHubCore(deployer, wormhole);
 
         setupHubCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
         setupChainRegistry(_core.chainRegistry, supportedChains);
         setupSwapModule(_core.swapModule, swappersData);
-        (_bridgeAdapterBeacons, _bridgeConfigs) = deployAndSetupBridges(
-            upgradeAdmin, ICoreRegistry(address(_core.hubCoreRegistry)), _core.accessManager, bridgesData
-        );
+        (_bridgeAdapterBeacons, _bridgeConfigs) =
+            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData, vm);
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            setupHubCoreAMFunctionRoles(_core);
-            setupAccessManagerRoles(
-                _core.accessManager,
-                superAdmin,
-                infraSetupAdmin,
-                stratDeployAdmin,
-                stratCompSetupAdmin,
-                stratMgmtSetupAdmin,
-                deployer
-            );
+            setupHubCoreAMFunctionRoles(_core, vm);
+            setupAccessManagerRoles(_core.accessManager, superAdminRoleGrant, otherRoleGrants, deployer);
+            transferAccessManagerOwnership(_core.accessManager, vm);
         }
     }
 

@@ -28,10 +28,10 @@ abstract contract LayerZeroV2BridgeConfig_Unit_Concrete_Test is Base_Test {
         mockOftAdapter = new OFTAdapterMock(address(baseToken), address(mockLzEndpointV2), address(this));
         mockOft = new OFTMock("Mock OFT", "MOFT", address(mockLzEndpointV2), address(this));
 
-        accessManager = _deployAccessManager(deployer, dao);
-        layerZeroV2BridgeConfig = _deployLayerZeroV2BridgeConfig(dao, address(accessManager));
+        accessManager = _deployAccessManager(deployer, deployer);
+        layerZeroV2BridgeConfig = _deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager));
 
-        _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(layerZeroV2BridgeConfig));
-        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
+        _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(layerZeroV2BridgeConfig), vm);
+        setupAccessManagerRolesAndOwnership();
     }
 }

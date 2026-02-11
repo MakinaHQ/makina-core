@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
-import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 import {AcrossV3BridgeAdapter} from "../../src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {AcrossV3BridgeConfig} from "../../src/bridge/configs/AcrossV3BridgeConfig.sol";
@@ -96,29 +100,35 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         address receiveSource;
     }
 
+    struct AMRoleGrant {
+        uint64 roleId;
+        address account;
+        uint32 executionDelay;
+    }
+
     ///
     /// CORE DEPLOYMENTS
     ///
 
-    function deployHubCore(address initialAMAdmin, address upgradeAdmin, address wormhole)
-        internal
-        returns (HubCore memory deployment)
-    {
+    function deployHubCore(address initialAMAdmin, address wormhole) internal returns (HubCore memory deployment) {
         // Access Manager
-        deployment.accessManager = _deployAccessManager(initialAMAdmin, upgradeAdmin);
+        deployment.accessManager = _deployAccessManager(initialAMAdmin, initialAMAdmin);
 
         // Oracle Registry
-        deployment.oracleRegistry = _deployOracleRegistry(upgradeAdmin, address(deployment.accessManager));
+        deployment.oracleRegistry =
+            _deployOracleRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
         // Token Registry
-        deployment.tokenRegistry = _deployTokenRegistry(upgradeAdmin, address(deployment.accessManager));
+        deployment.tokenRegistry =
+            _deployTokenRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
         // Chain Registry
-        deployment.chainRegistry = _deployChainRegistry(upgradeAdmin, address(deployment.accessManager));
+        deployment.chainRegistry =
+            _deployChainRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
         // Hub Core Registry
         deployment.hubCoreRegistry = _deployHubCoreRegistry(
-            upgradeAdmin,
+            address(deployment.accessManager),
             address(deployment.oracleRegistry),
             address(deployment.tokenRegistry),
             address(deployment.chainRegistry),
@@ -126,43 +136,49 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         );
 
         // Hub Core Factory
-        deployment.hubCoreFactory =
-            _deployHubCoreFactory(upgradeAdmin, address(deployment.hubCoreRegistry), address(deployment.accessManager));
+        deployment.hubCoreFactory = _deployHubCoreFactory(
+            address(deployment.accessManager), address(deployment.hubCoreRegistry), address(deployment.accessManager)
+        );
 
         // Swap Module
-        deployment.swapModule =
-            _deploySwapModule(upgradeAdmin, address(deployment.hubCoreRegistry), address(deployment.accessManager));
+        deployment.swapModule = _deploySwapModule(
+            address(deployment.accessManager), address(deployment.hubCoreRegistry), address(deployment.accessManager)
+        );
 
         // Weiroll VM
         address weirollVM = _deployWeirollVM();
 
         // Caliber Beacon
-        deployment.caliberBeacon = _deployCaliberBeacon(upgradeAdmin, address(deployment.hubCoreRegistry), weirollVM);
+        deployment.caliberBeacon =
+            _deployCaliberBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry), weirollVM);
 
         // Machine Beacon
-        deployment.machineBeacon = _deployMachineBeacon(upgradeAdmin, address(deployment.hubCoreRegistry), wormhole);
+        deployment.machineBeacon =
+            _deployMachineBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry), wormhole);
 
         // PreDeposit Vault Beacon
         deployment.preDepositVaultBeacon =
-            _deployPreDepositVaultBeacon(upgradeAdmin, address(deployment.hubCoreRegistry));
+            _deployPreDepositVaultBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry));
     }
 
-    function deploySpokeCore(address initialAMAdmin, address upgradeAdmin, uint256 hubChainId)
+    function deploySpokeCore(address initialAMAdmin, uint256 hubChainId)
         internal
         returns (SpokeCore memory deployment)
     {
         // Access Manager
-        deployment.accessManager = _deployAccessManager(initialAMAdmin, upgradeAdmin);
+        deployment.accessManager = _deployAccessManager(initialAMAdmin, initialAMAdmin);
 
         // Oracle Registry
-        deployment.oracleRegistry = _deployOracleRegistry(upgradeAdmin, address(deployment.accessManager));
+        deployment.oracleRegistry =
+            _deployOracleRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
         // Token Registry
-        deployment.tokenRegistry = _deployTokenRegistry(upgradeAdmin, address(deployment.accessManager));
+        deployment.tokenRegistry =
+            _deployTokenRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
         // Spoke Core Registry
         deployment.spokeCoreRegistry = _deploySpokeCoreRegistry(
-            upgradeAdmin,
+            address(deployment.accessManager),
             address(deployment.oracleRegistry),
             address(deployment.tokenRegistry),
             address(deployment.accessManager)
@@ -170,22 +186,25 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
 
         // Spoke Core Factory
         deployment.spokeCoreFactory = _deploySpokeCoreFactory(
-            upgradeAdmin, address(deployment.spokeCoreRegistry), address(deployment.accessManager)
+            address(deployment.accessManager), address(deployment.spokeCoreRegistry), address(deployment.accessManager)
         );
 
         // Swap Module
-        deployment.swapModule =
-            _deploySwapModule(upgradeAdmin, address(deployment.spokeCoreRegistry), address(deployment.accessManager));
+        deployment.swapModule = _deploySwapModule(
+            address(deployment.accessManager), address(deployment.spokeCoreRegistry), address(deployment.accessManager)
+        );
 
         // Weiroll VM
         address weirollVM = _deployWeirollVM();
 
         // Caliber Beacon
-        deployment.caliberBeacon = _deployCaliberBeacon(upgradeAdmin, address(deployment.spokeCoreRegistry), weirollVM);
+        deployment.caliberBeacon =
+            _deployCaliberBeacon(address(deployment.accessManager), address(deployment.spokeCoreRegistry), weirollVM);
 
         // Caliber Mailbox Beacon
-        deployment.caliberMailboxBeacon =
-            _deployCaliberMailboxBeacon(upgradeAdmin, address(deployment.spokeCoreRegistry), hubChainId);
+        deployment.caliberMailboxBeacon = _deployCaliberMailboxBeacon(
+            address(deployment.accessManager), address(deployment.spokeCoreRegistry), hubChainId
+        );
     }
 
     ///
@@ -256,12 +275,12 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     ///
 
     function deployAndSetupBridges(
-        address proxyOwner,
-        ICoreRegistry coreRegistry,
         AccessManagerUpgradeable accessManager,
-        BridgeData[] memory bridgesData
+        ICoreRegistry coreRegistry,
+        BridgeData[] memory bridgesData,
+        Vm vm
     )
-        public
+        internal
         returns (UpgradeableBeacon[] memory bridgeAdapterBeacons, TransparentUpgradeableProxy[] memory bridgeConfigs)
     {
         bridgeConfigs = new TransparentUpgradeableProxy[](bridgesData.length);
@@ -272,20 +291,20 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
             UpgradeableBeacon baBeacon;
             if (bridgeId == ACROSS_V3_BRIDGE_ID) {
                 baBeacon = _deployAcrossV3BridgeAdapterBeacon(
-                    proxyOwner, address(coreRegistry), bridgesData[i].executionTarget
+                    address(accessManager), address(coreRegistry), bridgesData[i].executionTarget
                 );
                 bc = TransparentUpgradeableProxy(
-                    payable(address(_deployAcrossV3BridgeConfig(proxyOwner, address(accessManager))))
+                    payable(address(_deployAcrossV3BridgeConfig(address(accessManager), address(accessManager))))
                 );
-                _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
+                _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(bc), vm);
             } else if (bridgeId == LAYER_ZERO_V2_BRIDGE_ID) {
                 baBeacon = _deployLayerZeroV2BridgeAdapterBeacon(
-                    proxyOwner, address(coreRegistry), bridgesData[i].receiveSource
+                    address(accessManager), address(coreRegistry), bridgesData[i].receiveSource
                 );
                 bc = TransparentUpgradeableProxy(
-                    payable(address(_deployLayerZeroV2BridgeConfig(proxyOwner, address(accessManager))))
+                    payable(address(_deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager))))
                 );
-                _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
+                _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(bc), vm);
             } else {
                 revert("Bridge not supported");
             }
@@ -300,29 +319,73 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     /// ACCESS MANAGER SETUP
     ///
 
+    function transferAccessManagerOwnership(AccessManagerUpgradeable accessManager, Vm vm) public {
+        Ownable(_getProxyAdmin(address(accessManager), vm)).transferOwnership(address(accessManager));
+    }
+
     function setupAccessManagerRoles(
         AccessManagerUpgradeable accessManager,
-        address superAdmin,
-        address infraSetupAdmin,
-        address stratDeployAdmin,
-        address stratCompSetupAdmin,
-        address stratMgmtSetupAdmin,
+        AMRoleGrant memory superAdminRoleGrant,
+        AMRoleGrant[] memory otherRoleGrants,
         address deployer
     ) public {
-        // Grant roles to the relevant accounts
-        accessManager.grantRole(accessManager.ADMIN_ROLE(), superAdmin, 0);
-        accessManager.grantRole(Roles.INFRA_SETUP_ROLE, infraSetupAdmin, 0);
-        accessManager.grantRole(Roles.STRATEGY_DEPLOYMENT_ROLE, stratDeployAdmin, 0);
-        accessManager.grantRole(Roles.STRATEGY_COMPONENTS_SETUP_ROLE, stratCompSetupAdmin, 0);
-        accessManager.grantRole(Roles.STRATEGY_MANAGEMENT_SETUP_ROLE, stratMgmtSetupAdmin, 0);
+        // Grant super admin role
+        accessManager.grantRole(
+            accessManager.ADMIN_ROLE(), superAdminRoleGrant.account, superAdminRoleGrant.executionDelay
+        );
+
+        // Grant other roles
+        for (uint256 i; i < otherRoleGrants.length; i++) {
+            accessManager.grantRole(
+                otherRoleGrants[i].roleId, otherRoleGrants[i].account, otherRoleGrants[i].executionDelay
+            );
+        }
 
         // Revoke roles from the deployer
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
     }
 
-    function setupHubCoreAMFunctionRoles(HubCore memory deployment) public {
+    function setupHubCoreAMFunctionRoles(HubCore memory deployment, Vm vm) public {
+        // Transparent Proxy Admins
+        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
+        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.accessManager), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.hubCoreRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.oracleRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.tokenRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.chainRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.swapModule), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.hubCoreFactory), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
+        // Upgradeable Beacons
+        bytes4[] memory beaconSelectors = new bytes4[](1);
+        beaconSelectors[0] = UpgradeableBeacon.upgradeTo.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.machineBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.caliberBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.preDepositVaultBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
         // HubCoreRegistry
-        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](11);
+        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](12);
         hubCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
         hubCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
         hubCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
@@ -335,11 +398,8 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         hubCoreRegistrySelectors[9] = IHubCoreRegistry.setMachineBeacon.selector;
         hubCoreRegistrySelectors[10] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
         deployment.accessManager.setTargetFunctionRole(
-            address(deployment.hubCoreRegistry), hubCoreRegistrySelectors, Roles.INFRA_SETUP_ROLE
+            address(deployment.hubCoreRegistry), hubCoreRegistrySelectors, Roles.INFRA_UPGRADE_ROLE
         );
-
-        // ChainRegistry
-        _setupChainRegistryAMFunctionRoles(deployment.accessManager, address(deployment.chainRegistry));
 
         // OracleRegistry
         _setupOracleRegistryAMFunctionRoles(deployment.accessManager, address(deployment.oracleRegistry));
@@ -347,20 +407,49 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         // TokenRegistry
         _setupTokenRegistryAMFunctionRoles(deployment.accessManager, address(deployment.tokenRegistry));
 
-        // HubCoreFactory
-        bytes4[] memory hubCoreFactorySelectors = new bytes4[](3);
-        hubCoreFactorySelectors[0] = IHubCoreFactory.createPreDepositVault.selector;
-        hubCoreFactorySelectors[1] = IHubCoreFactory.createMachineFromPreDeposit.selector;
-        hubCoreFactorySelectors[2] = IHubCoreFactory.createMachine.selector;
-        deployment.accessManager.setTargetFunctionRole(
-            address(deployment.hubCoreFactory), hubCoreFactorySelectors, Roles.STRATEGY_DEPLOYMENT_ROLE
-        );
+        // ChainRegistry
+        _setupChainRegistryAMFunctionRoles(deployment.accessManager, address(deployment.chainRegistry));
 
         // SwapModule
         _setupSwapModuleAMFunctionRoles(deployment.accessManager, address(deployment.swapModule));
+
+        // HubCoreFactory
+        _setupHubCoreFactoryAMFunctionRoles(deployment.accessManager, address(deployment.hubCoreFactory));
     }
 
-    function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment) public {
+    function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment, Vm vm) public {
+        // Transparent Proxy Admins
+        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
+        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.accessManager), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.spokeCoreRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.oracleRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.tokenRegistry), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.swapModule), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            _getProxyAdmin(address(deployment.spokeCoreFactory), vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
+        // Upgradeable Beacons
+        bytes4[] memory beaconSelectors = new bytes4[](1);
+        beaconSelectors[0] = UpgradeableBeacon.upgradeTo.selector;
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.caliberMailboxBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+        deployment.accessManager.setTargetFunctionRole(
+            address(deployment.caliberBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
         // SpokeCoreRegistry
         bytes4[] memory spokeCoreRegistrySelectors = new bytes4[](9);
         spokeCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
@@ -373,14 +462,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         spokeCoreRegistrySelectors[7] = ICoreRegistry.setBridgeConfig.selector;
         spokeCoreRegistrySelectors[8] = ISpokeCoreRegistry.setCaliberMailboxBeacon.selector;
         deployment.accessManager.setTargetFunctionRole(
-            address(deployment.spokeCoreRegistry), spokeCoreRegistrySelectors, Roles.INFRA_SETUP_ROLE
-        );
-
-        // SpokeCoreFactory
-        bytes4[] memory spokeCoreFactorySelectors = new bytes4[](1);
-        spokeCoreFactorySelectors[0] = ISpokeCoreFactory.createCaliber.selector;
-        deployment.accessManager.setTargetFunctionRole(
-            address(deployment.spokeCoreFactory), spokeCoreFactorySelectors, Roles.STRATEGY_DEPLOYMENT_ROLE
+            address(deployment.spokeCoreRegistry), spokeCoreRegistrySelectors, Roles.INFRA_UPGRADE_ROLE
         );
 
         // OracleRegistry
@@ -391,6 +473,9 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
 
         // SwapModule
         _setupSwapModuleAMFunctionRoles(deployment.accessManager, address(deployment.swapModule));
+
+        // SpokeCoreFactory
+        _setupSpokeCoreFactoryAMFunctionRoles(deployment.accessManager, address(deployment.spokeCoreFactory));
     }
 
     ///
@@ -403,7 +488,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         bytes4[] memory oracleRegistrySelectors = new bytes4[](2);
         oracleRegistrySelectors[0] = IOracleRegistry.setFeedRoute.selector;
         oracleRegistrySelectors[1] = IOracleRegistry.setFeedStaleThreshold.selector;
-        accessManager.setTargetFunctionRole(_oracleRegistry, oracleRegistrySelectors, Roles.INFRA_SETUP_ROLE);
+        accessManager.setTargetFunctionRole(_oracleRegistry, oracleRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
     }
 
     function _setupTokenRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _tokenRegistry)
@@ -411,13 +496,13 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     {
         bytes4[] memory tokenRegistrySelectors = new bytes4[](1);
         tokenRegistrySelectors[0] = ITokenRegistry.setToken.selector;
-        accessManager.setTargetFunctionRole(_tokenRegistry, tokenRegistrySelectors, Roles.INFRA_SETUP_ROLE);
+        accessManager.setTargetFunctionRole(_tokenRegistry, tokenRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
     }
 
     function _setupSwapModuleAMFunctionRoles(AccessManagerUpgradeable accessManager, address _swapModule) internal {
         bytes4[] memory swapModuleSelectors = new bytes4[](1);
         swapModuleSelectors[0] = ISwapModule.setSwapperTargets.selector;
-        accessManager.setTargetFunctionRole(_swapModule, swapModuleSelectors, Roles.INFRA_SETUP_ROLE);
+        accessManager.setTargetFunctionRole(_swapModule, swapModuleSelectors, Roles.INFRA_CONFIG_ROLE);
     }
 
     function _setupChainRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _chainRegistry)
@@ -425,7 +510,63 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     {
         bytes4[] memory chainRegistrySelectors = new bytes4[](1);
         chainRegistrySelectors[0] = IChainRegistry.setChainIds.selector;
-        accessManager.setTargetFunctionRole(_chainRegistry, chainRegistrySelectors, Roles.INFRA_SETUP_ROLE);
+        accessManager.setTargetFunctionRole(_chainRegistry, chainRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupHubCoreFactoryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _hubCoreFactory)
+        internal
+    {
+        bytes4[] memory hubCoreFactorySelectors = new bytes4[](3);
+        hubCoreFactorySelectors[0] = IHubCoreFactory.createPreDepositVault.selector;
+        hubCoreFactorySelectors[1] = IHubCoreFactory.createMachineFromPreDeposit.selector;
+        hubCoreFactorySelectors[2] = IHubCoreFactory.createMachine.selector;
+        accessManager.setTargetFunctionRole(_hubCoreFactory, hubCoreFactorySelectors, Roles.STRATEGY_DEPLOYMENT_ROLE);
+    }
+
+    function _setupSpokeCoreFactoryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _spokeCoreFactory)
+        internal
+    {
+        bytes4[] memory spokeCoreFactorySelectors = new bytes4[](1);
+        spokeCoreFactorySelectors[0] = ISpokeCoreFactory.createCaliber.selector;
+        accessManager.setTargetFunctionRole(
+            _spokeCoreFactory, spokeCoreFactorySelectors, Roles.STRATEGY_DEPLOYMENT_ROLE
+        );
+    }
+
+    function _setupAcrossV3BridgeConfigAMFunctionRoles(address _accessManager, address _acrossV3BridgeConfig, Vm vm)
+        internal
+    {
+        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
+        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _getProxyAdmin(_acrossV3BridgeConfig, vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
+        bytes4[] memory acrossV3BridgeConfigSelectors = new bytes4[](1);
+        acrossV3BridgeConfigSelectors[0] = IAcrossV3BridgeConfig.setForeignChainSupported.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _acrossV3BridgeConfig, acrossV3BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE
+        );
+    }
+
+    function _setupLayerZeroV2BridgeConfigAMFunctionRoles(
+        address _accessManager,
+        address _layerZeroV2BridgeConfig,
+        Vm vm
+    ) internal {
+        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
+        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _getProxyAdmin(_layerZeroV2BridgeConfig, vm), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
+        bytes4[] memory layerZeroV2BridgeConfigSelectors = new bytes4[](3);
+        layerZeroV2BridgeConfigSelectors[0] = ILayerZeroV2BridgeConfig.setLzChainId.selector;
+        layerZeroV2BridgeConfigSelectors[1] = ILayerZeroV2BridgeConfig.setOft.selector;
+        layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _layerZeroV2BridgeConfig, layerZeroV2BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE
+        );
     }
 
     ///
@@ -436,7 +577,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         bytes4[] memory mgmtSetupSelectors = new bytes4[](1);
         mgmtSetupSelectors[0] = IMakinaGovernable.setRiskManager.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
-            _preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
+            _preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
     }
 
@@ -461,7 +602,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
-            _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
+            _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
     }
 
@@ -482,7 +623,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
-            _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
+            _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
     }
 
@@ -491,35 +632,18 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         mgmtSetupSelectors[0] = ICaliber.addInstrRootGuardian.selector;
         mgmtSetupSelectors[1] = ICaliber.removeInstrRootGuardian.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
-            _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_SETUP_ROLE
-        );
-    }
-
-    function _setupAcrossV3BridgeConfigAMFunctionRoles(address _accessManager, address _acrossV3BridgeConfig)
-        internal
-    {
-        bytes4[] memory acrossV3BridgeConfigSelectors = new bytes4[](1);
-        acrossV3BridgeConfigSelectors[0] = IAcrossV3BridgeConfig.setForeignChainSupported.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _acrossV3BridgeConfig, acrossV3BridgeConfigSelectors, Roles.INFRA_SETUP_ROLE
-        );
-    }
-
-    function _setupLayerZeroV2BridgeConfigAMFunctionRoles(address _accessManager, address _layerZeroV2BridgeConfig)
-        internal
-    {
-        bytes4[] memory layerZeroV2BridgeConfigSelectors = new bytes4[](3);
-        layerZeroV2BridgeConfigSelectors[0] = ILayerZeroV2BridgeConfig.setLzChainId.selector;
-        layerZeroV2BridgeConfigSelectors[1] = ILayerZeroV2BridgeConfig.setOft.selector;
-        layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _layerZeroV2BridgeConfig, layerZeroV2BridgeConfigSelectors, Roles.INFRA_SETUP_ROLE
+            _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
     }
 
     ///
     /// DEPLOYMENT UTILS
     ///
+
+    function _getProxyAdmin(address _transparentProxy, Vm vm) internal view returns (address) {
+        bytes32 ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+        return address(uint160(uint256(vm.load(_transparentProxy, ADMIN_SLOT))));
+    }
 
     function _deployAccessManager(address _initialAMAdmin, address _proxyOwner)
         internal

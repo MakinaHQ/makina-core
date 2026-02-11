@@ -51,19 +51,22 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
         mockOft = new MockOFT("Mock OFT", "MOFT", address(mockLzEndpointV2), address(this));
         mockOft.setPeer(LAYER_ZERO_V2_SPOKE_CHAIN_ID, OFTComposeMsgCodec.addressToBytes32(address(0x2)));
 
-        lzConfig = _deployLayerZeroV2BridgeConfig(dao, address(accessManager));
+        address beacon = address(
+            _deployLayerZeroV2BridgeAdapterBeacon(
+                address(accessManager), address(coreRegistry), address(mockLzEndpointV2)
+            )
+        );
 
-        vm.startPrank(dao);
+        lzConfig = _deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager));
+        ICoreRegistry(coreRegistry).setBridgeConfig(LAYER_ZERO_V2_BRIDGE_ID, address(lzConfig));
         lzConfig.setLzChainId(chainId2, LAYER_ZERO_V2_SPOKE_CHAIN_ID);
         lzConfig.setOft(address(mockOftAdapter));
         lzConfig.setOft(address(mockOft));
         lzConfig.setForeignToken(address(token1), chainId2, address(token2));
         lzConfig.setForeignToken(address(mockOft), chainId2, address(token3));
-        ICoreRegistry(coreRegistry).setBridgeConfig(LAYER_ZERO_V2_BRIDGE_ID, address(lzConfig));
-        vm.stopPrank();
 
-        address beacon =
-            address(_deployLayerZeroV2BridgeAdapterBeacon(dao, address(coreRegistry), address(mockLzEndpointV2)));
+        setupAccessManagerRolesAndOwnership();
+
         bridgeAdapter1 = IBridgeAdapter(
             address(
                 new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(bridgeController1), "")))
