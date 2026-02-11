@@ -16,7 +16,7 @@ abstract contract LayerZeroV2BridgeConfig_Unit_Concrete_Test is Base_Test {
     OFTAdapterMock internal mockOftAdapter;
     OFTMock internal mockOft;
 
-    LayerZeroV2BridgeConfig public layerZeroV2BridgeConfig;
+    LayerZeroV2BridgeConfig internal layerZeroV2BridgeConfig;
 
     function setUp() public virtual override {
         Base_Test.setUp();

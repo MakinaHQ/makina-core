@@ -5,11 +5,11 @@ abstract contract IntegrationIds {
     /*//////////////////////////////////////////////////////////////////////////
                                 SWAPPER IDS
     //////////////////////////////////////////////////////////////////////////*/
-    uint16 public constant ZEROX_SWAPPER_ID = 1;
+    uint16 internal constant ZEROX_SWAPPER_ID = 1;
 
     /*//////////////////////////////////////////////////////////////////////////
                                 BRIDGE IDS
     //////////////////////////////////////////////////////////////////////////*/
-    uint16 public constant ACROSS_V3_BRIDGE_ID = 1;
-    uint16 public constant LAYER_ZERO_V2_BRIDGE_ID = 2;
+    uint16 internal constant ACROSS_V3_BRIDGE_ID = 1;
+    uint16 internal constant LAYER_ZERO_V2_BRIDGE_ID = 2;
 }

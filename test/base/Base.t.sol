@@ -31,22 +31,22 @@ import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 import {Base} from "./Base.sol";
 
 abstract contract Base_Test is Base, Constants, Test {
-    address public deployer;
+    address internal deployer;
 
-    uint256 public hubChainId;
+    uint256 internal hubChainId;
 
-    address public dao;
-    address public mechanic;
-    address public securityCouncil;
-    address public riskManager;
-    address public riskManagerTimelock;
+    address internal dao;
+    address internal mechanic;
+    address internal securityCouncil;
+    address internal riskManager;
+    address internal riskManagerTimelock;
 
-    AccessManagerUpgradeable public accessManager;
-    OracleRegistry public oracleRegistry;
-    TokenRegistry public tokenRegistry;
-    SwapModule public swapModule;
+    AccessManagerUpgradeable internal accessManager;
+    OracleRegistry internal oracleRegistry;
+    TokenRegistry internal tokenRegistry;
+    SwapModule internal swapModule;
 
-    UpgradeableBeacon public caliberBeacon;
+    UpgradeableBeacon internal caliberBeacon;
 
     function setUp() public virtual {
         deployer = address(this);
@@ -57,7 +57,7 @@ abstract contract Base_Test is Base, Constants, Test {
         riskManagerTimelock = makeAddr("RiskManagerTimelock");
     }
 
-    function setupAccessManagerRoles() public {
+    function setupAccessManagerRoles() internal {
         // Grant roles to the relevant accounts
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
         accessManager.grantRole(Roles.INFRA_CONFIG_ROLE, dao, 0);
@@ -71,30 +71,30 @@ abstract contract Base_Test is Base, Constants, Test {
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
     }
 
-    function setupAccessManagerRolesAndOwnership() public {
+    function setupAccessManagerRolesAndOwnership() internal {
         setupAccessManagerRoles();
         transferAccessManagerOwnership(accessManager, vm);
     }
 }
 
 abstract contract Base_Hub_Test is Base_Test {
-    HubCoreRegistry public hubCoreRegistry;
-    ChainRegistry public chainRegistry;
-    HubCoreFactory public hubCoreFactory;
-    UpgradeableBeacon public machineBeacon;
-    UpgradeableBeacon public preDepositVaultBeacon;
+    HubCoreRegistry internal hubCoreRegistry;
+    ChainRegistry internal chainRegistry;
+    HubCoreFactory internal hubCoreFactory;
+    UpgradeableBeacon internal machineBeacon;
+    UpgradeableBeacon internal preDepositVaultBeacon;
 
-    IWormhole public wormhole;
+    IWormhole internal wormhole;
 
-    address public machineDepositor = makeAddr("MachineDepositor");
-    address public machineRedeemer = makeAddr("MachineRedeemer");
+    address internal machineDepositor = makeAddr("MachineDepositor");
+    address internal machineRedeemer = makeAddr("MachineRedeemer");
 
-    MockFeeManager public feeManager;
+    MockFeeManager internal feeManager;
 
     function setUp() public virtual override {
         Base_Test.setUp();
         hubChainId = block.chainid;
-        _wormholeSetup();
+        _setupWormhole();
 
         HubCore memory deployment = deployHubCore(deployer, address(wormhole));
         accessManager = deployment.accessManager;
@@ -114,12 +114,12 @@ abstract contract Base_Hub_Test is Base_Test {
         setupAccessManagerRolesAndOwnership();
     }
 
-    function _wormholeSetup() public {
+    function _setupWormhole() internal {
         wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
     function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)
-        public
+        internal
         returns (Machine, Caliber)
     {
         vm.prank(dao);
@@ -165,9 +165,9 @@ abstract contract Base_Hub_Test is Base_Test {
 }
 
 abstract contract Base_Spoke_Test is Base_Test {
-    SpokeCoreRegistry public spokeCoreRegistry;
-    SpokeCoreFactory public spokeCoreFactory;
-    UpgradeableBeacon public caliberMailboxBeacon;
+    SpokeCoreRegistry internal spokeCoreRegistry;
+    SpokeCoreFactory internal spokeCoreFactory;
+    UpgradeableBeacon internal caliberMailboxBeacon;
 
     function setUp() public virtual override {
         Base_Test.setUp();
@@ -194,7 +194,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         address _accountingToken,
         bytes32 _allowedInstrMerkleRoot,
         bytes32 _salt
-    ) public returns (Caliber, CaliberMailbox) {
+    ) internal returns (Caliber, CaliberMailbox) {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             spokeCoreFactory.createCaliber(

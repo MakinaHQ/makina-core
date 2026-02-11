@@ -18,10 +18,10 @@ import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    PreDepositVault public preDepositVault;
-    MachineShare public shareToken;
+    PreDepositVault internal preDepositVault;
+    MachineShare internal shareToken;
 
-    address public hubCaliberAddr;
+    address internal hubCaliberAddr;
 
     function setUp() public override {
         Machine_Integration_Concrete_Test.setUp();

@@ -11,7 +11,7 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract NotifyIncomingTransfer_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    address public hubMachineEndpoint;
+    address internal hubMachineEndpoint;
 
     function setUp() public virtual override {
         Caliber_Integration_Concrete_Test.setUp();

@@ -11,8 +11,8 @@ import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3Bridge
 contract HandleV3AcrossMessage_AcrossV3BridgeAdapter_Integration_Concrete_Test is
     AcrossV3BridgeAdapter_Integration_Concrete_Test
 {
-    AcrossV3BridgeAdapter public acrossV3BridgeAdapter1;
-    AcrossV3BridgeAdapter public acrossV3BridgeAdapter2;
+    AcrossV3BridgeAdapter internal acrossV3BridgeAdapter1;
+    AcrossV3BridgeAdapter internal acrossV3BridgeAdapter2;
 
     function setUp() public virtual override {
         AcrossV3BridgeAdapter_Integration_Concrete_Test.setUp();

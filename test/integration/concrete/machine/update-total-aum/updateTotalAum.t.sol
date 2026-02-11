@@ -1309,6 +1309,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
                 outputToken, outputAmount, address(0), encodedMessage
             );
         } else {
+            // solhint-disable-next-line gas-custom-errors
             revert("Unsupported bridge");
         }
 

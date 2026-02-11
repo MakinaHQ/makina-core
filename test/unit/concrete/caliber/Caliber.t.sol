@@ -11,7 +11,7 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
 
 abstract contract Caliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
-    bytes32 public defaultRoot;
+    bytes32 internal defaultRoot;
 
     function setUp() public virtual override {
         Unit_Concrete_Spoke_Test.setUp();

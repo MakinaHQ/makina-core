@@ -7,9 +7,9 @@ import {Errors} from "src/libraries/Errors.sol";
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
 contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_Concrete_Test {
-    IBridgeAdapter public bridgeAdapter;
+    IBridgeAdapter internal bridgeAdapter;
 
-    uint256 public transferId;
+    uint256 internal transferId;
 
     function setUp() public override {
         CaliberMailbox_Integration_Concrete_Test.setUp();

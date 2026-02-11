@@ -10,11 +10,11 @@ import {Errors} from "src/libraries/Errors.sol";
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
 contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_Concrete_Test {
-    IBridgeAdapter public bridgeAdapter;
+    IBridgeAdapter internal bridgeAdapter;
 
-    uint256 public acrossV3DepositId;
-    uint256 public transferId;
-    uint256 public inputAmount;
+    uint256 internal acrossV3DepositId;
+    uint256 internal transferId;
+    uint256 internal inputAmount;
 
     function setUp() public override {
         CaliberMailbox_Integration_Concrete_Test.setUp();

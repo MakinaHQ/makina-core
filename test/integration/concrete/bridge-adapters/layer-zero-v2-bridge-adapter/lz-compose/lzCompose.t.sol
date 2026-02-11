@@ -12,8 +12,8 @@ import {LayerZeroV2BridgeAdapter_Integration_Concrete_Test} from "../LayerZeroV2
 contract LzCompose_LayerZeroV2BridgeAdapter_Integration_Concrete_Test is
     LayerZeroV2BridgeAdapter_Integration_Concrete_Test
 {
-    LayerZeroV2BridgeAdapter public layerZeroV2BridgeAdapter1;
-    LayerZeroV2BridgeAdapter public layerZeroV2BridgeAdapter2;
+    LayerZeroV2BridgeAdapter internal layerZeroV2BridgeAdapter1;
+    LayerZeroV2BridgeAdapter internal layerZeroV2BridgeAdapter2;
 
     function setUp() public virtual override {
         LayerZeroV2BridgeAdapter_Integration_Concrete_Test.setUp();

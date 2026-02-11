@@ -87,7 +87,7 @@ abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
 
     function test_SetFlashLoanModule() public {
         address newFlashLoanModule = makeAddr("NewFlashLoanModule");
-        vm.expectEmit(true, true, false, true, address(registry));
+        vm.expectEmit(true, true, true, true, address(registry));
         emit ICoreRegistry.FlashLoanModuleChanged(address(0), newFlashLoanModule);
         vm.prank(dao);
         registry.setFlashLoanModule(newFlashLoanModule);
@@ -101,7 +101,7 @@ abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
 
     function test_SetBridgeAdapterBeacon() public {
         address newBridgeAdapterBeacon = makeAddr("newBridgeAdapterBeacon");
-        vm.expectEmit(false, true, false, false, address(registry));
+        vm.expectEmit(true, true, true, true, address(registry));
         emit ICoreRegistry.BridgeAdapterBeaconChanged(DUMMY_BRIDGE_ID, address(0), newBridgeAdapterBeacon);
         vm.prank(dao);
         registry.setBridgeAdapterBeacon(DUMMY_BRIDGE_ID, newBridgeAdapterBeacon);
@@ -115,7 +115,7 @@ abstract contract CoreRegistry_Util_Concrete_Test is Unit_Concrete_Test {
 
     function test_SetBridgeConfig() public {
         address newBridgeConfig = makeAddr("newBridgeConfig");
-        vm.expectEmit(false, true, false, false, address(registry));
+        vm.expectEmit(true, true, true, true, address(registry));
         emit ICoreRegistry.BridgeConfigChanged(DUMMY_BRIDGE_ID, address(0), newBridgeConfig);
         vm.prank(dao);
         registry.setBridgeConfig(DUMMY_BRIDGE_ID, newBridgeConfig);

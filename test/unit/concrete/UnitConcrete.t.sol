@@ -10,8 +10,8 @@ import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
 abstract contract Unit_Concrete_Test is Base_Test {
-    MockERC20 public accountingToken;
-    MockERC20 public baseToken;
+    MockERC20 internal accountingToken;
+    MockERC20 internal baseToken;
 
     MockPriceFeed internal aPriceFeed1;
     MockPriceFeed internal bPriceFeed1;
@@ -35,11 +35,11 @@ abstract contract Unit_Concrete_Test is Base_Test {
 }
 
 abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test, Base_Hub_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
+    uint256 internal constant SPOKE_CHAIN_ID = 1000;
+    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
-    Machine public machine;
-    Caliber public caliber;
+    Machine internal machine;
+    Caliber internal caliber;
 
     function setUp() public virtual override(Unit_Concrete_Test, Base_Hub_Test) {
         Base_Hub_Test.setUp();
@@ -50,8 +50,8 @@ abstract contract Unit_Concrete_Hub_Test is Unit_Concrete_Test, Base_Hub_Test {
 }
 
 abstract contract Unit_Concrete_Spoke_Test is Unit_Concrete_Test, Base_Spoke_Test {
-    Caliber public caliber;
-    CaliberMailbox public caliberMailbox;
+    Caliber internal caliber;
+    CaliberMailbox internal caliberMailbox;
 
     function setUp() public virtual override(Unit_Concrete_Test, Base_Spoke_Test) {
         Base_Spoke_Test.setUp();

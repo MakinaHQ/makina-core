@@ -12,8 +12,8 @@ import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGo
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
 abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
-    address public spokeCaliberMailboxAddr;
-    address public spokeBridgeAdapterAddr;
+    address internal spokeCaliberMailboxAddr;
+    address internal spokeBridgeAdapterAddr;
 
     function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();

@@ -14,7 +14,7 @@ import {AcrossV3BridgeAdapter_Integration_Concrete_Test} from "../AcrossV3Bridge
 contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test is
     AcrossV3BridgeAdapter_Integration_Concrete_Test
 {
-    uint256 public constant DEFAULT_FILL_DEADLINE_OFFSET = 1 hours;
+    uint256 internal constant DEFAULT_FILL_DEADLINE_OFFSET = 1 hours;
 
     function test_RevertWhen_ReentrantCall() public {
         uint256 inputAmount = 1e18;

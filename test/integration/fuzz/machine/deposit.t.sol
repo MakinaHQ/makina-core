@@ -11,8 +11,8 @@ import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract Deposit_Integration_Fuzz_Test is Base_Hub_Test {
-    MockERC20 public accountingToken;
-    Machine public machine;
+    MockERC20 internal accountingToken;
+    Machine internal machine;
 
     function _fuzzTestSetupAfter(uint256 atDecimals) public {
         atDecimals = uint8(bound(atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
