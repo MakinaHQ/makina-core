@@ -10,12 +10,12 @@ import {MachineShare} from "src/machine/MachineShare.sol";
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
-    MockERC20 public accountingToken;
-    Machine public machine;
-    MachineShare public shareToken;
+    MockERC20 internal accountingToken;
+    Machine internal machine;
+    MachineShare internal shareToken;
 
-    uint256 public accountingTokenUnit;
-    uint256 public constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
+    uint256 internal accountingTokenUnit;
+    uint256 internal constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
 
     function _fuzzTestSetupAfter(uint256 atDecimals) public {
         atDecimals = uint8(bound(atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));

@@ -26,8 +26,8 @@ abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
     uint256 internal constant PRICE_B_E = 60000;
     uint256 internal constant PRICE_B_A = 400;
 
-    MockERC20 public accountingToken;
-    MockERC20 public baseToken;
+    MockERC20 internal accountingToken;
+    MockERC20 internal baseToken;
 
     MockFlashLoanModule internal flashLoanModule;
 
@@ -143,11 +143,11 @@ abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
 }
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
+    uint256 internal constant SPOKE_CHAIN_ID = 1000;
+    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
-    Machine public machine;
-    Caliber public caliber;
+    Machine internal machine;
+    Caliber internal caliber;
 
     function setUp() public virtual override(Integration_Concrete_Test, Base_Hub_Test) {
         Base_Hub_Test.setUp();
@@ -201,10 +201,10 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 }
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
-    address public hubMachineAddr;
+    address internal hubMachineAddr;
 
-    Caliber public caliber;
-    CaliberMailbox public caliberMailbox;
+    Caliber internal caliber;
+    CaliberMailbox internal caliberMailbox;
 
     function setUp() public virtual override(Integration_Concrete_Test, Base_Spoke_Test) {
         Base_Spoke_Test.setUp();

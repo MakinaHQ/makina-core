@@ -16,7 +16,7 @@ import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol"
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
 contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
-    IBridgeAdapter public bridgeAdapter;
+    IBridgeAdapter internal bridgeAdapter;
 
     function setUp() public override {
         Machine_Integration_Concrete_Test.setUp();

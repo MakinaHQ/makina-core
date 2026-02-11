@@ -7,9 +7,9 @@ import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract PreDepositVault_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    PreDepositVault public preDepositVault;
+    PreDepositVault internal preDepositVault;
 
-    address public newMachineAddr;
+    address internal newMachineAddr;
 
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();

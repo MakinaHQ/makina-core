@@ -13,7 +13,7 @@ import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {PreDepositVault_Integration_Concrete_Test} from "../PreDepositVault.t.sol";
 
 contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Concrete_Test {
-    MachineShare public shareToken;
+    MachineShare internal shareToken;
 
     function setUp() public override {
         PreDepositVault_Integration_Concrete_Test.setUp();

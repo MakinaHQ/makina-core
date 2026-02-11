@@ -18,7 +18,7 @@ import {WithdrawPendingFunds_Integration_Concrete_Test} from
     "../bridge-adapter/withdraw-pending-funds/withdrawPendingFunds.t.sol";
 
 abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapter_Integration_Concrete_Test {
-    IMockAcrossV3SpokePool public acrossV3SpokePool;
+    IMockAcrossV3SpokePool internal acrossV3SpokePool;
 
     function setUp() public virtual override {
         BridgeAdapter_Integration_Concrete_Test.setUp();

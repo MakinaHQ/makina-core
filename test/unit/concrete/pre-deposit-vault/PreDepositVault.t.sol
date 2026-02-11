@@ -10,7 +10,7 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
 abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
-    PreDepositVault public preDepositVault;
+    PreDepositVault internal preDepositVault;
 
     function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();

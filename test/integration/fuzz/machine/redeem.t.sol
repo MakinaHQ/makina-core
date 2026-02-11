@@ -12,8 +12,8 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
-    MockERC20 public accountingToken;
-    Machine public machine;
+    MockERC20 internal accountingToken;
+    Machine internal machine;
 
     struct Data {
         uint256 atDecimals;
