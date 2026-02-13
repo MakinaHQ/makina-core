@@ -60,9 +60,9 @@ abstract contract Fork_Test is Base, Test, Constants {
         // deploy core contracts
         if (isHub) {
             address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
-            hubCore = deployHubCore(address(this), forkData.dao, wormhole);
+            hubCore = deployHubCore(address(this), wormhole);
         } else {
-            spokeCores[chainId] = deploySpokeCore(address(this), forkData.dao, hubChainId);
+            spokeCores[chainId] = deploySpokeCore(address(this), hubChainId);
         }
 
         // setup makina registry and chain registry
@@ -85,27 +85,13 @@ abstract contract Fork_Test is Base, Test, Constants {
 
         // setup access manager
         if (isHub) {
-            setupHubCoreAMFunctionRoles(hubCore);
-            setupAccessManagerRoles(
-                hubCore.accessManager,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                address(this)
-            );
+            uint64 superAdminRole = hubCore.accessManager.ADMIN_ROLE();
+            hubCore.accessManager.grantRole(superAdminRole, forkData.dao, 0);
+            hubCore.accessManager.revokeRole(superAdminRole, address(this));
         } else {
-            setupSpokeCoreAMFunctionRoles(spokeCores[chainId]);
-            setupAccessManagerRoles(
-                spokeCores[chainId].accessManager,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                forkData.dao,
-                address(this)
-            );
+            uint64 superAdminRole = spokeCores[chainId].accessManager.ADMIN_ROLE();
+            spokeCores[chainId].accessManager.grantRole(superAdminRole, forkData.dao, 0);
+            spokeCores[chainId].accessManager.revokeRole(superAdminRole, address(this));
         }
     }
 }

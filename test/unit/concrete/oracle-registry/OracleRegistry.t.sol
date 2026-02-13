@@ -12,10 +12,10 @@ abstract contract OracleRegistry_Unit_Concrete_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
 
-        accessManager = _deployAccessManager(deployer, dao);
-        oracleRegistry = _deployOracleRegistry(dao, address(accessManager));
+        accessManager = _deployAccessManager(deployer, deployer);
+        oracleRegistry = _deployOracleRegistry(address(accessManager), address(accessManager));
 
         _setupOracleRegistryAMFunctionRoles(accessManager, address(oracleRegistry));
-        setupAccessManagerRoles(accessManager, address(0), dao, address(0), address(0), address(0), deployer);
+        setupAccessManagerRolesAndOwnership();
     }
 }

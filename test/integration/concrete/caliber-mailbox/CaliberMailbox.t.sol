@@ -33,9 +33,13 @@ abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concre
         vm.startPrank(address(dao));
         spokeCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID,
-            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(spokeCoreRegistry), address(acrossV3SpokePool)))
+            address(
+                _deployAcrossV3BridgeAdapterBeacon(
+                    address(accessManager), address(spokeCoreRegistry), address(acrossV3SpokePool)
+                )
+            )
         );
-        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(dao, address(accessManager));
+        AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
         spokeCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         config.setForeignChainSupported(hubChainId, true);
         vm.stopPrank();
