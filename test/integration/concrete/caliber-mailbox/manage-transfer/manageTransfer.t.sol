@@ -12,7 +12,7 @@ import {Errors} from "src/libraries/Errors.sol";
 import {CaliberMailbox_Integration_Concrete_Test} from "../CaliberMailbox.t.sol";
 
 contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_Concrete_Test {
-    AcrossV3BridgeAdapter public bridgeAdapter;
+    AcrossV3BridgeAdapter internal bridgeAdapter;
 
     function setUp() public virtual override {
         CaliberMailbox_Integration_Concrete_Test.setUp();

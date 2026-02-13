@@ -27,7 +27,7 @@ contract Machine_Fork_Test is Fork_Test {
     address public machineDepositor;
     address public machineRedeemer;
 
-    MockFeeManager public feeManager;
+    MockFeeManager internal feeManager;
 
     function setUp() public {
         machineDepositor = makeAddr("MachineDepositor");

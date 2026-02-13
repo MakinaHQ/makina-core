@@ -10,7 +10,7 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Unit_Concrete_Spoke_Test} from "../../UnitConcrete.t.sol";
 
 contract SetCaliber_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
-    CaliberMailbox public caliberMailbox2;
+    CaliberMailbox internal caliberMailbox2;
 
     function setUp() public override {
         Unit_Concrete_Spoke_Test.setUp();

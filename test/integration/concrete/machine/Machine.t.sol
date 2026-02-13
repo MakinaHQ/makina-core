@@ -25,23 +25,23 @@ import {SetOutTransferEnabled_Integration_Concrete_Test} from
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    uint256 public constant SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE = 3e18;
-    uint256 public constant SPOKE_CALIBER_BASE_TOKEN_VALUE = 4e18;
-    uint256 public constant SPOKE_CALIBER_VAULT_VALUE = 5e18;
-    uint256 public constant SPOKE_CALIBER_BORROW_VALUE = 20e18;
-    uint256 public constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB = 30e18;
-    uint256 public constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB = 20e18;
-    uint256 public constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
-    uint256 public constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
+    uint256 internal constant SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE = 3e18;
+    uint256 internal constant SPOKE_CALIBER_BASE_TOKEN_VALUE = 4e18;
+    uint256 internal constant SPOKE_CALIBER_VAULT_VALUE = 5e18;
+    uint256 internal constant SPOKE_CALIBER_BORROW_VALUE = 20e18;
+    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB = 30e18;
+    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB = 20e18;
+    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
+    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
 
-    uint256 public constant TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE =
+    uint256 internal constant TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE =
         SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
-    uint256 public constant TOTAL_SPOKE_CALIBER_NEGATIVE_POSITIONS_VALUE = SPOKE_CALIBER_BORROW_VALUE;
+    uint256 internal constant TOTAL_SPOKE_CALIBER_NEGATIVE_POSITIONS_VALUE = SPOKE_CALIBER_BORROW_VALUE;
 
-    address public spokeAccountingTokenAddr;
-    address public spokeBaseTokenAddr;
-    address public spokeCaliberMailboxAddr;
-    address public spokeBridgeAdapterAddr;
+    address internal spokeAccountingTokenAddr;
+    address internal spokeBaseTokenAddr;
+    address internal spokeCaliberMailboxAddr;
+    address internal spokeBridgeAdapterAddr;
 
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();

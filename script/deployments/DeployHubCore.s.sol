@@ -18,8 +18,8 @@ contract DeployHubCore is DeployCore {
     TransparentUpgradeableProxy[] private _bridgeConfigs;
 
     constructor() {
-        string memory inputFilename = vm.envString("HUB_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("HUB_OUTPUT_FILENAME");
+        string memory inputFilename = vm.envString("HUB_CORE_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
 
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 

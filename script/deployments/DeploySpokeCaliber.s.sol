@@ -22,8 +22,10 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
     address public deployedInstance;
 
     constructor() {
-        string memory inputFilename = vm.envString("SPOKE_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("SPOKE_OUTPUT_FILENAME");
+        string memory inputFilename = vm.envString("SPOKE_STRAT_INPUT_FILENAME");
+        string memory outputFilename = vm.envString("SPOKE_STRAT_OUTPUT_FILENAME");
+
+        string memory coreOutputFilename = vm.envString("SPOKE_CORE_OUTPUT_FILENAME");
 
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
@@ -38,7 +40,7 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
 
         // load output from DeploySpokeCore script
         string memory coreOutputPath = string.concat(basePath, "outputs/spoke-cores/");
-        coreOutputPath = string.concat(coreOutputPath, outputFilename);
+        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
         coreOutputJson = vm.readFile(coreOutputPath);
     }
 

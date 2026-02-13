@@ -9,8 +9,8 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Machine_Unit_Concrete_Test} from "../Machine.t.sol";
 
 contract SetSpokeCaliber_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
-    uint16[] public bridges;
-    address[] public spokeBridgeAdapters;
+    uint16[] internal bridges;
+    address[] internal spokeBridgeAdapters;
 
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));

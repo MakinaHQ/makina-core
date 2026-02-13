@@ -25,6 +25,7 @@ library ChainsInfo {
     uint256 public constant CHAIN_ID_MONAD = 143;
     uint256 public constant CHAIN_ID_PLASMA = 9745;
     uint256 public constant CHAIN_ID_HYPER_EVM = 999;
+    uint256 public constant CHAIN_ID_POLYGON = 137;
 
     function getChainInfo(uint256 chainId) internal pure returns (ChainInfo memory) {
         if (chainId == CHAIN_ID_ETHEREUM) {
@@ -114,6 +115,14 @@ library ChainsInfo {
                 name: "HyperEVM",
                 foundryAlias: "hyper_evm",
                 constantsFilename: "HyperEVM-Test.json"
+            });
+        } else if (chainId == CHAIN_ID_POLYGON) {
+            return ChainInfo({
+                evmChainId: CHAIN_ID_POLYGON,
+                wormholeChainId: WormholeChains.CHAIN_ID_POLYGON,
+                name: "Polygon",
+                foundryAlias: "polygon",
+                constantsFilename: "Polygon-Test.json"
             });
         } else {
             revert InvalidChainId();

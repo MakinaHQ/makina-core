@@ -11,6 +11,7 @@
     "prettier": "3.3.3",
     "solhint": "5.0.5"
   },
+  "type": "module",
   "dependencies": {},
   "scripts": {
     "build:ir": "FOUNDRY_PROFILE=ir forge build",

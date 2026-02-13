@@ -11,15 +11,15 @@ import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
-    MockERC20 public depositToken;
-    MockERC20 public accountingToken;
-    MachineShare public shareToken;
+    MockERC20 internal depositToken;
+    MockERC20 internal accountingToken;
+    MachineShare internal shareToken;
 
-    PreDepositVault public preDepositVault;
+    PreDepositVault internal preDepositVault;
 
-    uint256 public depositTokenUnit;
-    uint256 public accountingTokenUnit;
-    uint256 public constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
+    uint256 internal depositTokenUnit;
+    uint256 internal accountingTokenUnit;
+    uint256 internal constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
 
     struct Data {
         uint8 dtDecimals;

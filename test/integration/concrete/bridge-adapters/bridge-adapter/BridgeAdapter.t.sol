@@ -9,20 +9,20 @@ import {MockMachineEndpoint} from "test/mocks/MockMachineEndpoint.sol";
 import {Base_Test} from "test/base/Base.t.sol";
 
 abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
-    MockMachineEndpoint public bridgeController1;
-    MockMachineEndpoint public bridgeController2;
+    MockMachineEndpoint internal bridgeController1;
+    MockMachineEndpoint internal bridgeController2;
 
-    IBridgeAdapter public bridgeAdapter1;
-    IBridgeAdapter public bridgeAdapter2;
+    IBridgeAdapter internal bridgeAdapter1;
+    IBridgeAdapter internal bridgeAdapter2;
 
-    MockERC20 public token1;
-    MockERC20 public token2;
-    MockERC20 public token3;
+    MockERC20 internal token1;
+    MockERC20 internal token2;
+    MockERC20 internal token3;
 
-    uint256 public chainId1;
-    uint256 public chainId2;
+    uint256 internal chainId1;
+    uint256 internal chainId2;
 
-    ICoreRegistry public coreRegistry;
+    ICoreRegistry internal coreRegistry;
 
     function setUp() public virtual override {
         Base_Test.setUp();

@@ -6,7 +6,7 @@ import {PreDepositVault} from "src/pre-deposit/PreDepositVault.sol";
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract HubCoreFactory_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    PreDepositVault public preDepositVault;
+    PreDepositVault internal preDepositVault;
 
-    bytes32 public initialAllowedInstrRoot;
+    bytes32 internal initialAllowedInstrRoot;
 }

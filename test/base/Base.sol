@@ -211,7 +211,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     /// REGISTRIES SETUP
     ///
 
-    function setupHubCoreRegistry(HubCore memory deployment) public {
+    function setupHubCoreRegistry(HubCore memory deployment) internal {
         deployment.hubCoreRegistry.setOracleRegistry(address(deployment.oracleRegistry));
         deployment.hubCoreRegistry.setSwapModule(address(deployment.swapModule));
         deployment.hubCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
@@ -222,7 +222,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         deployment.hubCoreRegistry.setPreDepositVaultBeacon(address(deployment.preDepositVaultBeacon));
     }
 
-    function setupSpokeCoreRegistry(SpokeCore memory deployment) public {
+    function setupSpokeCoreRegistry(SpokeCore memory deployment) internal {
         deployment.spokeCoreRegistry.setOracleRegistry(address(deployment.oracleRegistry));
         deployment.spokeCoreRegistry.setSwapModule(address(deployment.swapModule));
         deployment.spokeCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
@@ -231,7 +231,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         deployment.spokeCoreRegistry.setCaliberMailboxBeacon(address(deployment.caliberMailboxBeacon));
     }
 
-    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) public {
+    function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) internal {
         for (uint256 i; i < priceFeedRoutes.length; i++) {
             oracleRegistry.setFeedRoute(
                 priceFeedRoutes[i].token,
@@ -243,14 +243,14 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         }
     }
 
-    function setupChainRegistry(ChainRegistry chainRegistry, uint256[] memory evmChainIds) public {
+    function setupChainRegistry(ChainRegistry chainRegistry, uint256[] memory evmChainIds) internal {
         for (uint256 i; i < evmChainIds.length; i++) {
             uint256 evmChainId = evmChainIds[i];
             chainRegistry.setChainIds(evmChainId, ChainsInfo.getChainInfo(evmChainId).wormholeChainId);
         }
     }
 
-    function setupTokenRegistry(TokenRegistry tokenRegistry, TokenToRegister[] memory tokensToRegister) public {
+    function setupTokenRegistry(TokenRegistry tokenRegistry, TokenToRegister[] memory tokensToRegister) internal {
         for (uint256 i; i < tokensToRegister.length; i++) {
             tokenRegistry.setToken(
                 tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId, tokensToRegister[i].foreignToken
@@ -262,7 +262,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     /// SWAPMODULE SETUP
     ///
 
-    function setupSwapModule(SwapModule swapModule, SwapperData[] memory swappersData) public {
+    function setupSwapModule(SwapModule swapModule, SwapperData[] memory swappersData) internal {
         for (uint256 i; i < swappersData.length; i++) {
             swapModule.setSwapperTargets(
                 swappersData[i].swapperId, swappersData[i].approvalTarget, swappersData[i].executionTarget
@@ -319,7 +319,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
     /// ACCESS MANAGER SETUP
     ///
 
-    function transferAccessManagerOwnership(AccessManagerUpgradeable accessManager, Vm vm) public {
+    function transferAccessManagerOwnership(AccessManagerUpgradeable accessManager, Vm vm) internal {
         Ownable(_getProxyAdmin(address(accessManager), vm)).transferOwnership(address(accessManager));
     }
 
@@ -328,7 +328,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         AMRoleGrant memory superAdminRoleGrant,
         AMRoleGrant[] memory otherRoleGrants,
         address deployer
-    ) public {
+    ) internal {
         // Grant super admin role
         accessManager.grantRole(
             accessManager.ADMIN_ROLE(), superAdminRoleGrant.account, superAdminRoleGrant.executionDelay
@@ -345,7 +345,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
     }
 
-    function setupHubCoreAMFunctionRoles(HubCore memory deployment, Vm vm) public {
+    function setupHubCoreAMFunctionRoles(HubCore memory deployment, Vm vm) internal {
         // Transparent Proxy Admins
         bytes4[] memory proxyAdminSelectors = new bytes4[](1);
         proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
@@ -417,7 +417,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         _setupHubCoreFactoryAMFunctionRoles(deployment.accessManager, address(deployment.hubCoreFactory));
     }
 
-    function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment, Vm vm) public {
+    function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment, Vm vm) internal {
         // Transparent Proxy Admins
         bytes4[] memory proxyAdminSelectors = new bytes4[](1);
         proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
@@ -809,7 +809,7 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         );
     }
 
-    function _deployWeirollVM() internal returns (address weirollVM) {
+    function _deployWeirollVM() internal virtual returns (address weirollVM) {
         return _deployCode(getWeirollVMCode(), WEIROLL_VM_SALT_DOMAIN);
     }
 

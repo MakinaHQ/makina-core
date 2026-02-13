@@ -20,29 +20,29 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
     uint256 internal constant PRICE_B_E = 60000;
     uint256 internal constant PRICE_B_A = 400;
 
-    uint256 public constant A_START_BALANCE = 1_000_000e18;
-    uint256 public constant B_START_BALANCE = 2_000_000e18;
+    uint256 internal constant A_START_BALANCE = 1_000_000e18;
+    uint256 internal constant B_START_BALANCE = 2_000_000e18;
 
-    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
+    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
-    uint256 public constant ACROSS_V3_FEE_BPS = 50;
+    uint256 internal constant ACROSS_V3_FEE_BPS = 50;
 
-    MockERC20 public accountingToken;
-    MockERC20 public baseToken;
+    MockERC20 internal accountingToken;
+    MockERC20 internal baseToken;
 
     IMockAcrossV3SpokePool internal acrossV3SpokePool;
 
     MockPriceFeed internal aPriceFeed1;
     MockPriceFeed internal bPriceFeed1;
 
-    Machine public machine;
-    Caliber public hubCaliber;
+    Machine internal machine;
+    Caliber internal hubCaliber;
 
-    Caliber public spokeCaliber;
-    CaliberMailbox public spokeCaliberMailbox;
+    Caliber internal spokeCaliber;
+    CaliberMailbox internal spokeCaliberMailbox;
 
-    MachineHandler public machineHandler;
-    MachineStore public machineStore;
+    MachineHandler internal machineHandler;
+    MachineStore internal machineStore;
 
     function setUp() public virtual override {
         Base_CrossChain_Test.setUp();

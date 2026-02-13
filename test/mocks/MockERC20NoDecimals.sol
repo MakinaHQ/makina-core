@@ -8,6 +8,8 @@ import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 ///       - direct minting and burning of tokens
 ///       - reentrancy scheduling
 contract MockERC20NoDecimals is ERC20 {
+    error NotImplemented();
+
     enum Type {
         No,
         Before,
@@ -23,7 +25,7 @@ contract MockERC20NoDecimals is ERC20 {
     constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) {}
 
     function decimals() public view virtual override returns (uint8) {
-        revert();
+        revert NotImplemented();
     }
 
     /// @notice Function to directly call _mint of ERC20 for minting "amount" number of mock tokens.

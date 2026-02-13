@@ -28,11 +28,11 @@ import {WormholeQueryTestHelpers} from "../../utils/WormholeQueryTestHelpers.sol
 contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, IntegrationIds {
     using Math for uint256;
 
-    Machine public machine;
-    Caliber public hubCaliber;
-    Caliber public spokeCaliber;
-    CaliberMailbox public spokeCaliberMailbox;
-    MachineStore public machineStore;
+    Machine internal machine;
+    Caliber internal hubCaliber;
+    Caliber internal spokeCaliber;
+    CaliberMailbox internal spokeCaliberMailbox;
+    MachineStore internal machineStore;
 
     constructor(Machine _machine, Caliber _spokeCaliber, MachineStore _machineStore) {
         machine = _machine;

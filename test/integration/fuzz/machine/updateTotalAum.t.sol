@@ -18,19 +18,19 @@ import {MockBorrowModule} from "test/mocks/MockBorrowModule.sol";
 import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
-    uint256 public constant SPOKE_CHAIN_ID = 1000;
-    uint16 public constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
+    uint256 internal constant SPOKE_CHAIN_ID = 1000;
+    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
-    MockERC20 public accountingToken;
-    MockERC20 public baseToken;
+    MockERC20 internal accountingToken;
+    MockERC20 internal baseToken;
 
     MockSupplyModule internal supplyModule;
     MockBorrowModule internal borrowModule;
 
-    Machine public machine;
-    Caliber public caliber;
+    Machine internal machine;
+    Caliber internal caliber;
 
-    address public spokeCaliberMailboxAddr;
+    address internal spokeCaliberMailboxAddr;
 
     struct Data {
         uint8 aDecimals;
@@ -44,10 +44,6 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         uint256 hubCaliberNetAum;
         uint256 spokeCaliberNetAum;
     }
-    // uint256 spokeCaliberTotalAccountingTokenReceivedFromHub;
-    // uint256 spokeCaliberTotalBaseTokenReceivedFromHub;
-    // uint256 spokeCaliberTotalAccountingTokenSentToHub;
-    // uint256 spokeCaliberTotalBaseTokenSentToHub;
 
     function setUp() public override {
         Base_Hub_Test.setUp();
