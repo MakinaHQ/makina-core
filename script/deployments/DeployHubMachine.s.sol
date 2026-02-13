@@ -98,11 +98,6 @@ contract DeployHubMachine is Base, Script, SortedParams {
             salt
         );
 
-        if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            _setupMachineAMFunctionRoles(mgParams.initialAuthority, deployedInstance);
-            _setupCaliberAMFunctionRoles(mgParams.initialAuthority, IMachine(deployedInstance).hubCaliber());
-        }
-
         vm.stopBroadcast();
 
         // Write to file

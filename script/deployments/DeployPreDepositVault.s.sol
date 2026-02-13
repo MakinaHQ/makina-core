@@ -70,10 +70,6 @@ contract DeployPreDepositVault is Base, Script, SortedParams {
             shareTokenSymbol
         );
 
-        if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            _setupPreDepositVaultAMFunctionRoles(pdvParams.initialAuthority, deployedInstance);
-        }
-
         vm.stopBroadcast();
 
         // Write to file

@@ -96,10 +96,6 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
             salt
         );
 
-        if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            _setupMachineAMFunctionRoles(mgParams.initialAuthority, deployedInstance);
-        }
-
         vm.stopBroadcast();
 
         // Write to file

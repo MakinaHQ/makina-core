@@ -82,13 +82,6 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
             salt
         );
 
-        if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            _setupCaliberAMFunctionRoles(mgParams.initialAuthority, deployedInstance);
-            _setupCaliberMailboxAMFunctionRoles(
-                mgParams.initialAuthority, ICaliber(deployedInstance).hubMachineEndpoint()
-            );
-        }
-
         vm.stopBroadcast();
 
         // Write to file

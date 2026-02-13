@@ -2,12 +2,14 @@
 pragma solidity 0.8.28;
 
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 
 import {Create3Factory} from "./Create3Factory.sol";
 import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberFactory} from "../interfaces/ICaliberFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {Roles} from "../libraries/Roles.sol";
 
 abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFactory {
     // keccak256("makina.salt.Caliber")
@@ -52,5 +54,15 @@ abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFacto
         emit CaliberCreated(caliber, machineEndpoint);
 
         return caliber;
+    }
+
+    /// @dev Sets function roles in associated access manager for a deployed caliber intance.
+    function _setupCaliberAMFunctionRoles(address _authority, address _caliber) internal {
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](2);
+        mgmtSetupSelectors[0] = ICaliber.addInstrRootGuardian.selector;
+        mgmtSetupSelectors[1] = ICaliber.removeInstrRootGuardian.selector;
+        IAccessManager(_authority).setTargetFunctionRole(
+            _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
     }
 }
