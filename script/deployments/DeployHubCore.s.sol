@@ -52,7 +52,9 @@ contract DeployHubCore is DeployCore {
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
             setupHubCoreAMFunctionRoles(_core, vm);
-            setupAccessManagerRoles(_core.accessManager, superAdminRoleGrant, otherRoleGrants, deployer);
+            setupAccessManagerRoles(
+                _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.hubCoreFactory), deployer
+            );
             transferAccessManagerOwnership(_core.accessManager, vm);
         }
     }

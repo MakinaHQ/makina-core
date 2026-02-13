@@ -19,9 +19,6 @@ import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IAcrossV3BridgeConfig} from "../../src/interfaces/IAcrossV3BridgeConfig.sol";
-import {IBridgeController} from "../../src/interfaces/IBridgeController.sol";
-import {ICaliber} from "../../src/interfaces/ICaliber.sol";
-import {ICaliberMailbox} from "../../src/interfaces/ICaliberMailbox.sol";
 import {IChainRegistry} from "../../src/interfaces/IChainRegistry.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
@@ -34,15 +31,13 @@ import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";
 import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
 import {ITokenRegistry} from "../../src/interfaces/ITokenRegistry.sol";
 import {IntegrationIds} from "../utils/IntegrationIds.sol";
-import {IMachine} from "../../src/interfaces/IMachine.sol";
-import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {LayerZeroV2BridgeAdapter} from "../../src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
 import {LayerZeroV2BridgeConfig} from "../../src/bridge/configs/LayerZeroV2BridgeConfig.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
 import {PreDepositVault} from "../../src/pre-deposit/PreDepositVault.sol";
-import {Roles} from "../utils/Roles.sol";
+import {Roles} from "../../src/libraries/Roles.sol";
 import {SaltDomains} from "../utils/SaltDomains.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
@@ -327,12 +322,14 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         AccessManagerUpgradeable accessManager,
         AMRoleGrant memory superAdminRoleGrant,
         AMRoleGrant[] memory otherRoleGrants,
+        address coreFactory,
         address deployer
     ) internal {
+        uint64 adminRole = accessManager.ADMIN_ROLE();
+
         // Grant super admin role
-        accessManager.grantRole(
-            accessManager.ADMIN_ROLE(), superAdminRoleGrant.account, superAdminRoleGrant.executionDelay
-        );
+        accessManager.grantRole(adminRole, superAdminRoleGrant.account, superAdminRoleGrant.executionDelay);
+        accessManager.grantRole(adminRole, coreFactory, 0);
 
         // Grant other roles
         for (uint256 i; i < otherRoleGrants.length; i++) {
@@ -566,73 +563,6 @@ abstract contract Base is IRCodeReader, SaltDomains, IntegrationIds {
         layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
             _layerZeroV2BridgeConfig, layerZeroV2BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE
-        );
-    }
-
-    ///
-    /// ACCESS MANAGER INSTANCE UTILS
-    ///
-
-    function _setupPreDepositVaultAMFunctionRoles(address _accessManager, address _preDepositVault) internal {
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](1);
-        mgmtSetupSelectors[0] = IMakinaGovernable.setRiskManager.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-    }
-
-    function _setupMachineAMFunctionRoles(address _accessManager, address _machine) internal {
-        bytes4[] memory compSetupSelectors = new bytes4[](6);
-        compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
-        compSetupSelectors[1] = IMachine.setSpokeCaliber.selector;
-        compSetupSelectors[2] = IMachine.setSpokeBridgeAdapter.selector;
-        compSetupSelectors[3] = IMachine.setDepositor.selector;
-        compSetupSelectors[4] = IMachine.setRedeemer.selector;
-        compSetupSelectors[5] = IMachine.setFeeManager.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
-        );
-
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
-        mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
-        mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
-        mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
-        mgmtSetupSelectors[3] = IMakinaGovernable.setRiskManagerTimelock.selector;
-        mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
-        mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
-        mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-    }
-
-    function _setupCaliberMailboxAMFunctionRoles(address _accessManager, address _mailbox) internal {
-        bytes4[] memory compSetupSelectors = new bytes4[](2);
-        compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
-        compSetupSelectors[1] = ICaliberMailbox.setHubBridgeAdapter.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
-        );
-
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
-        mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
-        mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
-        mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
-        mgmtSetupSelectors[3] = IMakinaGovernable.setRiskManagerTimelock.selector;
-        mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
-        mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
-        mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-    }
-
-    function _setupCaliberAMFunctionRoles(address _accessManager, address _caliber) internal {
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](2);
-        mgmtSetupSelectors[0] = ICaliber.addInstrRootGuardian.selector;
-        mgmtSetupSelectors[1] = ICaliber.removeInstrRootGuardian.selector;
-        IAccessManager(_accessManager).setTargetFunctionRole(
-            _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
     }
 

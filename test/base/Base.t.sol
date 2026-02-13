@@ -23,7 +23,7 @@ import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
-import {Roles} from "../utils/Roles.sol";
+import {Roles} from "../../src/libraries/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
@@ -48,6 +48,8 @@ abstract contract Base_Test is Base, Constants, Test {
 
     UpgradeableBeacon internal caliberBeacon;
 
+    address internal coreFactory;
+
     function setUp() public virtual {
         deployer = address(this);
         dao = makeAddr("MakinaDAO");
@@ -60,6 +62,7 @@ abstract contract Base_Test is Base, Constants, Test {
     function setupAccessManagerRoles() internal {
         // Grant roles to the relevant accounts
         accessManager.grantRole(accessManager.ADMIN_ROLE(), dao, 0);
+        accessManager.grantRole(accessManager.ADMIN_ROLE(), coreFactory, 0);
         accessManager.grantRole(Roles.INFRA_CONFIG_ROLE, dao, 0);
         accessManager.grantRole(Roles.STRATEGY_DEPLOYMENT_ROLE, dao, 0);
         accessManager.grantRole(Roles.STRATEGY_COMPONENTS_SETUP_ROLE, dao, 0);
@@ -111,6 +114,7 @@ abstract contract Base_Hub_Test is Base_Test {
         setupHubCoreRegistry(deployment);
         setupHubCoreAMFunctionRoles(deployment, vm);
 
+        coreFactory = address(hubCoreFactory);
         setupAccessManagerRolesAndOwnership();
     }
 
@@ -186,6 +190,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupSpokeCoreRegistry(deployment);
         setupSpokeCoreAMFunctionRoles(deployment, vm);
 
+        coreFactory = address(spokeCoreFactory);
         setupAccessManagerRolesAndOwnership();
     }
 
@@ -253,6 +258,8 @@ abstract contract Base_CrossChain_Test is Base_Hub_Test, Base_Spoke_Test {
                 caliberMailboxBeacon: caliberMailboxBeacon
             })
         );
+        accessManager.grantRole(accessManager.ADMIN_ROLE(), address(hubCoreFactory), 0);
+        accessManager.grantRole(accessManager.ADMIN_ROLE(), address(spokeCoreFactory), 0);
         vm.stopPrank();
     }
 }
