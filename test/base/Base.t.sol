@@ -156,7 +156,8 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -221,7 +222,8 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 _accountingToken,
                 _hubMachine,

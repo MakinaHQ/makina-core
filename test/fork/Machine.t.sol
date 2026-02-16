@@ -82,7 +82,8 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRiskManager: address(0),
                     initialRiskManagerTimelock: address(0),
                     initialAuthority: address(hubCore.accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 ethForkData.usdc,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -145,7 +146,8 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRiskManager: address(0),
                     initialRiskManagerTimelock: address(0),
                     initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 baseForkData.usdc,
                 address(machine),

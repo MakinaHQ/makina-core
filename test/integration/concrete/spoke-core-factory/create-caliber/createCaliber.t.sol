@@ -18,6 +18,13 @@ import {Roles} from "src/libraries/Roles.sol";
 import {SpokeCoreFactory_Integration_Concrete_Test} from "../SpokeCoreFactory.t.sol";
 
 contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration_Concrete_Test {
+    address internal accountingAgent;
+
+    function setUp() public override {
+        super.setUp();
+        accountingAgent = makeAddr("accountingAgent");
+    }
+
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
@@ -98,7 +105,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager2),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 address(accountingToken),
                 address(0),
@@ -114,6 +122,9 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
+
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
@@ -142,7 +153,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(accountingToken),
                 _hubMachine,
@@ -171,6 +183,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertEq(caliberMailbox.riskManagerTimelock(), riskManagerTimelock);
         assertEq(caliberMailbox.authority(), address(accessManager));
         assertFalse(caliberMailbox.restrictedAccountingMode());
+        assertTrue(caliberMailbox.isAccountingAgent(address(accountingAgent)));
 
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 2);
@@ -237,6 +250,9 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
 
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
@@ -264,7 +280,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(accountingToken),
                 _hubMachine,
@@ -293,6 +310,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertEq(caliberMailbox.authority(), address(accessManager));
         assertEq(caliber.authority(), address(accessManager));
         assertFalse(caliberMailbox.restrictedAccountingMode());
+        assertTrue(caliberMailbox.isAccountingAgent(address(accountingAgent)));
 
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 2);

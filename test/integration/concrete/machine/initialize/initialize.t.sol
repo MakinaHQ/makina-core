@@ -21,6 +21,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
     PreDepositVault internal preDepositVault;
     MachineShare internal shareToken;
 
+    address internal accountingAgent;
+
     address internal hubCaliberAddr;
 
     function setUp() public override {
@@ -28,6 +30,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         hubCaliberAddr = makeAddr("hubCaliber");
         shareToken =
             new MachineShare(DEFAULT_MACHINE_SHARE_TOKEN_NAME, DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL, address(this));
+        accountingAgent = makeAddr("accountingAgent");
     }
 
     function test_RevertWhen_ProvidedAccountingTokenNonPriceable() public {
@@ -145,6 +148,12 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.riskManager(), riskManager);
+        assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
+        assertEq(machine.authority(), address(accessManager));
+        assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(accountingAgent));
+
         assertEq(machine.depositor(), machineDepositor);
         assertEq(machine.redeemer(), machineRedeemer);
         assertEq(machine.accountingToken(), address(accountingToken));
@@ -154,11 +163,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertFalse(machine.isIdleToken(address(baseToken)));
         assertEq(machine.getIdleTokensLength(), 1);
         assertEq(machine.getIdleToken(0), address(accountingToken));
-        assertEq(shareToken.owner(), address(machine));
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(machine.hubCaliber(), hubCaliberAddr);
 
         assertEq(address(shareToken), machine.shareToken());
+        assertEq(shareToken.owner(), address(machine));
         assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
@@ -225,6 +234,12 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.riskManager(), riskManager);
+        assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
+        assertEq(machine.authority(), address(accessManager));
+        assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(accountingAgent));
+
         assertEq(machine.depositor(), machineDepositor);
         assertEq(machine.redeemer(), machineRedeemer);
         assertEq(machine.accountingToken(), address(accountingToken));
@@ -235,11 +250,11 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         assertEq(machine.getIdleTokensLength(), 2);
         assertEq(machine.getIdleToken(0), address(accountingToken));
         assertEq(machine.getIdleToken(1), address(baseToken));
-        assertEq(shareToken.owner(), address(machine));
         assertEq(machine.getSpokeCalibersLength(), 0);
         assertEq(machine.hubCaliber(), hubCaliberAddr);
 
         assertEq(address(shareToken), machine.shareToken());
+        assertEq(shareToken.owner(), address(machine));
         assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
@@ -268,13 +283,17 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         view
         returns (IMakinaGovernable.MakinaGovernableInitParams memory)
     {
+        address[] memory accountingAgents = new address[](1);
+        accountingAgents[0] = accountingAgent;
+
         return IMakinaGovernable.MakinaGovernableInitParams({
             initialMechanic: mechanic,
             initialSecurityCouncil: securityCouncil,
             initialRiskManager: riskManager,
             initialRiskManagerTimelock: riskManagerTimelock,
             initialAuthority: address(accessManager),
-            initialRestrictedAccountingMode: false
+            initialRestrictedAccountingMode: false,
+            initialAccountingAgents: accountingAgents
         });
     }
 }

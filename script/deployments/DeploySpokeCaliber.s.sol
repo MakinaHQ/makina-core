@@ -77,7 +77,8 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
                 mgParams.initialRiskManager,
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode
+                mgParams.initialRestrictedAccountingMode,
+                mgParams.initialAccountingAgents
             ),
             accountingToken,
             hubMachine,

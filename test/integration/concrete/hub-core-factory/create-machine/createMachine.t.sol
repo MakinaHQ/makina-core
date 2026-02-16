@@ -117,7 +117,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager2),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -137,6 +138,9 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
 
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
+
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
@@ -174,7 +178,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -203,6 +208,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
@@ -316,6 +322,9 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
 
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
@@ -354,7 +363,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -383,6 +393,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);

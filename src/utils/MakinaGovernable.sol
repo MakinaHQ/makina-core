@@ -42,6 +42,9 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         $._riskManager = params.initialRiskManager;
         $._riskManagerTimelock = params.initialRiskManagerTimelock;
         $._restrictedAccountingMode = params.initialRestrictedAccountingMode;
+        for (uint256 i; i < params.initialAccountingAgents.length; ++i) {
+            _addAccountingAgent(params.initialAccountingAgents[i]);
+        }
         __AccessManaged_init(params.initialAuthority);
     }
 
@@ -191,6 +194,16 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
 
     /// @inheritdoc IMakinaGovernable
     function addAccountingAgent(address newAgent) external override restricted {
+        _addAccountingAgent(newAgent);
+    }
+
+    /// @inheritdoc IMakinaGovernable
+    function removeAccountingAgent(address agent) external override restricted {
+        _removeAccountingAgent(agent);
+    }
+
+    /// @dev Internal logic for adding an accounting agent.
+    function _addAccountingAgent(address newAgent) internal {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if (newAgent == $._mechanic || newAgent == $._securityCouncil || $._isAccountingAgent[newAgent]) {
             revert Errors.AlreadyAccountingAgent();
@@ -199,8 +212,8 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
         emit AccountingAgentAdded(newAgent);
     }
 
-    /// @inheritdoc IMakinaGovernable
-    function removeAccountingAgent(address agent) external override restricted {
+    /// @dev Internal logic for removing an accounting agent.
+    function _removeAccountingAgent(address agent) internal {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if (agent == $._mechanic || agent == $._securityCouncil) {
             revert Errors.ProtectedAccountingAgent();

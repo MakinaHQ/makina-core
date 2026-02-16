@@ -134,7 +134,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager2),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
                 address(preDepositVault),
                 salt,
@@ -159,6 +160,9 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
 
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
+
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
@@ -201,7 +205,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(preDepositVault),
                 salt,
@@ -231,6 +236,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
@@ -351,6 +357,9 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         address[] memory initialBaseTokens = new address[](1);
         initialBaseTokens[0] = address(baseToken);
 
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
+
         vm.prank(dao);
         preDepositVault = _deployDepositVault();
 
@@ -399,8 +408,9 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialSecurityCouncil: securityCouncil,
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
-                    initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialAuthority: address(accessManager2),
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
                 address(preDepositVault),
                 salt,
@@ -430,6 +440,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);

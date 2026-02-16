@@ -9,4 +9,12 @@ abstract contract HubCoreFactory_Integration_Concrete_Test is Integration_Concre
     PreDepositVault internal preDepositVault;
 
     bytes32 internal initialAllowedInstrRoot;
+
+    address internal accountingAgent;
+
+    function setUp() public virtual override {
+        Integration_Concrete_Hub_Test.setUp();
+
+        accountingAgent = makeAddr("accountingAgent");
+    }
 }

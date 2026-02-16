@@ -33,6 +33,7 @@ abstract contract SortedParams {
     }
 
     struct MakinaGovernableInitParamsSorted {
+        address[] initialAccountingAgents;
         address initialAuthority;
         address initialMechanic;
         bool initialRestrictedAccountingMode;
