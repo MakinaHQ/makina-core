@@ -89,7 +89,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: new address[](0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -110,6 +111,10 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
     function test_CreateCaliber_AMSetup() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
@@ -128,7 +133,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -167,8 +173,9 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertFalse(caliberMailbox.restrictedAccountingMode());
 
         assertEq(caliber.getPositionsLength(), 0);
-        assertEq(caliber.getBaseTokensLength(), 1);
+        assertEq(caliber.getBaseTokensLength(), 2);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
 
         assertEq(
             accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
@@ -226,6 +233,10 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
     function test_CreateCaliber_WithoutAMSetup() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
@@ -244,7 +255,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -283,8 +295,9 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertFalse(caliberMailbox.restrictedAccountingMode());
 
         assertEq(caliber.getPositionsLength(), 0);
-        assertEq(caliber.getBaseTokensLength(), 1);
+        assertEq(caliber.getBaseTokensLength(), 2);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
 
         assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);

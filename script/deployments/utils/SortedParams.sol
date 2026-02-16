@@ -23,6 +23,7 @@ abstract contract SortedParams {
 
     struct CaliberInitParamsSorted {
         bytes32 initialAllowedInstrRoot;
+        address[] initialBaseTokens;
         uint256 initialCooldownDuration;
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxPositionIncreaseLossBps;

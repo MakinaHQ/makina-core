@@ -125,7 +125,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: new address[](0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -155,6 +156,9 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         deal(address(baseToken), address(this), preDepositAmount);
         baseToken.approve(address(preDepositVault), preDepositAmount);
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0, 0);
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
@@ -188,7 +192,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -246,6 +251,11 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
+
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
 
         assertTrue(machine.isIdleToken(address(baseToken)));
         assertEq(baseToken.balanceOf(address(preDepositVault)), 0);
@@ -338,6 +348,9 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
 
         initialAllowedInstrRoot = bytes32("0x12345");
 
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
         vm.prank(dao);
         preDepositVault = _deployDepositVault();
 
@@ -378,7 +391,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -436,6 +450,11 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
+
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
 
         assertTrue(machine.isIdleToken(address(baseToken)));
         assertEq(baseToken.balanceOf(address(preDepositVault)), 0);

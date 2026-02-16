@@ -108,7 +108,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: new address[](0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -133,6 +134,9 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
 
         initialAllowedInstrRoot = bytes32("0x12345");
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
@@ -161,7 +165,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -217,7 +222,11 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
 
-        // Caliber function roles should be set according to HubCoreFactory setup
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
+
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector),
             Roles.STRATEGY_COMPONENTS_SETUP_ROLE
@@ -303,6 +312,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
             new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
         initialAllowedInstrRoot = bytes32("0x12345");
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
@@ -332,7 +345,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -387,6 +401,11 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
+
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
 
         // Machine function roles should be set to 0 by default
         assertEq(

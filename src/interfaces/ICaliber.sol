@@ -41,6 +41,7 @@ interface ICaliber {
     /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
     /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
     /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
+    /// @param initialBaseTokens The array of initial base tokens.
     struct CaliberInitParams {
         uint256 initialPositionStaleThreshold;
         bytes32 initialAllowedInstrRoot;
@@ -49,6 +50,7 @@ interface ICaliber {
         uint256 initialMaxPositionDecreaseLossBps;
         uint256 initialMaxSwapLossBps;
         uint256 initialCooldownDuration;
+        address[] initialBaseTokens;
     }
 
     /// @notice Instruction parameters.

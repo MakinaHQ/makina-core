@@ -68,7 +68,8 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
                 cParams.initialMaxPositionIncreaseLossBps,
                 cParams.initialMaxPositionDecreaseLossBps,
                 cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration
+                cParams.initialCooldownDuration,
+                cParams.initialBaseTokens
             ),
             IMakinaGovernable.MakinaGovernableInitParams(
                 mgParams.initialMechanic,
