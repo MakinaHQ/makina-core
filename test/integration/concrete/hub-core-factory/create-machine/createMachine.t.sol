@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {Errors} from "src/libraries/Errors.sol";
+import {Caliber} from "src/caliber/Caliber.sol";
+import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -11,6 +14,7 @@ import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
+import {Roles} from "src/libraries/Roles.sol";
 
 import {HubCoreFactory_Integration_Concrete_Test} from "../HubCoreFactory.t.sol";
 
@@ -76,7 +80,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", salt);
     }
 
-    function test_CreateMachine() public {
+    function test_CreateMachine_FactoryAuthority() public {
         initialAllowedInstrRoot = bytes32("0x12345");
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
@@ -124,12 +128,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                 salt
             )
         );
-        address caliber = machine.hubCaliber();
+        Caliber caliber = Caliber(machine.hubCaliber());
 
         assertTrue(hubCoreFactory.isMachine(address(machine)));
         assertTrue(hubCoreFactory.isCaliber(address(caliber)));
-
-        assertEq(ICaliber(caliber).hubMachineEndpoint(), address(machine));
 
         assertEq(machine.registry(), address(hubCoreRegistry));
         assertEq(machine.mechanic(), mechanic);
@@ -154,5 +156,201 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(shareToken.minter(), address(machine));
         assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
+
+        assertEq(caliber.hubMachineEndpoint(), address(machine));
+        assertEq(caliber.accountingToken(), address(accountingToken));
+        assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
+        assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);
+        assertEq(caliber.timelockDuration(), DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK);
+        assertEq(caliber.maxPositionIncreaseLossBps(), DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
+        assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
+        assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
+        assertEq(caliber.authority(), address(accessManager));
+
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeCaliber.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeBridgeAdapter.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.setDepositor.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.setRedeemer.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.setFeeManager.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setMechanic.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setSecurityCouncil.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setRiskManager.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setRiskManagerTimelock.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(
+                address(machine), IMakinaGovernable.setRestrictedAccountingMode.selector
+            ),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.addAccountingAgent.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.removeAccountingAgent.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+    }
+
+    function test_CreateMachine_OtherAuthority() public {
+        AccessManagerUpgradeable accessManager2 = _deployAccessManager(address(this), address(this));
+
+        initialAllowedInstrRoot = bytes32("0x12345");
+
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit ICaliberFactory.CaliberCreated(address(0), address(0));
+
+        vm.expectEmit(false, false, false, false, address(hubCoreFactory));
+        emit IHubCoreFactory.MachineCreated(address(0), address(0));
+
+        vm.prank(dao);
+        machine = Machine(
+            hubCoreFactory.createMachine(
+                IMachine.MachineInitParams({
+                    initialDepositor: machineDepositor,
+                    initialRedeemer: machineRedeemer,
+                    initialFeeManager: address(feeManager),
+                    initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                    initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
+                    initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
+                    initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialMaxSharePriceChangeRate: DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE
+                }),
+                ICaliber.CaliberInitParams({
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: initialAllowedInstrRoot,
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialRiskManager: riskManager,
+                    initialRiskManagerTimelock: riskManagerTimelock,
+                    initialAuthority: address(accessManager2),
+                    initialRestrictedAccountingMode: false
+                }),
+                address(accountingToken),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                salt
+            )
+        );
+        Caliber caliber = Caliber(machine.hubCaliber());
+
+        assertTrue(hubCoreFactory.isMachine(address(machine)));
+        assertTrue(hubCoreFactory.isCaliber(address(caliber)));
+
+        assertEq(machine.registry(), address(hubCoreRegistry));
+        assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.depositor(), machineDepositor);
+        assertEq(machine.redeemer(), machineRedeemer);
+        assertEq(machine.accountingToken(), address(accountingToken));
+        assertEq(machine.caliberStaleThreshold(), DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD);
+        assertEq(machine.shareLimit(), DEFAULT_MACHINE_SHARE_LIMIT);
+
+        assertEq(machine.mechanic(), mechanic);
+        assertEq(machine.securityCouncil(), securityCouncil);
+        assertEq(machine.riskManager(), riskManager);
+        assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
+        assertEq(machine.authority(), address(accessManager2));
+        assertFalse(machine.restrictedAccountingMode());
+
+        assertTrue(machine.isIdleToken(address(accountingToken)));
+        assertEq(machine.getSpokeCalibersLength(), 0);
+
+        IMachineShare shareToken = IMachineShare(machine.shareToken());
+        assertEq(shareToken.minter(), address(machine));
+        assertEq(shareToken.name(), DEFAULT_MACHINE_SHARE_TOKEN_NAME);
+        assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
+
+        assertEq(caliber.hubMachineEndpoint(), address(machine));
+        assertEq(caliber.accountingToken(), address(accountingToken));
+        assertEq(caliber.positionStaleThreshold(), DEFAULT_CALIBER_POS_STALE_THRESHOLD);
+        assertEq(caliber.allowedInstrRoot(), initialAllowedInstrRoot);
+        assertEq(caliber.timelockDuration(), DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK);
+        assertEq(caliber.maxPositionIncreaseLossBps(), DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS);
+        assertEq(caliber.maxPositionDecreaseLossBps(), DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS);
+        assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
+        assertEq(caliber.authority(), address(accessManager2));
+
+        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
+
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector), 0
+        );
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMachine.setSpokeCaliber.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMachine.setSpokeBridgeAdapter.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMachine.setDepositor.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMachine.setRedeemer.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMachine.setFeeManager.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.setMechanic.selector), 0);
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.setSecurityCouncil.selector), 0
+        );
+        assertEq(accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.setRiskManager.selector), 0);
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.setRiskManagerTimelock.selector), 0
+        );
+        assertEq(
+            accessManager2.getTargetFunctionRole(
+                address(machine), IMakinaGovernable.setRestrictedAccountingMode.selector
+            ),
+            0
+        );
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.addAccountingAgent.selector), 0
+        );
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.removeAccountingAgent.selector), 0
+        );
     }
 }

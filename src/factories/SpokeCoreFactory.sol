@@ -3,10 +3,12 @@ pragma solidity 0.8.28;
 
 import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
+import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ISpokeCoreFactory} from "../interfaces/ISpokeCoreFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
@@ -14,6 +16,7 @@ import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
+import {Roles} from "../libraries/Roles.sol";
 
 contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapterFactory, ISpokeCoreFactory {
     // keccak256("makina.salt.CaliberMailbox")
@@ -66,6 +69,12 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         $._isCaliberMailbox[mailbox] = true;
         $._instanceSalts[mailbox] = salt;
 
+        address _authority = authority();
+        if (mgParams.initialAuthority == _authority) {
+            _setupCaliberMailboxAMFunctionRoles(_authority, mailbox);
+            _setupCaliberAMFunctionRoles(_authority, caliber);
+        }
+
         emit CaliberMailboxCreated(mailbox, caliber, hubMachine);
 
         return caliber;
@@ -96,5 +105,27 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         bytes memory bytecode = abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, initCD));
 
         return _create3(CaliberMailboxSaltDomain, salt, bytecode);
+    }
+
+    /// @dev Sets function roles in associated access manager for a deployed caliber mailbox instance.
+    function _setupCaliberMailboxAMFunctionRoles(address _authority, address _mailbox) internal {
+        bytes4[] memory compSetupSelectors = new bytes4[](2);
+        compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
+        compSetupSelectors[1] = ICaliberMailbox.setHubBridgeAdapter.selector;
+        IAccessManager(_authority).setTargetFunctionRole(
+            _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
+        mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
+        mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
+        mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
+        mgmtSetupSelectors[3] = IMakinaGovernable.setRiskManagerTimelock.selector;
+        mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
+        mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
+        mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
+        IAccessManager(_authority).setTargetFunctionRole(
+            _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
     }
 }

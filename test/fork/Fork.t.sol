@@ -3,6 +3,8 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
+import {Roles} from "../../src/libraries/Roles.sol";
+
 import {Constants} from "../utils/Constants.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 
@@ -87,10 +89,16 @@ abstract contract Fork_Test is Base, Test, Constants {
         if (isHub) {
             uint64 superAdminRole = hubCore.accessManager.ADMIN_ROLE();
             hubCore.accessManager.grantRole(superAdminRole, forkData.dao, 0);
+            hubCore.accessManager.grantRole(superAdminRole, address(hubCore.hubCoreFactory), 0);
+            hubCore.accessManager.grantRole(Roles.STRATEGY_COMPONENTS_SETUP_ROLE, forkData.dao, 0);
             hubCore.accessManager.revokeRole(superAdminRole, address(this));
         } else {
             uint64 superAdminRole = spokeCores[chainId].accessManager.ADMIN_ROLE();
             spokeCores[chainId].accessManager.grantRole(superAdminRole, forkData.dao, 0);
+            spokeCores[chainId].accessManager.grantRole(
+                superAdminRole, address(spokeCores[chainId].spokeCoreFactory), 0
+            );
+            spokeCores[chainId].accessManager.grantRole(Roles.STRATEGY_COMPONENTS_SETUP_ROLE, forkData.dao, 0);
             spokeCores[chainId].accessManager.revokeRole(superAdminRole, address(this));
         }
     }
