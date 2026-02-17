@@ -204,8 +204,6 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 }
 
 abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, Base_Spoke_Test {
-    address internal hubMachineAddr;
-
     Caliber internal caliber;
     CaliberMailbox internal caliberMailbox;
 
@@ -216,10 +214,7 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
         vm.prank(dao);
         spokeCoreRegistry.setFlashLoanModule(address(flashLoanModule));
 
-        hubMachineAddr = makeAddr("hubMachine");
-
-        (caliber, caliberMailbox) =
-            _deployCaliber(hubMachineAddr, address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
+        (caliber, caliberMailbox) = _deployCaliber(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 
     modifier whileInRecoveryMode() {

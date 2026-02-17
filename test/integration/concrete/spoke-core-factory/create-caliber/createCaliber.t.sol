@@ -24,7 +24,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), bytes32(0), false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_ZeroSalt() public {
@@ -34,7 +34,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.ZeroSalt.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), bytes32(0), false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_SaltAlreadyUsed() public {
@@ -44,7 +44,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.TargetAlreadyExists.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), TEST_DEPLOYMENT_SALT, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), TEST_DEPLOYMENT_SALT, false);
     }
 
     function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
@@ -64,7 +64,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), salt, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), salt, false);
     }
 
     function test_RevertGiven_CaliberCreate3ContractDeploymentFailed() public {
@@ -76,7 +76,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ContractDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), salt, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), salt, false);
     }
 
     function test_RevertWhen_AMSetupAndOtherAuthority() public {
@@ -109,7 +109,6 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                 }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 address(accountingToken),
-                address(0),
                 salt,
                 true
             )
@@ -117,7 +116,6 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
     }
 
     function test_CreateCaliber_AMSetup() public {
-        address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         address[] memory initialBaseTokens = new address[](1);
@@ -140,7 +138,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
 
         vm.expectEmit(false, false, true, false, address(spokeCoreFactory));
-        emit ISpokeCoreFactory.CaliberMailboxCreated(address(0), address(0), _hubMachine);
+        emit ISpokeCoreFactory.CaliberMailboxCreated(address(0));
 
         vm.prank(dao);
         caliber = Caliber(
@@ -166,11 +164,11 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                 }),
                 baParams,
                 address(accountingToken),
-                _hubMachine,
                 salt,
                 true
             )
         );
+
         assertTrue(spokeCoreFactory.isCaliber(address(caliber)));
         assertTrue(spokeCoreFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
 
@@ -254,7 +252,6 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
     }
 
     function test_CreateCaliber_WithoutAMSetup() public {
-        address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
 
         address[] memory initialBaseTokens = new address[](1);
@@ -277,7 +274,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
 
         vm.expectEmit(false, false, true, false, address(spokeCoreFactory));
-        emit ISpokeCoreFactory.CaliberMailboxCreated(address(0), address(0), _hubMachine);
+        emit ISpokeCoreFactory.CaliberMailboxCreated(address(0));
 
         vm.prank(dao);
         caliber = Caliber(
@@ -303,11 +300,11 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                 }),
                 baParams,
                 address(accountingToken),
-                _hubMachine,
                 salt,
                 false
             )
         );
+
         assertTrue(spokeCoreFactory.isCaliber(address(caliber)));
         assertTrue(spokeCoreFactory.isCaliberMailbox(caliber.hubMachineEndpoint()));
 

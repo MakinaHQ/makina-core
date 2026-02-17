@@ -57,7 +57,6 @@ abstract contract Unit_Concrete_Spoke_Test is Unit_Concrete_Test, Base_Spoke_Tes
         Base_Spoke_Test.setUp();
         Unit_Concrete_Test.setUp();
 
-        (caliber, caliberMailbox) =
-            _deployCaliber(address(0), address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
+        (caliber, caliberMailbox) = _deployCaliber(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
     }
 }

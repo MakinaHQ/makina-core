@@ -153,7 +153,6 @@ contract Machine_Fork_Test is Fork_Test {
                 }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 baseForkData.usdc,
-                address(machine),
                 TEST_DEPLOYMENT_SALT,
                 true
             )

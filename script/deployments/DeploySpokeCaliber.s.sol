@@ -54,7 +54,6 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
             vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
         );
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
-        address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
         bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
         bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
@@ -86,7 +85,6 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
             ),
             baParams,
             accountingToken,
-            hubMachine,
             salt,
             setupAMFunctionRoles
         );

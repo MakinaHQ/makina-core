@@ -199,12 +199,10 @@ abstract contract Base_Spoke_Test is Base_Test {
         setupAccessManagerRolesAndOwnership();
     }
 
-    function _deployCaliber(
-        address _hubMachine,
-        address _accountingToken,
-        bytes32 _allowedInstrMerkleRoot,
-        bytes32 _salt
-    ) internal returns (Caliber, CaliberMailbox) {
+    function _deployCaliber(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)
+        internal
+        returns (Caliber, CaliberMailbox)
+    {
         vm.prank(dao);
         Caliber _caliber = Caliber(
             spokeCoreFactory.createCaliber(
@@ -229,7 +227,6 @@ abstract contract Base_Spoke_Test is Base_Test {
                 }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,
-                _hubMachine,
                 _salt,
                 true
             )
