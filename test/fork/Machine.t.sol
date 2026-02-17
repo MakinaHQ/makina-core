@@ -5,6 +5,7 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -85,6 +86,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 ethForkData.usdc,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
@@ -149,6 +151,7 @@ contract Machine_Fork_Test is Fork_Test {
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 baseForkData.usdc,
                 address(machine),
                 TEST_DEPLOYMENT_SALT,

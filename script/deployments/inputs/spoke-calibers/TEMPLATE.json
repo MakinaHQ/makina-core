@@ -18,6 +18,13 @@
     "initialRestrictedAccountingMode": false,
     "initialAccountingAgents": ["0x0000000000000000000000000000000000000000"]
   },
+  "bridgeAdapterInitParams": [
+    {
+      "bridgeId": 0,
+      "initData": "",
+      "initialMaxBridgeLossBps": 0
+    }
+  ],
   "accountingToken": "0x0000000000000000000000000000000000000000",
   "hubMachine": "0x0000000000000000000000000000000000000000",
   "salt": "0x0000000000000000000000000000000000000000000000000000000000000000",

@@ -14,6 +14,7 @@ interface ISpokeCoreFactory is IBridgeAdapterFactory {
     /// @notice Deploys a new Caliber instance.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param accountingToken The address of the accounting token.
     /// @param hubMachine The address of the hub machine.
     /// @param salt The salt used to deploy the Caliber deterministically.
@@ -22,6 +23,7 @@ interface ISpokeCoreFactory is IBridgeAdapterFactory {
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
         address hubMachine,
         bytes32 salt,

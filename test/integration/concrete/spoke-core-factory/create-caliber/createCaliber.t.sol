@@ -5,7 +5,7 @@ import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {Errors} from "src/libraries/Errors.sol";
-import {IBridgeController} from "src/interfaces/IBridgeController.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -18,36 +18,33 @@ import {Roles} from "src/libraries/Roles.sol";
 import {SpokeCoreFactory_Integration_Concrete_Test} from "../SpokeCoreFactory.t.sol";
 
 contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration_Concrete_Test {
-    address internal accountingAgent;
-
-    function setUp() public override {
-        super.setUp();
-        accountingAgent = makeAddr("accountingAgent");
-    }
-
     function test_RevertWhen_CallerWithoutRole() public {
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
+
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0), false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_ZeroSalt() public {
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.ZeroSalt.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0), false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_SaltAlreadyUsed() public {
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.TargetAlreadyExists.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), TEST_DEPLOYMENT_SALT, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), TEST_DEPLOYMENT_SALT, false);
     }
 
     function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
@@ -63,10 +60,11 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), salt, false);
     }
 
     function test_RevertGiven_CaliberCreate3ContractDeploymentFailed() public {
@@ -74,10 +72,11 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ContractDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt, false);
+        spokeCoreFactory.createCaliber(cParams, mgParams, baParams, address(0), address(0), salt, false);
     }
 
     function test_RevertWhen_AMSetupAndOtherAuthority() public {
@@ -108,6 +107,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 address(accountingToken),
                 address(0),
                 salt,
@@ -125,6 +125,14 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         address[] memory initialAccountingAgents = new address[](1);
         initialAccountingAgents[0] = accountingAgent;
+
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
+        baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
+            bridgeId: ACROSS_V3_BRIDGE_ID,
+            initData: "",
+            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+        });
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
@@ -156,6 +164,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: initialAccountingAgents
                 }),
+                baParams,
                 address(accountingToken),
                 _hubMachine,
                 salt,
@@ -185,24 +194,16 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertFalse(caliberMailbox.restrictedAccountingMode());
         assertTrue(caliberMailbox.isAccountingAgent(address(accountingAgent)));
 
+        assertTrue(caliberMailbox.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
+        assertTrue(caliberMailbox.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
+        assertNotEq(caliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID), address(0));
+        assertEq(caliberMailbox.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID), DEFAULT_MAX_BRIDGE_LOSS_BPS);
+
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 2);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
         assertEq(caliber.getBaseToken(1), address(baseToken));
 
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
-            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector),
-            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliberMailbox), IBridgeController.createBridgeAdapter.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
-        );
         assertEq(
             accessManager.getTargetFunctionRole(address(caliberMailbox), ICaliberMailbox.setHubBridgeAdapter.selector),
             Roles.STRATEGY_COMPONENTS_SETUP_ROLE
@@ -241,6 +242,15 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
             ),
             Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
+
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
     }
 
     function test_CreateCaliber_WithoutAMSetup() public {
@@ -252,6 +262,14 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         address[] memory initialAccountingAgents = new address[](1);
         initialAccountingAgents[0] = accountingAgent;
+
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
+        baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
+            bridgeId: ACROSS_V3_BRIDGE_ID,
+            initData: "",
+            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+        });
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
@@ -283,6 +301,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: initialAccountingAgents
                 }),
+                baParams,
                 address(accountingToken),
                 _hubMachine,
                 salt,
@@ -312,18 +331,16 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertFalse(caliberMailbox.restrictedAccountingMode());
         assertTrue(caliberMailbox.isAccountingAgent(address(accountingAgent)));
 
+        assertTrue(caliberMailbox.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
+        assertTrue(caliberMailbox.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
+        assertNotEq(caliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID), address(0));
+        assertEq(caliberMailbox.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID), DEFAULT_MAX_BRIDGE_LOSS_BPS);
+
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 2);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
         assertEq(caliber.getBaseToken(1), address(baseToken));
 
-        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
-        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
-
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliberMailbox), IBridgeController.createBridgeAdapter.selector),
-            0
-        );
         assertEq(
             accessManager.getTargetFunctionRole(address(caliberMailbox), ICaliberMailbox.setHubBridgeAdapter.selector),
             0
@@ -360,5 +377,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
             ),
             0
         );
+
+        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
+        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
     }
 }

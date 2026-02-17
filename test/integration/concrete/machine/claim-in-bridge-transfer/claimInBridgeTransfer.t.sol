@@ -7,6 +7,7 @@ import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
@@ -27,8 +28,12 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID, spokeAccountingTokenAddr);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
-        bridgeAdapter =
-            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        bridgeAdapter = IBridgeAdapter(
+            hubCoreFactory.createBridgeAdapter(
+                address(machine),
+                IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+            )
+        );
         vm.stopPrank();
 
         inputAmount = 1e18;

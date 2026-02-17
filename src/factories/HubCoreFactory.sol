@@ -8,7 +8,6 @@ import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
-import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
@@ -91,6 +90,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address preDepositVault,
         bytes32 salt,
         bool setupAMFunctionRoles
@@ -113,6 +113,10 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         $._isMachine[machine] = true;
         $._instanceSalts[machine] = salt;
 
+        for (uint256 i; i < baParams.length; ++i) {
+            _createBridgeAdapter(machine, baParams[i], salt);
+        }
+
         if (setupAMFunctionRoles) {
             address initialAuthority = mgParams.initialAuthority;
             address initialFeeManager = mParams.initialFeeManager;
@@ -129,24 +133,30 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
         string memory tokenName,
         string memory tokenSymbol,
         bytes32 salt,
         bool setupAMFunctionRoles
     ) external override restricted returns (address) {
-        HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
-
-        address token = _createShareToken(tokenName, tokenSymbol, address(this));
+        address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
         address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
         address caliber = _createCaliber(cParams, accountingToken, machine, salt);
 
-        IOwnable2Step(token).transferOwnership(machine);
+        IOwnable2Step(shareToken).transferOwnership(machine);
 
-        IMachine(machine).initialize(mParams, mgParams, address(0), token, accountingToken, caliber);
+        IMachine(machine).initialize(mParams, mgParams, address(0), shareToken, accountingToken, caliber);
 
-        $._isMachine[machine] = true;
-        $._instanceSalts[machine] = salt;
+        {
+            HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
+            $._isMachine[machine] = true;
+            $._instanceSalts[machine] = salt;
+        }
+
+        for (uint256 i; i < baParams.length; ++i) {
+            _createBridgeAdapter(machine, baParams[i], salt);
+        }
 
         if (setupAMFunctionRoles) {
             address initialAuthority = mgParams.initialAuthority;
@@ -154,19 +164,24 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
             _setupMachineBundleAMFunctionRoles(initialAuthority, machine, caliber, initialFeeManager);
         }
 
-        emit MachineCreated(machine, token);
+        emit MachineCreated(machine, shareToken);
 
         return machine;
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address) {
+    function createBridgeAdapter(address bridgeController, BridgeAdapterInitParams calldata baParams)
+        external
+        override
+        restricted
+        returns (address)
+    {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
-        address caller = msg.sender;
-        if (!$._isMachine[caller]) {
-            revert Errors.NotMachine();
+        if (!$._isMachine[bridgeController]) {
+            revert Errors.InvalidBridgeController();
         }
-        return _createBridgeAdapter(caller, bridgeId, initData, $._instanceSalts[caller]);
+
+        return _createBridgeAdapter(bridgeController, baParams, $._instanceSalts[bridgeController]);
     }
 
     /// @dev Deploys a machine share token.
@@ -206,13 +221,12 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
 
     /// @dev Sets function roles for a deployed machine instance.
     function _setupMachineAMFunctionRoles(address _authority, address _machine) internal {
-        bytes4[] memory compSetupSelectors = new bytes4[](6);
-        compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
-        compSetupSelectors[1] = IMachine.setSpokeCaliber.selector;
-        compSetupSelectors[2] = IMachine.setSpokeBridgeAdapter.selector;
-        compSetupSelectors[3] = IMachine.setDepositor.selector;
-        compSetupSelectors[4] = IMachine.setRedeemer.selector;
-        compSetupSelectors[5] = IMachine.setFeeManager.selector;
+        bytes4[] memory compSetupSelectors = new bytes4[](5);
+        compSetupSelectors[0] = IMachine.setSpokeCaliber.selector;
+        compSetupSelectors[1] = IMachine.setSpokeBridgeAdapter.selector;
+        compSetupSelectors[2] = IMachine.setDepositor.selector;
+        compSetupSelectors[3] = IMachine.setRedeemer.selector;
+        compSetupSelectors[4] = IMachine.setFeeManager.selector;
         IAccessManager(_authority).setTargetFunctionRole(
             _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
         );

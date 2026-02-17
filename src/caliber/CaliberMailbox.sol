@@ -12,7 +12,6 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
-import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -59,13 +58,6 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
         $._hubMachine = _hubMachine;
         $._cooldownDuration = _initialCooldownDuration;
         __MakinaGovernable_init(mgParams);
-    }
-
-    modifier onlyFactory() {
-        if (msg.sender != ISpokeCoreRegistry(registry).coreFactory()) {
-            revert Errors.NotFactory();
-        }
-        _;
     }
 
     /// @inheritdoc ICaliberMailbox

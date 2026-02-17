@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
@@ -21,8 +22,12 @@ contract CancelOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Int
 
         vm.startPrank(dao);
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
-        bridgeAdapter =
-            IBridgeAdapter(caliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        bridgeAdapter = IBridgeAdapter(
+            spokeCoreFactory.createBridgeAdapter(
+                address(caliberMailbox),
+                IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+            )
+        );
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
         vm.stopPrank();
 

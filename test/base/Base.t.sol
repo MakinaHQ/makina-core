@@ -15,6 +15,7 @@ import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
@@ -159,6 +160,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
@@ -225,6 +227,7 @@ abstract contract Base_Spoke_Test is Base_Test {
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,
                 _hubMachine,
                 _salt,

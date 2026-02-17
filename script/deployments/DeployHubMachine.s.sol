@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
@@ -52,6 +53,9 @@ contract DeployHubMachine is Base, Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
+            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
+        );
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
         string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
@@ -95,6 +99,7 @@ contract DeployHubMachine is Base, Script, SortedParams {
                 mgParams.initialRestrictedAccountingMode,
                 mgParams.initialAccountingAgents
             ),
+            baParams,
             accountingToken,
             shareTokenName,
             shareTokenSymbol,

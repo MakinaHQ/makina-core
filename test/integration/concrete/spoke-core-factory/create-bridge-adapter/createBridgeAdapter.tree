@@ -1,8 +1,13 @@
 createBridgeAdapter.t.sol
-├── when caller is not a registered caliber mailbox
-│  └── it should revert with NotCaliberMailbox
-└── when caller is a registered caliber mailbox
-   ├── when the provided bridge ID is not supported
-   │  └── it should revert with InvalidBridgeId
-   └── when the provided bridge ID is supported
-      └── it should deploy a bridge adapter instance
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when the provided bridge controller is not a valid caliber mailbox instance
+   │  └── it should revert with InvalidBridgeController
+   └── when the provided bridge controller is a valid caliber mailbox instance
+      ├── when the provided bridge ID is not supported
+      │  └── it should revert with InvalidBridgeId
+      └── when the provided bridge ID is supported
+         ├── it should deploy a bridge adapter instance
+         ├── it should emit a BridgeAdapterCreated event
+         └── it should register the bridge adapter the provided caliber mailbox

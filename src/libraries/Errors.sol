@@ -30,6 +30,7 @@ library Errors {
     error InsufficientBalance();
     error InvalidAccounting();
     error InvalidAffectedToken();
+    error InvalidBridgeController();
     error InvalidBridgeTransferRoute();
     error InvalidChainId();
     error InvalidDebtFlag();
@@ -69,7 +70,6 @@ library Errors {
     error NotFactory();
     error NotFactoryAuthority();
     error NotFlashLoanModule();
-    error NotMachine();
     error NotMachineEndpoint();
     error NotMigrated();
     error NotPendingMachine();

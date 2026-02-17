@@ -12,6 +12,7 @@ import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
@@ -189,7 +190,9 @@ abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Ba
 
     modifier withBridgeAdapter(uint16 bridgeId) {
         vm.prank(dao);
-        machine.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        hubCoreFactory.createBridgeAdapter(
+            address(machine), IBridgeAdapterFactory.BridgeAdapterInitParams(bridgeId, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+        );
         _;
     }
 
@@ -233,7 +236,10 @@ abstract contract Integration_Concrete_Spoke_Test is Integration_Concrete_Test, 
 
     modifier withBridgeAdapter(uint16 bridgeId) {
         vm.prank(dao);
-        caliberMailbox.createBridgeAdapter(bridgeId, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        spokeCoreFactory.createBridgeAdapter(
+            address(caliberMailbox),
+            IBridgeAdapterFactory.BridgeAdapterInitParams(bridgeId, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+        );
         _;
     }
 

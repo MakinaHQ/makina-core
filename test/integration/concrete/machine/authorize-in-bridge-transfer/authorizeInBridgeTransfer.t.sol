@@ -2,6 +2,7 @@
 pragma solidity 0.8.28;
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
@@ -13,8 +14,12 @@ contract AuthorizeInBridgeTransfer_Integration_Concrete_Test is Machine_Integrat
         Machine_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
-        bridgeAdapter =
-            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        bridgeAdapter = IBridgeAdapter(
+            hubCoreFactory.createBridgeAdapter(
+                address(machine),
+                IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+            )
+        );
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {

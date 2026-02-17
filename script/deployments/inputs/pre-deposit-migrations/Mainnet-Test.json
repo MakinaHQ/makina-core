@@ -32,6 +32,13 @@
       "0x00000000000000000000000000000000000000a2"
     ]
   },
+  "bridgeAdapterInitParams": [
+    {
+      "bridgeId": 1,
+      "initData": "",
+      "initialMaxBridgeLossBps": 100
+    }
+  ],
   "preDepositVault": "0x0000000000000000000000000000000000000000",
   "salt": "0x0000000000000000000000000000000000000000000000000000000000000001",
   "setupAMFunctionRoles": false

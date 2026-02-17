@@ -39,6 +39,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param preDepositVault The address of the PreDepositVault instance to migrate.
     /// @param salt The salt used to deploy the Hub Caliber deterministically.
     /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
@@ -47,6 +48,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address preDepositVault,
         bytes32 salt,
         bool setupAMFunctionRoles
@@ -56,6 +58,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param accountingToken The address of the accounting token.
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
@@ -66,6 +69,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
         string memory tokenName,
         string memory tokenSymbol,

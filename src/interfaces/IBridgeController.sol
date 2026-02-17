@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 interface IBridgeController {
-    event BridgeAdapterCreated(uint16 indexed bridgeId, address indexed adapter);
+    event BridgeAdapterSet(uint16 indexed bridgeId, address indexed adapter);
     event MaxBridgeLossBpsChanged(
         uint16 indexed bridgeId, uint256 indexed oldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
     );
@@ -21,12 +21,12 @@ interface IBridgeController {
     /// @notice Bridge ID => Max allowed value loss in basis points for transfers via this bridge.
     function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256);
 
-    /// @notice Deploys a new BridgeAdapter instance.
+    /// @notice Sets a bridge adpater instance for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
+    /// @param bridgeAdapter The address of the new bridge adapter instance.
     /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for transfers via this bridge.
-    /// @param initData The optional initialization data for the bridge adapter.
     /// @return The address of the deployed BridgeAdapter.
-    function createBridgeAdapter(uint16 bridgeId, uint256 initialMaxBridgeLossBps, bytes calldata initData)
+    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
         external
         returns (address);
 

@@ -1,0 +1,14 @@
+setBridgeAdapter.t.sol
+├── when caller is not the bridge adapter factory
+│  └── it should revert with NotFactory
+└── when caller has the relevant role
+   ├── given an adapter already exists for the provided bridge ID
+   │  └── it should revert with BridgeAdapterAlreadyExists
+   └── given an adapter does not already exists for the provided bridge ID
+      ├── given the provide bridge adapter is the zero address
+      │  └── it should revert with ZeroBridgeAdapterAddress
+      └── given the provide bridge adapter is not the zero address
+         ├── it should assign the provided bridge adapter to the provided bridge ID in controller storage
+         ├── it should mark outgoing bridge transfers through the deployed BridgeAdapter as enabled by default
+         ├── it should set the max bridge loss basis point value associated with the provided bridge ID to the provided value
+         └── it should emit a BridgeAdapterSet event

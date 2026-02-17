@@ -5,6 +5,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 
 import {AcrossV3BridgeAdapter} from "src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {Errors} from "src/libraries/Errors.sol";
@@ -22,7 +23,10 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         tokenRegistry.setToken(address(accountingToken), hubChainId, hubAccountingTokenAddr);
 
         bridgeAdapter = AcrossV3BridgeAdapter(
-            caliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "")
+            spokeCoreFactory.createBridgeAdapter(
+                address(caliberMailbox),
+                IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+            )
         );
 
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);

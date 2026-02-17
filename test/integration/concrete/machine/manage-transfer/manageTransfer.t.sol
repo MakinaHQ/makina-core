@@ -6,6 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
 import {Errors} from "src/libraries/Errors.sol";
@@ -23,8 +24,12 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
         vm.startPrank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
-        bridgeAdapter =
-            IBridgeAdapter(machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, ""));
+        bridgeAdapter = IBridgeAdapter(
+            hubCoreFactory.createBridgeAdapter(
+                address(machine),
+                IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+            )
+        );
         machine.setSpokeBridgeAdapter(SPOKE_CHAIN_ID, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         vm.stopPrank();
 

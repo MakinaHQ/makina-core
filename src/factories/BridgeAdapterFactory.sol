@@ -6,6 +6,7 @@ import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol"
 import {Create3Factory} from "./Create3Factory.sol";
 import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
+import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {Errors} from "../libraries/Errors.sol";
@@ -35,26 +36,28 @@ abstract contract BridgeAdapterFactory is Create3Factory, MakinaContext, IBridge
         return _getBridgeAdapterFactoryStorage()._isBridgeAdapter[adapter];
     }
 
-    /// @dev Internal logic for bridge adapter deployment via create3.
-    function _createBridgeAdapter(address controller, uint16 bridgeId, bytes calldata initData, bytes32 salt)
+    /// @dev Internal logic for bridge adapter deployment via create3 and assignment to a bridge controller.
+    function _createBridgeAdapter(address controller, BridgeAdapterInitParams calldata baParams, bytes32 salt)
         internal
         returns (address)
     {
-        address beacon = ICoreRegistry(registry).bridgeAdapterBeacon(bridgeId);
+        address beacon = ICoreRegistry(registry).bridgeAdapterBeacon(baParams.bridgeId);
         if (beacon == address(0)) {
             revert Errors.InvalidBridgeId();
         }
 
-        bytes32 saltDomain = keccak256(abi.encode(BridgeAdapterSaltDomain, bridgeId));
-        bytes memory initCD = abi.encodeCall(IBridgeAdapter.initialize, (controller, initData));
+        bytes32 saltDomain = keccak256(abi.encode(BridgeAdapterSaltDomain, baParams.bridgeId));
+        bytes memory initCD = abi.encodeCall(IBridgeAdapter.initialize, (controller, baParams.initData));
         bytes memory bytecode = abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, initCD));
 
-        address bridgeAdapter = _create3(saltDomain, salt, bytecode);
+        address adapter = _create3(saltDomain, salt, bytecode);
 
-        _getBridgeAdapterFactoryStorage()._isBridgeAdapter[bridgeAdapter] = true;
+        _getBridgeAdapterFactoryStorage()._isBridgeAdapter[adapter] = true;
 
-        emit BridgeAdapterCreated(controller, uint256(bridgeId), bridgeAdapter);
+        emit BridgeAdapterCreated(controller, uint256(baParams.bridgeId), adapter);
 
-        return bridgeAdapter;
+        IBridgeController(controller).setBridgeAdapter(baParams.bridgeId, adapter, baParams.initialMaxBridgeLossBps);
+
+        return adapter;
     }
 }

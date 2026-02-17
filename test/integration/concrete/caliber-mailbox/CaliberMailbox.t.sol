@@ -7,8 +7,8 @@ import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../bridge-controller/BridgeController.t.sol";
-import {CreateBridgeAdapter_Integration_Concrete_Test} from
-    "../bridge-controller/create-bridge-adapter/createBridgeAdapter.t.sol";
+import {SetBridgeAdapter_Integration_Concrete_Test} from
+    "../bridge-controller/set-bridge-adapter/setBridgeAdapter.t.sol";
 import {GetBridgeAdapter_Integration_Concrete_Test} from
     "../bridge-controller/get-bridge-adapter/getBridgeAdapter.t.sol";
 import {GetMaxBridgeLossBps_Integration_Concrete_Test} from
@@ -73,7 +73,7 @@ contract IsBridgeSupported_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsBridgeSupported_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -86,7 +86,7 @@ contract IsOutTransferEnabled_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, IsOutTransferEnabled_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -99,7 +99,7 @@ contract GetBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, GetBridgeAdapter_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -112,20 +112,20 @@ contract GetMaxBridgeLossBps_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, GetMaxBridgeLossBps_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
 }
 
-contract CreateBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
+contract SetBridgeAdapter_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    CreateBridgeAdapter_Integration_Concrete_Test
+    SetBridgeAdapter_Integration_Concrete_Test
 {
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, CreateBridgeAdapter_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -138,7 +138,7 @@ contract SetMaxBridgeLossBps_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, SetMaxBridgeLossBps_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
@@ -151,7 +151,7 @@ contract SetOutTransferEnabled_CaliberMailbox_Integration_Concrete_Test is
     function setUp()
         public
         virtual
-        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, SetOutTransferEnabled_Integration_Concrete_Test)
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
     {
         BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
     }
