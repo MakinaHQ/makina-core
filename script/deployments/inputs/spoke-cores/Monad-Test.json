@@ -1,0 +1,66 @@
+{
+  "upgradeAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "superAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "infraSetupAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "stratDeployAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "stratCompSetupAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "stratMgmtSetupAdmin": "0xb7444CCf1236b5df1B7820a551268E9ee420cEf4",
+  "hubChainId": 1,
+  "priceFeedRoutes": [
+    {
+      "token": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+      "feed1": "0x2D1Df1bD061AAc38C22407AD69d69bCC3C62edBD",
+      "stalenessThreshold1": 4200,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    },
+    {
+      "token": "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
+      "feed1": "0xE20751C7B5867bCBef815ffc1b284c3f412a9e13",
+      "stalenessThreshold1": 4200,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    },
+    {
+      "token": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+      "feed1": "0xf5F15f188AbCB0d165D1Edb7f37F7d6fA2fCebec",
+      "stalenessThreshold1": 4200,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    }
+  ],
+  "foreignTokens": [
+    {
+      "localToken": "0x0555E30da8f98308EdB960aa94C0Db47230d2B9c",
+      "foreignEvmChainId": 1,
+      "foreignToken": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+    },
+    {
+      "localToken": "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
+      "foreignEvmChainId": 1,
+      "foreignToken": "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a"
+    },
+    {
+      "localToken": "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+      "foreignEvmChainId": 1,
+      "foreignToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+    }
+  ],
+  "swappersTargets": [
+    
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 1,
+      "approvalTarget": "0xd2ecb3afe598b746f8123cae365a598da831a449",
+      "executionTarget": "0xd2ecb3afe598b746f8123cae365a598da831a449",
+      "receiveSource": "0xd2ecb3afe598b746f8123cae365a598da831a449"
+    },
+    {
+      "bridgeId": 2,
+      "approvalTarget": "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
+      "executionTarget": "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B",
+      "receiveSource": "0x6F475642a6e85809B1c36Fa62763669b1b48DD5B"
+    }
+  ]
+}
