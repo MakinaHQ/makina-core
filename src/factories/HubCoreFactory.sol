@@ -10,6 +10,7 @@ import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IHubCoreFactory} from "../interfaces/IHubCoreFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -111,11 +112,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         $._isMachine[machine] = true;
         $._instanceSalts[machine] = salt;
 
-        address _authority = authority();
-        if (mgParams.initialAuthority == _authority) {
-            _setupMachineAMFunctionRoles(_authority, machine);
-            _setupCaliberAMFunctionRoles(_authority, caliber);
-        }
+        _setupMachineBundleAMFunctionRoles(machine, caliber, mParams.initialFeeManager, mgParams.initialAuthority);
 
         emit MachineCreated(machine, shareToken);
 
@@ -145,11 +142,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         $._isMachine[machine] = true;
         $._instanceSalts[machine] = salt;
 
-        address _authority = authority();
-        if (mgParams.initialAuthority == _authority) {
-            _setupMachineAMFunctionRoles(_authority, machine);
-            _setupCaliberAMFunctionRoles(_authority, caliber);
-        }
+        _setupMachineBundleAMFunctionRoles(machine, caliber, mParams.initialFeeManager, mgParams.initialAuthority);
 
         emit MachineCreated(machine, token);
 
@@ -176,7 +169,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         return _shareToken;
     }
 
-    /// @dev Sets function roles in associated access manager for a deployed pre-deposit vault instance.
+    /// @dev Sets function roles for a deployed pre-deposit vault instance.
     function _setupPreDepositVaultAMFunctionRoles(address _authority, address _preDepositVault) internal {
         bytes4[] memory mgmtSetupSelectors = new bytes4[](1);
         mgmtSetupSelectors[0] = IMakinaGovernable.setRiskManager.selector;
@@ -185,7 +178,22 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         );
     }
 
-    /// @dev Sets function roles in associated access manager for a deployed machine instance.
+    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager (if applicable).
+    function _setupMachineBundleAMFunctionRoles(
+        address machine,
+        address caliber,
+        address initialFeeManager,
+        address initialAuthority
+    ) internal {
+        address _authority = authority();
+        if (initialAuthority == _authority) {
+            _setupMachineAMFunctionRoles(_authority, machine);
+            _setupCaliberAMFunctionRoles(_authority, caliber);
+            _setupInitialFeeManagerAMFunctionRoles(_authority, initialFeeManager);
+        }
+    }
+
+    /// @dev Sets function roles for a deployed machine instance.
     function _setupMachineAMFunctionRoles(address _authority, address _machine) internal {
         bytes4[] memory compSetupSelectors = new bytes4[](6);
         compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
@@ -209,5 +217,17 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IAccessManager(_authority).setTargetFunctionRole(
             _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
+    }
+
+    /// @dev Sets function roles for the initial fee manager of a deployed machine instance (if applicable).
+    function _setupInitialFeeManagerAMFunctionRoles(address _authority, address _feeManager) internal {
+        if (_feeManager != address(0)) {
+            bytes4[] memory compSetupSelectors = IFeeManager(_feeManager).getRestrictedFeeConfigSelectors();
+            if (compSetupSelectors.length > 0) {
+                IAccessManager(_authority).setTargetFunctionRole(
+                    _feeManager, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+                );
+            }
+        }
     }
 }

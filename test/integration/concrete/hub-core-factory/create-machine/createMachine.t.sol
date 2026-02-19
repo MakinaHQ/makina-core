@@ -14,6 +14,7 @@ import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "src/machine/Machine.sol";
+import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {Roles} from "src/libraries/Roles.sol";
 
 import {HubCoreFactory_Integration_Concrete_Test} from "../HubCoreFactory.t.sol";
@@ -167,15 +168,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
 
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
-            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-        assertEq(
-            accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector),
-            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
-
+        // Caliber function roles should be set according to HubCoreFactory setup
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector),
             Roles.STRATEGY_COMPONENTS_SETUP_ROLE
@@ -229,6 +222,30 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.removeAccountingAgent.selector),
             Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+
+        // Caliber function roles should be set according to HubCoreFactory setup
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector),
+            Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
+        );
+
+        // Fee Manager function role 3 should be set for function selectors returned by getRestrictedFeeConfigSelectors
+        assertEq(
+            accessManager.getTargetFunctionRole(address(feeManager), MockFeeManager.setFixedFeeRate.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(feeManager), MockFeeManager.setPerfFeeRate.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(feeManager), MockFeeManager.setDistributionRate.selector),
+            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
         );
     }
 
@@ -321,9 +338,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager2));
 
-        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
-        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
-
+        // Machine function roles should be set to 0 by default
         assertEq(
             accessManager2.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector), 0
         );
@@ -351,6 +366,17 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         );
         assertEq(
             accessManager2.getTargetFunctionRole(address(machine), IMakinaGovernable.removeAccountingAgent.selector), 0
+        );
+
+        // Caliber function roles should be set to 0 by default
+        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
+
+        // FeeManager function roles should be set to 0 by default
+        assertEq(accessManager2.getTargetFunctionRole(address(feeManager), MockFeeManager.setFixedFeeRate.selector), 0);
+        assertEq(accessManager2.getTargetFunctionRole(address(feeManager), MockFeeManager.setPerfFeeRate.selector), 0);
+        assertEq(
+            accessManager2.getTargetFunctionRole(address(feeManager), MockFeeManager.setDistributionRate.selector), 0
         );
     }
 }

@@ -15,5 +15,6 @@ createCaliber.t.sol
             │  └── it should revert with Create3ContractDeploymentFailed
             └── given the caliber deployment succeeds
                ├── it should deploy a caliber instance, along with a caliber mailbox instance, and initialize them with provided parameters
+               ├── it should assign the relevant roles to restricted functions on applicable instances
                ├── it should emit a CaliberCreated event
                └── it should emit a CaliberMailboxCreated event

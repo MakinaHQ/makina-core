@@ -25,6 +25,14 @@ contract MockFeeManager is IFeeManager {
         distributionRate = 1e18;
     }
 
+    function getRestrictedFeeConfigSelectors() external returns (bytes4[] memory) {
+        bytes4[] memory selectors = new bytes4[](3);
+        selectors[0] = this.setFixedFeeRate.selector;
+        selectors[1] = this.setPerfFeeRate.selector;
+        selectors[2] = this.setDistributionRate.selector;
+        return selectors;
+    }
+
     function calculateFixedFee(uint256 shareSupply, uint256 elapsedTime) external view returns (uint256) {
         return shareSupply * elapsedTime * fixedFeeRate / RATE_DIVISOR;
     }

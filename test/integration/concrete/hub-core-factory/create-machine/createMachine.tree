@@ -15,6 +15,6 @@ createMachine.t.sol
             │  └── it should revert with Create3ContractDeploymentFailed
             └── given the caliber deployment succeeds
                ├── it should deploy a machine instance, along with a share token and a caliber instance, and initialize them with provided parameters
-               ├── it should assign the relevant roles to restricted functions on deployed instances
+               ├── it should assign the relevant roles to restricted functions on applicable instances
                ├── it should emit a CaliberCreated event
                └── it should emit a MachineCreated event
