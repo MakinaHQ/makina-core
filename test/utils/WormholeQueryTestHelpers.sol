@@ -6,8 +6,8 @@ import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
 import {QueryResponseLib} from "@wormhole/sdk/libraries/QueryResponse.sol";
 import {QueryRequestBuilder} from "@wormhole/sdk/testing/QueryRequestBuilder.sol";
 
-// File is copied from: https://github.com/wormholelabs-xyz/example-queries-demo/blob/829b58dba365a89df3c9ae6116792e396ab8a685/test/helpers/QueryTestHelpers.sol
-// and modified to fit the refactored wormhole-solidity-sdk
+// Adapted from https://github.com/wormholelabs-xyz/example-queries-demo/blob/829b58dba365a89df3c9ae6116792e396ab8a685/test/helpers/QueryTestHelpers.sol
+// Modified for testing purposes with wormhole-solidity-sdk v1.1.0
 
 struct PerChainData {
     uint16 chainId;
@@ -264,33 +264,5 @@ library WormholeQueryTestHelpers {
         });
         perChainData[0].result[0] = result;
         return perChainData;
-    }
-
-    function buildMultiplePerChainData(
-        uint16[] memory chainIds,
-        uint64 blockNum,
-        address[] memory contractAddresses,
-        uint256[] memory results
-    ) internal view returns (PerChainData[] memory) {
-        if (chainIds.length != results.length || chainIds.length != contractAddresses.length) {
-            revert ArrayLengthMismatch();
-        }
-        PerChainData[] memory perChainData = new PerChainData[](chainIds.length);
-        for (uint256 i = 0; i < chainIds.length; i++) {
-            perChainData[i] = PerChainData({
-                chainId: chainIds[i],
-                blockNum: blockNum,
-                blockHash: bytes32(blockhash(blockNum)),
-                blockTime: uint64(block.timestamp * 1e6),
-                contractAddress: contractAddresses[i],
-                result: new bytes[](1)
-            });
-            perChainData[i].result[0] = abi.encodePacked(results[i]);
-        }
-        return perChainData;
-    }
-
-    function addressToBytes32(address addr) internal pure returns (bytes32) {
-        return bytes32(uint256(uint160(addr)));
     }
 }

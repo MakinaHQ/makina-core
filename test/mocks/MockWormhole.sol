@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.20;
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {ICoreBridge, GuardianSet, GuardianSignature, CoreBridgeVM} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
 import {BytesLib} from "../utils/BytesLib.sol";
 import {WormholeQueryTestHelpers} from "../utils/WormholeQueryTestHelpers.sol";
 
-// File is copied from: https://github.com/wormhole-foundation/example-liquidity-layer/blob/main/evm/forge/modules/wormhole/MockWormhole.sol
-// and modified for testing purposes.
-contract MockWormhole is IWormhole {
+// Adapted from https://github.com/wormhole-foundation/example-liquidity-layer/blob/main/evm/forge/modules/wormhole/MockWormhole.sol
+// Modified for testing purposes with wormhole-solidity-sdk v1.1.0
+contract MockWormhole is ICoreBridge {
     using BytesLib for bytes;
 
     uint256 private constant VM_VERSION_SIZE = 1;
@@ -44,9 +44,10 @@ contract MockWormhole is IWormhole {
         boundEvmChainId = initEvmChainId;
     }
 
-    function invalidateVM(bytes calldata encodedVm) external {
-        VM memory vm = _parseVM(encodedVm);
-        invalidVMs[vm.hash] = true;
+    // -- publishing --
+
+    function messageFee() external view returns (uint256) {
+        return currentMsgFee;
     }
 
     function publishMessage(uint32 nonce, bytes memory payload, uint8 consistencyLevel)
@@ -59,14 +60,12 @@ contract MockWormhole is IWormhole {
         emit LogMessagePublished(msg.sender, sequence, nonce, payload, consistencyLevel);
     }
 
-    function parseVM(bytes calldata encodedVm) external pure returns (VM memory vm) {
-        vm = _parseVM(encodedVm);
-    }
+    // -- verification --
 
     function parseAndVerifyVM(bytes calldata encodedVm)
         external
         view
-        returns (VM memory vm, bool valid, string memory reason)
+        returns (CoreBridgeVM memory vm, bool valid, string memory reason)
     {
         vm = _parseVM(encodedVm);
         //behold the rigorous checking!
@@ -74,7 +73,35 @@ contract MockWormhole is IWormhole {
         reason = "";
     }
 
-    function _parseVM(bytes calldata encodedVm) internal pure returns (VM memory vm) {
+    // -- getters --
+
+    function chainId() external view returns (uint16) {
+        return wormholeChainId;
+    }
+
+    function evmChainId() external view returns (uint256) {
+        return boundEvmChainId;
+    }
+
+    function nextSequence(address emitter) external view returns (uint64) {
+        return sequences[emitter];
+    }
+
+    function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
+        address[] memory keys = new address[](1);
+        keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
+
+        GuardianSet memory gset = GuardianSet({keys: keys, expirationTime: 999999999});
+        return gset;
+    }
+
+    function getCurrentGuardianSetIndex() external pure returns (uint32) {
+        return 0;
+    }
+
+    // -- internal --
+
+    function _parseVM(bytes calldata encodedVm) internal pure returns (CoreBridgeVM memory vm) {
         require(encodedVm.length >= 0, "vm too small");
 
         bytes memory body;
@@ -86,7 +113,7 @@ contract MockWormhole is IWormhole {
         vm.guardianSetIndex = encodedVm.toUint32(offset);
         offset += 4;
 
-        (vm.signatures, offset) = parseSignatures(encodedVm, offset);
+        (vm.signatures, offset) = _parseSignatures(encodedVm, offset);
 
         body = encodedVm[offset:];
         vm.timestamp = encodedVm.toUint32(offset);
@@ -111,17 +138,17 @@ contract MockWormhole is IWormhole {
         vm.hash = keccak256(abi.encodePacked(keccak256(body)));
     }
 
-    function parseSignatures(bytes calldata encodedVm, uint256 offset)
+    function _parseSignatures(bytes calldata encodedVm, uint256 offset)
         internal
         pure
-        returns (Signature[] memory signatures, uint256 offsetAfterParse)
+        returns (GuardianSignature[] memory signatures, uint256 offsetAfterParse)
     {
         uint256 sigCount = uint256(encodedVm.toUint8(offset));
         offset += 1;
 
         require(encodedVm.length >= (VM_SIZE_MINIMUM + sigCount * SIGNATURE_SIZE_TOTAL), "vm too small");
 
-        signatures = new Signature[](sigCount);
+        signatures = new GuardianSignature[](sigCount);
         for (uint256 i = 0; i < sigCount; ++i) {
             uint8 guardianIndex = encodedVm.toUint8(offset);
             offset += 1;
@@ -135,7 +162,7 @@ contract MockWormhole is IWormhole {
             uint8 v = encodedVm.toUint8(offset);
             offset += 1;
 
-            signatures[i] = Signature({
+            signatures[i] = GuardianSignature({
                 r: r,
                 s: s,
                 // The hardcoded 27 comes from the base offset for public key recovery ids, public key type and network
@@ -147,164 +174,5 @@ contract MockWormhole is IWormhole {
         }
 
         return (signatures, offset);
-    }
-
-    function initialize() external {}
-
-    function quorum(uint256 /*numGuardians*/ ) external pure returns (uint256 /*numSignaturesRequiredForQuorum*/ ) {
-        return 0;
-    }
-
-    /**
-     * General state and chain observers
-     */
-    function chainId() external view returns (uint16) {
-        return wormholeChainId;
-    }
-
-    function evmChainId() external view returns (uint256) {
-        return boundEvmChainId;
-    }
-
-    function getCurrentGuardianSetIndex() external pure returns (uint32) {
-        return 0;
-    }
-
-    function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
-        address[] memory keys = new address[](1);
-        keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
-
-        GuardianSet memory gset = GuardianSet({keys: keys, expirationTime: 999999999});
-        return gset;
-    }
-
-    function getGuardianSetExpiry() external pure returns (uint32) {
-        return 0;
-    }
-
-    function governanceActionIsConsumed(bytes32 /*hash*/ ) external pure returns (bool) {
-        return false;
-    }
-
-    function isInitialized(address /*impl*/ ) external pure returns (bool) {
-        return true;
-    }
-
-    function isFork() external pure returns (bool) {
-        return false;
-    }
-
-    function governanceChainId() external pure returns (uint16) {
-        return 1;
-    }
-
-    function governanceContract() external pure returns (bytes32) {
-        return bytes32(0x0000000000000000000000000000000000000000000000000000000000000004);
-    }
-
-    function messageFee() external view returns (uint256) {
-        return currentMsgFee;
-    }
-
-    function nextSequence(address emitter) external view returns (uint64) {
-        return sequences[emitter];
-    }
-
-    function verifyVM(VM memory /*vm*/ ) external pure returns (bool, /*valid*/ string memory /*reason*/ ) {
-        revert("unsupported verifyVM in wormhole mock");
-    }
-
-    function verifySignatures(bytes32 hash, Signature[] memory signatures, GuardianSet memory guardianSet)
-        external
-        pure
-        returns (bool valid, string memory reason)
-    {
-        uint8 lastIndex = 0;
-        uint256 guardianCount = guardianSet.keys.length;
-        for (uint256 i = 0; i < signatures.length; i++) {
-            Signature memory sig = signatures[i];
-
-            /// Ensure that provided signature indices are ascending only
-            require(i == 0 || sig.guardianIndex > lastIndex, "signature indices must be ascending");
-            lastIndex = sig.guardianIndex;
-
-            /// @dev Ensure that the provided signature index is within the
-            /// bounds of the guardianSet. This is implicitly checked by the array
-            /// index operation below, so this check is technically redundant.
-            /// However, reverting explicitly here ensures that a bug is not
-            /// introduced accidentally later due to the nontrivial storage
-            /// semantics of solidity.
-            require(sig.guardianIndex < guardianCount, "guardian index out of bounds");
-
-            /// Check to see if the signer of the signature does not match a specific Guardian key at the provided index
-            if (ecrecover(hash, sig.v, sig.r, sig.s) != guardianSet.keys[sig.guardianIndex]) {
-                return (false, "VM signature invalid");
-            }
-        }
-
-        /// If we are here, we've validated that the provided signatures are valid for the provided guardianSet
-        return (true, "");
-    }
-
-    function parseContractUpgrade(bytes memory /*encodedUpgrade*/ )
-        external
-        pure
-        returns (ContractUpgrade memory /*cu*/ )
-    {
-        revert("unsupported parseContractUpgrade in wormhole mock");
-    }
-
-    function parseGuardianSetUpgrade(bytes memory /*encodedUpgrade*/ )
-        external
-        pure
-        returns (GuardianSetUpgrade memory /*gsu*/ )
-    {
-        revert("unsupported parseGuardianSetUpgrade in wormhole mock");
-    }
-
-    function parseSetMessageFee(bytes memory /*encodedSetMessageFee*/ )
-        external
-        pure
-        returns (SetMessageFee memory /*smf*/ )
-    {
-        revert("unsupported parseSetMessageFee in wormhole mock");
-    }
-
-    function parseTransferFees(bytes memory /*encodedTransferFees*/ )
-        external
-        pure
-        returns (TransferFees memory /*tf*/ )
-    {
-        revert("unsupported parseTransferFees in wormhole mock");
-    }
-
-    function parseRecoverChainId(bytes memory /*encodedRecoverChainId*/ )
-        external
-        pure
-        returns (RecoverChainId memory /*rci*/ )
-    {
-        revert("unsupported parseRecoverChainId in wormhole mock");
-    }
-
-    function submitContractUpgrade(bytes memory /*_vm*/ ) external pure {
-        revert("unsupported submitContractUpgrade in wormhole mock");
-    }
-
-    function submitSetMessageFee(bytes memory _vm) external override {}
-
-    function setMessageFee(uint256 newFee) external {
-        currentMsgFee = newFee;
-    }
-
-    function submitNewGuardianSet(bytes memory /*_vm*/ ) external pure {
-        revert("unsupported submitNewGuardianSet in wormhole mock");
-    }
-
-    function submitTransferFees(bytes memory /*_vm*/ ) external pure {
-        revert("unsupported submitTransferFees in wormhole mock");
-    }
-
-    function submitRecoverChainId(bytes memory /*_vm*/ ) external pure {
-        revert("unsupported submitRecoverChainId in wormhole mock");
     }
 }

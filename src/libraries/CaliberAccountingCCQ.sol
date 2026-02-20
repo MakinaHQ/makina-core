@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {ICoreBridge} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
 import {
     EthCallQueryResponse,
     PerChainQueryResponse,
@@ -20,7 +20,7 @@ library CaliberAccountingCCQ {
         GuardianSignature[] calldata signatures
     ) external view returns (QueryResponse memory ret) {
         return QueryResponseLib.decodeAndVerifyQueryResponseCd(
-            wormhole, response, signatures, IWormhole(wormhole).getCurrentGuardianSetIndex()
+            wormhole, response, signatures, ICoreBridge(wormhole).getCurrentGuardianSetIndex()
         );
     }
 

@@ -6,7 +6,7 @@ import {Test} from "forge-std/Test.sol";
 import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {IWormhole} from "@wormhole/sdk/interfaces/IWormhole.sol";
+import {ICoreBridge} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
 
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
@@ -88,7 +88,7 @@ abstract contract Base_Hub_Test is Base_Test {
     UpgradeableBeacon internal machineBeacon;
     UpgradeableBeacon internal preDepositVaultBeacon;
 
-    IWormhole internal wormhole;
+    ICoreBridge internal wormhole;
 
     address internal machineDepositor = makeAddr("MachineDepositor");
     address internal machineRedeemer = makeAddr("MachineRedeemer");
@@ -120,7 +120,7 @@ abstract contract Base_Hub_Test is Base_Test {
     }
 
     function _setupWormhole() internal {
-        wormhole = IWormhole(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
+        wormhole = ICoreBridge(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
     function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)
