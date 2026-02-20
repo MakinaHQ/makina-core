@@ -103,7 +103,7 @@ library ChainsInfo {
         } else if (chainId == CHAIN_ID_PLASMA) {
             return ChainInfo({
                 evmChainId: CHAIN_ID_PLASMA,
-                wormholeChainId: 58,
+                wormholeChainId: WormholeChains.CHAIN_ID_PLASMA,
                 name: "Plasma",
                 foundryAlias: "plasma",
                 constantsFilename: "Plasma-Test.json"
@@ -111,7 +111,7 @@ library ChainsInfo {
         } else if (chainId == CHAIN_ID_HYPER_EVM) {
             return ChainInfo({
                 evmChainId: CHAIN_ID_HYPER_EVM,
-                wormholeChainId: WormholeChains.CHAIN_ID_HYPER_E_V_M,
+                wormholeChainId: WormholeChains.CHAIN_ID_HYPER_EVM,
                 name: "HyperEVM",
                 foundryAlias: "hyper_evm",
                 constantsFilename: "HyperEVM-Test.json"
