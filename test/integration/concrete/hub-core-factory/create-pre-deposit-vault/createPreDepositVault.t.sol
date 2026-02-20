@@ -17,10 +17,32 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
     function test_RevertWhen_CallerWithoutRole() public {
         IPreDepositVault.PreDepositVaultInitParams memory params;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubCoreFactory.createPreDepositVault(params, address(0), address(0), "", "");
+        hubCoreFactory.createPreDepositVault(params, address(0), address(0), "", "", false);
     }
 
-    function test_CreatePreDepositVault_FactoryAuthority() public {
+    function test_RevertWhen_AMSetupAndOtherAuthority() public {
+        AccessManagerUpgradeable accessManager2 = _deployAccessManager(address(this), address(this));
+
+        vm.expectRevert(Errors.NotFactoryAuthority.selector);
+        vm.prank(dao);
+        preDepositVault = PreDepositVault(
+            hubCoreFactory.createPreDepositVault(
+                IPreDepositVault.PreDepositVaultInitParams({
+                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                    initialWhitelistMode: false,
+                    initialRiskManager: address(0),
+                    initialAuthority: address(accessManager2)
+                }),
+                address(baseToken),
+                address(accountingToken),
+                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
+            )
+        );
+    }
+
+    function test_CreatePreDepositVault_AMSetup() public {
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit IHubCoreFactory.PreDepositVaultCreated(address(0), address(0));
 
@@ -36,7 +58,8 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
                 address(baseToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
             )
         );
 
@@ -62,9 +85,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
         );
     }
 
-    function test_CreatePreDepositVault_OtherAuthority() public {
-        AccessManagerUpgradeable accessManager2 = _deployAccessManager(address(this), address(this));
-
+    function test_CreatePreDepositVault_WithoutAMSetup() public {
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit IHubCoreFactory.PreDepositVaultCreated(address(0), address(0));
 
@@ -75,12 +96,13 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
                     initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
                     initialWhitelistMode: false,
                     initialRiskManager: address(0),
-                    initialAuthority: address(accessManager2)
+                    initialAuthority: address(accessManager)
                 }),
                 address(baseToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                false
             )
         );
 
@@ -93,7 +115,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
 
         assertEq(preDepositVault.depositToken(), address(baseToken));
         assertEq(preDepositVault.accountingToken(), address(accountingToken));
-        assertEq(preDepositVault.authority(), address(accessManager2));
+        assertEq(preDepositVault.authority(), address(accessManager));
 
         IMachineShare shareToken = IMachineShare(preDepositVault.shareToken());
         assertEq(shareToken.minter(), address(preDepositVault));
@@ -101,7 +123,7 @@ contract CreatePreDepositVault_Integration_Concrete_Test is HubCoreFactory_Integ
         assertEq(shareToken.symbol(), DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL);
 
         assertEq(
-            accessManager2.getTargetFunctionRole(address(preDepositVault), IPreDepositVault.setRiskManager.selector), 0
+            accessManager.getTargetFunctionRole(address(preDepositVault), IPreDepositVault.setRiskManager.selector), 0
         );
     }
 }

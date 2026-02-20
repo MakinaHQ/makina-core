@@ -2,7 +2,15 @@ createPreDepositVault.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
-   ├── it should deploy a pre-deposit vault instance and initialize it with provided parameters
-   ├── it should set the vault as owner of the pre-deposit vault's share token
-   ├── it should assign the relevant roles to restricted functions on deployed instance
-   └── it should emit a PreDepositVaultCreated event
+   ├── when the setupAMFunctionRoles flag is set to true
+   │  ├── when the provided authority is not equal to current factory authority
+   │  │  └── it should revert with NotFactoryAuthority
+   │  └── when the provided authority is equal to current factory authority
+   │     ├── it should deploy a pre-deposit vault instance and initialize it with provided parameters
+   │     ├── it should set the vault as owner of the pre-deposit vault's share token
+   │     └── it should emit a PreDepositVaultCreated event
+   └── when the setupAMFunctionRoles flag is set to false
+      ├── it should deploy a pre-deposit vault instance and initialize it with provided parameters
+      ├── it should set the vault as owner of the pre-deposit vault's share token
+      ├── it should assign the relevant roles to restricted functions on deployed instance
+      └── it should emit a PreDepositVaultCreated event

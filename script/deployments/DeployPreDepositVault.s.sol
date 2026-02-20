@@ -50,6 +50,7 @@ contract DeployPreDepositVault is Base, Script, SortedParams {
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
         string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
+        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
         IHubCoreFactory hubCoreFactory =
             IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
@@ -67,7 +68,8 @@ contract DeployPreDepositVault is Base, Script, SortedParams {
             depositToken,
             accountingToken,
             shareTokenName,
-            shareTokenSymbol
+            shareTokenSymbol,
+            setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

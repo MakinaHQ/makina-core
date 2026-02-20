@@ -70,7 +70,8 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
                 address(depositToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
             )
         );
         shareToken = MachineShare(preDepositVault.shareToken());

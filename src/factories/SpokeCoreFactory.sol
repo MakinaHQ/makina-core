@@ -58,7 +58,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address accountingToken,
         address hubMachine,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external override restricted returns (address) {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
 
@@ -69,10 +70,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         $._isCaliberMailbox[mailbox] = true;
         $._instanceSalts[mailbox] = salt;
 
-        address _authority = authority();
-        if (mgParams.initialAuthority == _authority) {
-            _setupCaliberMailboxAMFunctionRoles(_authority, mailbox);
-            _setupCaliberAMFunctionRoles(_authority, caliber);
+        if (setupAMFunctionRoles) {
+            _setupSpokeCaliberBundleAMFunctionRoles(mgParams.initialAuthority, mailbox, caliber);
         }
 
         emit CaliberMailboxCreated(mailbox, caliber, hubMachine);
@@ -107,6 +106,14 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         return _create3(CaliberMailboxSaltDomain, salt, bytecode);
     }
 
+    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable.
+    function _setupSpokeCaliberBundleAMFunctionRoles(address _authority, address _mailbox, address _caliber) internal {
+        _checkAuthority(_authority);
+
+        _setupCaliberMailboxAMFunctionRoles(_authority, _mailbox);
+        _setupCaliberAMFunctionRoles(_authority, _caliber);
+    }
+
     /// @dev Sets function roles in associated access manager for a deployed caliber mailbox instance.
     function _setupCaliberMailboxAMFunctionRoles(address _authority, address _mailbox) internal {
         bytes4[] memory compSetupSelectors = new bytes4[](2);
@@ -127,5 +134,12 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         IAccessManager(_authority).setTargetFunctionRole(
             _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
+    }
+
+    /// @dev Checks that the provided authority matches the current authority.
+    function _checkAuthority(address _authority) internal {
+        if (_authority != authority()) {
+            revert Errors.NotFactoryAuthority();
+        }
     }
 }

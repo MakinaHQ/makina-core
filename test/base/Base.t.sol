@@ -160,7 +160,8 @@ abstract contract Base_Hub_Test is Base_Test {
                 _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-                _salt
+                _salt,
+                true
             )
         );
         Caliber _caliber = Caliber(_machine.hubCaliber());
@@ -222,7 +223,8 @@ abstract contract Base_Spoke_Test is Base_Test {
                 }),
                 _accountingToken,
                 _hubMachine,
-                _salt
+                _salt,
+                true
             )
         );
         CaliberMailbox _mailbox = CaliberMailbox(_caliber.hubMachineEndpoint());
