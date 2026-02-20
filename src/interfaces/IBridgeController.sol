@@ -48,7 +48,7 @@ interface IBridgeController {
     /// @param messageHash The hash of the message to authorize.
     function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external;
 
-    /// @notice Transfers a received bridge transfer out of the adapter.
+    /// @notice Transfers a received bridge transfer out of the corresponding bridge adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param transferId The ID of the transfer to claim.
     function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external;

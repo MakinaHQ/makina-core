@@ -96,6 +96,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         emit BridgeAdapterSet(bridgeId, bridgeAdapter);
     }
 
+    /// @dev Internal logic to set the outgoing transfer enabled status for a given bridge.
     function _setOutTransferEnabled(uint16 bridgeId, bool enabled) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
@@ -105,6 +106,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         $._isOutTransferEnabled[bridgeId] = enabled;
     }
 
+    /// @dev Internal logic to set the max allowed value loss in basis points for transfers via a given bridge.
     function _setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
@@ -114,10 +116,12 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
     }
 
+    /// @dev Returns whether the given address is a registered bridge adapter.
     function _isBridgeAdapter(address adapter) internal view returns (bool) {
         return _getBridgeControllerStorage()._isBridgeAdapter[adapter];
     }
 
+    /// @dev Internal logic to schedule an outgoing bridge transfer.
     function _scheduleOutBridgeTransfer(
         uint16 bridgeId,
         uint256 destinationChainId,
@@ -146,6 +150,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         );
     }
 
+    /// @dev Internal logic to execute a scheduled outgoing bridge transfer.
     function _sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) internal {
         address adapter = getBridgeAdapter(bridgeId);
         if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
@@ -154,16 +159,19 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
     }
 
+    /// @dev Internal logic to register a message hash as authorized for an incoming bridge transfer.
     function _authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).authorizeInBridgeTransfer(messageHash);
     }
 
+    /// @dev Internal logic to transfer a received bridge transfer out of the corresponding bridge adapter.
     function _claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).claimInBridgeTransfer(transferId);
     }
 
+    /// @dev Internal logic to cancel an outgoing bridge transfer.
     function _cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) internal {
         address adapter = getBridgeAdapter(bridgeId);
         IBridgeAdapter(adapter).cancelOutBridgeTransfer(transferId);
