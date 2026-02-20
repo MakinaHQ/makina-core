@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
@@ -55,6 +56,9 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
+            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
+        );
         bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
         bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
@@ -83,7 +87,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 cParams.initialMaxPositionIncreaseLossBps,
                 cParams.initialMaxPositionDecreaseLossBps,
                 cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration
+                cParams.initialCooldownDuration,
+                cParams.initialBaseTokens
             ),
             IMakinaGovernable.MakinaGovernableInitParams(
                 mgParams.initialMechanic,
@@ -91,8 +96,10 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 mgParams.initialRiskManager,
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode
+                mgParams.initialRestrictedAccountingMode,
+                mgParams.initialAccountingAgents
             ),
+            baParams,
             preDepositVault,
             salt,
             setupAMFunctionRoles

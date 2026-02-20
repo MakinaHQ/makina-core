@@ -12,7 +12,6 @@ import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox, IMachineEndpoint} from "../interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
-import {ISpokeCoreRegistry} from "../interfaces/ISpokeCoreRegistry.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
@@ -26,7 +25,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
 
     /// @custom:storage-location erc7201:makina.storage.CaliberMailbox
     struct CaliberMailboxStorage {
-        address _hubMachine;
+        address _deprecated_0;
         address _caliber;
         mapping(uint16 bridgeId => address adapter) _hubBridgeAdapters;
         EnumerableMap.AddressToUintMap _bridgesIn;
@@ -52,20 +51,10 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
 
     function initialize(
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        uint256 _initialCooldownDuration,
-        address _hubMachine
+        uint256 _initialCooldownDuration
     ) external override initializer {
-        CaliberMailboxStorage storage $ = _getCaliberMailboxStorage();
-        $._hubMachine = _hubMachine;
-        $._cooldownDuration = _initialCooldownDuration;
+        _getCaliberMailboxStorage()._cooldownDuration = _initialCooldownDuration;
         __MakinaGovernable_init(mgParams);
-    }
-
-    modifier onlyFactory() {
-        if (msg.sender != ISpokeCoreRegistry(registry).coreFactory()) {
-            revert Errors.NotFactory();
-        }
-        _;
     }
 
     /// @inheritdoc ICaliberMailbox

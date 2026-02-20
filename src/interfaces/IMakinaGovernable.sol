@@ -18,6 +18,7 @@ interface IMakinaGovernable {
     /// @param initialRiskManagerTimelock The address of the initial risk manager timelock.
     /// @param initialAuthority The address of the initial authority.
     /// @param initialRestrictedAccountingMode The initial value for the restricted accounting mode.
+    /// @param initialAccountingAgents The addresses of the initial accounting agents.
     struct MakinaGovernableInitParams {
         address initialMechanic;
         address initialSecurityCouncil;
@@ -25,6 +26,7 @@ interface IMakinaGovernable {
         address initialRiskManagerTimelock;
         address initialAuthority;
         bool initialRestrictedAccountingMode;
+        address[] initialAccountingAgents;
     }
 
     /// @notice Address of the mechanic.

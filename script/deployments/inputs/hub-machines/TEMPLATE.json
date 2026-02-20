@@ -17,7 +17,8 @@
     "initialMaxPositionIncreaseLossBps": 0,
     "initialMaxPositionDecreaseLossBps": 0,
     "initialMaxSwapLossBps": 0,
-    "initialCooldownDuration": 0
+    "initialCooldownDuration": 0,
+    "initialBaseTokens": ["0x0000000000000000000000000000000000000000"]
   },
   "makinaGovernableInitParams": {
     "initialMechanic": "0x0000000000000000000000000000000000000000",
@@ -25,8 +26,16 @@
     "initialRiskManager": "0x0000000000000000000000000000000000000000",
     "initialRiskManagerTimelock": "0x0000000000000000000000000000000000000000",
     "initialAuthority": "0x0000000000000000000000000000000000000000",
-    "initialRestrictedAccountingMode": false
+    "initialRestrictedAccountingMode": false,
+    "initialAccountingAgents": ["0x0000000000000000000000000000000000000000"]
   },
+  "bridgeAdapterInitParams": [
+    {
+      "bridgeId": 0,
+      "initData": "",
+      "initialMaxBridgeLossBps": 0
+    }
+  ],
   "accountingToken": "0x0000000000000000000000000000000000000000",
   "shareTokenName": "",
   "shareTokenSymbol": "",

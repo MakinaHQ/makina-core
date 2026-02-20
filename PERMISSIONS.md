@@ -43,6 +43,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### OracleRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set token price feed route.
   - Can set feeds staleness threshold.
 
@@ -52,6 +53,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### ChainRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set mappings of EVM and WH chain IDs.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -60,6 +62,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### TokenRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set mappings of local and foreign token addresses.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -68,6 +71,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### HubCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
+
   - Can deploy machine shares.
   - Can deploy pre-deposit vaults.
   - Can deploy machines and calibers.
@@ -78,6 +82,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### SpokeCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
+
   - Can deploy calibers.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -86,6 +91,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### SwapModule
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set approval and execution targets for a given swapper ID.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -94,6 +100,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### AcrossV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set supported status of EVM chains.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -102,6 +109,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### LayerZeroV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
+
   - Can set mappings of EVM and LZ chain IDs.
   - Can set mappings of tokens to corresponding LZ OFTs.
 

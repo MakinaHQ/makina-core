@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
@@ -49,8 +50,10 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
             abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
+            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
+        );
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
-        address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
         bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
         bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
@@ -68,7 +71,8 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
                 cParams.initialMaxPositionIncreaseLossBps,
                 cParams.initialMaxPositionDecreaseLossBps,
                 cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration
+                cParams.initialCooldownDuration,
+                cParams.initialBaseTokens
             ),
             IMakinaGovernable.MakinaGovernableInitParams(
                 mgParams.initialMechanic,
@@ -76,10 +80,11 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
                 mgParams.initialRiskManager,
                 mgParams.initialRiskManagerTimelock,
                 mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode
+                mgParams.initialRestrictedAccountingMode,
+                mgParams.initialAccountingAgents
             ),
+            baParams,
             accountingToken,
-            hubMachine,
             salt,
             setupAMFunctionRoles
         );

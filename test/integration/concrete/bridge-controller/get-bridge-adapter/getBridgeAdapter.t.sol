@@ -6,19 +6,17 @@ import {Errors} from "src/libraries/Errors.sol";
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
 abstract contract GetBridgeAdapter_Integration_Concrete_Test is BridgeController_Integration_Concrete_Test {
-    function setUp() public virtual override {
-        BridgeController_Integration_Concrete_Test.setUp();
-    }
-
     function test_RevertWhen_BridgeAdapterDoesNotExist() public {
         vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
         bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
     }
 
     function test_GetBridgeAdapter() public {
-        vm.prank(dao);
-        address adapter = bridgeController.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        address bridgeAdapter = makeAddr("bridgeAdapter");
 
-        assertEq(adapter, bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID));
+        vm.prank(address(bridgeAdapterFactory));
+        bridgeController.setBridgeAdapter(ACROSS_V3_BRIDGE_ID, bridgeAdapter, DEFAULT_MAX_BRIDGE_LOSS_BPS);
+
+        assertEq(bridgeAdapter, bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID));
     }
 }

@@ -97,6 +97,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
         _addBaseToken(_accountingToken);
+        for (uint256 i; i < cParams.initialBaseTokens.length; ++i) {
+            _addBaseToken(cParams.initialBaseTokens[i]);
+        }
     }
 
     modifier onlyOperator() {

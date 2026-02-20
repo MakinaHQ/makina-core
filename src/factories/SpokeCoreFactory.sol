@@ -8,7 +8,6 @@ import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {BridgeAdapterFactory} from "./BridgeAdapterFactory.sol";
 import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
-import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ISpokeCoreFactory} from "../interfaces/ISpokeCoreFactory.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
@@ -56,37 +55,46 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
-        address hubMachine,
         bytes32 salt,
         bool setupAMFunctionRoles
     ) external override restricted returns (address) {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
 
-        address mailbox = _createCaliberMailbox(mgParams, cParams.initialCooldownDuration, hubMachine, salt);
+        address mailbox = _createCaliberMailbox(mgParams, cParams.initialCooldownDuration, salt);
         address caliber = _createCaliber(cParams, accountingToken, mailbox, salt);
 
         ICaliberMailbox(mailbox).setCaliber(caliber);
         $._isCaliberMailbox[mailbox] = true;
         $._instanceSalts[mailbox] = salt;
 
+        for (uint256 i; i < baParams.length; ++i) {
+            _createBridgeAdapter(mailbox, baParams[i], salt);
+        }
+
         if (setupAMFunctionRoles) {
             _setupSpokeCaliberBundleAMFunctionRoles(mgParams.initialAuthority, mailbox, caliber);
         }
 
-        emit CaliberMailboxCreated(mailbox, caliber, hubMachine);
+        emit CaliberMailboxCreated(mailbox);
 
         return caliber;
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(uint16 bridgeId, bytes calldata initData) external returns (address) {
+    function createBridgeAdapter(address bridgeController, BridgeAdapterInitParams calldata baParams)
+        external
+        override
+        restricted
+        returns (address)
+    {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
-        address caller = msg.sender;
-        if (!$._isCaliberMailbox[caller]) {
-            revert Errors.NotCaliberMailbox();
+        if (!$._isCaliberMailbox[bridgeController]) {
+            revert Errors.InvalidBridgeController();
         }
-        return _createBridgeAdapter(caller, bridgeId, initData, $._instanceSalts[caller]);
+
+        return _createBridgeAdapter(bridgeController, baParams, $._instanceSalts[bridgeController]);
     }
 
     /// @dev Internal logic for caliber mailbox deployment via create3.
@@ -94,13 +102,11 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     function _createCaliberMailbox(
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         uint256 initialCooldownDuration,
-        address hubMachine,
         bytes32 salt
     ) internal returns (address) {
         address beacon = ISpokeCoreRegistry(registry).caliberMailboxBeacon();
 
-        bytes memory initCD =
-            abi.encodeCall(ICaliberMailbox.initialize, (mgParams, initialCooldownDuration, hubMachine));
+        bytes memory initCD = abi.encodeCall(ICaliberMailbox.initialize, (mgParams, initialCooldownDuration));
         bytes memory bytecode = abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(beacon, initCD));
 
         return _create3(CaliberMailboxSaltDomain, salt, bytecode);
@@ -116,9 +122,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
 
     /// @dev Sets function roles in associated access manager for a deployed caliber mailbox instance.
     function _setupCaliberMailboxAMFunctionRoles(address _authority, address _mailbox) internal {
-        bytes4[] memory compSetupSelectors = new bytes4[](2);
-        compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
-        compSetupSelectors[1] = ICaliberMailbox.setHubBridgeAdapter.selector;
+        bytes4[] memory compSetupSelectors = new bytes4[](1);
+        compSetupSelectors[0] = ICaliberMailbox.setHubBridgeAdapter.selector;
         IAccessManager(_authority).setTargetFunctionRole(
             _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
         );

@@ -5,6 +5,7 @@ import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol"
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
@@ -100,9 +101,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         // deploy hub and spoke chain contracts
         (machine, hubCaliber) = _deployMachine(address(accountingToken), bytes32(0), TEST_DEPLOYMENT_SALT);
-        (spokeCaliber, spokeCaliberMailbox) = _deployCaliber(
-            address(machine), address(accountingToken), bytes32(0), bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1)
-        );
+        (spokeCaliber, spokeCaliberMailbox) =
+            _deployCaliber(address(accountingToken), bytes32(0), bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1));
 
         // set up machine and spoke caliber
         vm.prank(riskManagerTimelock);
@@ -112,9 +112,14 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         machine.setSpokeCaliber(
             machineStore.spokeChainId(), address(spokeCaliberMailbox), new uint16[](0), new address[](0)
         );
-        address hubBridgeAdapterAddr = machine.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
-        address spokeBridgeAdapterAddr =
-            spokeCaliberMailbox.createBridgeAdapter(ACROSS_V3_BRIDGE_ID, DEFAULT_MAX_BRIDGE_LOSS_BPS, "");
+        address hubBridgeAdapterAddr = hubCoreFactory.createBridgeAdapter(
+            address(machine),
+            IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+        );
+        address spokeBridgeAdapterAddr = spokeCoreFactory.createBridgeAdapter(
+            address(spokeCaliberMailbox),
+            IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
+        );
         machine.setSpokeBridgeAdapter(machineStore.spokeChainId(), ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         spokeCaliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
         vm.stopPrank();

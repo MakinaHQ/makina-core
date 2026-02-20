@@ -26,12 +26,8 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @notice Initializer of the contract.
     /// @param mgParams The makina governable initialization parameters.
     /// @param initialCooldownDuration The duration of the cooldown period for outgoing bridge transfers.
-    /// @param hubMachine The foreign address of the hub machine.
-    function initialize(
-        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        uint256 initialCooldownDuration,
-        address hubMachine
-    ) external;
+    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, uint256 initialCooldownDuration)
+        external;
 
     /// @notice Address of the associated caliber.
     function caliber() external view returns (address);

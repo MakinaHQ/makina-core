@@ -6,7 +6,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {Errors} from "src/libraries/Errors.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {IBridgeController} from "src/interfaces/IBridgeController.sol";
+import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberFactory} from "src/interfaces/ICaliberFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
@@ -24,29 +24,34 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", bytes32(0), false);
+        hubCoreFactory.createMachine(mParams, cParams, mgParams, baParams, address(0), "", "", bytes32(0), false);
     }
 
     function test_RevertWhen_ZeroSalt() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.ZeroSalt.selector);
-        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", bytes32(0), false);
+        hubCoreFactory.createMachine(mParams, cParams, mgParams, baParams, address(0), "", "", bytes32(0), false);
     }
 
     function test_RevertWhen_SaltAlreadyUsed() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.TargetAlreadyExists.selector);
-        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", TEST_DEPLOYMENT_SALT, false);
+        hubCoreFactory.createMachine(
+            mParams, cParams, mgParams, baParams, address(0), "", "", TEST_DEPLOYMENT_SALT, false
+        );
     }
 
     function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
@@ -63,10 +68,11 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
-        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", salt, false);
+        hubCoreFactory.createMachine(mParams, cParams, mgParams, baParams, address(0), "", "", salt, false);
     }
 
     function test_RevertGiven_CaliberCreate3ContractDeploymentFailed() public {
@@ -75,10 +81,11 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ContractDeploymentFailed.selector);
-        hubCoreFactory.createMachine(mParams, cParams, mgParams, address(0), "", "", salt, false);
+        hubCoreFactory.createMachine(mParams, cParams, mgParams, baParams, address(0), "", "", salt, false);
     }
 
     function test_RevertWhen_AMSetupAndOtherAuthority() public {
@@ -108,7 +115,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: new address[](0)
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -116,8 +124,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager2),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: new address[](0)
                 }),
+                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
@@ -133,6 +143,20 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
 
         initialAllowedInstrRoot = bytes32("0x12345");
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
+
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
+        baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
+            bridgeId: ACROSS_V3_BRIDGE_ID,
+            initData: "",
+            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+        });
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
         emit ICaliberFactory.CaliberCreated(address(0), address(0));
@@ -161,7 +185,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -169,8 +194,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
+                baParams,
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
@@ -198,9 +225,15 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
+
+        assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
+        assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
+        assertNotEq(machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID), address(0));
+        assertEq(machine.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID), DEFAULT_MAX_BRIDGE_LOSS_BPS);
 
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         assertEq(shareToken.minter(), address(machine));
@@ -217,11 +250,11 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
 
-        // Caliber function roles should be set according to HubCoreFactory setup
-        assertEq(
-            accessManager.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
-        );
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
+
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeCaliber.selector),
             Roles.STRATEGY_COMPONENTS_SETUP_ROLE
@@ -303,6 +336,21 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
             new MockFeeManager(dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
         initialAllowedInstrRoot = bytes32("0x12345");
+
+        address[] memory initialBaseTokens = new address[](1);
+        initialBaseTokens[0] = address(baseToken);
+
+        address[] memory initialAccountingAgents = new address[](1);
+        initialAccountingAgents[0] = accountingAgent;
+
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
+        baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
+            bridgeId: ACROSS_V3_BRIDGE_ID,
+            initData: "",
+            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+        });
+
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
@@ -332,7 +380,8 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
                     initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
                     initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                    initialBaseTokens: initialBaseTokens
                 }),
                 IMakinaGovernable.MakinaGovernableInitParams({
                     initialMechanic: mechanic,
@@ -340,8 +389,10 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
                     initialAuthority: address(accessManager),
-                    initialRestrictedAccountingMode: false
+                    initialRestrictedAccountingMode: false,
+                    initialAccountingAgents: initialAccountingAgents
                 }),
+                baParams,
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
                 DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
@@ -369,9 +420,15 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(machine.riskManagerTimelock(), riskManagerTimelock);
         assertEq(machine.authority(), address(accessManager));
         assertFalse(machine.restrictedAccountingMode());
+        assertTrue(machine.isAccountingAgent(address(accountingAgent)));
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
+
+        assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
+        assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
+        assertNotEq(machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID), address(0));
+        assertEq(machine.getMaxBridgeLossBps(ACROSS_V3_BRIDGE_ID), DEFAULT_MAX_BRIDGE_LOSS_BPS);
 
         IMachineShare shareToken = IMachineShare(machine.shareToken());
         assertEq(shareToken.minter(), address(machine));
@@ -388,10 +445,12 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         assertEq(caliber.maxSwapLossBps(), DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS);
         assertEq(caliber.authority(), address(accessManager));
 
+        assertEq(caliber.getPositionsLength(), 0);
+        assertEq(caliber.getBaseTokensLength(), 2);
+        assertEq(caliber.getBaseToken(0), address(accountingToken));
+        assertEq(caliber.getBaseToken(1), address(baseToken));
+
         // Machine function roles should be set to 0 by default
-        assertEq(
-            accessManager.getTargetFunctionRole(address(machine), IBridgeController.createBridgeAdapter.selector), 0
-        );
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeCaliber.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeBridgeAdapter.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setDepositor.selector), 0);

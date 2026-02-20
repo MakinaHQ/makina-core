@@ -1,8 +1,13 @@
 createBridgeAdapter.t.sol
-├── when caller is not a registered machine
-│  └── it should revert with NotMachine
-└── when caller is a registered machine
-   ├── when the provided bridge ID is not supported
-   │  └── it should revert with InvalidBridgeId
-   └── when the provided bridge ID is supported
-      └── it should deploy a bridge adapter instance
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when the provided bridge controller is not a valid machine instance
+   │  └── it should revert with InvalidBridgeController
+   └── when the provided bridge controller is a valid machine instance
+      ├── when the provided bridge ID is not supported
+      │  └── it should revert with InvalidBridgeId
+      └── when the provided bridge ID is supported
+         ├── it should deploy a bridge adapter instance
+         ├── it should emit a BridgeAdapterCreated event
+         └── it should register the bridge adapter the provided machine

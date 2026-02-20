@@ -17,7 +17,8 @@
     "initialMaxPositionIncreaseLossBps": 300,
     "initialMaxPositionDecreaseLossBps": 3000,
     "initialMaxSwapLossBps": 200,
-    "initialCooldownDuration": 60
+    "initialCooldownDuration": 60,
+    "initialBaseTokens": []
   },
   "makinaGovernableInitParams": {
     "initialMechanic": "0xad60446470333ad23bececceda26071bb245ef6f",
@@ -25,8 +26,19 @@
     "initialRiskManager": "0xad60446470333ad23bececceda26071bb245ef6f",
     "initialRiskManagerTimelock": "0xad60446470333ad23bececceda26071bb245ef6f",
     "initialAuthority": "0x0000000000000000000000000000000000000000",
-    "initialRestrictedAccountingMode": false
+    "initialRestrictedAccountingMode": false,
+    "initialAccountingAgents": [
+      "0x00000000000000000000000000000000000000a1",
+      "0x00000000000000000000000000000000000000a2"
+    ]
   },
+  "bridgeAdapterInitParams": [
+    {
+      "bridgeId": 1,
+      "initData": "",
+      "initialMaxBridgeLossBps": 100
+    }
+  ],
   "accountingToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   "shareTokenName": "Makina Share (test)",
   "shareTokenSymbol": "MS",

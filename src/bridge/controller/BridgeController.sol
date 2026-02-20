@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -9,12 +8,11 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../../interfaces/IBridgeController.sol";
-import {IBridgeAdapterFactory} from "../../interfaces/IBridgeAdapterFactory.sol";
 import {ITokenRegistry} from "../../interfaces/ITokenRegistry.sol";
 import {Errors} from "../../libraries/Errors.sol";
 import {MakinaContext} from "../../utils/MakinaContext.sol";
 
-abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, IBridgeController {
+abstract contract BridgeController is MakinaContext, IBridgeController {
     using Math for uint256;
     using SafeERC20 for IERC20;
 
@@ -38,6 +36,13 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         assembly {
             $.slot := BridgeControllerStorageLocation
         }
+    }
+
+    modifier onlyFactory() {
+        if (msg.sender != ICoreRegistry(registry).coreFactory()) {
+            revert Errors.NotFactory();
+        }
+        _;
     }
 
     /// @inheritdoc IBridgeController
@@ -69,9 +74,9 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
     }
 
     /// @inheritdoc IBridgeController
-    function createBridgeAdapter(uint16 bridgeId, uint256 initialMaxBridgeLossBps, bytes calldata initData)
+    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
         external
-        restricted
+        onlyFactory
         returns (address)
     {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
@@ -79,9 +84,9 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         if ($._bridgeAdapters[bridgeId] != address(0)) {
             revert Errors.BridgeAdapterAlreadyExists();
         }
-
-        address bridgeAdapter =
-            IBridgeAdapterFactory(ICoreRegistry(registry).coreFactory()).createBridgeAdapter(bridgeId, initData);
+        if (bridgeAdapter == address(0)) {
+            revert Errors.ZeroBridgeAdapterAddress();
+        }
 
         $._bridgeAdapters[bridgeId] = bridgeAdapter;
         $._maxBridgeLossBps[bridgeId] = initialMaxBridgeLossBps;
@@ -89,7 +94,7 @@ abstract contract BridgeController is AccessManagedUpgradeable, MakinaContext, I
         $._isBridgeAdapter[bridgeAdapter] = true;
         $._supportedBridges.push(bridgeId);
 
-        emit BridgeAdapterCreated(bridgeId, bridgeAdapter);
+        emit BridgeAdapterSet(bridgeId, bridgeAdapter);
 
         return bridgeAdapter;
     }

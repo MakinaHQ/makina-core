@@ -103,7 +103,7 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return address(0);
     }
 
-    function createBridgeAdapter(uint16, uint256, bytes calldata) external pure returns (address) {
+    function setBridgeAdapter(uint16, address, uint256) external pure returns (address) {
         return address(0);
     }
 
