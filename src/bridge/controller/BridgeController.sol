@@ -77,7 +77,6 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
         external
         onlyFactory
-        returns (address)
     {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
 
@@ -95,8 +94,6 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         $._supportedBridges.push(bridgeId);
 
         emit BridgeAdapterSet(bridgeId, bridgeAdapter);
-
-        return bridgeAdapter;
     }
 
     function _setOutTransferEnabled(uint16 bridgeId, bool enabled) internal {

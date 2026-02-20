@@ -25,10 +25,7 @@ interface IBridgeController {
     /// @param bridgeId The ID of the bridge.
     /// @param bridgeAdapter The address of the new bridge adapter instance.
     /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for transfers via this bridge.
-    /// @return The address of the deployed BridgeAdapter.
-    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
-        external
-        returns (address);
+    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps) external;
 
     /// @notice Sets the maximum allowed value loss in basis points for transfers via this bridge.
     /// @param bridgeId The ID of the bridge.
