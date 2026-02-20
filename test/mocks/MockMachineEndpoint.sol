@@ -103,8 +103,8 @@ contract MockMachineEndpoint is IMachineEndpoint {
         return address(0);
     }
 
-    function setBridgeAdapter(uint16, address, uint256) external pure returns (address) {
-        return address(0);
+    function setBridgeAdapter(uint16, address, uint256) external pure {
+        return;
     }
 
     function setMaxBridgeLossBps(uint16 bridgeId, uint256 newMaxBridgeLossBps) external {
