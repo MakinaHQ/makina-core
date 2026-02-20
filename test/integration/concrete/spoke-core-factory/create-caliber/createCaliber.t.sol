@@ -22,7 +22,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0));
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_ZeroSalt() public {
@@ -31,7 +31,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.ZeroSalt.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0));
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), bytes32(0), false);
     }
 
     function test_RevertWhen_SaltAlreadyUsed() public {
@@ -40,7 +40,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.TargetAlreadyExists.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), TEST_DEPLOYMENT_SALT);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), TEST_DEPLOYMENT_SALT, false);
     }
 
     function test_RevertGiven_CaliberCreate3ProxyDeploymentFailed() public {
@@ -59,7 +59,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt, false);
     }
 
     function test_RevertGiven_CaliberCreate3ContractDeploymentFailed() public {
@@ -70,13 +70,46 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ContractDeploymentFailed.selector);
-        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt);
+        spokeCoreFactory.createCaliber(cParams, mgParams, address(0), address(0), salt, false);
     }
 
-    function test_CreateCaliber_FactoryAuthority() public {
+    function test_RevertWhen_AMSetupAndOtherAuthority() public {
+        AccessManagerUpgradeable accessManager2 = _deployAccessManager(address(this), address(this));
+
+        bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
+
+        vm.expectRevert(Errors.NotFactoryAuthority.selector);
+        vm.prank(dao);
+        caliber = Caliber(
+            spokeCoreFactory.createCaliber(
+                ICaliber.CaliberInitParams({
+                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                    initialAllowedInstrRoot: bytes32(0),
+                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION
+                }),
+                IMakinaGovernable.MakinaGovernableInitParams({
+                    initialMechanic: mechanic,
+                    initialSecurityCouncil: securityCouncil,
+                    initialRiskManager: riskManager,
+                    initialRiskManagerTimelock: riskManagerTimelock,
+                    initialAuthority: address(accessManager2),
+                    initialRestrictedAccountingMode: false
+                }),
+                address(accountingToken),
+                address(0),
+                salt,
+                true
+            )
+        );
+    }
+
+    function test_CreateCaliber_AMSetup() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
-
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
@@ -107,7 +140,8 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                 }),
                 address(accountingToken),
                 _hubMachine,
-                salt
+                salt,
+                true
             )
         );
         assertTrue(spokeCoreFactory.isCaliber(address(caliber)));
@@ -189,12 +223,9 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         );
     }
 
-    function test_CreateCaliber_OtherAuthority() public {
-        AccessManagerUpgradeable accessManager2 = _deployAccessManager(address(this), address(this));
-
+    function test_CreateCaliber_WithoutAMSetup() public {
         address _hubMachine = makeAddr("hubMachine");
         bytes32 initialAllowedInstrRoot = bytes32("0x12345");
-
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);
 
         vm.expectEmit(false, false, false, false, address(spokeCoreFactory));
@@ -220,12 +251,13 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
                     initialSecurityCouncil: securityCouncil,
                     initialRiskManager: riskManager,
                     initialRiskManagerTimelock: riskManagerTimelock,
-                    initialAuthority: address(accessManager2),
+                    initialAuthority: address(accessManager),
                     initialRestrictedAccountingMode: false
                 }),
                 address(accountingToken),
                 _hubMachine,
-                salt
+                salt,
+                false
             )
         );
         assertTrue(spokeCoreFactory.isCaliber(address(caliber)));
@@ -246,55 +278,53 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
         assertEq(caliberMailbox.securityCouncil(), securityCouncil);
         assertEq(caliberMailbox.riskManager(), riskManager);
         assertEq(caliberMailbox.riskManagerTimelock(), riskManagerTimelock);
-        assertEq(caliberMailbox.authority(), address(accessManager2));
-        assertEq(caliber.authority(), address(accessManager2));
+        assertEq(caliberMailbox.authority(), address(accessManager));
+        assertEq(caliber.authority(), address(accessManager));
         assertFalse(caliberMailbox.restrictedAccountingMode());
 
         assertEq(caliber.getPositionsLength(), 0);
         assertEq(caliber.getBaseTokensLength(), 1);
         assertEq(caliber.getBaseToken(0), address(accountingToken));
 
-        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
-        assertEq(accessManager2.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
+        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.addInstrRootGuardian.selector), 0);
+        assertEq(accessManager.getTargetFunctionRole(address(caliber), ICaliber.removeInstrRootGuardian.selector), 0);
 
         assertEq(
-            accessManager2.getTargetFunctionRole(
-                address(caliberMailbox), IBridgeController.createBridgeAdapter.selector
-            ),
+            accessManager.getTargetFunctionRole(address(caliberMailbox), IBridgeController.createBridgeAdapter.selector),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(address(caliberMailbox), ICaliberMailbox.setHubBridgeAdapter.selector),
+            accessManager.getTargetFunctionRole(address(caliberMailbox), ICaliberMailbox.setHubBridgeAdapter.selector),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setMechanic.selector), 0
+            accessManager.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setMechanic.selector), 0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setSecurityCouncil.selector),
+            accessManager.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setSecurityCouncil.selector),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setRiskManager.selector), 0
+            accessManager.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setRiskManager.selector), 0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(
+            accessManager.getTargetFunctionRole(
                 address(caliberMailbox), IMakinaGovernable.setRiskManagerTimelock.selector
             ),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(
+            accessManager.getTargetFunctionRole(
                 address(caliberMailbox), IMakinaGovernable.setRestrictedAccountingMode.selector
             ),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.addAccountingAgent.selector),
+            accessManager.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.addAccountingAgent.selector),
             0
         );
         assertEq(
-            accessManager2.getTargetFunctionRole(
+            accessManager.getTargetFunctionRole(
                 address(caliberMailbox), IMakinaGovernable.removeAccountingAgent.selector
             ),
             0

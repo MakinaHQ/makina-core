@@ -52,6 +52,7 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
         address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
         address hubMachine = abi.decode(vm.parseJson(inputJson, ".hubMachine"), (address));
         bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
+        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
         ISpokeCoreFactory spokeCoreFactory =
             ISpokeCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".SpokeCoreFactory"), (address)));
@@ -79,7 +80,8 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
             ),
             accountingToken,
             hubMachine,
-            salt
+            salt,
+            setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

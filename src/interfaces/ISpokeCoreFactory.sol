@@ -17,12 +17,14 @@ interface ISpokeCoreFactory is IBridgeAdapterFactory {
     /// @param accountingToken The address of the accounting token.
     /// @param hubMachine The address of the hub machine.
     /// @param salt The salt used to deploy the Caliber deterministically.
+    /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return caliber The address of the deployed Caliber instance.
     function createCaliber(
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address accountingToken,
         address hubMachine,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external returns (address caliber);
 }

@@ -2,6 +2,9 @@
 pragma solidity 0.8.28;
 
 interface IFeeManager {
+    /// @notice Returns the function selectors for the restricted fee configuration functions.
+    function getRestrictedFeeConfigSelectors() external returns (bytes4[] memory);
+
     /// @notice Calculates the fixed fee for a given share supply and elapsed time.
     /// @dev May update internal state related to fee accrual or realization.
     /// @param shareSupply The total supply of shares.

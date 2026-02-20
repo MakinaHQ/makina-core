@@ -119,7 +119,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
                 address(baseToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
             )
         );
 
@@ -192,7 +193,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
                 address(baseToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
             )
         );
 

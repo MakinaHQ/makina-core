@@ -10,6 +10,7 @@ import {CaliberFactory} from "./CaliberFactory.sol";
 import {IBridgeAdapterFactory} from "../interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IHubCoreFactory} from "../interfaces/IHubCoreFactory.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
@@ -63,7 +64,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         address depositToken,
         address accountingToken,
         string memory tokenName,
-        string memory tokenSymbol
+        string memory tokenSymbol,
+        bool setupAMFunctionRoles
     ) external override restricted returns (address) {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
@@ -75,9 +77,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
 
         $._isPreDepositVault[preDepositVault] = true;
 
-        address _authority = authority();
-        if (params.initialAuthority == _authority) {
-            _setupPreDepositVaultAMFunctionRoles(_authority, preDepositVault);
+        if (setupAMFunctionRoles) {
+            _setupPreDepositVaultAMFunctionRoles(params.initialAuthority, preDepositVault);
         }
 
         emit PreDepositVaultCreated(preDepositVault, shareToken);
@@ -91,7 +92,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address preDepositVault,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external override restricted returns (address) {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
@@ -111,10 +113,10 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         $._isMachine[machine] = true;
         $._instanceSalts[machine] = salt;
 
-        address _authority = authority();
-        if (mgParams.initialAuthority == _authority) {
-            _setupMachineAMFunctionRoles(_authority, machine);
-            _setupCaliberAMFunctionRoles(_authority, caliber);
+        if (setupAMFunctionRoles) {
+            address initialAuthority = mgParams.initialAuthority;
+            address initialFeeManager = mParams.initialFeeManager;
+            _setupMachineBundleAMFunctionRoles(initialAuthority, machine, caliber, initialFeeManager);
         }
 
         emit MachineCreated(machine, shareToken);
@@ -130,7 +132,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         address accountingToken,
         string memory tokenName,
         string memory tokenSymbol,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external override restricted returns (address) {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
 
@@ -145,10 +148,10 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         $._isMachine[machine] = true;
         $._instanceSalts[machine] = salt;
 
-        address _authority = authority();
-        if (mgParams.initialAuthority == _authority) {
-            _setupMachineAMFunctionRoles(_authority, machine);
-            _setupCaliberAMFunctionRoles(_authority, caliber);
+        if (setupAMFunctionRoles) {
+            address initialAuthority = mgParams.initialAuthority;
+            address initialFeeManager = mParams.initialFeeManager;
+            _setupMachineBundleAMFunctionRoles(initialAuthority, machine, caliber, initialFeeManager);
         }
 
         emit MachineCreated(machine, token);
@@ -176,8 +179,10 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         return _shareToken;
     }
 
-    /// @dev Sets function roles in associated access manager for a deployed pre-deposit vault instance.
+    /// @dev Sets function roles for a deployed pre-deposit vault instance.
     function _setupPreDepositVaultAMFunctionRoles(address _authority, address _preDepositVault) internal {
+        _checkAuthority(_authority);
+
         bytes4[] memory mgmtSetupSelectors = new bytes4[](1);
         mgmtSetupSelectors[0] = IMakinaGovernable.setRiskManager.selector;
         IAccessManager(_authority).setTargetFunctionRole(
@@ -185,7 +190,21 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         );
     }
 
-    /// @dev Sets function roles in associated access manager for a deployed machine instance.
+    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable.
+    function _setupMachineBundleAMFunctionRoles(
+        address _authority,
+        address _machine,
+        address _caliber,
+        address _initialFeeManager
+    ) internal {
+        _checkAuthority(_authority);
+
+        _setupMachineAMFunctionRoles(_authority, _machine);
+        _setupCaliberAMFunctionRoles(_authority, _caliber);
+        _setupInitialFeeManagerAMFunctionRoles(_authority, _initialFeeManager);
+    }
+
+    /// @dev Sets function roles for a deployed machine instance.
     function _setupMachineAMFunctionRoles(address _authority, address _machine) internal {
         bytes4[] memory compSetupSelectors = new bytes4[](6);
         compSetupSelectors[0] = IBridgeController.createBridgeAdapter.selector;
@@ -209,5 +228,24 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IAccessManager(_authority).setTargetFunctionRole(
             _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
+    }
+
+    /// @dev Sets function roles for the initial fee manager of a deployed machine instance if applicable.
+    function _setupInitialFeeManagerAMFunctionRoles(address _authority, address _feeManager) internal {
+        if (_feeManager != address(0)) {
+            bytes4[] memory compSetupSelectors = IFeeManager(_feeManager).getRestrictedFeeConfigSelectors();
+            if (compSetupSelectors.length > 0) {
+                IAccessManager(_authority).setTargetFunctionRole(
+                    _feeManager, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+                );
+            }
+        }
+    }
+
+    /// @dev Checks that the provided authority matches the current authority.
+    function _checkAuthority(address _authority) internal {
+        if (_authority != authority()) {
+            revert Errors.NotFactoryAuthority();
+        }
     }
 }

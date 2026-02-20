@@ -56,6 +56,7 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
         MakinaGovernableInitParamsSorted memory mgParams =
             abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
         bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
+        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
 
         IHubCoreFactory hubCoreFactory =
             IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
@@ -93,7 +94,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
                 mgParams.initialRestrictedAccountingMode
             ),
             preDepositVault,
-            salt
+            salt,
+            setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

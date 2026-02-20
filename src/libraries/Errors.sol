@@ -67,6 +67,7 @@ library Errors {
     error NotCaliberMailbox();
     error NotController();
     error NotFactory();
+    error NotFactoryAuthority();
     error NotFlashLoanModule();
     error NotMachine();
     error NotMachineEndpoint();

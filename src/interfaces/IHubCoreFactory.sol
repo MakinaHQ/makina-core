@@ -24,13 +24,15 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param accountingToken The address of the accounting token.
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
+    /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return preDepositVault The address of the deployed PreDepositVault instance.
     function createPreDepositVault(
         IPreDepositVault.PreDepositVaultInitParams calldata params,
         address depositToken,
         address accountingToken,
         string memory tokenName,
-        string memory tokenSymbol
+        string memory tokenSymbol,
+        bool setupAMFunctionRoles
     ) external returns (address preDepositVault);
 
     /// @notice Deploys a new Machine instance and migrates an existing PreDepositVault instance to it.
@@ -39,13 +41,15 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mgParams The makina governable initialization parameters.
     /// @param preDepositVault The address of the PreDepositVault instance to migrate.
     /// @param salt The salt used to deploy the Hub Caliber deterministically.
+    /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return machine The address of the deployed Machine instance.
     function createMachineFromPreDeposit(
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
         address preDepositVault,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external returns (address machine);
 
     /// @notice Deploys a new Machine instance.
@@ -56,6 +60,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
     /// @param salt The salt used to deploy the Hub Caliber deterministically.
+    /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return machine The address of the deployed Machine instance.
     function createMachine(
         IMachine.MachineInitParams calldata mParams,
@@ -64,6 +69,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         address accountingToken,
         string memory tokenName,
         string memory tokenSymbol,
-        bytes32 salt
+        bytes32 salt,
+        bool setupAMFunctionRoles
     ) external returns (address machine);
 }

@@ -8,5 +8,6 @@
   "depositToken": "0x0000000000000000000000000000000000000000",
   "accountingToken": "0x0000000000000000000000000000000000000000",
   "shareTokenName": "",
-  "shareTokenSymbol": ""
+  "shareTokenSymbol": "",
+  "setupAMFunctionRoles": false
 }

@@ -27,7 +27,8 @@ abstract contract PreDepositVault_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
                 address(baseToken),
                 address(accountingToken),
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL
+                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                true
             )
         );
     }
