@@ -2,14 +2,14 @@
 pragma solidity 0.8.28;
 
 /// @notice An aggregator of Chainlink price feeds that prices tokens in a reference currency (e.g., USD) using up to two feeds.
-/// If a direct feed between a base token and the reference currency does not exists, it combines two feeds to compute the price.
+/// If a direct feed between a base token and the reference currency does not exist, it combines two feeds to compute the price.
 ///
 /// Example:
 /// To price Token A in Token B:
 /// - If a feed for Token A -> Reference Currency exists, the registry uses that feed.
 /// - If Token B lacks a direct feed to the Reference Currency, but feeds for Token B -> Intermediate Token and
 ///   Intermediate Token -> Reference Currency exist, the registry combines these feeds to derive the price.
-/// - Finally, the price Token A -> Token B is calculated using both tokens individual prices in the reference currency.
+/// - Finally, the price Token A -> Token B is calculated using both tokens' individual prices in the reference currency.
 ///
 interface IOracleRegistry {
     event FeedRouteRegistered(address indexed token, address indexed feed1, address indexed feed2);

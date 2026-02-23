@@ -22,7 +22,7 @@ interface ILayerZeroV2BridgeConfig is IBridgeConfig {
 
     /// @notice Associates an EVM chain ID with a LayerZero endpoint ID in the contract storage.
     /// @param evmChainId The EVM chain ID.
-    /// @param lzChainId The Wormhole chain ID.
+    /// @param lzChainId The LayerZero endpoint ID.
     function setLzChainId(uint256 evmChainId, uint32 lzChainId) external;
 
     /// @notice Registers a LayerZero OFT for its associated token.

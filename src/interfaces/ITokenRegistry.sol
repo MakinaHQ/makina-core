@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.28;
 
-/// @notice This interface is used to map token addresses from one evm chain to another.
+/// @notice This interface is used to map token addresses from one EVM chain to another.
 interface ITokenRegistry {
     event TokenRegistered(address indexed localToken, uint256 indexed evmChainId, address indexed foreignToken);
 
@@ -11,7 +11,7 @@ interface ITokenRegistry {
     /// @notice Foreign token address => Foreign EVM chain ID => Local Token address
     function getLocalToken(address _foreignToken, uint256 _foreignEvmChainId) external view returns (address);
 
-    /// @notice Associates a local and a foreign token addresse.
+    /// @notice Associates a local and a foreign token address.
     /// @param _localToken The local token address.
     /// @param _foreignEvmChainId The foreign EVM chain ID.
     /// @param _foreignToken The foreign token address.

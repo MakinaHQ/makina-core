@@ -37,9 +37,9 @@ interface ICaliber {
     /// @param initialPositionStaleThreshold The position accounting staleness threshold in seconds.
     /// @param initialAllowedInstrRoot The root of the Merkle tree containing allowed instructions.
     /// @param initialTimelockDuration The duration of the allowedInstrRoot update timelock.
-    /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis point) for position increases.
-    /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis point) for position decreases.
-    /// @param initialMaxSwapLossBps The max allowed value loss (in basis point) for base token swaps.
+    /// @param initialMaxPositionIncreaseLossBps The max allowed value loss (in basis points) for position increases.
+    /// @param initialMaxPositionDecreaseLossBps The max allowed value loss (in basis points) for position decreases.
+    /// @param initialMaxSwapLossBps The max allowed value loss (in basis points) for base token swaps.
     /// @param initialCooldownDuration The duration of the cooldown period for swaps and position management.
     /// @param initialBaseTokens The array of initial base tokens.
     struct CaliberInitParams {
@@ -91,7 +91,7 @@ interface ICaliber {
     /// @notice Initializer of the contract.
     /// @param cParams The caliber initialization parameters.
     /// @param _accountingToken The address of the accounting token.
-    /// @param _hubMachineEndpoint The address of the hub machine endpoints.
+    /// @param _hubMachineEndpoint The address of the hub machine endpoint.
     function initialize(CaliberInitParams calldata cParams, address _accountingToken, address _hubMachineEndpoint)
         external;
 
@@ -119,13 +119,13 @@ interface ICaliber {
     /// @notice Effective time of the last scheduled allowedInstrRoot update.
     function pendingTimelockExpiry() external view returns (uint256);
 
-    /// @notice Max allowed value loss (in basis point) when increasing a position.
+    /// @notice Max allowed value loss (in basis points) when increasing a position.
     function maxPositionIncreaseLossBps() external view returns (uint256);
 
-    /// @notice Max allowed value loss (in basis point) when decreasing a position.
+    /// @notice Max allowed value loss (in basis points) when decreasing a position.
     function maxPositionDecreaseLossBps() external view returns (uint256);
 
-    /// @notice Max allowed value loss (in basis point) for base token swaps.
+    /// @notice Max allowed value loss (in basis points) for base token swaps.
     function maxSwapLossBps() external view returns (uint256);
 
     /// @notice Duration of the cooldown period for swaps and position management.
@@ -239,8 +239,8 @@ interface ICaliber {
         external
         returns (uint256[] memory values, int256[] memory changes);
 
-    /// @notice Manages flashLoan funds.
-    /// @param instruction The flashLoan management instruction.
+    /// @notice Manages flash loan funds.
+    /// @param instruction The flash loan management instruction.
     /// @param token The loan token.
     /// @param amount The loan amount.
     function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) external;
@@ -250,7 +250,7 @@ interface ICaliber {
     /// @param swapOrders The array of swap orders to be executed after the harvest.
     function harvest(Instruction calldata instruction, ISwapModule.SwapOrder[] calldata swapOrders) external;
 
-    /// @notice Performs a swap via the swapModule module.
+    /// @notice Performs a swap via the swap module.
     /// @param order The swap order parameters.
     function swap(ISwapModule.SwapOrder calldata order) external;
 

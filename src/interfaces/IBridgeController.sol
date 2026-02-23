@@ -21,7 +21,7 @@ interface IBridgeController {
     /// @notice Bridge ID => Max allowed value loss in basis points for transfers via this bridge.
     function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256);
 
-    /// @notice Sets a bridge adpater instance for a given bridge ID.
+    /// @notice Sets a bridge adapter instance for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
     /// @param bridgeAdapter The address of the new bridge adapter instance.
     /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for transfers via this bridge.
@@ -58,7 +58,7 @@ interface IBridgeController {
     /// @param transferId The ID of the transfer to cancel.
     function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external;
 
-    /// @notice Resets internal bridge counters for a given token, and withdraw token balances held by all bridge adapters.
+    /// @notice Resets internal bridge counters for a given token, and withdraws token balances held by all bridge adapters.
     /// @dev This function is intended to be used by the DAO to realign bridge accounting state and maintain protocol consistency,
     ///      typically in response to operator deviations, external bridge discrepancies, or unbounded counter growth.
     /// @param token The address of the token.
