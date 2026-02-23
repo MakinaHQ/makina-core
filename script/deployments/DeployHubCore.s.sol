@@ -48,14 +48,14 @@ contract DeployHubCore is DeployCore {
         setupChainRegistry(_core.chainRegistry, supportedChains);
         setupSwapModule(_core.swapModule, swappersData);
         (_bridgeAdapterBeacons, _bridgeConfigs) =
-            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData, vm);
+            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData);
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            setupHubCoreAMFunctionRoles(_core, vm);
+            setupHubCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(
                 _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.hubCoreFactory), deployer
             );
-            transferAccessManagerOwnership(_core.accessManager, vm);
+            transferAccessManagerOwnership(_core.accessManager);
         }
     }
 
