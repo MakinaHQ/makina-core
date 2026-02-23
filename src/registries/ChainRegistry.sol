@@ -27,58 +27,58 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
         _disableInitializers();
     }
 
-    function initialize(address _accessManager) external initializer {
-        __AccessManaged_init(_accessManager);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IChainRegistry
-    function isEvmChainIdRegistered(uint256 _evmChainId) external view override returns (bool) {
-        return _getChainRegistryStorage()._evmToWhChainId[_evmChainId] != 0;
+    function isEvmChainIdRegistered(uint256 evmChainId) external view override returns (bool) {
+        return _getChainRegistryStorage()._evmToWhChainId[evmChainId] != 0;
     }
 
     /// @inheritdoc IChainRegistry
-    function isWhChainIdRegistered(uint16 _whChainId) external view override returns (bool) {
-        return _getChainRegistryStorage()._whToEvmChainId[_whChainId] != 0;
+    function isWhChainIdRegistered(uint16 whChainId) external view override returns (bool) {
+        return _getChainRegistryStorage()._whToEvmChainId[whChainId] != 0;
     }
 
     /// @inheritdoc IChainRegistry
-    function evmToWhChainId(uint256 _evmChainId) external view override returns (uint16) {
-        uint16 whChainId = _getChainRegistryStorage()._evmToWhChainId[_evmChainId];
+    function evmToWhChainId(uint256 evmChainId) external view override returns (uint16) {
+        uint16 whChainId = _getChainRegistryStorage()._evmToWhChainId[evmChainId];
         if (whChainId == 0) {
-            revert Errors.EvmChainIdNotRegistered(_evmChainId);
+            revert Errors.EvmChainIdNotRegistered(evmChainId);
         }
         return whChainId;
     }
 
     /// @inheritdoc IChainRegistry
-    function whToEvmChainId(uint16 _whChainId) external view override returns (uint256) {
-        uint256 evmChainId = _getChainRegistryStorage()._whToEvmChainId[_whChainId];
+    function whToEvmChainId(uint16 whChainId) external view override returns (uint256) {
+        uint256 evmChainId = _getChainRegistryStorage()._whToEvmChainId[whChainId];
         if (evmChainId == 0) {
-            revert Errors.WhChainIdNotRegistered(_whChainId);
+            revert Errors.WhChainIdNotRegistered(whChainId);
         }
         return evmChainId;
     }
 
     /// @inheritdoc IChainRegistry
-    function setChainIds(uint256 _evmChainId, uint16 _whChainId) external restricted {
+    function setChainIds(uint256 evmChainId, uint16 whChainId) external restricted {
         ChainRegistryStorage storage $ = _getChainRegistryStorage();
 
-        if (_evmChainId == 0 || _whChainId == 0) {
+        if (evmChainId == 0 || whChainId == 0) {
             revert Errors.ZeroChainId();
         }
 
-        uint16 oldWh = $._evmToWhChainId[_evmChainId];
+        uint16 oldWh = $._evmToWhChainId[evmChainId];
         if (oldWh != 0) {
             delete $._whToEvmChainId[oldWh];
         }
 
-        uint256 oldEvm = $._whToEvmChainId[_whChainId];
+        uint256 oldEvm = $._whToEvmChainId[whChainId];
         if (oldEvm != 0) {
             delete $._evmToWhChainId[oldEvm];
         }
 
-        $._evmToWhChainId[_evmChainId] = _whChainId;
-        $._whToEvmChainId[_whChainId] = _evmChainId;
-        emit ChainIdsRegistered(_evmChainId, _whChainId);
+        $._evmToWhChainId[evmChainId] = whChainId;
+        $._whToEvmChainId[whChainId] = evmChainId;
+        emit ChainIdsRegistered(evmChainId, whChainId);
     }
 }

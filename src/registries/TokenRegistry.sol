@@ -27,51 +27,51 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
         _disableInitializers();
     }
 
-    function initialize(address _accessManager) external initializer {
-        __AccessManaged_init(_accessManager);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc ITokenRegistry
-    function getForeignToken(address _localToken, uint256 _foreignEvmChainId) external view returns (address) {
-        address foreignToken = _getTokenRegistryStorage()._localToForeignTokens[_localToken][_foreignEvmChainId];
+    function getForeignToken(address localToken, uint256 foreignEvmChainId) external view returns (address) {
+        address foreignToken = _getTokenRegistryStorage()._localToForeignTokens[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
-            revert Errors.ForeignTokenNotRegistered(_localToken, _foreignEvmChainId);
+            revert Errors.ForeignTokenNotRegistered(localToken, foreignEvmChainId);
         }
         return foreignToken;
     }
 
     /// @inheritdoc ITokenRegistry
-    function getLocalToken(address _foreignToken, uint256 _foreignEvmChainId) external view returns (address) {
-        address localToken = _getTokenRegistryStorage()._foreignToLocalTokens[_foreignToken][_foreignEvmChainId];
+    function getLocalToken(address foreignToken, uint256 foreignEvmChainId) external view returns (address) {
+        address localToken = _getTokenRegistryStorage()._foreignToLocalTokens[foreignToken][foreignEvmChainId];
         if (localToken == address(0)) {
-            revert Errors.LocalTokenNotRegistered(_foreignToken, _foreignEvmChainId);
+            revert Errors.LocalTokenNotRegistered(foreignToken, foreignEvmChainId);
         }
         return localToken;
     }
 
     /// @inheritdoc ITokenRegistry
-    function setToken(address _localToken, uint256 _foreignEvmChainId, address _foreignToken) external restricted {
+    function setToken(address localToken, uint256 foreignEvmChainId, address foreignToken) external restricted {
         TokenRegistryStorage storage $ = _getTokenRegistryStorage();
 
-        if (_localToken == address(0) || _foreignToken == address(0)) {
+        if (localToken == address(0) || foreignToken == address(0)) {
             revert Errors.ZeroTokenAddress();
         }
-        if (_foreignEvmChainId == 0) {
+        if (foreignEvmChainId == 0) {
             revert Errors.ZeroChainId();
         }
 
-        address oldForeignToken = $._localToForeignTokens[_localToken][_foreignEvmChainId];
+        address oldForeignToken = $._localToForeignTokens[localToken][foreignEvmChainId];
         if (oldForeignToken != address(0)) {
-            delete $._foreignToLocalTokens[oldForeignToken][_foreignEvmChainId];
+            delete $._foreignToLocalTokens[oldForeignToken][foreignEvmChainId];
         }
 
-        address oldLocalToken = $._foreignToLocalTokens[_foreignToken][_foreignEvmChainId];
+        address oldLocalToken = $._foreignToLocalTokens[foreignToken][foreignEvmChainId];
         if (oldLocalToken != address(0)) {
-            delete $._localToForeignTokens[oldLocalToken][_foreignEvmChainId];
+            delete $._localToForeignTokens[oldLocalToken][foreignEvmChainId];
         }
 
-        $._localToForeignTokens[_localToken][_foreignEvmChainId] = _foreignToken;
-        $._foreignToLocalTokens[_foreignToken][_foreignEvmChainId] = _localToken;
-        emit TokenRegistered(_localToken, _foreignEvmChainId, _foreignToken);
+        $._localToForeignTokens[localToken][foreignEvmChainId] = foreignToken;
+        $._foreignToLocalTokens[foreignToken][foreignEvmChainId] = localToken;
+        emit TokenRegistered(localToken, foreignEvmChainId, foreignToken);
     }
 }
