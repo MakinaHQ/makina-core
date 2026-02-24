@@ -31,7 +31,7 @@ abstract contract LayerZeroV2BridgeConfig_Unit_Concrete_Test is Base_Test {
         accessManager = _deployAccessManager(deployer, deployer);
         layerZeroV2BridgeConfig = _deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager));
 
-        _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(layerZeroV2BridgeConfig), vm);
+        _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(layerZeroV2BridgeConfig));
         setupAccessManagerRolesAndOwnership();
     }
 }

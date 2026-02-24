@@ -24,10 +24,10 @@ interface ICoreRegistry {
     /// @notice Address of the token registry.
     function tokenRegistry() external view returns (address);
 
-    /// @notice Address of the swapModule module.
+    /// @notice Address of the swap module.
     function swapModule() external view returns (address);
 
-    /// @notice Address of the flashLoan module.
+    /// @notice Address of the flash loan module.
     function flashLoanModule() external view returns (address);
 
     /// @notice Address of the caliber beacon contract.
@@ -52,11 +52,11 @@ interface ICoreRegistry {
     function setTokenRegistry(address _tokenRegistry) external;
 
     /// @notice Sets the swap module address.
-    /// @param _swapModule The swapModule address.
+    /// @param _swapModule The swap module address.
     function setSwapModule(address _swapModule) external;
 
-    /// @notice Sets the flashLoan module address.
-    /// @param _flashLoanModule The flashLoan module address.
+    /// @notice Sets the flash loan module address.
+    /// @param _flashLoanModule The flash loan module address.
     function setFlashLoanModule(address _flashLoanModule) external;
 
     /// @notice Sets the caliber beacon address.

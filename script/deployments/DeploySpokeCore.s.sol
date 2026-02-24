@@ -46,14 +46,14 @@ contract DeploySpokeCore is DeployCore {
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
         setupSwapModule(_core.swapModule, swappersData);
         (_bridgeAdapterBeacons, _bridgeConfigs) =
-            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData, vm);
+            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData);
 
         if (!vm.envOr("SKIP_AM_SETUP", false)) {
-            setupSpokeCoreAMFunctionRoles(_core, vm);
+            setupSpokeCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(
                 _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.spokeCoreFactory), deployer
             );
-            transferAccessManagerOwnership(_core.accessManager, vm);
+            transferAccessManagerOwnership(_core.accessManager);
         }
     }
 

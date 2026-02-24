@@ -10,7 +10,7 @@ interface ICaliberMailbox is IMachineEndpoint {
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 
     /// @notice Accounting data of the caliber.
-    /// @param netAum The net AUM expresses in caliber's accounting token.
+    /// @param netAum The net AUM expressed in caliber's accounting token.
     /// @param positions The list of positions of the caliber, each encoded as abi.encode(positionId, value, isDebt).
     /// @param baseTokens The list of base tokens of the caliber, each encoded as abi.encode(token, value).
     /// @param bridgesIn The list of incoming bridge amounts, each encoded as abi.encode(token, amount).

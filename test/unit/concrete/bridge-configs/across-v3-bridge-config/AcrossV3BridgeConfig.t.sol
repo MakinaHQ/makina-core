@@ -16,7 +16,7 @@ contract AcrossV3BridgeConfig_Unit_Concrete_Test is Base_Test {
         accessManager = _deployAccessManager(deployer, deployer);
         acrossV3BridgeConfig = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
 
-        _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(acrossV3BridgeConfig), vm);
+        _setupAcrossV3BridgeConfigAMFunctionRoles(address(accessManager), address(acrossV3BridgeConfig));
         setupAccessManagerRolesAndOwnership();
     }
 

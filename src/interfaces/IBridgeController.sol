@@ -21,14 +21,11 @@ interface IBridgeController {
     /// @notice Bridge ID => Max allowed value loss in basis points for transfers via this bridge.
     function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256);
 
-    /// @notice Sets a bridge adpater instance for a given bridge ID.
+    /// @notice Sets a bridge adapter instance for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
     /// @param bridgeAdapter The address of the new bridge adapter instance.
     /// @param initialMaxBridgeLossBps The initial maximum allowed value loss in basis points for transfers via this bridge.
-    /// @return The address of the deployed BridgeAdapter.
-    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
-        external
-        returns (address);
+    function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps) external;
 
     /// @notice Sets the maximum allowed value loss in basis points for transfers via this bridge.
     /// @param bridgeId The ID of the bridge.
@@ -51,7 +48,7 @@ interface IBridgeController {
     /// @param messageHash The hash of the message to authorize.
     function authorizeInBridgeTransfer(uint16 bridgeId, bytes32 messageHash) external;
 
-    /// @notice Transfers a received bridge transfer out of the adapter.
+    /// @notice Transfers a received bridge transfer out of the corresponding bridge adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param transferId The ID of the transfer to claim.
     function claimInBridgeTransfer(uint16 bridgeId, uint256 transferId) external;
@@ -61,7 +58,7 @@ interface IBridgeController {
     /// @param transferId The ID of the transfer to cancel.
     function cancelOutBridgeTransfer(uint16 bridgeId, uint256 transferId) external;
 
-    /// @notice Resets internal bridge counters for a given token, and withdraw token balances held by all bridge adapters.
+    /// @notice Resets internal bridge counters for a given token, and withdraws token balances held by all bridge adapters.
     /// @dev This function is intended to be used by the DAO to realign bridge accounting state and maintain protocol consistency,
     ///      typically in response to operator deviations, external bridge discrepancies, or unbounded counter growth.
     /// @param token The address of the token.

@@ -34,7 +34,7 @@ interface IMachine is IMachineEndpoint {
     /// @param initialCaliberStaleThreshold The caliber accounting staleness threshold in seconds.
     /// @param initialMaxFixedFeeAccrualRate The maximum fixed fee accrual rate per second, 1e18 = 100%.
     /// @param initialMaxPerfFeeAccrualRate The maximum performance fee accrual rate per second, 1e18 = 100%.
-    /// @param initialFeeMintCooldown The minimum time to be elapsed between two fee minting events in seconds.
+    /// @param initialFeeMintCooldown The minimum time that must elapse between two fee minting events in seconds.
     /// @param initialShareLimit The share cap value.
     /// @param initialMaxSharePriceChangeRate The maximum relative share price change rate per second during total AUM updates, 1e18 = 100%.
     struct MachineInitParams {
@@ -49,7 +49,7 @@ interface IMachine is IMachineEndpoint {
         uint256 initialMaxSharePriceChangeRate;
     }
 
-    /// @dev Internal state structure for a spoke caliber data.
+    /// @dev State data for each spoke caliber.
     /// @param mailbox The foreign address of the spoke caliber mailbox.
     /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
     /// @param timestamp The timestamp of the last accounting.
@@ -119,7 +119,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Maximum performance fee accrual rate per second used to compute an upper bound on shares to be minted, 1e18 = 100%.
     function maxPerfFeeAccrualRate() external view returns (uint256);
 
-    /// @notice Minimum time to be elapsed between two fee minting events.
+    /// @notice Minimum time that must elapse between two fee minting events.
     function feeMintCooldown() external view returns (uint256);
 
     /// @notice Share token supply limit that cannot be exceeded by new deposits.
@@ -179,12 +179,12 @@ interface IMachine is IMachineEndpoint {
     /// @return assets The amount of accounting tokens.
     function convertToAssets(uint256 shares) external view returns (uint256);
 
-    /// @notice Initiates a token transfers to the hub caliber.
+    /// @notice Initiates a token transfer to the hub caliber.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of token to transfer.
     function transferToHubCaliber(address token, uint256 amount) external;
 
-    /// @notice Initiates a token transfers to the spoke caliber.
+    /// @notice Initiates a token transfer to the spoke caliber.
     /// @param bridgeId The ID of the bridge to use for the transfer.
     /// @param chainId The foreign EVM chain ID of the spoke caliber.
     /// @param token The address of the token to transfer.
@@ -223,7 +223,8 @@ interface IMachine is IMachineEndpoint {
     /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
     /// @param response The Wormhole CCQ response payload containing the accounting data.
     /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
-    function updateSpokeCaliberAccountingData(bytes memory response, GuardianSignature[] memory signatures) external;
+    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures)
+        external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The foreign EVM chain ID of the spoke caliber.

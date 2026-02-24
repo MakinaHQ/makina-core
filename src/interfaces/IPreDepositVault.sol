@@ -69,8 +69,8 @@ interface IPreDepositVault {
     function previewDeposit(uint256 assets) external view returns (uint256);
 
     /// @notice Amount of deposit tokens that can be withdrawn against a given amount of shares.
-    /// @param assets The amount of shares to be redeemed.
-    function previewRedeem(uint256 assets) external view returns (uint256);
+    /// @param shares The amount of shares to be redeemed.
+    function previewRedeem(uint256 shares) external view returns (uint256);
 
     /// @notice Deposits a given amount of deposit tokens and mints shares to the receiver.
     /// @param assets The amount of deposit tokens to be deposited.

@@ -257,7 +257,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
     }
 
     /// @dev Checks that the provided authority matches the current authority.
-    function _checkAuthority(address _authority) internal {
+    function _checkAuthority(address _authority) internal view {
         if (_authority != authority()) {
             revert Errors.NotFactoryAuthority();
         }

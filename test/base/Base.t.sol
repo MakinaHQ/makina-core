@@ -77,7 +77,7 @@ abstract contract Base_Test is Base, Constants, Test {
 
     function setupAccessManagerRolesAndOwnership() internal {
         setupAccessManagerRoles();
-        transferAccessManagerOwnership(accessManager, vm);
+        transferAccessManagerOwnership(accessManager);
     }
 }
 
@@ -113,7 +113,7 @@ abstract contract Base_Hub_Test is Base_Test {
         preDepositVaultBeacon = deployment.preDepositVaultBeacon;
 
         setupHubCoreRegistry(deployment);
-        setupHubCoreAMFunctionRoles(deployment, vm);
+        setupHubCoreAMFunctionRoles(deployment);
 
         coreFactory = address(hubCoreFactory);
         setupAccessManagerRolesAndOwnership();
@@ -193,7 +193,7 @@ abstract contract Base_Spoke_Test is Base_Test {
         caliberMailboxBeacon = deployment.caliberMailboxBeacon;
 
         setupSpokeCoreRegistry(deployment);
-        setupSpokeCoreAMFunctionRoles(deployment, vm);
+        setupSpokeCoreAMFunctionRoles(deployment);
 
         coreFactory = address(spokeCoreFactory);
         setupAccessManagerRolesAndOwnership();
