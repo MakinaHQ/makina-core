@@ -112,6 +112,17 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can set mappings of EVM and LZ chain IDs.
   - Can set mappings of tokens to corresponding LZ OFTs.
+  - Can set mappings of local tokens to their foreign counterparts through OFT bridging.
+
+- `INFRA_UPGRADE_ROLE` (roleId `5`)
+  - Can upgrade implementation via associated ProxyAdmin.
+
+# CctpV2BridgeConfig
+
+- `INFRA_CONFIG_ROLE` (roleId `1`)
+
+  - Can set mappings of EVM chains IDs and CCTP domains.
+  - Can set mappings of local tokens to their foreign counterparts through CCTP bridging.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
   - Can upgrade implementation via associated ProxyAdmin.
@@ -142,6 +153,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can upgrade implementation.
 
 ### LayerZeroV2BridgeAdapter Beacon
+
+- `INFRA_UPGRADE_ROLE` (roleId `5`)
+  - Can upgrade implementation.
+
+### CctpV2BridgeAdapter Beacon
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
   - Can upgrade implementation.
