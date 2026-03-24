@@ -10,23 +10,25 @@ See `SPECIFICATION.md` and `PERMISSIONS.MD` for more details.
 
 ## Contracts Overview
 
-| Filename                       | Deployment chain | Description                                                                                                                                            |
-| ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `HubCoreRegistry.sol`          | Hub              | Stores addresses of core hub components of the protocol, including registries, factory, and beacons.                                                   |
-| `SpokeCoreRegistry.sol`        | Spoke            | Stores addresses of core spoke components of the protocol, including registries, factory, and beacons.                                                 |
-| `OracleRegistry.sol`           | Hub + Spoke      | Aggregates price feeds in order to price base tokens against accounting tokens used in machines and calibers.                                          |
-| `TokenRegistry.sol`            | Hub + Spoke      | Maps token addresses across different chains.                                                                                                          |
-| `ChainRegistry.sol`            | Hub              | Maps EVM chain IDs to Wormhole chain IDs.                                                                                                              |
-| `HubCoreFactory.sol`           | Hub              | Hub factory for creation of machines, machine shares, caliber, bridge adapters, and pre-deposit vaults.                                                |
-| `SpokeCoreFactory.sol`         | Spoke            | Spoke factory for creation of calibers, caliber mailboxes and bridge adapters.                                                                         |
-| `Machine.sol`                  | Hub              | Core component of Makina which handles deposits, redemptions and share price calculation.                                                              |
-| `Caliber.sol`                  | Hub + Spoke      | Execution engine used to manage positions on each supported chain.                                                                                     |
-| `CaliberMailbox.sol`           | Spoke            | Handles communication between a spoke caliber and the hub machine.                                                                                     |
-| `SwapModule.sol`               | Hub + Spoke      | Standalone module used by calibers to execute swap transactions through external protocols.                                                            |
-| `AcrossV3BridgeAdapter.sol`    | Hub + Spoke      | Handles bidirectional bridge transfers via Across V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain.    |
-| `AcrossV3BridgeConfig.sol`     | Hub + Spoke      | Stores various configuration data required for Across V3 bridge transfers.                                                                             |
-| `LayerZeroV2BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via LayerZero V2, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain. |
-| `LayerZeroV2BridgeConfig.sol`  | Hub + Spoke      | Stores various configuration data required for LayerZero V2 bridge transfers.                                                                          |
+| Filename                       | Deployment chain | Description                                                                                                                                              |
+| ------------------------------ | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HubCoreRegistry.sol`          | Hub              | Stores addresses of core hub components of the protocol, including registries, factory, and beacons.                                                     |
+| `SpokeCoreRegistry.sol`        | Spoke            | Stores addresses of core spoke components of the protocol, including registries, factory, and beacons.                                                   |
+| `OracleRegistry.sol`           | Hub + Spoke      | Aggregates price feeds in order to price base tokens against accounting tokens used in machines and calibers.                                            |
+| `TokenRegistry.sol`            | Hub + Spoke      | Maps token addresses across different chains.                                                                                                            |
+| `ChainRegistry.sol`            | Hub              | Maps EVM chain IDs to Wormhole chain IDs.                                                                                                                |
+| `HubCoreFactory.sol`           | Hub              | Hub factory for creation of machines, machine shares, caliber, bridge adapters, and pre-deposit vaults.                                                  |
+| `SpokeCoreFactory.sol`         | Spoke            | Spoke factory for creation of calibers, caliber mailboxes and bridge adapters.                                                                           |
+| `Machine.sol`                  | Hub              | Core component of Makina which handles deposits, redemptions and share price calculation.                                                                |
+| `Caliber.sol`                  | Hub + Spoke      | Execution engine used to manage positions on each supported chain.                                                                                       |
+| `CaliberMailbox.sol`           | Spoke            | Handles communication between a spoke caliber and the hub machine.                                                                                       |
+| `SwapModule.sol`               | Hub + Spoke      | Standalone module used by calibers to execute swap transactions through external protocols.                                                              |
+| `AcrossV3BridgeAdapter.sol`    | Hub + Spoke      | Handles bidirectional bridge transfers via Across V3, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain.      |
+| `AcrossV3BridgeConfig.sol`     | Hub + Spoke      | Stores various configuration data required for Across V3 bridge transfers.                                                                               |
+| `LayerZeroV2BridgeAdapter.sol` | Hub + Spoke      | Handles bidirectional bridge transfers via LayerZero V2, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain.   |
+| `LayerZeroV2BridgeConfig.sol`  | Hub + Spoke      | Stores various configuration data required for LayerZero V2 bridge transfers.                                                                            |
+| `CctpV2BridgeAdapter.sol`      | Hub + Spoke      | Handles bidirectional bridge transfers via Circle CCTP V2, between a hub machine and a spoke caliber. Operates with a counterpart on the opposite chain. |
+| `CctpV2BridgeConfig.sol`       | Hub + Spoke      | Stores various configuration data required for Circle CCTP V2 bridge transfers.                                                                          |
 
 ## Installation
 
