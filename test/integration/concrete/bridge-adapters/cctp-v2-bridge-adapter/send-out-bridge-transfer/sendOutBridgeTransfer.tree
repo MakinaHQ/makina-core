@@ -1,0 +1,17 @@
+sendOutBridgeTransfer.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── when caller is not the controller contract
+   │  └── it should revert with NotController
+   └── when caller is the controller contract
+      ├── given the provided transfer ID does not corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+      │  └── it should revert with InvalidTransferStatus
+      └── given the provided transfer ID corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+         ├── given that the spread between input and minOutputAmount is below the CCTP minimum fee.
+         │  └── it should revert
+         └── The spread between input and minOutputAmount is at least equal to the CCTP minimum fee.
+            ├── it should decrease the adapter's token balance by amount
+            ├── it should initiate the CCTP transfer
+            └── it should emit a OutBridgeTransferSent event
+

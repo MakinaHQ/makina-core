@@ -11,14 +11,15 @@ import {AuthorizeInBridgeTransfer_Integration_Concrete_Test} from
 import {BridgeAdapter_Unit_Concrete_Test} from "../bridge-adapter/BridgeAdapter.t.sol";
 
 abstract contract AcrossV3BridgeAdapter_Unit_Concrete_Test is BridgeAdapter_Unit_Concrete_Test {
+    address internal acrossV3SpokePool;
+
     function setUp() public virtual override {
         BridgeAdapter_Unit_Concrete_Test.setUp();
 
-        address acrossV3SpokePool = makeAddr("acrossV3SpokePool");
+        acrossV3SpokePool = makeAddr("acrossV3SpokePool");
         coreRegistry = makeAddr("coreRegistry");
 
-        address beacon =
-            address(_deployAcrossV3BridgeAdapterBeacon(dao, address(coreRegistry), address(acrossV3SpokePool)));
+        address beacon = address(_deployAcrossV3BridgeAdapterBeacon(dao, address(coreRegistry), acrossV3SpokePool));
         bridgeAdapter = IBridgeAdapter(
             address(new BeaconProxy(beacon, abi.encodeCall(IBridgeAdapter.initialize, (address(controller), ""))))
         );
@@ -30,6 +31,9 @@ contract Getters_AcrossV3BridgeAdapter_Unit_Concrete_Test is AcrossV3BridgeAdapt
         assertEq(IMakinaContext(address(bridgeAdapter)).registry(), address(coreRegistry));
         assertEq(bridgeAdapter.controller(), address(controller));
         assertEq(bridgeAdapter.bridgeId(), ACROSS_V3_BRIDGE_ID);
+        assertEq(bridgeAdapter.approvalTarget(), acrossV3SpokePool);
+        assertEq(bridgeAdapter.executionTarget(), acrossV3SpokePool);
+        assertEq(bridgeAdapter.receiveSource(), acrossV3SpokePool);
         assertEq(bridgeAdapter.nextOutTransferId(), 1);
         assertEq(bridgeAdapter.nextInTransferId(), 1);
     }

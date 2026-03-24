@@ -8,7 +8,7 @@ import {Errors} from "src/libraries/Errors.sol";
 
 import {LayerZeroV2BridgeConfig_Unit_Concrete_Test} from "../LayerZeroV2BridgeConfig.t.sol";
 
-contract SetToken_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test {
+contract SetForeignToken_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test {
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         layerZeroV2BridgeConfig.setForeignToken(address(0), 0, address(0));
@@ -44,6 +44,9 @@ contract SetToken_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Te
         layerZeroV2BridgeConfig.setForeignToken(address(1), 2, address(2));
 
         assertEq(layerZeroV2BridgeConfig.getForeignToken(address(1), 2), address(2));
+
+        vm.expectRevert(abi.encodeWithSelector(Errors.LzForeignTokenNotRegistered.selector, address(2), 2));
+        layerZeroV2BridgeConfig.getForeignToken(address(2), 2);
     }
 
     function test_SetToken_SameAddresses() public {
