@@ -40,7 +40,7 @@ abstract contract WithdrawPendingFunds_Integration_Concrete_Test is BridgeAdapte
         uint256 amount3 = 3e20;
         uint256 amount4 = 4e21;
 
-        deal(address(token1), address(bridgeController1), amount1 + amount2);
+        deal(address(token1), address(bridgeController1), amount1 + amount2, true);
 
         vm.startPrank(address(bridgeController1));
 

@@ -1,0 +1,5 @@
+outBridgeTransferCancelDefault.t.sol
+├── given the provided transfer ID does not corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+│  └── it should revert with InvalidTransferStatus
+└── given the provided transfer ID corresponds to a scheduled, unsent outgoing transfer in adapter's storage
+   └── it should return 0

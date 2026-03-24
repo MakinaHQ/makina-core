@@ -15,6 +15,8 @@ library Errors {
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
+    error CctpForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error CctpMessageReceptionFailed();
     error Create3ContractDeploymentFailed();
     error DirectManageFlashLoanCall();
     error EvmChainIdNotRegistered(uint256 chainId);
@@ -32,6 +34,7 @@ library Errors {
     error InvalidAffectedToken();
     error InvalidBridgeController();
     error InvalidBridgeTransferRoute();
+    error InvalidCctpMessage();
     error InvalidChainId();
     error InvalidDebtFlag();
     error InvalidDecimals();
@@ -86,6 +89,8 @@ library Errors {
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
     error ProtectedAccountingAgent();
+    error ProtectedChainId();
+    error ProtectedCctpDomain();
     error ProtectedRootGuardian();
     error Create3ProxyDeploymentFailed();
     error RecoveryMode();

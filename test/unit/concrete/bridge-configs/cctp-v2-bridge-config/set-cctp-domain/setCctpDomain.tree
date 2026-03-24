@@ -1,0 +1,16 @@
+setCctpDomain.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when the provided EVM chain ID is equal to zero
+   │  └── it should revert with ZeroChainId
+   └── when the provided EVM chain ID is non-zero
+      ├── when the provided EVM chain ID is equal to Mainnet chain ID (1)
+      │  └── it should revert with ProtectedChainId
+      └── when the provided EVM chain ID is not equal to Mainnet chain ID (1)
+         ├── when the provided CCTP domain is equal to Mainnet domain (0)
+         │  └── it should revert with ProtectedCctpDomain
+         └── when the provided CCTP domain is not equal to Mainnet domain (0)
+            ├── it should associate the provided IDs in contract storage
+            ├── it should clean up any previous associations involving either ID
+            └── it should emit a CctpDomainRegistered event
