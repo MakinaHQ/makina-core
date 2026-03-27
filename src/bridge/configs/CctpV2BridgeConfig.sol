@@ -20,7 +20,8 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.CctpV2BridgeConfig")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant CctpV2BridgeConfigStorageLocation = 0;
+    bytes32 private constant CctpV2BridgeConfigStorageLocation =
+        0xfddff817c79375fc2894a034cbd193828d9a03a3c9ab698ec061f44863e21100;
 
     function _getCctpV2BridgeConfigStorage() private pure returns (CctpV2BridgeConfigStorage storage $) {
         assembly {
