@@ -19,6 +19,10 @@ contract MockMachineEndpoint is IMachineEndpoint {
     event InBridgeTransferClaimed(uint16 bridgeId, uint256 transferId);
     event OutBridgeTransferCancelled(uint16 bridgeId, uint256 transferId);
 
+    function operator() external view returns (address) {
+        return address(0);
+    }
+
     function mechanic() public pure returns (address) {
         return address(0);
     }
@@ -44,10 +48,6 @@ contract MockMachineEndpoint is IMachineEndpoint {
     }
 
     function isAccountingAgent(address) external pure returns (bool) {
-        return false;
-    }
-
-    function isOperator(address) external pure returns (bool) {
         return false;
     }
 

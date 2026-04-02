@@ -29,6 +29,9 @@ interface IMakinaGovernable {
         address[] initialAccountingAgents;
     }
 
+    /// @notice Address of the current operator (mechanic or security council).
+    function operator() external view returns (address);
+
     /// @notice Address of the mechanic.
     function mechanic() external view returns (address);
 
@@ -49,10 +52,6 @@ interface IMakinaGovernable {
 
     /// @notice User => Whether the user is an accounting agent
     function isAccountingAgent(address agent) external view returns (bool);
-
-    /// @notice User => Whether the user is the current operator
-    ///         The operator is either the mechanic or the security council depending on the recovery mode.
-    function isOperator(address user) external view returns (bool);
 
     /// @notice User => Whether the user is authorized to perform accounting operations under current settings
     function isAccountingAuthorized(address user) external view returns (bool);
