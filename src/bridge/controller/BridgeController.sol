@@ -57,11 +57,11 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
 
     /// @inheritdoc IBridgeController
     function getBridgeAdapter(uint16 bridgeId) public view override returns (address) {
-        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
-        if ($._bridgeAdapters[bridgeId] == address(0)) {
+        address adapter = _getBridgeControllerStorage()._bridgeAdapters[bridgeId];
+        if (adapter == address(0)) {
             revert Errors.BridgeAdapterDoesNotExist();
         }
-        return $._bridgeAdapters[bridgeId];
+        return adapter;
     }
 
     /// @inheritdoc IBridgeController
