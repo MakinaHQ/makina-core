@@ -5,7 +5,7 @@
     "initialFeeManager": "0x0000000000000000000000000000000000000000",
     "initialCaliberStaleThreshold": 0,
     "initialMaxFixedFeeAccrualRate": 0,
-    "initialPerfFixedFeeAccrualRate": 0,
+    "initialMaxPerfFeeAccrualRate": 0,
     "initialFeeMintCooldown": 0,
     "initialShareLimit": 0,
     "initialMaxSharePriceChangeRate": 0
