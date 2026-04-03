@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 interface IBridgeAdapterFactory {
     event BridgeAdapterCreated(address indexed controller, uint256 indexed bridgeId, address indexed adapter);
