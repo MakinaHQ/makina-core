@@ -42,14 +42,16 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
             _deployCode(abi.encodePacked(getMockLayerZeroEndpointV2Code(), abi.encode(0, address(this))), 0)
         );
         mockLzSendLib = new MockLzSendLib();
+        mockLzSendLib.setGasPrice(DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
+
         mockLzEndpointV2.registerLibrary(address(mockLzSendLib));
-        mockLzEndpointV2.setDefaultSendLibrary(LAYER_ZERO_V2_SPOKE_CHAIN_ID, address(mockLzSendLib));
+        mockLzEndpointV2.setDefaultSendLibrary(LAYER_ZERO_V2_SPOKE_ENDPOINT_ID, address(mockLzSendLib));
 
         mockOftAdapter = new MockOFTAdapter(address(token1), address(mockLzEndpointV2), address(this));
-        mockOftAdapter.setPeer(LAYER_ZERO_V2_SPOKE_CHAIN_ID, OFTComposeMsgCodec.addressToBytes32(address(0x1)));
+        mockOftAdapter.setPeer(LAYER_ZERO_V2_SPOKE_ENDPOINT_ID, OFTComposeMsgCodec.addressToBytes32(address(0x1)));
 
         mockOft = new MockOFT("Mock OFT", "MOFT", address(mockLzEndpointV2), address(this));
-        mockOft.setPeer(LAYER_ZERO_V2_SPOKE_CHAIN_ID, OFTComposeMsgCodec.addressToBytes32(address(0x2)));
+        mockOft.setPeer(LAYER_ZERO_V2_SPOKE_ENDPOINT_ID, OFTComposeMsgCodec.addressToBytes32(address(0x2)));
 
         address beacon = address(
             _deployLayerZeroV2BridgeAdapterBeacon(
@@ -59,7 +61,7 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
 
         lzConfig = _deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager));
         ICoreRegistry(coreRegistry).setBridgeConfig(LAYER_ZERO_V2_BRIDGE_ID, address(lzConfig));
-        lzConfig.setLzEndpointId(chainId2, LAYER_ZERO_V2_SPOKE_CHAIN_ID);
+        lzConfig.setLzEndpointId(chainId2, LAYER_ZERO_V2_SPOKE_ENDPOINT_ID);
         lzConfig.setOft(address(mockOftAdapter));
         lzConfig.setOft(address(mockOft));
         lzConfig.setForeignToken(address(token1), chainId2, address(token2));

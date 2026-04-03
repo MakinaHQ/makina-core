@@ -25,7 +25,7 @@ contract RemoveBaseToken_Integration_Concrete_Test is Caliber_Integration_Concre
     }
 
     function test_RevertGiven_NonZeroTokenBalance() public withTokenAsBT(address(baseToken)) {
-        deal(address(baseToken), address(caliber), 1);
+        deal(address(baseToken), address(caliber), 1, true);
 
         vm.expectRevert(Errors.NonZeroBalance.selector);
         vm.prank(riskManagerTimelock);

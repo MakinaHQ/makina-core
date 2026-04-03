@@ -16,7 +16,7 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         layerZeroV2BridgeConfig.setOft(address(0));
     }
 
-    function test_RevertWhen_ZeroTokenAddress() public {
+    function test_RevertWhen_ZeroOftAddress() public {
         vm.startPrank(dao);
 
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroOftAddress.selector));

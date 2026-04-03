@@ -21,7 +21,7 @@ contract MigrateToMachine_Integration_Concrete_Test is PreDepositVault_Integrati
 
     function test_MigrateToMachine() public {
         uint256 preDepositAmount = 1e18;
-        deal(address(baseToken), address(preDepositVault), preDepositAmount);
+        deal(address(baseToken), address(preDepositVault), preDepositAmount, true);
 
         newMachineAddr = makeAddr("newMachine");
         vm.prank(address(hubCoreFactory));

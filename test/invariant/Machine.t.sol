@@ -129,9 +129,9 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         targetContract(address(machineHandler));
 
         // set up machine balances
-        deal(address(accountingToken), address(machine), A_START_BALANCE);
+        deal(address(accountingToken), address(machine), A_START_BALANCE, true);
 
-        deal(address(baseToken), address(hubCaliber), B_START_BALANCE);
+        deal(address(baseToken), address(hubCaliber), B_START_BALANCE, true);
         vm.prank(mechanic);
         hubCaliber.transferToHubMachine(address(baseToken), B_START_BALANCE, "");
     }

@@ -8,12 +8,14 @@ import {IMessageLib, MessageLibType} from "@layerzerolabs/lz-evm-protocol-v2/con
 import {MessagingFee} from "@layerzerolabs/lz-evm-protocol-v2/contracts/interfaces/ILayerZeroEndpointV2.sol";
 
 contract MockLzSendLib is ERC165 {
-    uint256 public nativeFee;
-    uint256 public lzReceiveFee;
-    uint256 public lzComposeFee;
+    uint256 public verifyGas;
+    uint256 public lzReceiveGas;
+    uint256 public lzComposeGas;
+
+    uint256 public gasPrice;
 
     function quote(Packet calldata, bytes calldata, bool) external view returns (MessagingFee memory) {
-        return MessagingFee(nativeFee + lzReceiveFee + lzComposeFee, 0);
+        return MessagingFee((verifyGas + lzReceiveGas + lzComposeGas) * gasPrice, 0);
     }
 
     function send(Packet calldata, bytes memory, bool)
@@ -21,19 +23,23 @@ contract MockLzSendLib is ERC165 {
         view
         returns (MessagingFee memory, bytes memory, bytes memory)
     {
-        return (MessagingFee(nativeFee + lzReceiveFee + lzComposeFee, 0), "", "");
+        return (MessagingFee((verifyGas + lzReceiveGas + lzComposeGas) * gasPrice, 0), "", "");
     }
 
-    function setNativeFee(uint256 _fee) external {
-        nativeFee = _fee;
+    function setVerifyGas(uint256 _verifyGas) external {
+        verifyGas = _verifyGas;
     }
 
-    function setLzReceiveFee(uint256 _fee) external {
-        lzReceiveFee = _fee;
+    function setLzReceiveGas(uint256 _lzReceiveGas) external {
+        lzReceiveGas = _lzReceiveGas;
     }
 
-    function setLzComposeFee(uint256 _fee) external {
-        lzComposeFee = _fee;
+    function setLzComposeGas(uint256 _lzComposeGas) external {
+        lzComposeGas = _lzComposeGas;
+    }
+
+    function setGasPrice(uint256 _gasPrice) public {
+        gasPrice = _gasPrice;
     }
 
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {

@@ -5,6 +5,6 @@ setOft.t.sol
    ├── when the provided oft address is equal to zero
    │  └── it should revert with ZeroTokenAddress
    └── when the provided oft address is not equal to zero
-      ├── it should associate the provided oft address with its corresponding token
-      ├── it should clean up any previous associations involving either addresses
+      ├── it should register the provided oft address for its corresponding token
+      ├── it should overwrite any previously registered oft for the provided OFT's associated token
       └── it should emit a OftRegistered event
