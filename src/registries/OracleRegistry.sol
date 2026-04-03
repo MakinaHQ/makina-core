@@ -119,6 +119,18 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
+    function clearFeedRoute(address token) external override restricted {
+        OracleRegistryStorage storage $ = _getOracleRegistryStorage();
+
+        if ($._feedRoutes[token].feed1 == address(0)) {
+            revert Errors.PriceFeedRouteNotRegistered(token);
+        }
+        delete $._feedRoutes[token];
+
+        emit FeedRouteCleared(token);
+    }
+
+    /// @inheritdoc IOracleRegistry
     function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
         emit FeedStaleThresholdChanged(feed, $._feedStaleThreshold[feed], newThreshold);

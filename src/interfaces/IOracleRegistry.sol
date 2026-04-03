@@ -12,6 +12,7 @@ pragma solidity 0.8.28;
 /// - Finally, the price Token A -> Token B is calculated using both tokens' individual prices in the reference currency.
 ///
 interface IOracleRegistry {
+    event FeedRouteCleared(address indexed token);
     event FeedRouteRegistered(address indexed token, address indexed feed1, address indexed feed2);
     event FeedStaleThresholdChanged(address indexed feed, uint256 oldThreshold, uint256 newThreshold);
 
@@ -54,6 +55,11 @@ interface IOracleRegistry {
         address feed2,
         uint256 stalenessThreshold2
     ) external;
+
+    /// @notice Clears the price feed route for a given token.
+    /// @dev Staleness thresholds for the route's feeds are preserved, as the feeds may be used by other routes.
+    /// @param token The address of the token for which the price feed route is cleared.
+    function clearFeedRoute(address token) external;
 
     /// @notice Sets the price staleness threshold for a given feed.
     /// @param feed The address of the price feed.

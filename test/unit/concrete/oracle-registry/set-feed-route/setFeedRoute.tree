@@ -5,4 +5,6 @@ setFeedRoute.t.sol
    ├── given first price feed is null
    │  └── it should revert with InvalidFeedRoute
    └── given first price feed is non null
-      └── it should associate the provided feed route to provided token in oracle registry storage
+      ├── it should associate the provided feed route to provided token in oracle registry storage
+      ├── it should associate the provided feeds to respective staleness thresholds in oracle registry storage
+      └── it should emit a FeedRouteRegistered event
