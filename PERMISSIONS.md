@@ -110,8 +110,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
 
-  - Can set mappings of EVM and LZ chain IDs.
-  - Can set mappings of tokens to corresponding LZ OFTs.
+  - Can set mappings of EVM chain ID to LZ endpoint ID.
+  - Can set mappings of local tokens to corresponding LZ OFTs.
   - Can set mappings of local tokens to their foreign counterparts through OFT bridging.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -121,7 +121,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
 
-  - Can set mappings of EVM chains IDs and CCTP domains.
+  - Can set mappings of EVM chain ID to CCTP domain.
   - Can set mappings of local tokens to their foreign counterparts through CCTP bridging.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)

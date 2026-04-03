@@ -59,7 +59,7 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
 
         lzConfig = _deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager));
         ICoreRegistry(coreRegistry).setBridgeConfig(LAYER_ZERO_V2_BRIDGE_ID, address(lzConfig));
-        lzConfig.setLzChainId(chainId2, LAYER_ZERO_V2_SPOKE_CHAIN_ID);
+        lzConfig.setLzEndpointId(chainId2, LAYER_ZERO_V2_SPOKE_CHAIN_ID);
         lzConfig.setOft(address(mockOftAdapter));
         lzConfig.setOft(address(mockOft));
         lzConfig.setForeignToken(address(token1), chainId2, address(token2));
@@ -95,7 +95,7 @@ abstract contract LayerZeroV2BridgeAdapter_Integration_Concrete_Test is BridgeAd
             true
         );
 
-        address oft = lzConfig.tokenToOft(receivedToken);
+        address oft = lzConfig.getOft(receivedToken);
 
         bytes memory oftComposeMsg = _encodeComposeMsg(receivedAmount, encodedMessage);
 

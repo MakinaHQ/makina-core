@@ -1,4 +1,4 @@
-tokenToOft.t.sol
+getOft.t.sol
 ├── when the OFT corresponding to the provided local token is not registered
 │  └── it should revert with OftNotRegistered
 └── when the OFT corresponding to the provided local token is registered

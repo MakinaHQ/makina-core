@@ -11,7 +11,7 @@ contract IsRouteSupported_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Con
 
         assertFalse(layerZeroV2BridgeConfig.isRouteSupported(address(mockOft), 1, foreignToken));
 
-        layerZeroV2BridgeConfig.setLzChainId(1, 2);
+        layerZeroV2BridgeConfig.setLzEndpointId(1, 2);
 
         assertFalse(layerZeroV2BridgeConfig.isRouteSupported(address(mockOft), 1, foreignToken));
 

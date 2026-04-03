@@ -1,4 +1,4 @@
-setLzChainId.t.sol
+setLzEndpointId.t.sol
 ├── when caller does not have the relevant role
 │  └── it should revert with AccessManagedUnauthorized
 └── when caller has the relevant role
@@ -7,4 +7,4 @@ setLzChainId.t.sol
    └── when both of the IDs are non-zero
       ├── it should associate both provided IDs in contract storage
       ├── it should clean up any previous associations involving either ID
-      └── it should emit a LzChainIdRegistered event
+      └── it should emit a LzEndpointIdRegistered event

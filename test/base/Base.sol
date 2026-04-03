@@ -568,7 +568,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
         );
 
         bytes4[] memory layerZeroV2BridgeConfigSelectors = new bytes4[](3);
-        layerZeroV2BridgeConfigSelectors[0] = ILayerZeroV2BridgeConfig.setLzChainId.selector;
+        layerZeroV2BridgeConfigSelectors[0] = ILayerZeroV2BridgeConfig.setLzEndpointId.selector;
         layerZeroV2BridgeConfigSelectors[1] = ILayerZeroV2BridgeConfig.setOft.selector;
         layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(

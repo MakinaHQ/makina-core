@@ -57,7 +57,7 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
         }
         uint32 cctpDomain = _getCctpV2BridgeConfigStorage()._evmToCctpId[evmChainId];
         if (cctpDomain == 0) {
-            revert Errors.EvmChainIdNotRegistered(evmChainId);
+            revert Errors.CctpDomainNotRegistered();
         }
         return cctpDomain;
     }
@@ -66,7 +66,7 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
     function getForeignToken(address localToken, uint256 foreignEvmChainId) external view override returns (address) {
         address foreignToken = _getCctpV2BridgeConfigStorage()._localToForeignTokens[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
-            revert Errors.CctpForeignTokenNotRegistered(localToken, foreignEvmChainId);
+            revert Errors.CctpForeignTokenNotRegistered();
         }
         return foreignToken;
     }

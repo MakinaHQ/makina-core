@@ -58,7 +58,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         address tokenSent = IOFT(_from).token();
         uint256 amount = OFTComposeMsgCodec.amountLD(_message);
 
-        if (ILayerZeroV2BridgeConfig(_getConfig()).tokenToOft(tokenSent) != _from) {
+        if (ILayerZeroV2BridgeConfig(_getConfig()).getOft(tokenSent) != _from) {
             revert Errors.InvalidOft();
         }
 
@@ -101,8 +101,8 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
 
         address config = _getConfig();
-        uint32 lzChainId = ILayerZeroV2BridgeConfig(config).evmToLzChainId(receipt.destinationChainId);
-        address oft = ILayerZeroV2BridgeConfig(config).tokenToOft(receipt.inputToken);
+        uint32 lzEndpointId = ILayerZeroV2BridgeConfig(config).getLzEndpointId(receipt.destinationChainId);
+        address oft = ILayerZeroV2BridgeConfig(config).getOft(receipt.inputToken);
 
         if (IOFT(oft).approvalRequired()) {
             IERC20(receipt.inputToken).forceApprove(oft, receipt.inputAmount);
@@ -124,7 +124,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         }
 
         SendParam memory sendParam = SendParam({
-            dstEid: lzChainId,
+            dstEid: lzEndpointId,
             to: bytes32(uint256(uint160(receipt.recipient))),
             amountLD: receipt.inputAmount,
             minAmountLD: receipt.inputAmount,

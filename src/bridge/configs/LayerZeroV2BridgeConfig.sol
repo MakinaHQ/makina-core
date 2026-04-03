@@ -12,9 +12,9 @@ import {Errors} from "../../libraries/Errors.sol";
 contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2BridgeConfig {
     /// @custom:storage-location erc7201:makina.storage.LayerZeroV2BridgeConfig
     struct LayerZeroV2BridgeConfigStorage {
-        mapping(uint256 evmChainId => uint32 lzChainId) _evmToLzChainId;
-        mapping(uint32 lzChainId => uint256 evmChainId) _lzToEvmChainId;
-        mapping(address localToken => address oft) _tokenToOft;
+        mapping(uint256 evmChainId => uint32 lzEndpointId) _evmToLzId;
+        mapping(uint32 lzEndpointId => uint256 evmChainId) _lzToEvmId;
+        mapping(address localToken => address oft) _getOft;
         mapping(address localToken => mapping(uint256 foreignEvmChainId => address foreignToken)) _localToForeignTokens;
         mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) _foreignToLocalTokens;
     }
@@ -45,33 +45,24 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
         returns (bool)
     {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
-        return $._evmToLzChainId[foreignChainId] != 0 && $._tokenToOft[inputToken] != address(0)
+        return $._evmToLzId[foreignChainId] != 0 && $._getOft[inputToken] != address(0)
             && $._localToForeignTokens[inputToken][foreignChainId] == outputToken;
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
-    function evmToLzChainId(uint256 evmChainId) external view override returns (uint32) {
-        uint32 lzChainId = _getLayerZeroV2BridgeConfigStorage()._evmToLzChainId[evmChainId];
-        if (lzChainId == 0) {
-            revert Errors.EvmChainIdNotRegistered(evmChainId);
+    function getLzEndpointId(uint256 evmChainId) external view override returns (uint32) {
+        uint32 lzEndpointId = _getLayerZeroV2BridgeConfigStorage()._evmToLzId[evmChainId];
+        if (lzEndpointId == 0) {
+            revert Errors.LzEndpointIdNotRegistered();
         }
-        return lzChainId;
+        return lzEndpointId;
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
-    function lzToEvmChainId(uint32 lzChainId) external view override returns (uint256) {
-        uint256 evmChainId = _getLayerZeroV2BridgeConfigStorage()._lzToEvmChainId[lzChainId];
-        if (evmChainId == 0) {
-            revert Errors.LzChainIdNotRegistered(lzChainId);
-        }
-        return evmChainId;
-    }
-
-    /// @inheritdoc ILayerZeroV2BridgeConfig
-    function tokenToOft(address token) external view override returns (address) {
-        address oft = _getLayerZeroV2BridgeConfigStorage()._tokenToOft[token];
+    function getOft(address localToken) external view override returns (address) {
+        address oft = _getLayerZeroV2BridgeConfigStorage()._getOft[localToken];
         if (oft == address(0)) {
-            revert Errors.OftNotRegistered(token);
+            revert Errors.OftNotRegistered();
         }
         return oft;
     }
@@ -80,32 +71,32 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     function getForeignToken(address localToken, uint256 foreignEvmChainId) external view returns (address) {
         address foreignToken = _getLayerZeroV2BridgeConfigStorage()._localToForeignTokens[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
-            revert Errors.LzForeignTokenNotRegistered(localToken, foreignEvmChainId);
+            revert Errors.LzForeignTokenNotRegistered();
         }
         return foreignToken;
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
-    function setLzChainId(uint256 evmChainId, uint32 lzChainId) external override restricted {
+    function setLzEndpointId(uint256 evmChainId, uint32 lzEndpointId) external override restricted {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
 
-        if (evmChainId == 0 || lzChainId == 0) {
+        if (evmChainId == 0 || lzEndpointId == 0) {
             revert Errors.ZeroChainId();
         }
 
-        uint32 oldLz = $._evmToLzChainId[evmChainId];
+        uint32 oldLz = $._evmToLzId[evmChainId];
         if (oldLz != 0) {
-            delete $._lzToEvmChainId[oldLz];
+            delete $._lzToEvmId[oldLz];
         }
 
-        uint256 oldEvm = $._lzToEvmChainId[lzChainId];
+        uint256 oldEvm = $._lzToEvmId[lzEndpointId];
         if (oldEvm != 0) {
-            delete $._evmToLzChainId[oldEvm];
+            delete $._evmToLzId[oldEvm];
         }
 
-        $._evmToLzChainId[evmChainId] = lzChainId;
-        $._lzToEvmChainId[lzChainId] = evmChainId;
-        emit LzChainIdRegistered(evmChainId, lzChainId);
+        $._evmToLzId[evmChainId] = lzEndpointId;
+        $._lzToEvmId[lzEndpointId] = evmChainId;
+        emit LzEndpointIdRegistered(evmChainId, lzEndpointId);
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
@@ -118,7 +109,7 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
 
         address _token = IOFT(oft).token();
 
-        $._tokenToOft[_token] = oft;
+        $._getOft[_token] = oft;
         emit OftRegistered(oft, _token);
     }
 
