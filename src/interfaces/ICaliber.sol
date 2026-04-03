@@ -4,6 +4,7 @@ pragma solidity ^0.8.28;
 import {ISwapModule} from "./ISwapModule.sol";
 
 interface ICaliber {
+    event AllowedInstrRootSet(bytes32 indexed newAllowedInstrRoot);
     event BaseTokenAdded(address indexed token);
     event BaseTokenRemoved(address indexed token);
     event CooldownDurationChanged(uint256 indexed oldDuration, uint256 indexed newDuration);

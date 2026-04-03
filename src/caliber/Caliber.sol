@@ -100,12 +100,15 @@ contract Caliber is
         $._accountingToken = _accountingToken;
         $._hubMachineEndpoint = _hubMachineEndpoint;
         $._positionStaleThreshold = cParams.initialPositionStaleThreshold;
-        $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
         $._timelockDuration = cParams.initialTimelockDuration;
         $._maxPositionIncreaseLossBps = cParams.initialMaxPositionIncreaseLossBps;
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
+
+        $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
+        emit AllowedInstrRootSet(cParams.initialAllowedInstrRoot);
+
         _addBaseToken(_accountingToken);
         for (uint256 i; i < cParams.initialBaseTokens.length; ++i) {
             _addBaseToken(cParams.initialBaseTokens[i]);
