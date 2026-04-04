@@ -292,23 +292,23 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         // Machine function roles should be set according to HubCoreFactory setup
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeCaliber.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setSpokeBridgeAdapter.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setDepositor.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setRedeemer.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMachine.setFeeManager.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setMechanic.selector),
@@ -354,15 +354,15 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         // Fee Manager function role 3 should be set for function selectors returned by getRestrictedFeeConfigSelectors
         assertEq(
             accessManager.getTargetFunctionRole(address(feeManager2), MockFeeManager.setFixedFeeRate.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_FEE_CONFIG_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(feeManager2), MockFeeManager.setPerfFeeRate.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_FEE_CONFIG_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(feeManager2), MockFeeManager.setDistributionRate.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_FEE_CONFIG_ROLE
         );
     }
 

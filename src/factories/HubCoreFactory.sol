@@ -228,7 +228,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         compSetupSelectors[3] = IMachine.setRedeemer.selector;
         compSetupSelectors[4] = IMachine.setFeeManager.selector;
         IAccessManager(_authority).setTargetFunctionRole(
-            _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
 
         bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
@@ -250,7 +250,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
             bytes4[] memory compSetupSelectors = IFeeManager(_feeManager).getRestrictedFeeConfigSelectors();
             if (compSetupSelectors.length > 0) {
                 IAccessManager(_authority).setTargetFunctionRole(
-                    _feeManager, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+                    _feeManager, compSetupSelectors, Roles.STRATEGY_FEE_CONFIG_ROLE
                 );
             }
         }

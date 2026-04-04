@@ -204,7 +204,7 @@ contract CreateCaliber_Integration_Concrete_Test is SpokeCoreFactory_Integration
 
         assertEq(
             accessManager.getTargetFunctionRole(address(caliberMailbox), ICaliberMailbox.setHubBridgeAdapter.selector),
-            Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
             accessManager.getTargetFunctionRole(address(caliberMailbox), IMakinaGovernable.setMechanic.selector),
