@@ -12,11 +12,14 @@ import {AcrossV3BridgeAdapter} from "../../src/bridge/adapters/AcrossV3BridgeAda
 import {AcrossV3BridgeConfig} from "../../src/bridge/configs/AcrossV3BridgeConfig.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "../../src/caliber/Caliber.sol";
+import {CctpV2BridgeAdapter} from "../../src/bridge/adapters/CctpV2BridgeAdapter.sol";
+import {CctpV2BridgeConfig} from "../../src/bridge/configs/CctpV2BridgeConfig.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IAcrossV3BridgeConfig} from "../../src/interfaces/IAcrossV3BridgeConfig.sol";
+import {ICctpV2BridgeConfig} from "../../src/interfaces/ICctpV2BridgeConfig.sol";
 import {IChainRegistry} from "../../src/interfaces/IChainRegistry.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
@@ -298,6 +301,17 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
                     payable(address(_deployLayerZeroV2BridgeConfig(address(accessManager), address(accessManager))))
                 );
                 _setupLayerZeroV2BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
+            } else if (bridgeId == CCTP_V2_BRIDGE_ID) {
+                baBeacon = _deployCctpV2BridgeAdapterBeacon(
+                    address(accessManager),
+                    address(coreRegistry),
+                    bridgesData[i].executionTarget,
+                    bridgesData[i].receiveSource
+                );
+                bc = TransparentUpgradeableProxy(
+                    payable(address(_deployCctpV2BridgeConfig(address(accessManager), address(accessManager))))
+                );
+                _setupCctpV2BridgeConfigAMFunctionRoles(address(accessManager), address(bc));
             } else {
                 revert("Bridge not supported");
             }
@@ -559,6 +573,21 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
         layerZeroV2BridgeConfigSelectors[2] = ILayerZeroV2BridgeConfig.setForeignToken.selector;
         IAccessManager(_accessManager).setTargetFunctionRole(
             _layerZeroV2BridgeConfig, layerZeroV2BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE
+        );
+    }
+
+    function _setupCctpV2BridgeConfigAMFunctionRoles(address _accessManager, address _cctpV2BridgeConfig) internal {
+        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
+        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            getProxyAdmin(_cctpV2BridgeConfig), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
+        );
+
+        bytes4[] memory cctpV2BridgeConfigSelectors = new bytes4[](2);
+        cctpV2BridgeConfigSelectors[0] = ICctpV2BridgeConfig.setCctpDomain.selector;
+        cctpV2BridgeConfigSelectors[1] = ICctpV2BridgeConfig.setForeignToken.selector;
+        IAccessManager(_accessManager).setTargetFunctionRole(
+            _cctpV2BridgeConfig, cctpV2BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE
         );
     }
 
@@ -853,6 +882,42 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
             _deployCode(
                 abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _beaconOwner)),
                 LAYER_ZERO_V2_BRIDGE_ADAPTER_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployCctpV2BridgeConfig(address _proxyOwner, address _accessManager)
+        internal
+        returns (CctpV2BridgeConfig cctpV2BridgeConfig)
+    {
+        address implem = _deployCode(type(CctpV2BridgeConfig).creationCode, 0);
+        return CctpV2BridgeConfig(
+            _deployCode(
+                abi.encodePacked(
+                    type(TransparentUpgradeableProxy).creationCode,
+                    abi.encode(implem, _proxyOwner, abi.encodeCall(CctpV2BridgeConfig.initialize, (_accessManager)))
+                ),
+                CCTP_V2_CONFIG_SALT_DOMAIN
+            )
+        );
+    }
+
+    function _deployCctpV2BridgeAdapterBeacon(
+        address _beaconOwner,
+        address _coreRegistry,
+        address _tokenMessenger,
+        address _messageTransmitter
+    ) internal returns (UpgradeableBeacon cctpV2BridgeAdapterBeacon) {
+        address implem = _deployCode(
+            abi.encodePacked(
+                type(CctpV2BridgeAdapter).creationCode, abi.encode(_coreRegistry, _tokenMessenger, _messageTransmitter)
+            ),
+            0
+        );
+        return UpgradeableBeacon(
+            _deployCode(
+                abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _beaconOwner)),
+                CCTP_V2_BRIDGE_ADAPTER_SALT_DOMAIN
             )
         );
     }

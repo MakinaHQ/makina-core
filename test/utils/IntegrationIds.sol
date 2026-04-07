@@ -12,4 +12,5 @@ abstract contract IntegrationIds {
     //////////////////////////////////////////////////////////////////////////*/
     uint16 internal constant ACROSS_V3_BRIDGE_ID = 1;
     uint16 internal constant LAYER_ZERO_V2_BRIDGE_ID = 2;
+    uint16 internal constant CCTP_V2_BRIDGE_ID = 3;
 }

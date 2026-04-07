@@ -37,6 +37,11 @@ abstract contract Constants {
     uint32 internal constant LAYER_ZERO_V2_HUB_CHAIN_ID = 30101;
     uint32 internal constant LAYER_ZERO_V2_SPOKE_CHAIN_ID = 30184;
 
+    uint32 internal constant CCTP_V2_HUB_DOMAIN = 0;
+    uint32 internal constant CCTP_V2_SPOKE_DOMAIN = 6;
+    uint256 internal constant CCTP_V2_FEE_MILLI_BPS = 1000;
+    uint32 internal constant CCTP_V2_CONFIRMED_FINALITY_THRESHOLD = 1000;
+
     uint256 internal constant DEFAULT_FEE_MANAGER_FIXED_FEE_RATE = 1e8;
     uint256 internal constant DEFAULT_FEE_MANAGER_PERF_FEE_RATE = 2e8;
 

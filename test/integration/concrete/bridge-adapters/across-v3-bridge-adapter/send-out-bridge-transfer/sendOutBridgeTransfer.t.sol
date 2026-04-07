@@ -47,10 +47,24 @@ contract SendOutBridgeTransfer_AcrossV3BridgeAdapter_Integration_Concrete_Test i
 
     function test_RevertGiven_InvalidTransferStatus() public {
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
+        uint256 inputAmount = 1e18;
 
+        // transfer not sheduled
         vm.expectRevert(Errors.InvalidTransferStatus.selector);
         vm.prank(address(bridgeController1));
-        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, "");
+        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint32(0)));
+
+        deal(address(token1), address(bridgeController1), inputAmount, true);
+
+        vm.startPrank(address(bridgeController1));
+        token1.approve(address(bridgeAdapter1), inputAmount);
+        bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(token2), 0);
+
+        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint32(0)));
+
+        // transfer already sent
+        vm.expectRevert(Errors.InvalidTransferStatus.selector);
+        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint32(0)));
     }
 
     function test_SendOutBridgeTransfer() public {

@@ -1,0 +1,13 @@
+setForeignToken.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when at least one of the token addresses is equal to zero
+   │  └── it should revert with ZeroTokenAddress
+   └── when both the token addresses are non-zero
+      ├── when the provided chain id is equal to zero
+      │  └── it should revert with ZeroChainId
+      └── when the provided chain id is not equal to zero
+         ├── it should associate both provided token addresses and the chain id in contract storage
+         ├── it should clean up any previous associations involving either token addresses and the chain id
+         └── it should emit a ForeignTokenRegistered event

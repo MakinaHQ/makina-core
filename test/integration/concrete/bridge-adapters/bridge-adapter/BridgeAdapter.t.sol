@@ -56,9 +56,9 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
 
     /// @dev Simulates incoming bridge transfer reception. To be overridden for each bridge adapter version.
     function _receiveInBridgeTransfer(
-        address, /*bridgeAdapter*/
-        bytes memory, /* encodedMessage*/
-        address, /*receivedToken*/
-        uint256 /*receivedAmount*/
-    ) internal virtual {}
+        address bridgeAdapter,
+        bytes memory encodedMessage,
+        address receivedToken,
+        uint256 receivedAmount
+    ) internal virtual;
 }
