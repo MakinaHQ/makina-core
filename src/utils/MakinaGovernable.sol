@@ -49,7 +49,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     modifier onlyOperator() {
-        if (!isOperator(msg.sender)) {
+        if (msg.sender != operator()) {
             revert Errors.UnauthorizedCaller();
         }
         _;
@@ -98,6 +98,12 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
+    function operator() public view override returns (address) {
+        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
+        return $._recoveryMode ? $._securityCouncil : $._mechanic;
+    }
+
+    /// @inheritdoc IMakinaGovernable
     function mechanic() external view override returns (address) {
         return _getMakinaGovernableStorage()._mechanic;
     }
@@ -131,12 +137,6 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     function isAccountingAgent(address user) external view override returns (bool) {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         return user == $._mechanic || user == $._securityCouncil || $._isAccountingAgent[user];
-    }
-
-    /// @inheritdoc IMakinaGovernable
-    function isOperator(address user) public view override returns (bool) {
-        MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
-        return user == ($._recoveryMode ? $._securityCouncil : $._mechanic);
     }
 
     /// @inheritdoc IMakinaGovernable

@@ -14,6 +14,7 @@ abstract contract MakinaGovernable_Unit_Concrete_Test is Unit_Concrete_Test {
     function setUp() public virtual override {}
 
     function test_MakinaGovernableGetters() public view {
+        assertEq(governable.operator(), mechanic);
         assertEq(governable.mechanic(), mechanic);
         assertEq(governable.securityCouncil(), securityCouncil);
         assertEq(governable.riskManager(), riskManager);
@@ -88,6 +89,7 @@ abstract contract MakinaGovernable_Unit_Concrete_Test is Unit_Concrete_Test {
         vm.prank(securityCouncil);
         governable.setRecoveryMode(true);
         assertTrue(governable.recoveryMode());
+        assertEq(governable.operator(), securityCouncil);
     }
 
     function test_SetRestrictedAccountingMode_RevertWhen_CallerWithoutRole() public {
