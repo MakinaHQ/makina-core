@@ -354,7 +354,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
         );
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        for (uint256 i = 0; i < machineStore.tokensLength(); i++) {
+        for (uint256 i; i < machineStore.tokensLength(); ++i) {
             address token = machineStore.tokens(i);
             machineStore.addTotalAccountedBridgeFee(token, machineStore.pendingCaliberRealisedBridgeFee(token));
             machineStore.resetPendingCaliberRealisedBridgeFee(token);

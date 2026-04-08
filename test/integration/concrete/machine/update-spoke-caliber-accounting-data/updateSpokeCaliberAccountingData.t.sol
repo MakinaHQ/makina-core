@@ -222,11 +222,11 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
         assertEq(timestamp, blockTime);
         assertEq(netAum, queriedData.netAum);
         assertEq(positions.length, queriedData.positions.length);
-        for (uint256 i = 0; i < queriedData.positions.length; i++) {
+        for (uint256 i; i < queriedData.positions.length; ++i) {
             assertEq(positions[i], queriedData.positions[i]);
         }
         assertEq(baseTokens.length, queriedData.baseTokens.length);
-        for (uint256 i = 0; i < queriedData.baseTokens.length; i++) {
+        for (uint256 i; i < queriedData.baseTokens.length; ++i) {
             assertEq(baseTokens[i], queriedData.baseTokens[i]);
         }
     }

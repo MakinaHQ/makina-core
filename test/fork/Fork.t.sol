@@ -34,7 +34,7 @@ abstract contract Fork_Test is Base, Test, Constants {
     function _setUp() public {
         _setupChain(hubChainId);
 
-        for (uint256 i = 0; i < spokeChainIds.length; i++) {
+        for (uint256 i; i < spokeChainIds.length; ++i) {
             _setupChain(spokeChainIds[i]);
         }
     }

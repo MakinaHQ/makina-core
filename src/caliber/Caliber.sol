@@ -864,7 +864,7 @@ contract Caliber is
     /// @dev Checks if a given group ID is included in the provided array of group IDs.
     function _includesGroupId(uint256[] calldata groupIds, uint256 groupId) internal pure returns (bool) {
         uint256 len = groupIds.length;
-        for (uint256 i = 0; i < len; ++i) {
+        for (uint256 i; i < len; ++i) {
             if (groupIds[i] == groupId) {
                 return true;
             }

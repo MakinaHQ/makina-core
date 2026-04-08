@@ -39,29 +39,29 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
         });
 
         AMRoleGrant[] memory _otherRoleGrants = abi.decode(vm.parseJson(inputJson, ".otherRoleGrants"), (AMRoleGrant[]));
-        for (uint256 i; i < _otherRoleGrants.length; i++) {
+        for (uint256 i; i < _otherRoleGrants.length; ++i) {
             otherRoleGrants.push(_otherRoleGrants[i]);
         }
 
         PriceFeedRoute[] memory _priceFeedRoutes =
             abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
-        for (uint256 i; i < _priceFeedRoutes.length; i++) {
+        for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             priceFeedRoutes.push(_priceFeedRoutes[i]);
         }
 
         TokenToRegister[] memory _tokensToRegister =
             abi.decode(vm.parseJson(inputJson, ".foreignTokens"), (TokenToRegister[]));
-        for (uint256 i; i < _tokensToRegister.length; i++) {
+        for (uint256 i; i < _tokensToRegister.length; ++i) {
             tokensToRegister.push(_tokensToRegister[i]);
         }
 
         SwapperData[] memory _swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
-        for (uint256 i; i < _swappersData.length; i++) {
+        for (uint256 i; i < _swappersData.length; ++i) {
             swappersData.push(_swappersData[i]);
         }
 
         BridgeData[] memory _bridgesData = abi.decode(vm.parseJson(inputJson, ".bridgesTargets"), (BridgeData[]));
-        for (uint256 i; i < _bridgesData.length; i++) {
+        for (uint256 i; i < _bridgesData.length; ++i) {
             bridgesData.push(_bridgesData[i]);
         }
 

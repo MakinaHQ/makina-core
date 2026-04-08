@@ -40,7 +40,7 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
         assertEq(machine.convertToShares(accountingTokenUnit), shareTokenUnit);
         assertEq(machine.convertToAssets(shareTokenUnit), accountingTokenUnit);
 
-        for (uint256 i; i < amounts.length; i++) {
+        for (uint256 i; i < amounts.length; ++i) {
             if (direction[i]) {
                 uint256 assets = amounts[i] = bound(amounts[i], accountingTokenUnit / 1e3, 1e30);
 

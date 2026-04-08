@@ -112,7 +112,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that OracleRegistry is correctly set up
         PriceFeedRoute[] memory _priceFeedRoutes =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".priceFeedRoutes"), (PriceFeedRoute[]));
-        for (uint256 i; i < _priceFeedRoutes.length; i++) {
+        for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             (address feed1, address feed2) = hubCoreDeployment.oracleRegistry.getFeedRoute(_priceFeedRoutes[i].token);
             assertEq(_priceFeedRoutes[i].feed1, feed1);
             assertEq(_priceFeedRoutes[i].feed2, feed2);
@@ -121,7 +121,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that TokenRegistry is correctly set up
         TokenToRegister[] memory tokensToRegister =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
-        for (uint256 i; i < tokensToRegister.length; i++) {
+        for (uint256 i; i < tokensToRegister.length; ++i) {
             assertEq(
                 hubCoreDeployment.tokenRegistry
                     .getForeignToken(tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId),
@@ -137,7 +137,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that SwapModule is correctly set up
         SwapperData[] memory _swappersData =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".swappersTargets"), (SwapperData[]));
-        for (uint256 i; i < _swappersData.length; i++) {
+        for (uint256 i; i < _swappersData.length; ++i) {
             (address approvalTarget, address executionTarget) =
                 hubCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
@@ -146,7 +146,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Check that ChainRegistry is correctly set up
         uint256[] memory supportedChains = vm.parseJsonUintArray(deployHubCore.inputJson(), ".supportedChains");
-        for (uint256 i; i < supportedChains.length; i++) {
+        for (uint256 i; i < supportedChains.length; ++i) {
             assertEq(
                 hubCoreDeployment.chainRegistry.evmToWhChainId(supportedChains[i]),
                 ChainsInfo.getChainInfo(supportedChains[i]).wormholeChainId
@@ -156,7 +156,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that BridgeAdapterBeacons are correctly set up
         BridgeData[] memory _bridgesData =
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
-        for (uint256 i; i < _bridgesData.length; i++) {
+        for (uint256 i; i < _bridgesData.length; ++i) {
             IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
             address approvalTarget = implementation.approvalTarget();
             address executionTarget = implementation.executionTarget();
@@ -381,7 +381,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that OracleRegistry is correctly set up
         PriceFeedRoute[] memory _priceFeedRoutes =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".priceFeedRoutes"), (PriceFeedRoute[]));
-        for (uint256 i; i < _priceFeedRoutes.length; i++) {
+        for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             (address feed1, address feed2) = spokeCoreDeployment.oracleRegistry.getFeedRoute(_priceFeedRoutes[i].token);
             assertEq(_priceFeedRoutes[i].feed1, feed1);
             assertEq(_priceFeedRoutes[i].feed2, feed2);
@@ -390,7 +390,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that TokenRegistry is correctly set up
         TokenToRegister[] memory tokensToRegister =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
-        for (uint256 i; i < tokensToRegister.length; i++) {
+        for (uint256 i; i < tokensToRegister.length; ++i) {
             assertEq(
                 spokeCoreDeployment.tokenRegistry
                     .getForeignToken(tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId),
@@ -406,7 +406,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that SwapModule is correctly set up
         SwapperData[] memory _swappersData =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".swappersTargets"), (SwapperData[]));
-        for (uint256 i; i < _swappersData.length; i++) {
+        for (uint256 i; i < _swappersData.length; ++i) {
             (address approvalTarget, address executionTarget) =
                 spokeCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
             assertEq(_swappersData[i].approvalTarget, approvalTarget);
@@ -416,7 +416,7 @@ contract Deploy_Scripts_Test is Base_Test {
         // Check that BridgeAdapterBeacons are correctly set up
         BridgeData[] memory _bridgesData =
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
-        for (uint256 i; i < _bridgesData.length; i++) {
+        for (uint256 i; i < _bridgesData.length; ++i) {
             IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
             address approvalTarget = implementation.approvalTarget();
             address executionTarget = implementation.executionTarget();
@@ -506,14 +506,14 @@ contract Deploy_Scripts_Test is Base_Test {
             vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".additionalCancellers");
 
         TimelockController timelockController = TimelockController(payable(deployTimelockController.deployedInstance()));
-        for (uint256 i = 0; i < initialProposers.length; i++) {
+        for (uint256 i; i < initialProposers.length; ++i) {
             assertTrue(timelockController.hasRole(timelockController.PROPOSER_ROLE(), initialProposers[i]));
             assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), initialProposers[i]));
         }
-        for (uint256 i = 0; i < initialExecutors.length; i++) {
+        for (uint256 i; i < initialExecutors.length; ++i) {
             assertTrue(timelockController.hasRole(timelockController.EXECUTOR_ROLE(), initialExecutors[i]));
         }
-        for (uint256 i = 0; i < additionalCancellers.length; i++) {
+        for (uint256 i; i < additionalCancellers.length; ++i) {
             assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), additionalCancellers[i]));
         }
         assertEq(timelockController.getMinDelay(), initialMinDelay);

@@ -59,7 +59,7 @@ contract DeployTimelockController is Script, CreateXUtils {
 
         if (additionalCancellers.length > 0) {
             // Grant additional cancellers the CANCELLER_ROLE
-            for (uint256 i; i < additionalCancellers.length; i++) {
+            for (uint256 i; i < additionalCancellers.length; ++i) {
                 TimelockController(deployedInstance).grantRole(TIMELOCK_CANCELLER_ROLE, additionalCancellers[i]);
             }
             // Renounce the admin role

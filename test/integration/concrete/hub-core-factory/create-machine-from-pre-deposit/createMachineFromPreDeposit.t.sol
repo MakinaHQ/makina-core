@@ -6,7 +6,6 @@ import {
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
-import {Errors} from "src/libraries/Errors.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";

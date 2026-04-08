@@ -300,7 +300,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
 
         // remove 1 wei from aum, which corresponds to a -20% price change
-        aum -= 1;
+        --aum;
         deal(address(accountingToken), address(machine), aum, true);
 
         // set max change rate just under 20%
@@ -319,7 +319,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
 
         // remove 1 wei from aum, which corresponds to a -25% price change
-        aum -= 1;
+        --aum;
         deal(address(accountingToken), address(machine), aum, true);
 
         skip(1);

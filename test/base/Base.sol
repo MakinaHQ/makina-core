@@ -231,7 +231,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
     }
 
     function setupOracleRegistry(OracleRegistry oracleRegistry, PriceFeedRoute[] memory priceFeedRoutes) internal {
-        for (uint256 i; i < priceFeedRoutes.length; i++) {
+        for (uint256 i; i < priceFeedRoutes.length; ++i) {
             oracleRegistry.setFeedRoute(
                 priceFeedRoutes[i].token,
                 priceFeedRoutes[i].feed1,
@@ -243,14 +243,14 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
     }
 
     function setupChainRegistry(ChainRegistry chainRegistry, uint256[] memory evmChainIds) internal {
-        for (uint256 i; i < evmChainIds.length; i++) {
+        for (uint256 i; i < evmChainIds.length; ++i) {
             uint256 evmChainId = evmChainIds[i];
             chainRegistry.setChainIds(evmChainId, ChainsInfo.getChainInfo(evmChainId).wormholeChainId);
         }
     }
 
     function setupTokenRegistry(TokenRegistry tokenRegistry, TokenToRegister[] memory tokensToRegister) internal {
-        for (uint256 i; i < tokensToRegister.length; i++) {
+        for (uint256 i; i < tokensToRegister.length; ++i) {
             tokenRegistry.setToken(
                 tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId, tokensToRegister[i].foreignToken
             );
@@ -262,7 +262,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
     ///
 
     function setupSwapModule(SwapModule swapModule, SwapperData[] memory swappersData) internal {
-        for (uint256 i; i < swappersData.length; i++) {
+        for (uint256 i; i < swappersData.length; ++i) {
             swapModule.setSwapperTargets(
                 swappersData[i].swapperId, swappersData[i].approvalTarget, swappersData[i].executionTarget
             );
@@ -283,7 +283,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
     {
         bridgeConfigs = new TransparentUpgradeableProxy[](bridgesData.length);
         bridgeAdapterBeacons = new UpgradeableBeacon[](bridgesData.length);
-        for (uint256 i; i < bridgesData.length; i++) {
+        for (uint256 i; i < bridgesData.length; ++i) {
             uint16 bridgeId = bridgesData[i].bridgeId;
             TransparentUpgradeableProxy bc;
             UpgradeableBeacon baBeacon;
@@ -346,7 +346,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
         accessManager.grantRole(adminRole, coreFactory, 0);
 
         // Grant other roles
-        for (uint256 i; i < otherRoleGrants.length; i++) {
+        for (uint256 i; i < otherRoleGrants.length; ++i) {
             accessManager.grantRole(
                 otherRoleGrants[i].roleId, otherRoleGrants[i].account, otherRoleGrants[i].executionDelay
             );
