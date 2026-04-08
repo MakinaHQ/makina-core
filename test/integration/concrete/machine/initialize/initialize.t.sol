@@ -209,7 +209,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         // deposit funds into pre-deposit vault
         uint256 preDepositAmount = 1e18;
-        deal(address(baseToken), address(this), preDepositAmount);
+        deal(address(baseToken), address(this), preDepositAmount, true);
         baseToken.approve(address(preDepositVault), preDepositAmount);
         uint256 shares = preDepositVault.deposit(preDepositAmount, address(this), 0, 0);
 

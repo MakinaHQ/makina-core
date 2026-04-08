@@ -66,9 +66,9 @@ contract Caliber is
         bool _isManagingFlashloan;
         uint256 _cooldownDuration;
         uint256 _lastBTSwapTimestamp;
-        mapping(bytes32 executionHash => uint256 timestamp) _lastExecutionTimestamp;
+        mapping(bytes32 executionHash => uint256 timestamp) _lastExecTimestamps;
         mapping(uint256 posId => Position pos) _positionById;
-        mapping(uint256 groupId => EnumerableSet.UintSet positionIds) _positionIdGroups;
+        mapping(uint256 groupId => EnumerableSet.UintSet positionIds) _positionIdsByGroup;
         EnumerableSet.UintSet _positionIds;
         EnumerableSet.AddressSet _baseTokens;
         EnumerableSet.AddressSet _instrRootGuardians;
@@ -100,12 +100,15 @@ contract Caliber is
         $._accountingToken = _accountingToken;
         $._hubMachineEndpoint = _hubMachineEndpoint;
         $._positionStaleThreshold = cParams.initialPositionStaleThreshold;
-        $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
         $._timelockDuration = cParams.initialTimelockDuration;
         $._maxPositionIncreaseLossBps = cParams.initialMaxPositionIncreaseLossBps;
         $._maxPositionDecreaseLossBps = cParams.initialMaxPositionDecreaseLossBps;
         $._maxSwapLossBps = cParams.initialMaxSwapLossBps;
         $._cooldownDuration = cParams.initialCooldownDuration;
+
+        $._allowedInstrRoot = cParams.initialAllowedInstrRoot;
+        emit AllowedInstrRootSet(cParams.initialAllowedInstrRoot);
+
         _addBaseToken(_accountingToken);
         for (uint256 i; i < cParams.initialBaseTokens.length; ++i) {
             _addBaseToken(cParams.initialBaseTokens[i]);
@@ -349,7 +352,7 @@ contract Caliber is
         if (!$._positionIds.contains(instruction.positionId)) {
             revert Errors.PositionDoesNotExist();
         }
-        if (instruction.groupId != 0 && $._positionIdGroups[instruction.groupId].length() > 1) {
+        if (instruction.groupId != 0 && $._positionIdsByGroup[instruction.groupId].length() > 1) {
             revert Errors.PositionIsGrouped();
         }
         return _accountForPosition(instruction, true);
@@ -374,9 +377,9 @@ contract Caliber is
             if (groupId == 0) {
                 revert Errors.ZeroGroupId();
             }
-            uint256 groupLen = $._positionIdGroups[groupId].length();
+            uint256 groupLen = $._positionIdsByGroup[groupId].length();
             for (uint256 j; j < groupLen; ++j) {
-                delete $._positionById[$._positionIdGroups[groupId].at(j)].lastAccountingTime;
+                delete $._positionById[$._positionIdsByGroup[groupId].at(j)].lastAccountingTime;
             }
         }
 
@@ -390,7 +393,7 @@ contract Caliber is
                 revert Errors.PositionDoesNotExist();
             }
             uint256 groupId = instructions[i].groupId;
-            if (groupId != 0 && $._positionIdGroups[groupId].length() > 1) {
+            if (groupId != 0 && $._positionIdsByGroup[groupId].length() > 1) {
                 if (!_includesGroupId(groupIds, groupId)) {
                     revert Errors.GroupIdNotProvided();
                 }
@@ -401,9 +404,9 @@ contract Caliber is
         // check that all positions in provided groups were accounted for
         for (uint256 i; i < groupsLen; ++i) {
             uint256 groupId = groupIds[i];
-            uint256 groupLen = $._positionIdGroups[groupId].length();
+            uint256 groupLen = $._positionIdsByGroup[groupId].length();
             for (uint256 j; j < groupLen; ++j) {
-                uint256 positionId = $._positionIdGroups[groupId].at(j);
+                uint256 positionId = $._positionIdsByGroup[groupId].at(j);
                 if ($._positionById[positionId].lastAccountingTime == 0) {
                     revert Errors.MissingInstructionForGroup(groupId);
                 }
@@ -717,7 +720,7 @@ contract Caliber is
         }
 
         bytes32 executionHash = keccak256(abi.encodePacked(posId, mgmtInstruction.commands, isPositionIncrease));
-        if (block.timestamp - $._lastExecutionTimestamp[executionHash] < $._cooldownDuration) {
+        if (block.timestamp - $._lastExecTimestamps[executionHash] < $._cooldownDuration) {
             revert Errors.OngoingCooldown();
         }
 
@@ -732,7 +735,7 @@ contract Caliber is
             }
         }
 
-        $._lastExecutionTimestamp[executionHash] = block.timestamp;
+        $._lastExecTimestamps[executionHash] = block.timestamp;
         $._managedPositionId = 0;
         $._isManagedPositionDebt = false;
 
@@ -778,7 +781,7 @@ contract Caliber is
         if (lastValue > 0 && currentValue == 0) {
             $._positionIds.remove(posId);
             if (groupId != 0) {
-                $._positionIdGroups[groupId].remove(posId);
+                $._positionIdsByGroup[groupId].remove(posId);
             }
             delete $._positionById[posId];
 
@@ -796,7 +799,7 @@ contract Caliber is
                 pos.isDebt = instruction.isDebt;
                 $._positionIds.add(posId);
                 if (groupId != 0) {
-                    $._positionIdGroups[groupId].add(posId);
+                    $._positionIdsByGroup[groupId].add(posId);
                 }
 
                 len = instruction.positionTokens.length;
@@ -842,9 +845,9 @@ contract Caliber is
     /// @dev Marks all positions in a given group as stale, except for the position currently being managed.
     function _invalidateGroupedPositions(uint256 groupId) internal {
         CaliberStorage storage $ = _getCaliberStorage();
-        uint256 groupLen = $._positionIdGroups[groupId].length();
+        uint256 groupLen = $._positionIdsByGroup[groupId].length();
         for (uint256 i; i < groupLen; ++i) {
-            uint256 posId = $._positionIdGroups[groupId].at(i);
+            uint256 posId = $._positionIdsByGroup[groupId].at(i);
             if (posId != $._managedPositionId) {
                 delete $._positionById[posId].lastAccountingTime;
             }
@@ -946,10 +949,14 @@ contract Caliber is
     /// @return currentRoot The current allowed instructions root.
     function _updateAllowedInstrRoot() internal returns (bytes32) {
         CaliberStorage storage $ = _getCaliberStorage();
-        if ($._pendingTimelockExpiry != 0 && block.timestamp >= $._pendingTimelockExpiry) {
-            $._allowedInstrRoot = $._pendingAllowedInstrRoot;
+        uint256 expiry = $._pendingTimelockExpiry;
+        if (expiry != 0 && block.timestamp >= expiry) {
+            bytes32 newRoot = $._pendingAllowedInstrRoot;
+            $._allowedInstrRoot = newRoot;
             delete $._pendingAllowedInstrRoot;
             delete $._pendingTimelockExpiry;
+            emit AllowedInstrRootSet(newRoot);
+            return newRoot;
         }
         return $._allowedInstrRoot;
     }

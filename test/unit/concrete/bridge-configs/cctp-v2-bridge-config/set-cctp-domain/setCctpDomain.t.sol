@@ -44,7 +44,7 @@ contract SetCctpDomain_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_Te
 
         assertEq(cctpV2BridgeConfig.getCctpDomain(2), 3);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 3));
+        vm.expectRevert(Errors.CctpDomainNotRegistered.selector);
         cctpV2BridgeConfig.getCctpDomain(3);
     }
 
@@ -69,7 +69,7 @@ contract SetCctpDomain_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_Te
 
         assertEq(cctpV2BridgeConfig.getCctpDomain(2), 3);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 3));
+        vm.expectRevert(Errors.CctpDomainNotRegistered.selector);
         cctpV2BridgeConfig.getCctpDomain(3);
     }
 
@@ -84,7 +84,7 @@ contract SetCctpDomain_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_Te
 
         assertEq(cctpV2BridgeConfig.getCctpDomain(3), 2);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 2));
+        vm.expectRevert(Errors.CctpDomainNotRegistered.selector);
         cctpV2BridgeConfig.getCctpDomain(2);
     }
 }

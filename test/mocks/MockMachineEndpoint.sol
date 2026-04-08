@@ -19,27 +19,27 @@ contract MockMachineEndpoint is IMachineEndpoint {
     event InBridgeTransferClaimed(uint16 bridgeId, uint256 transferId);
     event OutBridgeTransferCancelled(uint16 bridgeId, uint256 transferId);
 
-    function operator() external view returns (address) {
+    function operator() external pure returns (address) {
         return address(0);
     }
 
-    function mechanic() public pure returns (address) {
+    function mechanic() external pure returns (address) {
         return address(0);
     }
 
-    function securityCouncil() public pure returns (address) {
+    function securityCouncil() external pure returns (address) {
         return address(0);
     }
 
-    function riskManager() public pure returns (address) {
+    function riskManager() external pure returns (address) {
         return address(0);
     }
 
-    function riskManagerTimelock() public pure returns (address) {
+    function riskManagerTimelock() external pure returns (address) {
         return address(0);
     }
 
-    function recoveryMode() public pure returns (bool) {
+    function recoveryMode() external pure returns (bool) {
         return false;
     }
 

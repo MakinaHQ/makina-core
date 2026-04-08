@@ -14,7 +14,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### HubCoreRegistry
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
   - Can set address of OracleRegistry.
   - Can set address of TokenRegistry.
@@ -29,7 +29,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### SpokeCoreRegistry
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
   - Can set address of OracleRegistry.
   - Can set address of TokenRegistry.
@@ -47,7 +47,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set token price feed route.
   - Can set feeds staleness threshold.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### ChainRegistry
@@ -56,7 +56,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can set mappings of EVM and WH chain IDs.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### TokenRegistry
@@ -65,7 +65,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can set mappings of local and foreign token addresses.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### HubCoreFactory
@@ -75,17 +75,19 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can deploy machine shares.
   - Can deploy pre-deposit vaults.
   - Can deploy machines and calibers.
+  - Can deploy bridge adapters.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### SpokeCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
 
-  - Can deploy calibers.
+  - Can deploy mailboxes and calibers.
+  - Can deploy bridge adapters.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### SwapModule
@@ -94,24 +96,24 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
   - Can set approval and execution targets for a given swapper ID.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
-### AcrossV2BridgeConfig
+### AcrossV3BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
 
   - Can set supported status of EVM chains.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### LayerZeroV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
 
-  - Can set mappings of EVM and LZ chain IDs.
-  - Can set mappings of tokens to corresponding LZ OFTs.
+  - Can set mappings of EVM chain ID to LZ endpoint ID.
+  - Can set mappings of local tokens to corresponding LZ OFTs.
   - Can set mappings of local tokens to their foreign counterparts through OFT bridging.
 
 - `INFRA_UPGRADE_ROLE` (roleId `5`)
@@ -121,40 +123,40 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
 
-  - Can set mappings of EVM chains IDs and CCTP domains.
+  - Can set mappings of EVM chain ID to CCTP domain.
   - Can set mappings of local tokens to their foreign counterparts through CCTP bridging.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
 ### Machine Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### Caliber Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### PreDepositVault Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### CalibrMailbox Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
-### AcrossV2BridgeAdapter Beacon
+### AcrossV3BridgeAdapter Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### LayerZeroV2BridgeAdapter Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### CctpV2BridgeAdapter Beacon
@@ -164,10 +166,9 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### Machine
 
-- `STRATEGY_COMPONENTS_SETUP_ROLE` (roleId `3`)
+- `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
 
   - Can set the address of a Spoke caliber mailbox.
-  - Can create a bridge adapter.
   - Can set the address of a Spoke bridge adapter.
   - Can set the address of the depositor contract.
   - Can set the address of the redeemer contract.
@@ -229,9 +230,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### Caliber Mailbox
 
-- `STRATEGY_COMPONENTS_SETUP_ROLE` (roleId `3`)
+- `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
 
-  - Can create a bridge adapter.
   - Can set the address of a Hub bridge adapter.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)

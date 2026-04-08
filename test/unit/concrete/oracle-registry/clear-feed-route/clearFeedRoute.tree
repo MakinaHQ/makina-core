@@ -1,0 +1,9 @@
+clearFeedRoute.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── given first price feed is null
+   │  └── it should revert with PriceFeedRouteNotRegistered
+   └── given first price feed is non null
+      ├── it should clear the feed route for the provided token in oracle registry storage
+      └── it should emit a FeedRouteCleared event

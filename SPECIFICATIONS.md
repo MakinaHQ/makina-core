@@ -145,7 +145,8 @@ Roles use in Makina Core contracts are defined as follows:
 - `ADMIN_ROLE` - roleId `0` - Super admin of the Access Manager. Authorized to perform Access Manager configuration actions.
 - `INFRA_CONFIG_ROLE` - roleId `1` - Authorized to configure shared core contracts.
 - `STRATEGY_DEPLOYMENT_ROLE` - roleId `2` - Authorized to deploy new strategies.
-- `STRATEGY_COMPONENTS_SETUP_ROLE` - roleId `3` - Authorized to link strategy contracts together.
+- `STRATEGY_COMPONENTS_LINKING_ROLE` - roleId `3` - Authorized to link strategy contracts together.
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` - roleId `4` - Authorized to designate the entities responsible for managing strategies.
-- `INFRA_UPGRADE_ROLE` - roleId `5` - Authorized to upgrade proxys and beacons, and register contracts in the core registry.
-- `GUARDIAN_ROLE` - roleId `6` - Authorized to cancel operations scheduled with the roles above.
+- `STRATEGY_FEE_CONFIG_ROLE` - roleId `5` - Authorized to configure fee parameters in strategy periphery contracts.
+- `INFRA_UPGRADE_ROLE` - roleId `6` - Authorized to upgrade proxys and beacons, and register contracts in the core registry.
+- `GUARDIAN_ROLE` - roleId `7` - Authorized to cancel operations scheduled with the other roles.

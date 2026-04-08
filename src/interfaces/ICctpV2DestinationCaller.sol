@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 interface ICctpV2DestinationCaller {
     /// @notice Handles reception of a CCTP V2 message and signature.

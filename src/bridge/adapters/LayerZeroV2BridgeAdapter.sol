@@ -16,7 +16,6 @@ import {
 } from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
 
 import {IBridgeAdapter} from "../../interfaces/IBridgeAdapter.sol";
-import {ICoreRegistry} from "../../interfaces/ICoreRegistry.sol";
 import {ILayerZeroV2BridgeConfig} from "../../interfaces/ILayerZeroV2BridgeConfig.sol";
 import {BridgeAdapter} from "./BridgeAdapter.sol";
 import {Errors} from "../../libraries/Errors.sol";
@@ -59,8 +58,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         address tokenSent = IOFT(_from).token();
         uint256 amount = OFTComposeMsgCodec.amountLD(_message);
 
-        address config = ICoreRegistry(registry).bridgeConfig(LAYER_ZERO_V2_BRIDGE_ID);
-        if (ILayerZeroV2BridgeConfig(config).tokenToOft(tokenSent) != _from) {
+        if (ILayerZeroV2BridgeConfig(_getConfig()).getOft(tokenSent) != _from) {
             revert Errors.InvalidOft();
         }
 
@@ -102,9 +100,9 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
     function _sendOutBridgeTransfer(uint256 transferId, bytes calldata data) internal override {
         OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
 
-        address config = ICoreRegistry(registry).bridgeConfig(LAYER_ZERO_V2_BRIDGE_ID);
-        uint32 lzChainId = ILayerZeroV2BridgeConfig(config).evmToLzChainId(receipt.destinationChainId);
-        address oft = ILayerZeroV2BridgeConfig(config).tokenToOft(receipt.inputToken);
+        address config = _getConfig();
+        uint32 lzEndpointId = ILayerZeroV2BridgeConfig(config).getLzEndpointId(receipt.destinationChainId);
+        address oft = ILayerZeroV2BridgeConfig(config).getOft(receipt.inputToken);
 
         if (IOFT(oft).approvalRequired()) {
             IERC20(receipt.inputToken).forceApprove(oft, receipt.inputAmount);
@@ -126,7 +124,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         }
 
         SendParam memory sendParam = SendParam({
-            dstEid: lzChainId,
+            dstEid: lzEndpointId,
             to: bytes32(uint256(uint160(receipt.recipient))),
             amountLD: receipt.inputAmount,
             minAmountLD: receipt.inputAmount,

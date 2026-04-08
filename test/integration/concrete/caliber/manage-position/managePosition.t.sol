@@ -86,6 +86,112 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
+    function test_RevertWhen_ProvidedSecondInstructionNonAccountingType() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.InvalidInstructionType.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertWhen_ProvidedSecondInstructionProofInvalid() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        // use wrong vault
+        MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // use wrong affected tokens list
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstruction.affectedTokens[0] = address(0);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // use wrong position tokens list
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstruction.positionTokens[0] = address(0);
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // use wrong commands
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        delete acctInstruction.commands[0];
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // use wrong state
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        delete acctInstruction.state[2];
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        // use wrong bitmap
+        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+        acctInstruction.stateBitmap = 0;
+        vm.expectRevert(Errors.InvalidInstructionProof.selector);
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertGiven_ProvidedSecondInstructionFails() public {
+        vault.setAccountingDisabled(true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), 3e18);
+        ICaliber.Instruction memory acctInstruction =
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertGiven_AccountingOutputStateInvalid() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 3e18;
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
+        ICaliber.Instruction memory acctInstruction =
+            _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
+
+        // replace end flag with null value in accounting output state
+        delete acctInstruction.state[1];
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.InvalidAccounting.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
+    function test_RevertWhen_ProvidedSecondInstructionAffectedTokensListInvalid() public {
+        uint256 inputAmount = 3e18;
+        deal(address(accountingToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
+        ICaliber.Instruction memory acctInstruction =
+            _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
+
+        vm.prank(mechanic);
+        vm.expectRevert(Errors.InvalidAffectedToken.selector);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
     function test_RevertWhen_ProvidedFirstInstructionAffectedTokensListInvalid() public {
         uint256 inputAmount = 3e18;
         deal(address(accountingToken), address(caliber), inputAmount, true);
@@ -217,100 +323,20 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         skip(caliber.timelockDuration());
 
         // instruction can be executed after the update takes effect
+        vm.expectEmit(true, false, false, false);
+        emit ICaliber.AllowedInstrRootSet(allowedInstrMerkleRoot);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
-    function test_RevertWhen_ProvidedSecondInstructionNonAccountingType() public withTokenAsBT(address(baseToken)) {
-        uint256 inputAmount = 3e18;
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
+    function test_RevertGiven_ProvidedFirstInstructionFails() public {
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), 3e18);
         ICaliber.Instruction memory acctInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+
+        vm.expectRevert();
         vm.prank(mechanic);
-        vm.expectRevert(Errors.InvalidInstructionType.selector);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-    }
-
-    function test_RevertWhen_ProvidedSecondInstructionProofInvalid() public withTokenAsBT(address(baseToken)) {
-        uint256 inputAmount = 3e18;
-        deal(address(baseToken), address(caliber), inputAmount, true);
-
-        // use wrong vault
-        MockERC4626 vault2 = new MockERC4626("Vault2", "VLT2", IERC20(baseToken), 0);
-        ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault2));
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        // use wrong affected tokens list
-        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        acctInstruction.affectedTokens[0] = address(0);
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        // use wrong position tokens list
-        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        acctInstruction.positionTokens[0] = address(0);
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        // use wrong commands
-        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        delete acctInstruction.commands[0];
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        // use wrong state
-        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        delete acctInstruction.state[2];
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        // use wrong bitmap
-        acctInstruction = _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        acctInstruction.stateBitmap = 0;
-        vm.expectRevert(Errors.InvalidInstructionProof.selector);
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-    }
-
-    function test_RevertGiven_AccountingOutputStateInvalid() public withTokenAsBT(address(baseToken)) {
-        uint256 inputAmount = 3e18;
-        deal(address(accountingToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction memory mgmtInstruction =
-            _buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
-        ICaliber.Instruction memory acctInstruction =
-            _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
-
-        // replace end flag with null value in accounting output state
-        delete acctInstruction.state[1];
-        vm.prank(mechanic);
-        vm.expectRevert(Errors.InvalidAccounting.selector);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-    }
-
-    function test_RevertWhen_ProvidedSecondInstructionAffectedTokensListInvalid() public {
-        uint256 inputAmount = 3e18;
-        deal(address(accountingToken), address(caliber), inputAmount, true);
-
-        ICaliber.Instruction memory mgmtInstruction =
-            _buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), inputAmount, false);
-        ICaliber.Instruction memory acctInstruction =
-            _buildMockPoolAccountingInstruction(address(caliber), POOL_POS_ID, address(pool), true);
-
-        vm.prank(mechanic);
-        vm.expectRevert(Errors.InvalidAffectedToken.selector);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 

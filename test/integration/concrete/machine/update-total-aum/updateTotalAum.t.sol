@@ -111,7 +111,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_RevertGiven_HubCaliberStale() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(caliber), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
             _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
         ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
@@ -258,7 +258,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // add 1 wei to aum, which corresponds to a +100% price change
         uint256 aum = 1;
-        deal(address(accountingToken), address(machine), aum);
+        deal(address(accountingToken), address(machine), aum, true);
 
         // set max change rate just under 100%
         vm.prank(riskManagerTimelock);
@@ -277,7 +277,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // generate 3 wei to aum, which corresponds to a +150% price change
         aum += 3;
-        deal(address(accountingToken), address(machine), aum);
+        deal(address(accountingToken), address(machine), aum, true);
 
         skip(1);
 
@@ -292,14 +292,16 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_RevertGiven_MaxAuthorizedPriceChangeExceeded_NegativeChange() public {
         // add 4 wei to aum, which corresponds to +400% price change
         uint256 aum = 4;
-        deal(address(accountingToken), address(machine), aum);
+        deal(address(accountingToken), address(machine), aum, true);
+
+        // set max change rate to 300%
 
         // update last accounting timestamp
         machine.updateTotalAum();
 
         // remove 1 wei from aum, which corresponds to a -20% price change
         aum -= 1;
-        deal(address(accountingToken), address(machine), aum);
+        deal(address(accountingToken), address(machine), aum, true);
 
         // set max change rate just under 20%
         vm.prank(riskManagerTimelock);
@@ -318,7 +320,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         // remove 1 wei from aum, which corresponds to a -25% price change
         aum -= 1;
-        deal(address(accountingToken), address(machine), aum);
+        deal(address(accountingToken), address(machine), aum, true);
 
         skip(1);
 
@@ -339,7 +341,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_UnnoticedToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(machine), inputAmount);
+        deal(address(baseToken), address(machine), inputAmount, true);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0);
@@ -350,7 +352,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_IdleAccountingToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(machine), inputAmount);
+        deal(address(accountingToken), address(machine), inputAmount, true);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount);
@@ -360,7 +362,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_IdleBaseToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(caliber), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount, true);
 
         vm.startPrank(address(caliber));
         baseToken.approve(address(machine), inputAmount);
@@ -375,7 +377,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
     function test_UpdateTotalAum_PositiveHubCaliberAum() public {
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(caliber), inputAmount);
+        deal(address(accountingToken), address(caliber), inputAmount, true);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount);
@@ -386,7 +388,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_PositiveHubCaliberAumAndDebt() public withTokenAsBT(address(baseToken)) {
         // fund caliber with accountingToken
         uint256 inputAmount = 3e18;
-        deal(address(accountingToken), address(caliber), inputAmount);
+        deal(address(accountingToken), address(caliber), inputAmount, true);
 
         uint256 inputAmount2 = 1e18;
         deal(address(baseToken), address(borrowModule), inputAmount2, true);
@@ -435,7 +437,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 inputAmount = 1e18;
 
         // fund machine with accountingToken
-        deal(address(accountingToken), address(machine), inputAmount);
+        deal(address(accountingToken), address(machine), inputAmount, true);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(inputAmount);
@@ -443,7 +445,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
 
         // fund caliber with accountingToken
-        deal(address(accountingToken), address(caliber), inputAmount);
+        deal(address(accountingToken), address(caliber), inputAmount, true);
 
         skip(1);
 
@@ -456,7 +458,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
     function test_UpdateTotalAum_NegativeHubCaliberValueAndIdleToken() public withTokenAsBT(address(baseToken)) {
         // fund machine with accountingToken
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(machineDepositor), inputAmount);
+        deal(address(accountingToken), address(machineDepositor), inputAmount, true);
 
         vm.startPrank(address(machineDepositor));
         accountingToken.approve(address(machine), inputAmount);

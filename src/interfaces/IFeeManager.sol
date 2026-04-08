@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 interface IFeeManager {
     /// @notice Returns the function selectors for the restricted fee configuration functions.

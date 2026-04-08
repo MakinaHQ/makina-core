@@ -12,30 +12,30 @@ managePosition.t.sol
    │        ├── when the first instruction is not of type management
    │        │  └── it should revert with InvalidInstructionType
    │        └── when the first instruction is of type management
-   │           ├── when the first instruction's affected tokens list contains non-base tokens
-   │           │  └── it should revert with InvalidAffectedToken
-   │           └── when the first instruction's affected tokens list only contains base tokens
-   │              ├── given the first instruction proof is not valid against the merkle root set in the caliber
+   │           ├── when the second instruction is not of the accounting type
+   │           │  └── it should revert with InvalidInstructionType
+   │           └── when the second instruction is of the accounting type
+   │              ├── when the second instruction proof is not valid against the merkle root set in the caliber
    │              │  └── it should revert with InvalidInstructionProof
-   │              └── given the first instruction proof is valid against the merkle root set in the caliber
-   │                 ├── given the first instruction execution fails
+   │              └── when the second instruction proof is valid against the merkle root set in the caliber
+   │                 ├── given the second instruction execution fails
    │                 │  └── it should revert
-   │                 └── given the first instruction execution succeeds
-   │                    ├── when the second instruction is not of the accounting type
-   │                    │  └── it should revert with InvalidInstructionType
-   │                    └── when the second instruction is of the accounting type
-   │                       ├── when the second instruction proof is not valid against the merkle root set in the caliber
-   │                       │  └── it should revert with InvalidInstructionProof
-   │                       └── when the second instruction proof is valid against the merkle root set in the caliber
-   │                          ├── given the second instruction execution fails
-   │                          │  └── it should revert
-   │                          └── given the second instruction execution succeeds
-   │                             ├── given the second instruction does not output a valid state
-   │                             │  └── it should revert with InvalidAccounting
-   │                             └── given the second instruction outputs a valid state
-   │                                ├── when the second instruction's affected tokens list contains non-base tokens
-   │                                │  └── it should revert with InvalidAffectedToken
-   │                                └── when the second instruction's affected tokens list only contains base tokens
+   │                 └── given the second instruction execution succeeds
+   │                    ├── given the second instruction does not output a valid state
+   │                    │  └── it should revert with InvalidAccounting
+   │                    └── given the second instruction outputs a valid state
+   │                       ├── when the second instruction's affected tokens list contains non-base tokens
+   │                       │  └── it should revert with InvalidAffectedToken
+   │                       └── when the second instruction's affected tokens list only contains base tokens
+   │                          ├── when the first instruction's affected tokens list contazins non-base tokens
+   │                          │  └── it should revert with InvalidAffectedToken
+   │                          └── when the first instruction's affected tokens list only contains base tokens
+   │                             ├── given the first instruction proof is not valid against the merkle root set in the caliber
+   │                             │  └── it should revert with InvalidInstructionProof
+   │                             └── given the first instruction proof is valid against the merkle root set in the caliber
+   │                                ├── given the first instruction execution fails
+   │                                │  └── it should revert
+   │                                └── given the first instruction execution succeeds
    │                                   ├── when a position was just created and the second instruction's position tokens list contains a base token
    │                                   │  └── it should revert with PositionTokenIsBaseToken
    │                                   └── when no position was just created or the second instruction's position tokens list does not contain any base token

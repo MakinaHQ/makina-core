@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.28;
+pragma solidity ^0.8.28;
 
 interface IWeirollVM {
     /// @notice Executes a list of commands on the VM.

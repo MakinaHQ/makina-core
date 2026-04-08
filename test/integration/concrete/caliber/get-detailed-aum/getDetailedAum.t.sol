@@ -56,7 +56,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
 
     function test_GetDetailedAum_UnregisteredToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(caliber), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount, true);
 
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, 0);
@@ -67,7 +67,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
 
     function test_GetDetailedAum_AccountingToken() public {
         uint256 inputAmount = 1e18;
-        deal(address(accountingToken), address(caliber), inputAmount);
+        deal(address(accountingToken), address(caliber), inputAmount, true);
 
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount);
@@ -78,7 +78,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
 
     function test_GetDetailedAum_BaseToken() public withTokenAsBT(address(baseToken)) {
         uint256 inputAmount = 1e18;
-        deal(address(baseToken), address(caliber), inputAmount);
+        deal(address(baseToken), address(caliber), inputAmount, true);
 
         (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
         assertEq(netAum, inputAmount * PRICE_B_A);

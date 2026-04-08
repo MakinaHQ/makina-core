@@ -15,8 +15,8 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
     struct CctpV2BridgeConfigStorage {
         mapping(uint256 evmChainId => uint32 cctpDomain) _evmToCctpId;
         mapping(uint32 cctpDomain => uint256 evmChainId) _cctpToEvmId;
-        mapping(address localToken => mapping(uint256 foreignEvmChainId => address foreignToken)) _localToForeignTokens;
-        mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) _foreignToLocalTokens;
+        mapping(address localToken => mapping(uint256 foreignEvmChainId => address foreignToken)) _localToForeignToken;
+        mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) _foreignToLocalToken;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.CctpV2BridgeConfig")) - 1)) & ~bytes32(uint256(0xff))
@@ -47,7 +47,7 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
     {
         CctpV2BridgeConfigStorage storage $ = _getCctpV2BridgeConfigStorage();
         return (foreignChainId == MAINNET_CHAIN_ID || $._evmToCctpId[foreignChainId] != 0)
-            && $._localToForeignTokens[inputToken][foreignChainId] == outputToken;
+            && $._localToForeignToken[inputToken][foreignChainId] == outputToken;
     }
 
     /// @inheritdoc ICctpV2BridgeConfig
@@ -57,16 +57,16 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
         }
         uint32 cctpDomain = _getCctpV2BridgeConfigStorage()._evmToCctpId[evmChainId];
         if (cctpDomain == 0) {
-            revert Errors.EvmChainIdNotRegistered(evmChainId);
+            revert Errors.CctpDomainNotRegistered();
         }
         return cctpDomain;
     }
 
     /// @inheritdoc ICctpV2BridgeConfig
     function getForeignToken(address localToken, uint256 foreignEvmChainId) external view override returns (address) {
-        address foreignToken = _getCctpV2BridgeConfigStorage()._localToForeignTokens[localToken][foreignEvmChainId];
+        address foreignToken = _getCctpV2BridgeConfigStorage()._localToForeignToken[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
-            revert Errors.CctpForeignTokenNotRegistered(localToken, foreignEvmChainId);
+            revert Errors.CctpForeignTokenNotRegistered();
         }
         return foreignToken;
     }
@@ -115,18 +115,18 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
             revert Errors.ZeroChainId();
         }
 
-        address oldForeignToken = $._localToForeignTokens[localToken][foreignEvmChainId];
+        address oldForeignToken = $._localToForeignToken[localToken][foreignEvmChainId];
         if (oldForeignToken != address(0)) {
-            delete $._foreignToLocalTokens[oldForeignToken][foreignEvmChainId];
+            delete $._foreignToLocalToken[oldForeignToken][foreignEvmChainId];
         }
 
-        address oldLocalToken = $._foreignToLocalTokens[foreignToken][foreignEvmChainId];
+        address oldLocalToken = $._foreignToLocalToken[foreignToken][foreignEvmChainId];
         if (oldLocalToken != address(0)) {
-            delete $._localToForeignTokens[oldLocalToken][foreignEvmChainId];
+            delete $._localToForeignToken[oldLocalToken][foreignEvmChainId];
         }
 
-        $._localToForeignTokens[localToken][foreignEvmChainId] = foreignToken;
-        $._foreignToLocalTokens[foreignToken][foreignEvmChainId] = localToken;
+        $._localToForeignToken[localToken][foreignEvmChainId] = foreignToken;
+        $._foreignToLocalToken[foreignToken][foreignEvmChainId] = localToken;
         emit ForeignTokenRegistered(localToken, foreignEvmChainId, foreignToken);
     }
 }

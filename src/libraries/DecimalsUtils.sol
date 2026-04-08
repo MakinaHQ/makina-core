@@ -2,6 +2,8 @@
 pragma solidity 0.8.28;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {LowLevelCall} from "@openzeppelin/contracts/utils/LowLevelCall.sol";
+import {Memory} from "@openzeppelin/contracts/utils/Memory.sol";
 
 library DecimalsUtils {
     uint8 internal constant DEFAULT_DECIMALS = 18;
@@ -11,13 +13,13 @@ library DecimalsUtils {
     uint256 internal constant SHARE_TOKEN_UNIT = 10 ** SHARE_TOKEN_DECIMALS;
 
     function _getDecimals(address asset) internal view returns (uint8) {
-        (bool success, bytes memory encodedDecimals) = asset.staticcall(abi.encodeCall(IERC20Metadata.decimals, ()));
-        if (success && encodedDecimals.length >= 32) {
-            uint256 returnedDecimals = abi.decode(encodedDecimals, (uint256));
-            if (returnedDecimals <= type(uint8).max) {
-                return uint8(returnedDecimals);
-            }
-        }
-        return DEFAULT_DECIMALS;
+        Memory.Pointer ptr = Memory.getFreeMemoryPointer();
+        (bool success, bytes32 returnedDecimals,) =
+            LowLevelCall.staticcallReturn64Bytes(address(asset), abi.encodeCall(IERC20Metadata.decimals, ()));
+        Memory.unsafeSetFreeMemoryPointer(ptr);
+
+        return (success && LowLevelCall.returnDataSize() >= 32 && uint256(returnedDecimals) <= type(uint8).max)
+            ? uint8(uint256(returnedDecimals))
+            : DEFAULT_DECIMALS;
     }
 }

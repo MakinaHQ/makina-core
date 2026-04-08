@@ -15,7 +15,8 @@ library Errors {
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
-    error CctpForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error CctpDomainNotRegistered();
+    error CctpForeignTokenNotRegistered();
     error CctpMessageReceptionFailed();
     error Create3ContractDeploymentFailed();
     error DirectManageFlashLoanCall();
@@ -50,9 +51,9 @@ library Errors {
     error InvalidRecipientChainId();
     error InvalidTransferStatus();
     error LocalTokenNotRegistered(address token, uint256 foreignEvmChainId);
-    error LzChainIdNotRegistered(uint32 chainId);
-    error LzForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
-    error OftNotRegistered(address token);
+    error LzEndpointIdNotRegistered();
+    error LzForeignTokenNotRegistered();
+    error OftNotRegistered();
     error ManageFlashLoanReentrantCall();
     error MaxAuthorizedPriceChangeExceeded();
     error MaxValueLossExceeded();

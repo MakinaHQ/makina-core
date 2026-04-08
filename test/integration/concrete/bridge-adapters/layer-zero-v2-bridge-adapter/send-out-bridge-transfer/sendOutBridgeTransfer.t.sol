@@ -73,6 +73,8 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
     }
 
     function test_RevertWhen_ExceededMaxFee() public {
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+
         uint256 inputAmount = 1e18;
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
@@ -84,13 +86,17 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(token2), 0);
 
-        mockLzSendLib.setNativeFee(1);
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.ExceededMaxFee.selector, 1, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Errors.ExceededMaxFee.selector, DEFAULT_LAYER_ZERO_V2_VERIFY_GAS * DEFAULT_LAYER_ZERO_V2_GAS_PRICE, 0
+            )
+        );
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 
     function test_RevertWhen_UnsufficientGasBalance() public {
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+
         uint256 inputAmount = 1e18;
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
@@ -102,10 +108,11 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         token1.approve(address(bridgeAdapter1), inputAmount);
         bridgeAdapter1.scheduleOutBridgeTransfer(chainId2, address(0), address(token1), inputAmount, address(token2), 0);
 
-        mockLzSendLib.setNativeFee(1);
-
         vm.expectRevert();
-        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 1));
+        bridgeAdapter1.sendOutBridgeTransfer(
+            nextOutTransferId,
+            abi.encode(uint128(0), uint128(0), DEFAULT_LAYER_ZERO_V2_VERIFY_GAS * DEFAULT_LAYER_ZERO_V2_GAS_PRICE)
+        );
     }
 
     function test_RevertGiven_InvalidLzSentAmount() public {
@@ -147,10 +154,10 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
     }
 
     function test_SendOutBridgeTransfer_NativeOFT_WithoutGasOption() public {
-        uint256 nativeFee = 100000;
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+
         uint256 extraGas = 20000;
-        _fundBridgeAdapterGas(nativeFee, 0, 0, extraGas);
-        mockLzSendLib.setNativeFee(nativeFee);
+        _fundBridgeAdapterGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS, 0, 0, extraGas, DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
 
         uint256 inputAmount = 1e18;
         uint256 minOutputAmount = 999e15;
@@ -182,7 +189,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
 
         vm.expectEmit(false, false, false, true, address(mockOft));
         emit MockOFT.SentParams(
-            LAYER_ZERO_V2_SPOKE_CHAIN_ID,
+            LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
             inputAmount,
@@ -196,23 +203,30 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         vm.expectEmit(true, false, false, false, address(bridgeAdapter1));
         emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
 
-        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), nativeFee));
+        bridgeAdapter1.sendOutBridgeTransfer(
+            nextOutTransferId,
+            abi.encode(uint128(0), uint128(0), DEFAULT_LAYER_ZERO_V2_VERIFY_GAS * DEFAULT_LAYER_ZERO_V2_GAS_PRICE)
+        );
 
         assertEq(IERC20(address(mockOft)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(mockOft)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(IERC20(address(mockOft)).totalSupply(), 0);
-        assertEq(address(bridgeAdapter1).balance, extraGas);
+        assertEq(address(bridgeAdapter1).balance, extraGas * DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
     }
 
     function test_SendOutBridgeTransfer_NativeOFT_WithGasOption() public {
-        uint256 nativeFee = 100000;
-        uint128 lzReceiveGas = 100000;
-        uint128 lzComposeGas = 200000;
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+        mockLzSendLib.setLzReceiveGas(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS);
+        mockLzSendLib.setLzComposeGas(DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
+
         uint256 extraGas = 20000;
-        _fundBridgeAdapterGas(nativeFee, lzReceiveGas, lzComposeGas, extraGas);
-        mockLzSendLib.setNativeFee(nativeFee);
-        mockLzSendLib.setLzReceiveFee(lzReceiveGas);
-        mockLzSendLib.setLzComposeFee(lzComposeGas);
+        _fundBridgeAdapterGas(
+            DEFAULT_LAYER_ZERO_V2_VERIFY_GAS,
+            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS,
+            DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS,
+            extraGas,
+            DEFAULT_LAYER_ZERO_V2_GAS_PRICE
+        );
 
         uint256 inputAmount = 1e18;
         uint256 minOutputAmount = 999e15;
@@ -242,12 +256,13 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(mockOft), inputAmount, address(token3), minOutputAmount
         );
 
-        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(lzReceiveGas)
-            .addExecutorLzComposeOption(0, lzComposeGas);
+        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(
+            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS
+        ).addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
 
         vm.expectEmit(false, false, false, true, address(mockOft));
         emit MockOFT.SentParams(
-            LAYER_ZERO_V2_SPOKE_CHAIN_ID,
+            LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
             inputAmount,
@@ -262,20 +277,21 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
 
         bridgeAdapter1.sendOutBridgeTransfer(
-            nextOutTransferId, abi.encode(lzReceiveGas, lzComposeGas, type(uint256).max)
+            nextOutTransferId,
+            abi.encode(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS, type(uint256).max)
         );
 
         assertEq(IERC20(address(mockOft)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(mockOft)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(IERC20(address(mockOft)).totalSupply(), 0);
-        assertEq(address(bridgeAdapter1).balance, extraGas);
+        assertEq(address(bridgeAdapter1).balance, extraGas * DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
     }
 
     function test_SendOutBridgeTransfer_OFTAdapter_WithoutGasOption() public {
-        uint256 nativeFee = 100000;
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+
         uint256 extraGas = 20000;
-        _fundBridgeAdapterGas(nativeFee, 0, 0, extraGas);
-        mockLzSendLib.setNativeFee(nativeFee);
+        _fundBridgeAdapterGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS, 0, 0, extraGas, DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
 
         uint256 inputAmount = 1e18;
         uint256 minOutputAmount = 999e15;
@@ -307,7 +323,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
 
         vm.expectEmit(false, false, false, false, address(mockOftAdapter));
         emit MockOFTAdapter.SentParams(
-            LAYER_ZERO_V2_SPOKE_CHAIN_ID,
+            LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
             inputAmount,
@@ -326,18 +342,22 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(mockOftAdapter)), inputAmount);
-        assertEq(address(bridgeAdapter1).balance, extraGas);
+        assertEq(address(bridgeAdapter1).balance, extraGas * DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
     }
 
     function test_SendOutBridgeTransfer_OFTAdapter_WithGasOption() public {
-        uint256 nativeFee = 100000;
-        uint128 lzReceiveGas = 100000;
-        uint128 lzComposeGas = 200000;
+        mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
+        mockLzSendLib.setLzReceiveGas(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS);
+        mockLzSendLib.setLzComposeGas(DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
+
         uint256 extraGas = 20000;
-        _fundBridgeAdapterGas(nativeFee, lzReceiveGas, lzComposeGas, extraGas);
-        mockLzSendLib.setNativeFee(nativeFee);
-        mockLzSendLib.setLzReceiveFee(lzReceiveGas);
-        mockLzSendLib.setLzComposeFee(lzComposeGas);
+        _fundBridgeAdapterGas(
+            DEFAULT_LAYER_ZERO_V2_VERIFY_GAS,
+            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS,
+            DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS,
+            extraGas,
+            DEFAULT_LAYER_ZERO_V2_GAS_PRICE
+        );
 
         uint256 inputAmount = 1e18;
         uint256 minOutputAmount = 999e15;
@@ -367,12 +387,13 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(lzReceiveGas)
-            .addExecutorLzComposeOption(0, lzComposeGas);
+        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(
+            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS
+        ).addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
 
         vm.expectEmit(false, false, false, true, address(mockOftAdapter));
         emit MockOFTAdapter.SentParams(
-            LAYER_ZERO_V2_SPOKE_CHAIN_ID,
+            LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
             inputAmount,
@@ -387,21 +408,26 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         emit IBridgeAdapter.OutBridgeTransferSent(nextOutTransferId);
 
         bridgeAdapter1.sendOutBridgeTransfer(
-            nextOutTransferId, abi.encode(lzReceiveGas, lzComposeGas, type(uint256).max)
+            nextOutTransferId,
+            abi.encode(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS, type(uint256).max)
         );
 
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeController1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(bridgeAdapter1)), 0);
         assertEq(IERC20(address(token1)).balanceOf(address(mockOftAdapter)), inputAmount);
-        assertEq(address(bridgeAdapter1).balance, extraGas);
+        assertEq(address(bridgeAdapter1).balance, extraGas * DEFAULT_LAYER_ZERO_V2_GAS_PRICE);
     }
 
-    function _fundBridgeAdapterGas(uint256 nativeFee, uint128 lzReceiveGas, uint128 lzComposeGas, uint256 extraGas)
-        internal
-    {
-        uint256 totalGas = nativeFee + lzReceiveGas + lzComposeGas + extraGas;
-        deal(address(this), totalGas);
-        (bool success,) = payable(address(bridgeAdapter1)).call{value: totalGas}("");
+    function _fundBridgeAdapterGas(
+        uint256 verifyGas,
+        uint128 lzReceiveGas,
+        uint128 lzComposeGas,
+        uint256 extraGas,
+        uint256 gasPrice
+    ) internal {
+        uint256 totalValue = (verifyGas + lzReceiveGas + lzComposeGas + extraGas) * gasPrice;
+        deal(address(this), totalValue);
+        (bool success,) = payable(address(bridgeAdapter1)).call{value: totalValue}("");
         assertTrue(success);
     }
 }

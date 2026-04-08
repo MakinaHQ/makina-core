@@ -1,0 +1,23 @@
+{
+  "lib/LayerZero-v2": {
+    "rev": "3801b9929281261b907eb3482a82364ad00d7868"
+  },
+  "lib/devtools": {
+    "rev": "b150aaa536ed707a4720bf1057bb772562b18e2d"
+  },
+  "lib/enso-weiroll": {
+    "rev": "900250114203727ff236d3f6313673c17c2d90dd"
+  },
+  "lib/forge-std": {
+    "rev": "3b20d60d14b343ee4f908cb8079495c07f5e8981"
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "tag": {
+      "name": "v5.6.1",
+      "rev": "7bf4727aacdbfaa0f36cbd664654d0c9e1dc52bf"
+    }
+  },
+  "lib/wormhole-solidity-sdk": {
+    "rev": "d80e0f6cd16f281f3f9df435e98e823b4212b2ad"
+  }
+}

@@ -6,11 +6,11 @@ import {Errors} from "src/libraries/Errors.sol";
 import {CctpV2BridgeConfig_Unit_Concrete_Test} from "../CctpV2BridgeConfig.t.sol";
 
 contract GetCctpDomain_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_Test {
-    function test_RevertWhen_EvmChainIdNotRegistered() public {
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 0));
+    function test_RevertWhen_CctpDomainNotRegistered() public {
+        vm.expectRevert(Errors.CctpDomainNotRegistered.selector);
         cctpV2BridgeConfig.getCctpDomain(0);
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, 2));
+        vm.expectRevert(Errors.CctpDomainNotRegistered.selector);
         cctpV2BridgeConfig.getCctpDomain(2);
     }
 

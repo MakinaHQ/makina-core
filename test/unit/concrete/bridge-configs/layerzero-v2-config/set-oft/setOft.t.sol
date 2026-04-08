@@ -16,7 +16,7 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         layerZeroV2BridgeConfig.setOft(address(0));
     }
 
-    function test_RevertWhen_ZeroTokenAddress() public {
+    function test_RevertWhen_ZeroOftAddress() public {
         vm.startPrank(dao);
 
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroOftAddress.selector));
@@ -29,7 +29,7 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         vm.prank(dao);
         layerZeroV2BridgeConfig.setOft(address(mockOftAdapter));
 
-        assertEq(layerZeroV2BridgeConfig.tokenToOft(address(baseToken)), address(mockOftAdapter));
+        assertEq(layerZeroV2BridgeConfig.getOft(address(baseToken)), address(mockOftAdapter));
     }
 
     function test_SetOft_NativeOFT() public {
@@ -38,7 +38,7 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         vm.prank(dao);
         layerZeroV2BridgeConfig.setOft(address(mockOft));
 
-        assertEq(layerZeroV2BridgeConfig.tokenToOft(address(mockOft)), address(mockOft));
+        assertEq(layerZeroV2BridgeConfig.getOft(address(mockOft)), address(mockOft));
     }
 
     function test_SetOft_ReassignOft() public {
@@ -50,7 +50,7 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         emit ILayerZeroV2BridgeConfig.OftRegistered(address(mockOftAdapter), address(baseToken));
         layerZeroV2BridgeConfig.setOft(address(mockOftAdapter));
 
-        assertEq(layerZeroV2BridgeConfig.tokenToOft(address(baseToken)), address(mockOftAdapter));
+        assertEq(layerZeroV2BridgeConfig.getOft(address(baseToken)), address(mockOftAdapter));
     }
 
     function test_SetOft_ReassignToken() public {
@@ -65,6 +65,6 @@ contract SetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         emit ILayerZeroV2BridgeConfig.OftRegistered(address(mockOftAdapter2), address(baseToken));
         layerZeroV2BridgeConfig.setOft(address(mockOftAdapter2));
 
-        assertEq(layerZeroV2BridgeConfig.tokenToOft(address(baseToken)), address(mockOftAdapter2));
+        assertEq(layerZeroV2BridgeConfig.getOft(address(baseToken)), address(mockOftAdapter2));
     }
 }

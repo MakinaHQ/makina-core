@@ -125,7 +125,7 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         bytes4[] memory compSetupSelectors = new bytes4[](1);
         compSetupSelectors[0] = ICaliberMailbox.setHubBridgeAdapter.selector;
         IAccessManager(_authority).setTargetFunctionRole(
-            _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_SETUP_ROLE
+            _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
 
         bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
