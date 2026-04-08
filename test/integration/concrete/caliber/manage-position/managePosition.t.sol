@@ -323,6 +323,8 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
         skip(caliber.timelockDuration());
 
         // instruction can be executed after the update takes effect
+        vm.expectEmit(true, false, false, false);
+        emit ICaliber.AllowedInstrRootSet(allowedInstrMerkleRoot);
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }

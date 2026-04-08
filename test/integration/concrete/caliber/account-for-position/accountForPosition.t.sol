@@ -328,6 +328,8 @@ contract AccountForPosition_Integration_Concrete_Test is Caliber_Integration_Con
         skip(caliber.timelockDuration());
 
         // accounting can be executed after the update takes effect
+        vm.expectEmit(true, false, false, false);
+        emit ICaliber.AllowedInstrRootSet(allowedInstrMerkleRoot);
         caliber.accountForPosition(instruction);
     }
 }

@@ -14,9 +14,9 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     struct LayerZeroV2BridgeConfigStorage {
         mapping(uint256 evmChainId => uint32 lzEndpointId) _evmToLzId;
         mapping(uint32 lzEndpointId => uint256 evmChainId) _lzToEvmId;
-        mapping(address localToken => address oft) _getOft;
-        mapping(address localToken => mapping(uint256 foreignEvmChainId => address foreignToken)) _localToForeignTokens;
-        mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) _foreignToLocalTokens;
+        mapping(address localToken => address oft) _localTokenToOft;
+        mapping(address localToken => mapping(uint256 foreignEvmChainId => address foreignToken)) _localToForeignToken;
+        mapping(address foreignToken => mapping(uint256 foreignEvmChainId => address localToken)) _foreignToLocalToken;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.LayerZeroV2BridgeConfig")) - 1)) & ~bytes32(uint256(0xff))
@@ -45,8 +45,8 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
         returns (bool)
     {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
-        return $._evmToLzId[foreignChainId] != 0 && $._getOft[inputToken] != address(0)
-            && $._localToForeignTokens[inputToken][foreignChainId] == outputToken;
+        return $._evmToLzId[foreignChainId] != 0 && $._localTokenToOft[inputToken] != address(0)
+            && $._localToForeignToken[inputToken][foreignChainId] == outputToken;
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
@@ -60,7 +60,7 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
     function getOft(address localToken) external view override returns (address) {
-        address oft = _getLayerZeroV2BridgeConfigStorage()._getOft[localToken];
+        address oft = _getLayerZeroV2BridgeConfigStorage()._localTokenToOft[localToken];
         if (oft == address(0)) {
             revert Errors.OftNotRegistered();
         }
@@ -69,7 +69,7 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
     function getForeignToken(address localToken, uint256 foreignEvmChainId) external view returns (address) {
-        address foreignToken = _getLayerZeroV2BridgeConfigStorage()._localToForeignTokens[localToken][foreignEvmChainId];
+        address foreignToken = _getLayerZeroV2BridgeConfigStorage()._localToForeignToken[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
             revert Errors.LzForeignTokenNotRegistered();
         }
@@ -109,7 +109,7 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
 
         address _token = IOFT(oft).token();
 
-        $._getOft[_token] = oft;
+        $._localTokenToOft[_token] = oft;
         emit OftRegistered(oft, _token);
     }
 
@@ -124,18 +124,18 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
             revert Errors.ZeroChainId();
         }
 
-        address oldForeignToken = $._localToForeignTokens[localToken][foreignEvmChainId];
+        address oldForeignToken = $._localToForeignToken[localToken][foreignEvmChainId];
         if (oldForeignToken != address(0)) {
-            delete $._foreignToLocalTokens[oldForeignToken][foreignEvmChainId];
+            delete $._foreignToLocalToken[oldForeignToken][foreignEvmChainId];
         }
 
-        address oldLocalToken = $._foreignToLocalTokens[foreignToken][foreignEvmChainId];
+        address oldLocalToken = $._foreignToLocalToken[foreignToken][foreignEvmChainId];
         if (oldLocalToken != address(0)) {
-            delete $._localToForeignTokens[oldLocalToken][foreignEvmChainId];
+            delete $._localToForeignToken[oldLocalToken][foreignEvmChainId];
         }
 
-        $._localToForeignTokens[localToken][foreignEvmChainId] = foreignToken;
-        $._foreignToLocalTokens[foreignToken][foreignEvmChainId] = localToken;
+        $._localToForeignToken[localToken][foreignEvmChainId] = foreignToken;
+        $._foreignToLocalToken[foreignToken][foreignEvmChainId] = localToken;
         emit ForeignTokenRegistered(localToken, foreignEvmChainId, foreignToken);
     }
 }

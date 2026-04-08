@@ -15,7 +15,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @custom:storage-location erc7201:makina.storage.OracleRegistry
     struct OracleRegistryStorage {
         mapping(address token => FeedRoute feedRoute) _feedRoutes;
-        mapping(address feed => uint256 stalenessThreshold) _feedStaleThreshold;
+        mapping(address feed => uint256 stalenessThreshold) _feedStaleThresholds;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.OracleRegistry")) - 1)) & ~bytes32(uint256(0xff))
@@ -38,7 +38,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
     /// @inheritdoc IOracleRegistry
     function getFeedStaleThreshold(address feed) external view override returns (uint256) {
-        return _getOracleRegistryStorage()._feedStaleThreshold[feed];
+        return _getOracleRegistryStorage()._feedStaleThresholds[feed];
     }
 
     /// @inheritdoc IOracleRegistry
@@ -110,9 +110,9 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
         $._feedRoutes[token] = FeedRoute({feed1: feed1, feed2: feed2});
 
-        $._feedStaleThreshold[feed1] = stalenessThreshold1;
+        $._feedStaleThresholds[feed1] = stalenessThreshold1;
         if (feed2 != address(0)) {
-            $._feedStaleThreshold[feed2] = stalenessThreshold2;
+            $._feedStaleThresholds[feed2] = stalenessThreshold2;
         }
 
         emit FeedRouteRegistered(token, feed1, feed2);
@@ -133,9 +133,9 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     /// @inheritdoc IOracleRegistry
     function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
-        emit FeedStaleThresholdChanged(feed, $._feedStaleThreshold[feed], newThreshold);
+        emit FeedStaleThresholdChanged(feed, $._feedStaleThresholds[feed], newThreshold);
         // zero is allowed in order to disable a feed
-        $._feedStaleThreshold[feed] = newThreshold;
+        $._feedStaleThresholds[feed] = newThreshold;
     }
 
     /// @dev Returns the last price of the feed.
@@ -149,7 +149,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         if (answer < 0) {
             revert Errors.NegativeTokenPrice(feed);
         }
-        if (block.timestamp - updatedAt >= $._feedStaleThreshold[feed]) {
+        if (block.timestamp - updatedAt >= $._feedStaleThresholds[feed]) {
             revert Errors.PriceFeedStale(feed, updatedAt);
         }
         return uint256(answer);
