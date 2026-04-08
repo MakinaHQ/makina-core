@@ -29,7 +29,7 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
     }
 
     /// @inheritdoc IAcrossV3MessageHandler
-    function handleV3AcrossMessage(address tokenSent, uint256 amount, address, /*relayer*/ bytes memory encodedMessage)
+    function handleV3AcrossMessage(address tokenSent, uint256 amount, address, bytes memory encodedMessage)
         external
         override
     {
@@ -83,18 +83,19 @@ contract AcrossV3BridgeAdapter is BridgeAdapter, IAcrossV3MessageHandler {
         OutBridgeTransfer storage receipt = _getBridgeAdapterStorage()._outgoingTransfers[transferId];
 
         IERC20(receipt.inputToken).forceApprove(executionTarget, receipt.inputAmount);
-        IAcrossV3SpokePool(executionTarget).depositV3Now(
-            address(this),
-            receipt.recipient,
-            receipt.inputToken,
-            receipt.outputToken,
-            receipt.inputAmount,
-            receipt.minOutputAmount,
-            receipt.destinationChainId,
-            address(0),
-            fillDeadlineOffset,
-            0,
-            receipt.encodedMessage
-        );
+        IAcrossV3SpokePool(executionTarget)
+            .depositV3Now(
+                address(this),
+                receipt.recipient,
+                receipt.inputToken,
+                receipt.outputToken,
+                receipt.inputAmount,
+                receipt.minOutputAmount,
+                receipt.destinationChainId,
+                address(0),
+                fillDeadlineOffset,
+                0,
+                receipt.encodedMessage
+            );
     }
 }

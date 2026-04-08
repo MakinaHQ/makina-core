@@ -38,8 +38,8 @@ contract DeployHubCore is DeployCore {
     }
 
     function _coreSetup() public override {
-        address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
-        uint256[] memory supportedChains = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
+        address wormhole = vm.parseJsonAddress(inputJson, ".wormhole");
+        uint256[] memory supportedChains = vm.parseJsonUintArray(inputJson, ".supportedChains");
         _core = deployHubCore(deployer, wormhole);
 
         setupHubCoreRegistry(_core);

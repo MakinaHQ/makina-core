@@ -3,7 +3,10 @@ pragma solidity 0.8.28;
 
 import {OFTAdapterMock} from "@layerzerolabs/oft-evm/test/mocks/OFTAdapterMock.sol";
 import {
-    SendParam, MessagingFee, MessagingReceipt, OFTReceipt
+    SendParam,
+    MessagingFee,
+    MessagingReceipt,
+    OFTReceipt
 } from "@layerzerolabs/oft-evm/contracts/interfaces/IOFT.sol";
 
 /// @dev MockOFTAdapter contract for testing use only
@@ -37,7 +40,11 @@ contract MockOFTAdapter is OFTAdapterMock {
         return _send(_sendParam, _fee, _refundAddress);
     }
 
-    function _debitView(uint256 _amountLD, uint256 _minAmountLD, uint32 /*_dstEid*/ )
+    function _debitView(
+        uint256 _amountLD,
+        uint256 _minAmountLD,
+        uint32 /*_dstEid*/
+    )
         internal
         view
         override

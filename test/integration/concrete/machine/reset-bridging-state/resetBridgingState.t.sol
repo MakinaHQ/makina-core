@@ -126,9 +126,8 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
-        IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
-            address(accountingToken), amount1, address(0), encodedMessage
-        );
+        IAcrossV3MessageHandler(bridgeAdapterAddr)
+            .handleV3AcrossMessage(address(accountingToken), amount1, address(0), encodedMessage);
 
         // schedule outgoing bridge transfer
         deal(address(accountingToken), address(machine), amount2, true);
@@ -178,9 +177,8 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(baseToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
-        IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
-            address(baseToken), amount1, address(0), encodedMessage
-        );
+        IAcrossV3MessageHandler(bridgeAdapterAddr)
+            .handleV3AcrossMessage(address(baseToken), amount1, address(0), encodedMessage);
 
         // schedule outgoing bridge transfer
         deal(address(baseToken), address(machine), amount2, true);

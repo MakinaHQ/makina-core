@@ -78,9 +78,8 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
-        IAcrossV3MessageHandler(address(bridgeAdapter)).handleV3AcrossMessage(
-            address(accountingToken), outputAmount, address(0), encodedMessage
-        );
+        IAcrossV3MessageHandler(address(bridgeAdapter))
+            .handleV3AcrossMessage(address(accountingToken), outputAmount, address(0), encodedMessage);
     }
 
     function test_RevertWhen_CallerNotMechanic_WhileNotInRecoveryMode() public {

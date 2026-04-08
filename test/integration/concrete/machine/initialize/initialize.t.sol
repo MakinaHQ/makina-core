@@ -59,28 +59,30 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.expectRevert(
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(machine))
         );
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            _getMakinaGovernableInitParams(),
-            address(0),
-            address(shareToken),
-            address(accountingToken),
-            hubCaliberAddr
-        );
+        IMachine(machine)
+            .initialize(
+                _getMachineInitParams(),
+                _getMakinaGovernableInitParams(),
+                address(0),
+                address(shareToken),
+                address(accountingToken),
+                hubCaliberAddr
+            );
     }
 
     function test_Initialize_WithoutPreDeposit() public {
         machine = Machine(address(new BeaconProxy(address(machineBeacon), "")));
         shareToken.transferOwnership(address(machine));
 
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            _getMakinaGovernableInitParams(),
-            address(0),
-            address(shareToken),
-            address(accountingToken),
-            hubCaliberAddr
-        );
+        IMachine(machine)
+            .initialize(
+                _getMachineInitParams(),
+                _getMakinaGovernableInitParams(),
+                address(0),
+                address(shareToken),
+                address(accountingToken),
+                hubCaliberAddr
+            );
 
         assertEq(machine.mechanic(), mechanic);
         assertEq(machine.securityCouncil(), securityCouncil);
@@ -135,14 +137,15 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.prank(address(preDepositVault));
         shareToken.transferOwnership(address(machine));
 
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            mgParams,
-            address(preDepositVault),
-            address(shareToken),
-            address(accountingToken),
-            hubCaliberAddr
-        );
+        IMachine(machine)
+            .initialize(
+                _getMachineInitParams(),
+                mgParams,
+                address(preDepositVault),
+                address(shareToken),
+                address(accountingToken),
+                hubCaliberAddr
+            );
 
         assertTrue(preDepositVault.migrated());
 
@@ -221,14 +224,15 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         vm.prank(address(preDepositVault));
         shareToken.transferOwnership(address(machine));
 
-        IMachine(machine).initialize(
-            _getMachineInitParams(),
-            mgParams,
-            address(preDepositVault),
-            address(shareToken),
-            address(accountingToken),
-            hubCaliberAddr
-        );
+        IMachine(machine)
+            .initialize(
+                _getMachineInitParams(),
+                mgParams,
+                address(preDepositVault),
+                address(shareToken),
+                address(accountingToken),
+                hubCaliberAddr
+            );
 
         assertTrue(preDepositVault.migrated());
 

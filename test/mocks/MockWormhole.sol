@@ -87,7 +87,14 @@ contract MockWormhole is ICoreBridge {
         return sequences[emitter];
     }
 
-    function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
+    function getGuardianSet(
+        uint32 /*index*/
+    )
+        external
+        pure
+        override
+        returns (GuardianSet memory)
+    {
         address[] memory keys = new address[](1);
         keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
 

@@ -335,9 +335,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
 
     /// @dev Notifies machine of the current state of the spoke caliber accounting
     function notifySpokeCaliberAccounting() public {
-        uint16 whChainId = IChainRegistry(IHubCoreRegistry(machine.registry()).chainRegistry()).evmToWhChainId(
-            machineStore.spokeChainId()
-        );
+        uint16 whChainId = IChainRegistry(IHubCoreRegistry(machine.registry()).chainRegistry())
+            .evmToWhChainId(machineStore.spokeChainId());
 
         ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
             spokeCaliberMailbox.getSpokeCaliberAccountingData();

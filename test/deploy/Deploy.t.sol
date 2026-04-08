@@ -21,8 +21,8 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
+import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
-import {SortedParams} from "script/deployments/utils/SortedParams.sol";
 
 import {Base_Test} from "../base/Base.t.sol";
 
@@ -67,39 +67,30 @@ contract Deploy_Scripts_Test is Base_Test {
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCaliber = new DeploySpokeCaliber();
 
-        address[] memory initialExecutors = abi.decode(
-            vm.parseJson(deployTimelockController.inputJson(), ".timelockControllerInitParams.initialExecutors"),
-            (address[])
-        );
+        address[] memory initialExecutors =
+            vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".initialExecutors");
         assertTrue(initialExecutors.length != 0);
 
-        address hubSuperAdmin =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".superAdminRoleGrant.account"), (address));
+        address hubSuperAdmin = vm.parseJsonAddress(deployHubCore.inputJson(), ".superAdminRoleGrant.account");
         assertTrue(hubSuperAdmin != address(0));
 
-        address machineMechanic = abi.decode(
-            vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams.initialMechanic"), (address)
-        );
+        address machineMechanic =
+            vm.parseJsonAddress(deployHubMachine.inputJson(), ".makinaGovernableInitParams.initialMechanic");
         assertTrue(machineMechanic != address(0));
 
-        machineMechanic = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams.initialMechanic"),
-            (address)
-        );
+        machineMechanic =
+            vm.parseJsonAddress(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams.initialMechanic");
         assertTrue(machineMechanic != address(0));
 
-        address pdvRiskManager = abi.decode(
-            vm.parseJson(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams.initialRiskManager"), (address)
-        );
+        address pdvRiskManager =
+            vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams.initialRiskManager");
         assertTrue(pdvRiskManager != address(0));
 
-        address spokeSuperAdmin =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".superAdminRoleGrant.account"), (address));
+        address spokeSuperAdmin = vm.parseJsonAddress(deploySpokeCore.inputJson(), ".superAdminRoleGrant.account");
         assertTrue(spokeSuperAdmin != address(0));
 
-        address caliberMechanic = abi.decode(
-            vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams.initialMechanic"), (address)
-        );
+        address caliberMechanic =
+            vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams.initialMechanic");
         assertTrue(caliberMechanic != address(0));
     }
 
@@ -132,15 +123,13 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deployHubCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
         for (uint256 i; i < tokensToRegister.length; i++) {
             assertEq(
-                hubCoreDeployment.tokenRegistry.getForeignToken(
-                    tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId
-                ),
+                hubCoreDeployment.tokenRegistry
+                    .getForeignToken(tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId),
                 tokensToRegister[i].foreignToken
             );
             assertEq(
-                hubCoreDeployment.tokenRegistry.getLocalToken(
-                    tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId
-                ),
+                hubCoreDeployment.tokenRegistry
+                    .getLocalToken(tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId),
                 tokensToRegister[i].localToken
             );
         }
@@ -156,8 +145,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that ChainRegistry is correctly set up
-        uint256[] memory supportedChains =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".supportedChains"), (uint256[]));
+        uint256[] memory supportedChains = vm.parseJsonUintArray(deployHubCore.inputJson(), ".supportedChains");
         for (uint256 i; i < supportedChains.length; i++) {
             assertEq(
                 hubCoreDeployment.chainRegistry.evmToWhChainId(supportedChains[i]),
@@ -200,21 +188,17 @@ contract Deploy_Scripts_Test is Base_Test {
         deployHubMachine.run();
 
         // Check that Hub Machine is correctly set up
-        SortedParams.MachineInitParamsSorted memory mParams = abi.decode(
-            vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (SortedParams.MachineInitParamsSorted)
-        );
-        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
-            vm.parseJson(deployHubMachine.inputJson(), ".caliberInitParams"), (SortedParams.CaliberInitParamsSorted)
-        );
-        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+        IMachine.MachineInitParams memory mParams =
+            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (IMachine.MachineInitParams));
+        ICaliber.CaliberInitParams memory cParams =
+            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams));
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
             vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams"),
-            (SortedParams.MakinaGovernableInitParamsSorted)
+            (IMakinaGovernable.MakinaGovernableInitParams)
         );
-        address accountingToken = abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".accountingToken"), (address));
-        string memory shareTokenName =
-            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenName"), (string));
-        string memory shareTokenSymbol =
-            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".shareTokenSymbol"), (string));
+        address accountingToken = vm.parseJsonAddress(deployHubMachine.inputJson(), ".accountingToken");
+        string memory shareTokenName = vm.parseJsonString(deployHubMachine.inputJson(), ".shareTokenName");
+        string memory shareTokenSymbol = vm.parseJsonString(deployHubMachine.inputJson(), ".shareTokenSymbol");
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
@@ -273,17 +257,14 @@ contract Deploy_Scripts_Test is Base_Test {
         deployPreDepositVault.run();
 
         // Check that PreDepositVault is correctly set up
-        SortedParams.PreDepositVaultInitParamsSorted memory pdvParams = abi.decode(
+        IPreDepositVault.PreDepositVaultInitParams memory pdvParams = abi.decode(
             vm.parseJson(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams"),
-            (SortedParams.PreDepositVaultInitParamsSorted)
+            (IPreDepositVault.PreDepositVaultInitParams)
         );
-        address depositToken = abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".depositToken"), (address));
-        address accountingToken =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".accountingToken"), (address));
-        string memory shareTokenName =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenName"), (string));
-        string memory shareTokenSymbol =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenSymbol"), (string));
+        address depositToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".depositToken");
+        address accountingToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".accountingToken");
+        string memory shareTokenName = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenName");
+        string memory shareTokenSymbol = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenSymbol");
 
         IPreDepositVault preDepositVault = IPreDepositVault(deployPreDepositVault.deployedInstance());
         IMachineShare shareToken = IMachineShare(preDepositVault.shareToken());
@@ -322,30 +303,24 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // PreDeposit Vault migration to Machine
         deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
-        stdstore.target(address(deployMachineFromPreDeposit)).sig("preDepositVault()").checked_write(
-            deployPreDepositVault.deployedInstance()
-        );
+        stdstore.target(address(deployMachineFromPreDeposit)).sig("preDepositVault()")
+            .checked_write(deployPreDepositVault.deployedInstance());
         deployMachineFromPreDeposit.run();
 
         // Check that Hub Machine is correctly set up
-        SortedParams.MachineInitParamsSorted memory mParams = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".machineInitParams"),
-            (SortedParams.MachineInitParamsSorted)
+        IMachine.MachineInitParams memory mParams = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".machineInitParams"), (IMachine.MachineInitParams)
         );
-        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".caliberInitParams"),
-            (SortedParams.CaliberInitParamsSorted)
+        ICaliber.CaliberInitParams memory cParams = abi.decode(
+            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams)
         );
-        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
             vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams"),
-            (SortedParams.MakinaGovernableInitParamsSorted)
+            (IMakinaGovernable.MakinaGovernableInitParams)
         );
-        address accountingToken =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".accountingToken"), (address));
-        string memory shareTokenName =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenName"), (string));
-        string memory shareTokenSymbol =
-            abi.decode(vm.parseJson(deployPreDepositVault.inputJson(), ".shareTokenSymbol"), (string));
+        address accountingToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".accountingToken");
+        string memory shareTokenName = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenName");
+        string memory shareTokenSymbol = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenSymbol");
 
         IMachine machine = IMachine(deployMachineFromPreDeposit.deployedInstance());
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
@@ -417,15 +392,13 @@ contract Deploy_Scripts_Test is Base_Test {
             abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
         for (uint256 i; i < tokensToRegister.length; i++) {
             assertEq(
-                spokeCoreDeployment.tokenRegistry.getForeignToken(
-                    tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId
-                ),
+                spokeCoreDeployment.tokenRegistry
+                    .getForeignToken(tokensToRegister[i].localToken, tokensToRegister[i].foreignEvmChainId),
                 tokensToRegister[i].foreignToken
             );
             assertEq(
-                spokeCoreDeployment.tokenRegistry.getLocalToken(
-                    tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId
-                ),
+                spokeCoreDeployment.tokenRegistry
+                    .getLocalToken(tokensToRegister[i].foreignToken, tokensToRegister[i].foreignEvmChainId),
                 tokensToRegister[i].localToken
             );
         }
@@ -475,15 +448,14 @@ contract Deploy_Scripts_Test is Base_Test {
         deploySpokeCaliber.run();
 
         // Check that Spoke Caliber is correctly set up
-        SortedParams.CaliberInitParamsSorted memory cParams = abi.decode(
-            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"), (SortedParams.CaliberInitParamsSorted)
+        ICaliber.CaliberInitParams memory cParams = abi.decode(
+            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams)
         );
-        SortedParams.MakinaGovernableInitParamsSorted memory mgParams = abi.decode(
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
             vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams"),
-            (SortedParams.MakinaGovernableInitParamsSorted)
+            (IMakinaGovernable.MakinaGovernableInitParams)
         );
-        address accountingToken =
-            abi.decode(vm.parseJson(deploySpokeCaliber.inputJson(), ".accountingToken"), (address));
+        address accountingToken = vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".accountingToken");
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
 
         assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliber(address(spokeCaliber)));
@@ -525,24 +497,25 @@ contract Deploy_Scripts_Test is Base_Test {
         deployTimelockController.run();
 
         // Check that Timelock Controller is correctly set up
-        SortedParams.TimelockControllerInitParamsSorted memory tcParams = abi.decode(
-            vm.parseJson(deployTimelockController.inputJson(), ".timelockControllerInitParams"),
-            (SortedParams.TimelockControllerInitParamsSorted)
-        );
+        uint256 initialMinDelay = vm.parseJsonUint(deployTimelockController.inputJson(), ".initialMinDelay");
+        address[] memory initialProposers =
+            vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".initialProposers");
+        address[] memory initialExecutors =
+            vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".initialExecutors");
         address[] memory additionalCancellers =
-            abi.decode(vm.parseJson(deployTimelockController.inputJson(), ".additionalCancellers"), (address[]));
+            vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".additionalCancellers");
 
         TimelockController timelockController = TimelockController(payable(deployTimelockController.deployedInstance()));
-        for (uint256 i = 0; i < tcParams.initialProposers.length; i++) {
-            assertTrue(timelockController.hasRole(timelockController.PROPOSER_ROLE(), tcParams.initialProposers[i]));
-            assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), tcParams.initialProposers[i]));
+        for (uint256 i = 0; i < initialProposers.length; i++) {
+            assertTrue(timelockController.hasRole(timelockController.PROPOSER_ROLE(), initialProposers[i]));
+            assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), initialProposers[i]));
         }
-        for (uint256 i = 0; i < tcParams.initialExecutors.length; i++) {
-            assertTrue(timelockController.hasRole(timelockController.EXECUTOR_ROLE(), tcParams.initialExecutors[i]));
+        for (uint256 i = 0; i < initialExecutors.length; i++) {
+            assertTrue(timelockController.hasRole(timelockController.EXECUTOR_ROLE(), initialExecutors[i]));
         }
         for (uint256 i = 0; i < additionalCancellers.length; i++) {
             assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), additionalCancellers[i]));
         }
-        assertEq(timelockController.getMinDelay(), tcParams.initialMinDelay);
+        assertEq(timelockController.getMinDelay(), initialMinDelay);
     }
 }

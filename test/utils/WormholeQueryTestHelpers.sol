@@ -176,9 +176,10 @@ library WormholeQueryTestHelpers {
                 abi.encodePacked(_blockNum), _finality, numCalls, concatenatedCallData
             );
 
-            return QueryRequestBuilder.buildPerChainRequestBytes(
-                _chainId, ETH_CALL_WITH_FINALITY, ethCallWithFinalityRequest
-            );
+            return
+                QueryRequestBuilder.buildPerChainRequestBytes(
+                    _chainId, ETH_CALL_WITH_FINALITY, ethCallWithFinalityRequest
+                );
         } else {
             // Without finality
             bytes memory ethCallRequest = QueryRequestBuilder.buildEthCallRequestBytes(

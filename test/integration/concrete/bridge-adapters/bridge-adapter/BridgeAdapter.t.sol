@@ -52,7 +52,13 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
     ///
 
     /// @dev Sends out scheduled outgoing bridge transfer. To be overridden for each bridge adapter version.
-    function _sendOutBridgeTransfer(address, /*bridgeAdapter*/ uint256 /*transferId*/ ) internal virtual {}
+    function _sendOutBridgeTransfer(
+        address,
+        /*bridgeAdapter*/
+        uint256 /*transferId*/
+    )
+        internal
+        virtual {}
 
     /// @dev Simulates incoming bridge transfer reception. To be overridden for each bridge adapter version.
     function _receiveInBridgeTransfer(

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
@@ -76,7 +78,8 @@ contract Caliber is
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Caliber")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant CaliberStorageLocation = 0x32461bf02c7aa4aa351cd04411b6c7b9348073fbccf471c7b347bdaada044b00;
+    bytes32 private constant CaliberStorageLocation =
+        0x32461bf02c7aa4aa351cd04411b6c7b9348073fbccf471c7b347bdaada044b00;
 
     function _getCaliberStorage() private pure returns (CaliberStorage storage $) {
         assembly {
@@ -187,9 +190,10 @@ contract Caliber is
     /// @inheritdoc ICaliber
     function pendingTimelockExpiry() public view override returns (uint256) {
         CaliberStorage storage $ = _getCaliberStorage();
-        return ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
-            ? 0
-            : $._pendingTimelockExpiry;
+        return
+            ($._pendingTimelockExpiry == 0 || block.timestamp >= $._pendingTimelockExpiry)
+                ? 0
+                : $._pendingTimelockExpiry;
     }
 
     /// @inheritdoc ICaliber
@@ -246,7 +250,8 @@ contract Caliber is
     function isInstrRootGuardian(address user) external view override returns (bool) {
         CaliberStorage storage $ = _getCaliberStorage();
         return user == IMakinaGovernable($._hubMachineEndpoint).riskManager()
-            || user == IMakinaGovernable($._hubMachineEndpoint).securityCouncil() || $._instrRootGuardians.contains(user);
+            || user == IMakinaGovernable($._hubMachineEndpoint).securityCouncil()
+            || $._instrRootGuardians.contains(user);
     }
 
     /// @inheritdoc ICaliber
@@ -692,8 +697,9 @@ contract Caliber is
             if (!$._baseTokens.contains(_affectedToken)) {
                 revert Errors.InvalidAffectedToken();
             }
-            affectedTokensValueBefore +=
-                _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            affectedTokensValueBefore += _accountingValueOf(
+                _affectedToken, IERC20(_affectedToken).balanceOf(address(this))
+            );
         }
 
         _execute(mgmtInstruction.commands, mgmtInstruction.state);
@@ -707,8 +713,9 @@ contract Caliber is
         uint256 affectedTokensValueAfter;
         for (uint256 i; i < atLen; ++i) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
-            affectedTokensValueAfter +=
-                _accountingValueOf(_affectedToken, IERC20(_affectedToken).balanceOf(address(this)));
+            affectedTokensValueAfter += _accountingValueOf(
+                _affectedToken, IERC20(_affectedToken).balanceOf(address(this))
+            );
         }
 
         bool isPositionIncrease = change > 0;

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 
 import {IAcrossV3BridgeConfig} from "../../interfaces/IAcrossV3BridgeConfig.sol";
 import {IBridgeConfig} from "../../interfaces/IBridgeConfig.sol";
@@ -31,7 +33,12 @@ contract AcrossV3BridgeConfig is AccessManagedUpgradeable, IAcrossV3BridgeConfig
     }
 
     /// @inheritdoc IBridgeConfig
-    function isRouteSupported(address, /*inputToken*/ uint256 foreignChainId, address /*outputToken*/ )
+    function isRouteSupported(
+        address,
+        /*inputToken*/
+        uint256 foreignChainId,
+        address /*outputToken*/
+    )
         external
         view
         override

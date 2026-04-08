@@ -256,9 +256,9 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(mockOft), inputAmount, address(token3), minOutputAmount
         );
 
-        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(
-            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS
-        ).addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
+        bytes memory extraOptions = LzOptionsBuilder.newOptions()
+            .addExecutorLzReceiveOption(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS)
+            .addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
 
         vm.expectEmit(false, false, false, true, address(mockOft));
         emit MockOFT.SentParams(
@@ -387,9 +387,9 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        bytes memory extraOptions = LzOptionsBuilder.newOptions().addExecutorLzReceiveOption(
-            DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS
-        ).addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
+        bytes memory extraOptions = LzOptionsBuilder.newOptions()
+            .addExecutorLzReceiveOption(DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS)
+            .addExecutorLzComposeOption(0, DEFAULT_LAYER_ZERO_V2_LZ_COMPOSE_GAS);
 
         vm.expectEmit(false, false, false, true, address(mockOftAdapter));
         emit MockOFTAdapter.SentParams(

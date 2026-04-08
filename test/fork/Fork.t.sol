@@ -51,17 +51,17 @@ abstract contract Fork_Test is Base, Test, Constants {
         string memory inputJson = vm.readFile(string.concat(inputPath, chainInfo.constantsFilename));
 
         // read misc addresses from json
-        forkData.dao = abi.decode(vm.parseJson(inputJson, ".dao"), (address));
-        forkData.mechanic = abi.decode(vm.parseJson(inputJson, ".mechanic"), (address));
-        forkData.securityCouncil = abi.decode(vm.parseJson(inputJson, ".securityCouncil"), (address));
-        forkData.usdc = abi.decode(vm.parseJson(inputJson, ".usdc"), (address));
-        forkData.weth = abi.decode(vm.parseJson(inputJson, ".weth"), (address));
+        forkData.dao = vm.parseJsonAddress(inputJson, ".dao");
+        forkData.mechanic = vm.parseJsonAddress(inputJson, ".mechanic");
+        forkData.securityCouncil = vm.parseJsonAddress(inputJson, ".securityCouncil");
+        forkData.usdc = vm.parseJsonAddress(inputJson, ".usdc");
+        forkData.weth = vm.parseJsonAddress(inputJson, ".weth");
 
         bool isHub = chainId == hubChainId;
 
         // deploy core contracts
         if (isHub) {
-            address wormhole = abi.decode(vm.parseJson(inputJson, ".wormhole"), (address));
+            address wormhole = vm.parseJsonAddress(inputJson, ".wormhole");
             hubCore = deployHubCore(address(this), wormhole);
         } else {
             spokeCores[chainId] = deploySpokeCore(address(this), hubChainId);
@@ -70,7 +70,7 @@ abstract contract Fork_Test is Base, Test, Constants {
         // setup makina registry and chain registry
         if (isHub) {
             setupHubCoreRegistry(hubCore);
-            uint256[] memory evmChainIds = abi.decode(vm.parseJson(inputJson, ".supportedChains"), (uint256[]));
+            uint256[] memory evmChainIds = vm.parseJsonUintArray(inputJson, ".supportedChains");
             setupChainRegistry(hubCore.chainRegistry, evmChainIds);
         } else {
             setupSpokeCoreRegistry(spokeCores[chainId]);
@@ -95,9 +95,8 @@ abstract contract Fork_Test is Base, Test, Constants {
         } else {
             uint64 superAdminRole = spokeCores[chainId].accessManager.ADMIN_ROLE();
             spokeCores[chainId].accessManager.grantRole(superAdminRole, forkData.dao, 0);
-            spokeCores[chainId].accessManager.grantRole(
-                superAdminRole, address(spokeCores[chainId].spokeCoreFactory), 0
-            );
+            spokeCores[chainId].accessManager
+                .grantRole(superAdminRole, address(spokeCores[chainId].spokeCoreFactory), 0);
             spokeCores[chainId].accessManager.grantRole(Roles.STRATEGY_COMPONENTS_LINKING_ROLE, forkData.dao, 0);
             spokeCores[chainId].accessManager.revokeRole(superAdminRole, address(this));
         }

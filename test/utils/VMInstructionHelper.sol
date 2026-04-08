@@ -758,11 +758,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         );
     }
 
-    function _buildManageFlashLoanDummyInstruction(uint256 _posId)
-        internal
-        view
-        returns (ICaliber.Instruction memory)
-    {
+    function _buildManageFlashLoanDummyInstruction(uint256 _posId) internal view returns (ICaliber.Instruction memory) {
         bytes32[] memory merkleProof = _getManageFlashLoanDummyInstrProof();
 
         return ICaliber.Instruction(

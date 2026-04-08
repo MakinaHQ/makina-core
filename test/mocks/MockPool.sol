@@ -71,7 +71,14 @@ contract MockPool is ERC20 {
         return token0Amount + token1Amount;
     }
 
-    function previewAddLiquidityOneSide(uint256 tokenAmount, address /*tokenIn*/ ) public pure returns (uint256) {
+    function previewAddLiquidityOneSide(
+        uint256 tokenAmount,
+        address /*tokenIn*/
+    )
+        public
+        pure
+        returns (uint256)
+    {
         return tokenAmount;
     }
 

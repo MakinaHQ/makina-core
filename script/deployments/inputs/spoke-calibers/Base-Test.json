@@ -1,6 +1,6 @@
 {
   "caliberInitParams": {
-    "initialPosStaleThreshold": 10800,
+    "initialPositionStaleThreshold": 10800,
     "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "initialTimelockDuration": 0,
     "initialMaxPositionIncreaseLossBps": 300,

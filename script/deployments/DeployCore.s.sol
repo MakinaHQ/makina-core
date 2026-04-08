@@ -34,7 +34,7 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     function _deploySetupBefore() public {
         superAdminRoleGrant = AMRoleGrant({
             roleId: 0,
-            account: abi.decode(vm.parseJson(inputJson, ".superAdminRoleGrant.account"), (address)),
+            account: vm.parseJsonAddress(inputJson, ".superAdminRoleGrant.account"),
             executionDelay: abi.decode(vm.parseJson(inputJson, ".superAdminRoleGrant.executionDelay"), (uint32))
         });
 

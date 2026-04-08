@@ -37,10 +37,7 @@ interface ISwapModule {
     /// @param swapperId The swapper ID.
     /// @return approvalTarget The approval target.
     /// @return executionTarget The execution target.
-    function getSwapperTargets(uint16 swapperId)
-        external
-        view
-        returns (address approvalTarget, address executionTarget);
+    function getSwapperTargets(uint16 swapperId) external view returns (address approvalTarget, address executionTarget);
 
     /// @notice Swaps tokens using a given swapper.
     /// @param order The swap order object.

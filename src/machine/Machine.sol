@@ -62,7 +62,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.Machine")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 private constant MachineStorageLocation = 0x55fe2a17e400bcd0e2125123a7fc955478e727b29a4c522f4f2bd95d961bd900;
+    bytes32 private constant MachineStorageLocation =
+        0x55fe2a17e400bcd0e2125123a7fc955478e727b29a4c522f4f2bd95d961bd900;
 
     function _getMachineStorage() private pure returns (MachineStorage storage $) {
         assembly {
@@ -406,8 +407,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     function updateTotalAum() external override nonReentrant onlyAccountingAuthorized returns (uint256) {
         MachineStorage storage $ = _getMachineStorage();
 
-        uint256 _lastTotalAum =
-            MachineUtils.updateTotalAum($, IHubCoreRegistry(registry).oracleRegistry(), msg.sender != securityCouncil());
+        uint256 _lastTotalAum = MachineUtils.updateTotalAum(
+            $, IHubCoreRegistry(registry).oracleRegistry(), msg.sender != securityCouncil()
+        );
         emit TotalAumUpdated(_lastTotalAum);
 
         uint256 _mintedFees = MachineUtils.manageFees($);

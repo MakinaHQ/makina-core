@@ -7,20 +7,27 @@ import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
 
 import {BridgeController_Integration_Concrete_Test} from "../bridge-controller/BridgeController.t.sol";
-import {SetBridgeAdapter_Integration_Concrete_Test} from
-    "../bridge-controller/set-bridge-adapter/setBridgeAdapter.t.sol";
-import {GetBridgeAdapter_Integration_Concrete_Test} from
-    "../bridge-controller/get-bridge-adapter/getBridgeAdapter.t.sol";
-import {GetMaxBridgeLossBps_Integration_Concrete_Test} from
-    "../bridge-controller/get-max-bridge-loss-bps/getMaxBridgeLossBps.t.sol";
-import {IsBridgeSupported_Integration_Concrete_Test} from
-    "../bridge-controller/is-bridge-supported/isBridgeSupported.t.sol";
-import {IsOutTransferEnabled_Integration_Concrete_Test} from
-    "../bridge-controller/is-out-transfer-enabled/isOutTransferEnabled.t.sol";
-import {SetMaxBridgeLossBps_Integration_Concrete_Test} from
-    "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
-import {SetOutTransferEnabled_Integration_Concrete_Test} from
-    "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
+import {
+    SetBridgeAdapter_Integration_Concrete_Test
+} from "../bridge-controller/set-bridge-adapter/setBridgeAdapter.t.sol";
+import {
+    GetBridgeAdapter_Integration_Concrete_Test
+} from "../bridge-controller/get-bridge-adapter/getBridgeAdapter.t.sol";
+import {
+    GetMaxBridgeLossBps_Integration_Concrete_Test
+} from "../bridge-controller/get-max-bridge-loss-bps/getMaxBridgeLossBps.t.sol";
+import {
+    IsBridgeSupported_Integration_Concrete_Test
+} from "../bridge-controller/is-bridge-supported/isBridgeSupported.t.sol";
+import {
+    IsOutTransferEnabled_Integration_Concrete_Test
+} from "../bridge-controller/is-out-transfer-enabled/isOutTransferEnabled.t.sol";
+import {
+    SetMaxBridgeLossBps_Integration_Concrete_Test
+} from "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
+import {
+    SetOutTransferEnabled_Integration_Concrete_Test
+} from "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {

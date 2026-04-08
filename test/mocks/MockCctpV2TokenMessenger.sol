@@ -101,8 +101,7 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
         IERC20(burnToken).safeTransferFrom(msg.sender, localMinter, amount);
         MockCctpV2TokenMinter(localMinter).burn(burnToken, amount);
 
-        emit DepositForBurnWithHook(
-            keccak256(
+        emit DepositForBurnWithHook(keccak256(
                 formatMessageForRelay(
                     RelayMessageParams({
                         sourceDomain: sourceDomain,
@@ -118,8 +117,7 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
                         hookData: hookData
                     })
                 )
-            )
-        );
+            ));
     }
 
     function handleReceiveFinalizedMessage(uint32 remoteDomain, bytes32, uint32, bytes calldata messageBody)
@@ -131,9 +129,8 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
         uint256 _amount = uint256(_readBytes32(messageBody, BODY_AMOUNT_INDEX));
         uint256 _fee = uint256(_readBytes32(messageBody, BODY_FEE_EXECUTED_INDEX));
 
-        MockCctpV2TokenMinter(localMinter).mint(
-            remoteDomain, _burnToken, _mintRecipient, feeRecipient, _amount - _fee, _fee
-        );
+        MockCctpV2TokenMinter(localMinter)
+            .mint(remoteDomain, _burnToken, _mintRecipient, feeRecipient, _amount - _fee, _fee);
 
         return true;
     }
