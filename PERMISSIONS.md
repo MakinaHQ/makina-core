@@ -43,7 +43,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### OracleRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set token price feed route.
   - Can set feeds staleness threshold.
 
@@ -53,7 +52,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### ChainRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set mappings of EVM and WH chain IDs.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
@@ -62,7 +60,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### TokenRegistry
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set mappings of local and foreign token addresses.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
@@ -71,7 +68,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### HubCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
-
   - Can deploy machine shares.
   - Can deploy pre-deposit vaults.
   - Can deploy machines and calibers.
@@ -83,7 +79,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### SpokeCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
-
   - Can deploy mailboxes and calibers.
   - Can deploy bridge adapters.
 
@@ -93,7 +88,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### SwapModule
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set approval and execution targets for a given swapper ID.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
@@ -102,7 +96,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### AcrossV3BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set supported status of EVM chains.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
@@ -111,7 +104,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### LayerZeroV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set mappings of EVM chain ID to LZ endpoint ID.
   - Can set mappings of local tokens to corresponding LZ OFTs.
   - Can set mappings of local tokens to their foreign counterparts through OFT bridging.
@@ -122,7 +114,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 # CctpV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
-
   - Can set mappings of EVM chain ID to CCTP domain.
   - Can set mappings of local tokens to their foreign counterparts through CCTP bridging.
 
@@ -167,7 +158,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Machine
 
 - `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
-
   - Can set the address of a Spoke caliber mailbox.
   - Can set the address of a Spoke bridge adapter.
   - Can set the address of the depositor contract.
@@ -175,7 +165,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the fee manager contract.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
-
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
@@ -184,17 +173,14 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can add and remove accounting agents.
 
 - **Security Council**
-
   - Can trigger total AUM update at any time.
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
 - **Risk Manager**
-
   - Can set the share token supply limit that cannot be exceeded by new deposits.
 
 - **Risk Manager Timelock**
-
   - Can set the outgoing transfer enabled status for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
   - Can set the caliber accounting staleness threshold.
@@ -205,7 +191,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
-
   - Can trigger total AUM update, provided the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
   - Can schedule an outgoing bridge transfer towards a spoke caliber (only when not in recovery mode).
   - Can cancel an outgoing bridge transfer.
@@ -214,13 +199,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can claim an incoming bridge transfer from a spoke caliber.
 
 - **Accounting Agents**
-
   - Can update total AUM (only when not in recovery mode).
 
 ### Pre-Deposit Vault
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
-
   - Can set the address of the risk manager.
 
 - **Risk Manager**
@@ -231,11 +214,9 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Caliber Mailbox
 
 - `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
-
   - Can set the address of a Hub bridge adapter.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
-
   - Can set the address of the mechanic.
   - Can set the address of the security council.
   - Can set the address of the risk manager.
@@ -244,19 +225,16 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can add and remove accounting agents.
 
 - **Security Council**
-
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
 
 - **Risk Manager Timelock**
-
   - Can set the outgoing transfer enabled status for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
-
   - Can schedule outgoing bridge transfer towards the Hub Machine.
   - Can cancel outgoing bridge transfer.
   - Can send outgoing bridge transfer.
@@ -266,23 +244,18 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Caliber
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
-
   - Can add and remove Merkle root guardians.
 
 - **Security Council**
-
   - Can account for positions. at any time.
 
 - **Risk Manager**
-
   - Can schedule an update of the root of the Merkle tree containing allowed instructions.
 
 - **Root Guardians**
-
   - Can veto an update of the root of the Merkle tree containing allowed instructions.
 
 - **Risk Manager Timelock**
-
   - Can register and unregister base tokens.
   - Can set the position accounting staleness threshold.
   - Can set the timelock duration for the allowed instruction merkle root update.
@@ -293,7 +266,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
-
   - Can open, manage and close positions (position increases allowed only when not in recovery mode).
   - Can account for positions.
   - Can harvest external rewards.
@@ -301,5 +273,4 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can initiate a transfer towards hub machine endpoint.
 
 - **Accounting Agents**
-
   - Can account for positions (only when not in recovery mode).
