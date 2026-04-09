@@ -194,9 +194,12 @@ abstract contract BridgeAdapter is Initializable, ReentrancyGuard, MakinaContext
         _checkOutBridgeTransferIsCancellable(transferId);
 
         IERC20(receipt.inputToken).forceApprove($._controller, receipt.inputAmount);
-        IMachineEndpoint($._controller).manageTransfer(
-            receipt.inputToken, receipt.inputAmount, abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
-        );
+        IMachineEndpoint($._controller)
+            .manageTransfer(
+                receipt.inputToken,
+                receipt.inputAmount,
+                abi.encode(receipt.destinationChainId, receipt.inputAmount, true)
+            );
 
         emit OutBridgeTransferCancelled(transferId);
     }
@@ -212,9 +215,10 @@ abstract contract BridgeAdapter is Initializable, ReentrancyGuard, MakinaContext
         }
 
         IERC20(receipt.outputToken).forceApprove($._controller, receipt.outputAmount);
-        IMachineEndpoint($._controller).manageTransfer(
-            receipt.outputToken, receipt.outputAmount, abi.encode(receipt.originChainId, receipt.inputAmount, false)
-        );
+        IMachineEndpoint($._controller)
+            .manageTransfer(
+                receipt.outputToken, receipt.outputAmount, abi.encode(receipt.originChainId, receipt.inputAmount, false)
+            );
 
         $._reservedBalances[receipt.outputToken] -= receipt.outputAmount;
 

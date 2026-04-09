@@ -9,13 +9,16 @@ import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol"
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IMockAcrossV3SpokePool} from "test/mocks/IMockAcrossV3SpokePool.sol";
 
-import {ScheduleOutBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/schedule-out-bridge-transfer/scheduleOutBridgeTransfer.t.sol";
-import {ClaimInBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/claim-in-bridge-transfer/claimInBridgeTransfer.t.sol";
+import {
+    ScheduleOutBridgeTransfer_Integration_Concrete_Test
+} from "../bridge-adapter/schedule-out-bridge-transfer/scheduleOutBridgeTransfer.t.sol";
+import {
+    ClaimInBridgeTransfer_Integration_Concrete_Test
+} from "../bridge-adapter/claim-in-bridge-transfer/claimInBridgeTransfer.t.sol";
 import {BridgeAdapter_Integration_Concrete_Test} from "../bridge-adapter/BridgeAdapter.t.sol";
-import {WithdrawPendingFunds_Integration_Concrete_Test} from
-    "../bridge-adapter/withdraw-pending-funds/withdrawPendingFunds.t.sol";
+import {
+    WithdrawPendingFunds_Integration_Concrete_Test
+} from "../bridge-adapter/withdraw-pending-funds/withdrawPendingFunds.t.sol";
 
 abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapter_Integration_Concrete_Test {
     IMockAcrossV3SpokePool internal acrossV3SpokePool;
@@ -69,9 +72,8 @@ abstract contract AcrossV3BridgeAdapter_Integration_Concrete_Test is BridgeAdapt
         );
 
         vm.prank(address(acrossV3SpokePool));
-        AcrossV3BridgeAdapter(bridgeAdapter).handleV3AcrossMessage(
-            receivedToken, receivedAmount, address(0), encodedMessage
-        );
+        AcrossV3BridgeAdapter(bridgeAdapter)
+            .handleV3AcrossMessage(receivedToken, receivedAmount, address(0), encodedMessage);
     }
 
     function _sendOutBridgeTransfer(address bridgeAdapter, uint256 transferId) internal virtual override {

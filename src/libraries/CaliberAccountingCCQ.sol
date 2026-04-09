@@ -29,7 +29,7 @@ library CaliberAccountingCCQ {
     /// @param caliberMailbox The address of the queried caliber mailbox.
     /// @return data The accounting data for the given caliber mailbox
     /// @return responseTimestamp The timestamp of the response.
-    function getAccountingData(PerChainQueryResponse memory pcr, address caliberMailbox)
+    function getAccountingData(PerChainQueryResponse calldata pcr, address caliberMailbox)
         external
         pure
         returns (ICaliberMailbox.SpokeCaliberAccountingData memory, uint256)

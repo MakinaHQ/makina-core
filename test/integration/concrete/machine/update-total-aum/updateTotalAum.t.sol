@@ -300,7 +300,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
 
         // remove 1 wei from aum, which corresponds to a -20% price change
-        aum -= 1;
+        --aum;
         deal(address(accountingToken), address(machine), aum, true);
 
         // set max change rate just under 20%
@@ -319,7 +319,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
 
         // remove 1 wei from aum, which corresponds to a -25% price change
-        aum -= 1;
+        --aum;
         deal(address(accountingToken), address(machine), aum, true);
 
         skip(1);
@@ -1307,9 +1307,8 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         if (bridgeId == ACROSS_V3_BRIDGE_ID) {
             deal(address(outputToken), address(bridgeAdapterAddr), outputAmount, true);
             vm.prank(address(acrossV3SpokePool));
-            IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
-                outputToken, outputAmount, address(0), encodedMessage
-            );
+            IAcrossV3MessageHandler(bridgeAdapterAddr)
+                .handleV3AcrossMessage(outputToken, outputAmount, address(0), encodedMessage);
         } else {
             // solhint-disable-next-line gas-custom-errors
             revert("Unsupported bridge");

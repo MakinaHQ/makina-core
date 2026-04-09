@@ -63,7 +63,7 @@ library WormholeQueryTestHelpers {
 
         bool useFinality = _finality.length > 0;
 
-        for (uint256 i = 0; i < perChainData.length; i++) {
+        for (uint256 i; i < perChainData.length; ++i) {
             perChainResponses[i] = buildPerChainResponse(
                 perChainData[i].chainId,
                 perChainData[i].blockNum,
@@ -125,7 +125,7 @@ library WormholeQueryTestHelpers {
         bool useFinality
     ) internal pure returns (bytes memory) {
         bytes memory ethCallResults = new bytes(0);
-        for (uint256 i = 0; i < _results.length; i++) {
+        for (uint256 i; i < _results.length; ++i) {
             ethCallResults = abi.encodePacked(ethCallResults, QueryRequestBuilder.buildEthCallResultBytes(_results[i]));
         }
 
@@ -159,7 +159,7 @@ library WormholeQueryTestHelpers {
         bytes memory _finality
     ) internal pure returns (bytes memory) {
         bytes[] memory callDatas = new bytes[](numCalls);
-        for (uint8 i = 0; i < numCalls; i++) {
+        for (uint8 i = 0; i < numCalls; ++i) {
             if (selector != bytes4(0)) {
                 callDatas[i] =
                     QueryRequestBuilder.buildEthCallRecordBytes(_contractAddress, abi.encodeWithSelector(selector));
@@ -176,9 +176,10 @@ library WormholeQueryTestHelpers {
                 abi.encodePacked(_blockNum), _finality, numCalls, concatenatedCallData
             );
 
-            return QueryRequestBuilder.buildPerChainRequestBytes(
-                _chainId, ETH_CALL_WITH_FINALITY, ethCallWithFinalityRequest
-            );
+            return
+                QueryRequestBuilder.buildPerChainRequestBytes(
+                    _chainId, ETH_CALL_WITH_FINALITY, ethCallWithFinalityRequest
+                );
         } else {
             // Without finality
             bytes memory ethCallRequest = QueryRequestBuilder.buildEthCallRequestBytes(
@@ -192,15 +193,15 @@ library WormholeQueryTestHelpers {
     // Helper function to concatenate call data arrays
     function concatenateCallData(bytes[] memory callDatas) internal pure returns (bytes memory concatenated) {
         uint256 totalLength = 0;
-        for (uint256 i = 0; i < callDatas.length; i++) {
+        for (uint256 i; i < callDatas.length; ++i) {
             totalLength += callDatas[i].length;
         }
 
         concatenated = new bytes(totalLength);
         uint256 offset = 0;
-        for (uint256 i = 0; i < callDatas.length; i++) {
+        for (uint256 i; i < callDatas.length; ++i) {
             bytes memory data = callDatas[i];
-            for (uint256 j = 0; j < data.length; j++) {
+            for (uint256 j; j < data.length; ++j) {
                 concatenated[offset + j] = data[j];
             }
             offset += data.length;
@@ -210,15 +211,15 @@ library WormholeQueryTestHelpers {
     // Concatenates an array of `bytes` arrays into a single `bytes` array without encoding metadata.
     function concatenateBytesArrays(bytes[] memory arrays) internal pure returns (bytes memory concatenated) {
         uint256 totalLength = 0;
-        for (uint256 i = 0; i < arrays.length; i++) {
+        for (uint256 i; i < arrays.length; ++i) {
             totalLength += arrays[i].length;
         }
 
         concatenated = new bytes(totalLength);
         uint256 offset = 0;
-        for (uint256 i = 0; i < arrays.length; i++) {
+        for (uint256 i; i < arrays.length; ++i) {
             bytes memory array = arrays[i];
-            for (uint256 j = 0; j < array.length; j++) {
+            for (uint256 j; j < array.length; ++j) {
                 concatenated[offset + j] = array[j];
             }
             offset += array.length;

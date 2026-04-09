@@ -10,13 +10,16 @@ import {MockCctpV2TokenMessenger} from "test/mocks/MockCctpV2TokenMessenger.sol"
 import {MockCctpV2MessageTransmitter} from "test/mocks/MockCctpV2MessageTransmitter.sol";
 import {MockCctpV2TokenMinter} from "test/mocks/MockCctpV2TokenMinter.sol";
 
-import {ScheduleOutBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/schedule-out-bridge-transfer/scheduleOutBridgeTransfer.t.sol";
-import {ClaimInBridgeTransfer_Integration_Concrete_Test} from
-    "../bridge-adapter/claim-in-bridge-transfer/claimInBridgeTransfer.t.sol";
+import {
+    ScheduleOutBridgeTransfer_Integration_Concrete_Test
+} from "../bridge-adapter/schedule-out-bridge-transfer/scheduleOutBridgeTransfer.t.sol";
+import {
+    ClaimInBridgeTransfer_Integration_Concrete_Test
+} from "../bridge-adapter/claim-in-bridge-transfer/claimInBridgeTransfer.t.sol";
 import {BridgeAdapter_Integration_Concrete_Test} from "../bridge-adapter/BridgeAdapter.t.sol";
-import {WithdrawPendingFunds_Integration_Concrete_Test} from
-    "../bridge-adapter/withdraw-pending-funds/withdrawPendingFunds.t.sol";
+import {
+    WithdrawPendingFunds_Integration_Concrete_Test
+} from "../bridge-adapter/withdraw-pending-funds/withdrawPendingFunds.t.sol";
 
 abstract contract CctpV2BridgeAdapter_Integration_Concrete_Test is BridgeAdapter_Integration_Concrete_Test {
     MockCctpV2TokenMessenger internal tokenMessenger;

@@ -83,15 +83,16 @@ contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
         (uint32 minFinalityThreshold) = abi.decode(data, (uint32));
 
         IERC20(receipt.inputToken).forceApprove(approvalTarget, receipt.inputAmount);
-        ICctpV2TokenMessenger(executionTarget).depositForBurnWithHook(
-            receipt.inputAmount,
-            destCctpDomain,
-            CctpV2Message.addressToBytes32(receipt.recipient),
-            receipt.inputToken,
-            CctpV2Message.addressToBytes32(receipt.recipient),
-            receipt.inputAmount - receipt.minOutputAmount,
-            minFinalityThreshold,
-            receipt.encodedMessage
-        );
+        ICctpV2TokenMessenger(executionTarget)
+            .depositForBurnWithHook(
+                receipt.inputAmount,
+                destCctpDomain,
+                CctpV2Message.addressToBytes32(receipt.recipient),
+                receipt.inputToken,
+                CctpV2Message.addressToBytes32(receipt.recipient),
+                receipt.inputAmount - receipt.minOutputAmount,
+                minFinalityThreshold,
+                receipt.encodedMessage
+            );
     }
 }

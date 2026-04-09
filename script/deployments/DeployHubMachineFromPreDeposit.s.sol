@@ -9,11 +9,10 @@ import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
-import {SortedParams} from "./utils/SortedParams.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
-contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
+contract DeployHubMachineFromPreDeposit is Base, Script {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -46,24 +45,24 @@ contract DeployHubMachineFromPreDeposit is Base, Script, SortedParams {
         coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
         coreOutputJson = vm.readFile(coreOutputPath);
 
-        preDepositVault = abi.decode(vm.parseJson(inputJson, ".preDepositVault"), (address));
+        preDepositVault = vm.parseJsonAddress(inputJson, ".preDepositVault");
     }
 
     function run() public {
-        MachineInitParamsSorted memory mParams =
-            abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (MachineInitParamsSorted));
-        CaliberInitParamsSorted memory cParams =
-            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
-        MakinaGovernableInitParamsSorted memory mgParams =
-            abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        IMachine.MachineInitParams memory mParams =
+            abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (IMachine.MachineInitParams));
+        ICaliber.CaliberInitParams memory cParams =
+            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (ICaliber.CaliberInitParams));
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
+            vm.parseJson(inputJson, ".makinaGovernableInitParams"), (IMakinaGovernable.MakinaGovernableInitParams)
+        );
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
             vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
         );
-        bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
-        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
+        bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
+        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        IHubCoreFactory hubCoreFactory =
-            IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
+        IHubCoreFactory hubCoreFactory = IHubCoreFactory(vm.parseJsonAddress(coreOutputJson, ".HubCoreFactory"));
 
         // Deploy pre-deposit vault
         vm.startBroadcast();

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 
@@ -200,9 +202,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
 
         bytes4[] memory mgmtSetupSelectors = new bytes4[](1);
         mgmtSetupSelectors[0] = IMakinaGovernable.setRiskManager.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }
 
     /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable.
@@ -227,9 +228,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         compSetupSelectors[2] = IMachine.setDepositor.selector;
         compSetupSelectors[3] = IMachine.setRedeemer.selector;
         compSetupSelectors[4] = IMachine.setFeeManager.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE);
 
         bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
@@ -239,9 +239,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
         mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }
 
     /// @dev Sets function roles for the initial fee manager of a deployed machine instance if applicable.
@@ -249,9 +248,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         if (_feeManager != address(0)) {
             bytes4[] memory compSetupSelectors = IFeeManager(_feeManager).getRestrictedFeeConfigSelectors();
             if (compSetupSelectors.length > 0) {
-                IAccessManager(_authority).setTargetFunctionRole(
-                    _feeManager, compSetupSelectors, Roles.STRATEGY_FEE_CONFIG_ROLE
-                );
+                IAccessManager(_authority)
+                    .setTargetFunctionRole(_feeManager, compSetupSelectors, Roles.STRATEGY_FEE_CONFIG_ROLE);
             }
         }
     }

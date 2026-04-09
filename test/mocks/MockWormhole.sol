@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache 2
-
-pragma solidity ^0.8.20;
+pragma solidity 0.8.28;
 
 import {ICoreBridge, GuardianSet, GuardianSignature, CoreBridgeVM} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
 import {BytesLib} from "../utils/BytesLib.sol";
@@ -87,7 +86,14 @@ contract MockWormhole is ICoreBridge {
         return sequences[emitter];
     }
 
-    function getGuardianSet(uint32 /*index*/ ) external pure override returns (GuardianSet memory) {
+    function getGuardianSet(
+        uint32 /*index*/
+    )
+        external
+        pure
+        override
+        returns (GuardianSet memory)
+    {
         address[] memory keys = new address[](1);
         keys[0] = WormholeQueryTestHelpers.DEVNET_GUARDIAN_ADDRESS;
 
@@ -149,7 +155,7 @@ contract MockWormhole is ICoreBridge {
         require(encodedVm.length >= (VM_SIZE_MINIMUM + sigCount * SIGNATURE_SIZE_TOTAL), "vm too small");
 
         signatures = new GuardianSignature[](sigCount);
-        for (uint256 i = 0; i < sigCount; ++i) {
+        for (uint256 i; i < sigCount; ++i) {
             uint8 guardianIndex = encodedVm.toUint8(offset);
             offset += 1;
 

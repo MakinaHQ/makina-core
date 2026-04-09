@@ -97,9 +97,8 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
-        IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
-            address(accountingToken), outputAmount, address(0), encodedMessage
-        );
+        IAcrossV3MessageHandler(bridgeAdapterAddr)
+            .handleV3AcrossMessage(address(accountingToken), outputAmount, address(0), encodedMessage);
 
         // claim transfer
         vm.prank(mechanic);
@@ -150,9 +149,8 @@ contract ResetBridgingState_Integration_Concrete_Test is CaliberMailbox_Integrat
         caliberMailbox.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
         deal(address(accountingToken), address(bridgeAdapterAddr), amount1, true);
         vm.prank(address(acrossV3SpokePool));
-        IAcrossV3MessageHandler(bridgeAdapterAddr).handleV3AcrossMessage(
-            address(accountingToken), amount1, address(0), encodedMessage
-        );
+        IAcrossV3MessageHandler(bridgeAdapterAddr)
+            .handleV3AcrossMessage(address(accountingToken), amount1, address(0), encodedMessage);
 
         // schedule outgoing bridge transfer
         deal(address(accountingToken), address(caliber), amount2, true);

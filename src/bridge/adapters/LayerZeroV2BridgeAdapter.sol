@@ -50,7 +50,10 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
         bytes calldata _message,
         address, /*_executor*/
         bytes calldata /*_extraData*/
-    ) external payable {
+    )
+        external
+        payable
+    {
         if (msg.sender != receiveSource) {
             revert Errors.UnauthorizedSource();
         }

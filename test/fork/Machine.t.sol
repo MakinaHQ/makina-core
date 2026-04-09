@@ -55,44 +55,45 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy machine
         vm.prank(ethForkData.dao);
         machine = Machine(
-            hubCore.hubCoreFactory.createMachine(
-                IMachine.MachineInitParams({
-                    initialDepositor: machineDepositor,
-                    initialRedeemer: machineRedeemer,
-                    initialFeeManager: address(feeManager),
-                    initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
-                    initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
-                    initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
-                    initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
-                    initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
-                    initialMaxSharePriceChangeRate: type(uint256).max
-                }),
-                ICaliber.CaliberInitParams({
-                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    initialAllowedInstrRoot: bytes32(""),
-                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
-                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
-                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
-                    initialBaseTokens: new address[](0)
-                }),
-                IMakinaGovernable.MakinaGovernableInitParams({
-                    initialMechanic: ethForkData.mechanic,
-                    initialSecurityCouncil: ethForkData.securityCouncil,
-                    initialRiskManager: address(0),
-                    initialRiskManagerTimelock: address(0),
-                    initialAuthority: address(hubCore.accessManager),
-                    initialRestrictedAccountingMode: false,
-                    initialAccountingAgents: new address[](0)
-                }),
-                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
-                ethForkData.usdc,
-                DEFAULT_MACHINE_SHARE_TOKEN_NAME,
-                DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
-                TEST_DEPLOYMENT_SALT,
-                true
-            )
+            hubCore.hubCoreFactory
+                .createMachine(
+                    IMachine.MachineInitParams({
+                        initialDepositor: machineDepositor,
+                        initialRedeemer: machineRedeemer,
+                        initialFeeManager: address(feeManager),
+                        initialCaliberStaleThreshold: DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD,
+                        initialMaxFixedFeeAccrualRate: DEFAULT_MACHINE_MAX_FIXED_FEE_ACCRUAL_RATE,
+                        initialMaxPerfFeeAccrualRate: DEFAULT_MACHINE_MAX_PERF_FEE_ACCRUAL_RATE,
+                        initialFeeMintCooldown: DEFAULT_MACHINE_FEE_MINT_COOLDOWN,
+                        initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
+                        initialMaxSharePriceChangeRate: type(uint256).max
+                    }),
+                    ICaliber.CaliberInitParams({
+                        initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                        initialAllowedInstrRoot: bytes32(""),
+                        initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                        initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                        initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                        initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                        initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                        initialBaseTokens: new address[](0)
+                    }),
+                    IMakinaGovernable.MakinaGovernableInitParams({
+                        initialMechanic: ethForkData.mechanic,
+                        initialSecurityCouncil: ethForkData.securityCouncil,
+                        initialRiskManager: address(0),
+                        initialRiskManagerTimelock: address(0),
+                        initialAuthority: address(hubCore.accessManager),
+                        initialRestrictedAccountingMode: false,
+                        initialAccountingAgents: new address[](0)
+                    }),
+                    new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
+                    ethForkData.usdc,
+                    DEFAULT_MACHINE_SHARE_TOKEN_NAME,
+                    DEFAULT_MACHINE_SHARE_TOKEN_SYMBOL,
+                    TEST_DEPLOYMENT_SALT,
+                    true
+                )
         );
         hubCaliber = Caliber(machine.hubCaliber());
 
@@ -131,31 +132,32 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy spoke caliber
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
-            spokeCores[ChainsInfo.CHAIN_ID_BASE].spokeCoreFactory.createCaliber(
-                ICaliber.CaliberInitParams({
-                    initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
-                    initialAllowedInstrRoot: bytes32(""),
-                    initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
-                    initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
-                    initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
-                    initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
-                    initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
-                    initialBaseTokens: new address[](0)
-                }),
-                IMakinaGovernable.MakinaGovernableInitParams({
-                    initialMechanic: baseForkData.mechanic,
-                    initialSecurityCouncil: baseForkData.securityCouncil,
-                    initialRiskManager: address(0),
-                    initialRiskManagerTimelock: address(0),
-                    initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager),
-                    initialRestrictedAccountingMode: false,
-                    initialAccountingAgents: new address[](0)
-                }),
-                new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
-                baseForkData.usdc,
-                TEST_DEPLOYMENT_SALT,
-                true
-            )
+            spokeCores[ChainsInfo.CHAIN_ID_BASE].spokeCoreFactory
+                .createCaliber(
+                    ICaliber.CaliberInitParams({
+                        initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
+                        initialAllowedInstrRoot: bytes32(""),
+                        initialTimelockDuration: DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK,
+                        initialMaxPositionIncreaseLossBps: DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS,
+                        initialMaxPositionDecreaseLossBps: DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS,
+                        initialMaxSwapLossBps: DEFAULT_CALIBER_MAX_SWAP_LOSS_BPS,
+                        initialCooldownDuration: DEFAULT_CALIBER_COOLDOWN_DURATION,
+                        initialBaseTokens: new address[](0)
+                    }),
+                    IMakinaGovernable.MakinaGovernableInitParams({
+                        initialMechanic: baseForkData.mechanic,
+                        initialSecurityCouncil: baseForkData.securityCouncil,
+                        initialRiskManager: address(0),
+                        initialRiskManagerTimelock: address(0),
+                        initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager),
+                        initialRestrictedAccountingMode: false,
+                        initialAccountingAgents: new address[](0)
+                    }),
+                    new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
+                    baseForkData.usdc,
+                    TEST_DEPLOYMENT_SALT,
+                    true
+                )
         );
         address spokeCaliberMailbox = spokeCaliber.hubMachineEndpoint();
 

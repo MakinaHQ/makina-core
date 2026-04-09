@@ -52,9 +52,8 @@ contract MockCctpV2MessageTransmitter is ICctpV2MessageTransmitter {
         uint32 _finalityThresholdExecuted = uint32(bytes4(_readBytes32(message, FINALITY_THRESHOLD_EXECUTED_INDEX)));
         bytes memory _messageBody = message[MESSAGE_BODY_INDEX:];
 
-        MockCctpV2TokenMessenger(_recipient).handleReceiveFinalizedMessage(
-            _sourceDomain, _sender, _finalityThresholdExecuted, _messageBody
-        );
+        MockCctpV2TokenMessenger(_recipient)
+            .handleReceiveFinalizedMessage(_sourceDomain, _sender, _finalityThresholdExecuted, _messageBody);
 
         emit ReceiveMessage(message, attestation);
 

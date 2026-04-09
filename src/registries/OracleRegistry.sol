@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {AggregatorV2V3Interface} from "../interfaces/AggregatorV2V3Interface.sol";
@@ -77,13 +79,13 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
         if (quoteTokenDecimals + quoteFRDecimalsSum < baseFRDecimalsSum) {
             return _getFeedPrice(baseFR.feed1) * _getFeedPrice(baseFR.feed2)
-                / (
-                    (10 ** (baseFRDecimalsSum - quoteTokenDecimals - quoteFRDecimalsSum)) * _getFeedPrice(quoteFR.feed1)
-                        * _getFeedPrice(quoteFR.feed2)
-                );
+                / ((10 ** (baseFRDecimalsSum - quoteTokenDecimals - quoteFRDecimalsSum))
+                    * _getFeedPrice(quoteFR.feed1)
+                    * _getFeedPrice(quoteFR.feed2));
         }
 
-        return (10 ** (quoteTokenDecimals + quoteFRDecimalsSum - baseFRDecimalsSum)).mulDiv(
+        return (10 ** (quoteTokenDecimals + quoteFRDecimalsSum - baseFRDecimalsSum))
+        .mulDiv(
             _getFeedPrice(baseFR.feed1) * _getFeedPrice(baseFR.feed2),
             _getFeedPrice(quoteFR.feed1) * _getFeedPrice(quoteFR.feed2)
         );

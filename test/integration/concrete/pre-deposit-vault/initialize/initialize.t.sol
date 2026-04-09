@@ -54,9 +54,10 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         vm.expectRevert(
             abi.encodeWithSelector(OwnableUpgradeable.OwnableUnauthorizedAccount.selector, address(preDepositVault))
         );
-        IPreDepositVault(preDepositVault).initialize(
-            _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
-        );
+        IPreDepositVault(preDepositVault)
+            .initialize(
+                _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
+            );
     }
 
     function test_Initialize() public {
@@ -64,9 +65,10 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
 
         shareToken.transferOwnership(address(preDepositVault));
 
-        IPreDepositVault(preDepositVault).initialize(
-            _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
-        );
+        IPreDepositVault(preDepositVault)
+            .initialize(
+                _getPreDepositVaultInitParams(), address(shareToken), address(baseToken), address(accountingToken)
+            );
 
         assertFalse(preDepositVault.migrated());
 
@@ -80,11 +82,7 @@ contract Initialize_Integration_Concrete_Test is PreDepositVault_Integration_Con
         assertEq(shareToken.owner(), address(preDepositVault));
     }
 
-    function _getPreDepositVaultInitParams()
-        internal
-        view
-        returns (IPreDepositVault.PreDepositVaultInitParams memory)
-    {
+    function _getPreDepositVaultInitParams() internal view returns (IPreDepositVault.PreDepositVaultInitParams memory) {
         return IPreDepositVault.PreDepositVaultInitParams({
             initialShareLimit: DEFAULT_MACHINE_SHARE_LIMIT,
             initialWhitelistMode: false,

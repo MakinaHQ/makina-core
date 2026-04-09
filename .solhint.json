@@ -3,18 +3,26 @@
   "rules": {
     "one-contract-per-file": "off",
     "code-complexity": ["error", 15],
-    "compiler-version": ["error", ">=0.8.20"],
+    "compiler-version": ["error", "^0.8.24"],
     "func-name-mixedcase": "off",
     "func-visibility": ["error", { "ignoreConstructors": true }],
-    "max-line-length": ["error", 200],
     "no-empty-blocks": "off",
     "named-parameters-mapping": "warn",
-    "no-console": "off",
     "not-rely-on-time": "off",
     "const-name-snakecase": "off",
     "immutable-vars-naming": "off",
     "no-inline-assembly": "off",
     "contract-name-capwords": "off",
-    "max-states-count": ["error", 50]
+    "max-states-count": ["error", 50],
+    "no-unused-import": "error",
+    "no-unused-vars": "error",
+    "gas-struct-packing": "off",
+    "gas-strict-inequalities": "off",
+    "gas-small-strings": "off",
+    "gas-indexed-events": "off",
+    "var-name-mixedcase": "off",
+    "function-max-lines": "off",
+    "use-natspec": "off",
+    "import-path-check": "off"
   }
 }

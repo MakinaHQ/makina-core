@@ -89,7 +89,7 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
             depositTokenUnit * accountingTokenUnit / (accountingTokenUnit * data.price_d_e / data.price_a_e)
         );
 
-        for (uint256 i; i < amounts.length; i++) {
+        for (uint256 i; i < amounts.length; ++i) {
             if (direction[i]) {
                 uint256 assets = bound(amounts[i], depositTokenUnit / 1e3, 1e30);
                 deal(address(depositToken), address(this), assets, true);

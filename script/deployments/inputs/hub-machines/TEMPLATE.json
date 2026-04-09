@@ -11,7 +11,7 @@
     "initialMaxSharePriceChangeRate": 0
   },
   "caliberInitParams": {
-    "initialPosStaleThreshold": 0,
+    "initialPositionStaleThreshold": 0,
     "initialAllowedInstrRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "initialTimelockDuration": 0,
     "initialMaxPositionIncreaseLossBps": 0,

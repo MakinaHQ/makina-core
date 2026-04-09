@@ -23,11 +23,12 @@ contract MockFlashLoanModule {
         IERC20(token).forceApprove(msg.sender, amount);
 
         if (reentrancyMode) {
-            MockERC20(token).scheduleReenter(
-                MockERC20.Type.Before,
-                address(this),
-                abi.encodeCall(this.reentrancy, (msg.sender, instruction, token, amount))
-            );
+            MockERC20(token)
+                .scheduleReenter(
+                    MockERC20.Type.Before,
+                    address(this),
+                    abi.encodeCall(this.reentrancy, (msg.sender, instruction, token, amount))
+                );
         }
 
         (bool success, bytes memory returnData) =

@@ -30,8 +30,6 @@ jobs:
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: v1.3.6
 
       - name: Show Forge version
         run: |
@@ -59,7 +57,7 @@ jobs:
 
       - name: Run Forge coverage
         run: |
-          FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --report lcov --gas-report --no-match-coverage '(script|test|src/caliber/vm)'
+          FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --no-match-coverage '(script|test)' --report lcov
         id: coverage
 
       - name: Report coverage

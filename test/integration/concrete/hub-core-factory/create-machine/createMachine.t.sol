@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagerUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
+import {
+    AccessManagerUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {Errors} from "src/libraries/Errors.sol";
@@ -153,9 +155,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
         baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
-            bridgeId: ACROSS_V3_BRIDGE_ID,
-            initData: "",
-            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+            bridgeId: ACROSS_V3_BRIDGE_ID, initData: "", initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
         });
 
         vm.expectEmit(false, false, false, false, address(hubCoreFactory));
@@ -346,9 +346,7 @@ contract CreateMachine_Integration_Concrete_Test is HubCoreFactory_Integration_C
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
         baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
-            bridgeId: ACROSS_V3_BRIDGE_ID,
-            initData: "",
-            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+            bridgeId: ACROSS_V3_BRIDGE_ID, initData: "", initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
         });
 
         bytes32 salt = bytes32(uint256(TEST_DEPLOYMENT_SALT) + 1);

@@ -7,9 +7,9 @@
   "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "@openzeppelin/merkle-tree": "1.0.8",
-    "ethers": "6.14.0",
-    "prettier": "3.3.3",
-    "solhint": "5.0.5"
+    "ethers": "6.16.0",
+    "prettier": "3.8.1",
+    "solhint": "6.2.1"
   },
   "type": "module",
   "dependencies": {},
@@ -19,8 +19,8 @@
     "lint:sol": "forge fmt --check && yarn solhint \"{script,src,test}/**/*.sol\"",
     "prettier:check": "prettier --check \"**/*.{js,json,md,yml}\" \"!script/deployments/outputs/**/*\"",
     "prettier:write": "prettier --write \"**/*.{js,json,md,yml}\" \"!script/deployments/outputs/**/*\"",
-    "coverage": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test)\"",
-    "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 forge coverage --no-match-coverage \"(script|test)\" --report debug",
+    "coverage": "FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --no-match-coverage \"(script|test)\"",
+    "coverage:debug": "FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --no-match-coverage \"(script|test)\" --report debug",
     "genMerkleDataMock": "node script/merkle/generateMerkleTreeDataMock.js"
   }
 }

@@ -81,9 +81,10 @@ library MachineUtils {
             uint256 netSharePrice =
                 getSharePrice($._lastTotalAum, currentShareSupply + fixedFee, $._shareTokenDecimalsOffset);
             uint256 perfFee = Math.min(
-                IFeeManager(_feeManager).calculatePerformanceFee(
-                    currentShareSupply, $._lastMintedFeesSharePrice, netSharePrice, elapsedTime
-                ),
+                IFeeManager(_feeManager)
+                    .calculatePerformanceFee(
+                        currentShareSupply, $._lastMintedFeesSharePrice, netSharePrice, elapsedTime
+                    ),
                 (currentShareSupply * elapsedTime).mulDiv($._maxPerfFeeAccrualRate, RATE_SCALE)
             );
 
@@ -131,7 +132,7 @@ library MachineUtils {
         GuardianSignature[] calldata signatures
     ) external {
         PerChainQueryResponse[] memory responses =
-            CaliberAccountingCCQ.decodeAndVerifyQueryResponse(wormhole, response, signatures).responses;
+        CaliberAccountingCCQ.decodeAndVerifyQueryResponse(wormhole, response, signatures).responses;
 
         uint256 len = responses.length;
         for (uint256 i; i < len; ++i) {
@@ -195,7 +196,8 @@ library MachineUtils {
         // Validate that update is not older than current chain last update, nor stale.
         if (
             responseTimestamp <= caliberData.timestamp
-                || (block.timestamp > responseTimestamp && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
+                || (block.timestamp > responseTimestamp
+                    && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
         ) {
             revert Errors.StaleData();
         }
@@ -279,8 +281,9 @@ library MachineUtils {
         len = $._idleTokens.length();
         for (uint256 i; i < len; ++i) {
             address token = $._idleTokens.at(i);
-            totalAum +=
-                _accountingValueOf(oracleRegistry, $._accountingToken, token, IERC20(token).balanceOf(address(this)));
+            totalAum += _accountingValueOf(
+                oracleRegistry, $._accountingToken, token, IERC20(token).balanceOf(address(this))
+            );
         }
 
         return totalAum;

@@ -55,9 +55,10 @@ abstract contract MerkleProofHelper {
     }
 
     function _getMerkleData() internal view returns (string memory) {
-        return vm.readFile(
-            string.concat(vm.projectRoot(), "/script/merkle/", vm.toString(allowedInstrMerkleRoot), ".json")
-        );
+        return
+            vm.readFile(
+                string.concat(vm.projectRoot(), "/script/merkle/", vm.toString(allowedInstrMerkleRoot), ".json")
+            );
     }
 
     function _getAllowedInstrMerkleRoot() internal view returns (bytes32) {

@@ -38,7 +38,7 @@ contract DeploySpokeCore is DeployCore {
     }
 
     function _coreSetup() public override {
-        uint256 hubChainId = abi.decode(vm.parseJson(inputJson, ".hubChainId"), (uint256));
+        uint256 hubChainId = vm.parseJsonUint(inputJson, ".hubChainId");
         _core = deploySpokeCore(deployer, hubChainId);
 
         setupSpokeCoreRegistry(_core);

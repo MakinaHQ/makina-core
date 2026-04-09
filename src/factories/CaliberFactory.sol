@@ -61,8 +61,7 @@ abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFacto
         bytes4[] memory mgmtSetupSelectors = new bytes4[](2);
         mgmtSetupSelectors[0] = ICaliber.addInstrRootGuardian.selector;
         mgmtSetupSelectors[1] = ICaliber.removeInstrRootGuardian.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_caliber, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }
 }

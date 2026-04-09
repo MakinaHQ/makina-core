@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {AccessManagedUpgradeable} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {
+    AccessManagedUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 
@@ -124,9 +126,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     function _setupCaliberMailboxAMFunctionRoles(address _authority, address _mailbox) internal {
         bytes4[] memory compSetupSelectors = new bytes4[](1);
         compSetupSelectors[0] = ICaliberMailbox.setHubBridgeAdapter.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_mailbox, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE);
 
         bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
@@ -136,9 +137,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
         mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
-        IAccessManager(_authority).setTargetFunctionRole(
-            _mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
-        );
+        IAccessManager(_authority)
+            .setTargetFunctionRole(_mailbox, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }
 
     /// @dev Checks that the provided authority matches the current authority.

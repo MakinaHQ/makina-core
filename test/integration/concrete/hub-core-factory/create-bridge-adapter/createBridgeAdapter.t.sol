@@ -35,9 +35,7 @@ contract CreateBridgeAdapter_Integration_Concrete_Test is HubCoreFactory_Integra
 
     function test_CreateBridgeAdapter() public {
         IBridgeAdapterFactory.BridgeAdapterInitParams memory baParams = IBridgeAdapterFactory.BridgeAdapterInitParams({
-            bridgeId: ACROSS_V3_BRIDGE_ID,
-            initData: "",
-            initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
+            bridgeId: ACROSS_V3_BRIDGE_ID, initData: "", initialMaxBridgeLossBps: DEFAULT_MAX_BRIDGE_LOSS_BPS
         });
 
         vm.expectEmit(true, true, false, false, address(hubCoreFactory));

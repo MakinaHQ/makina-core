@@ -223,8 +223,7 @@ interface IMachine is IMachineEndpoint {
     /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
     /// @param response The Wormhole CCQ response payload containing the accounting data.
     /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
-    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures)
-        external;
+    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The foreign EVM chain ID of the spoke caliber.

@@ -145,9 +145,10 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         address outputToken =
             ITokenRegistry(ICoreRegistry(registry).tokenRegistry()).getForeignToken(inputToken, destinationChainId);
         IERC20(inputToken).forceApprove(adapter, inputAmount);
-        IBridgeAdapter(adapter).scheduleOutBridgeTransfer(
-            destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
-        );
+        IBridgeAdapter(adapter)
+            .scheduleOutBridgeTransfer(
+                destinationChainId, recipient, inputToken, inputAmount, outputToken, minOutputAmount
+            );
     }
 
     /// @dev Internal logic to execute a scheduled outgoing bridge transfer.

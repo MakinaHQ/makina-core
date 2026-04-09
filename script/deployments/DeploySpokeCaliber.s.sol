@@ -8,11 +8,10 @@ import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
-import {SortedParams} from "./utils/SortedParams.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
-contract DeploySpokeCaliber is Base, Script, SortedParams {
+contract DeploySpokeCaliber is Base, Script {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -46,19 +45,19 @@ contract DeploySpokeCaliber is Base, Script, SortedParams {
     }
 
     function run() public {
-        CaliberInitParamsSorted memory cParams =
-            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (CaliberInitParamsSorted));
-        MakinaGovernableInitParamsSorted memory mgParams =
-            abi.decode(vm.parseJson(inputJson, ".makinaGovernableInitParams"), (MakinaGovernableInitParamsSorted));
+        ICaliber.CaliberInitParams memory cParams =
+            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (ICaliber.CaliberInitParams));
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
+            vm.parseJson(inputJson, ".makinaGovernableInitParams"), (IMakinaGovernable.MakinaGovernableInitParams)
+        );
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
             vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
         );
-        address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
-        bytes32 salt = abi.decode(vm.parseJson(inputJson, ".salt"), (bytes32));
-        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
+        address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
+        bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
+        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        ISpokeCoreFactory spokeCoreFactory =
-            ISpokeCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".SpokeCoreFactory"), (address)));
+        ISpokeCoreFactory spokeCoreFactory = ISpokeCoreFactory(vm.parseJsonAddress(coreOutputJson, ".SpokeCoreFactory"));
 
         // Deploy caliber
         vm.startBroadcast();

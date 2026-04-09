@@ -8,9 +8,7 @@ import {CreateXUtils} from "./utils/CreateXUtils.sol";
 
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
-import {SortedParams} from "./utils/SortedParams.sol";
-
-contract DeployTimelockController is Script, SortedParams, CreateXUtils {
+contract DeployTimelockController is Script, CreateXUtils {
     using stdJson for string;
 
     string public inputJson;
@@ -40,11 +38,10 @@ contract DeployTimelockController is Script, SortedParams, CreateXUtils {
     }
 
     function run() public {
-        TimelockControllerInitParamsSorted memory tcParams =
-            abi.decode(vm.parseJson(inputJson, ".timelockControllerInitParams"), (TimelockControllerInitParamsSorted));
-
-        address[] memory additionalCancellers =
-            abi.decode(vm.parseJson(inputJson, ".additionalCancellers"), (address[]));
+        uint256 initialMinDelay = vm.parseJsonUint(inputJson, ".initialMinDelay");
+        address[] memory initialProposers = vm.parseJsonAddressArray(inputJson, ".initialProposers");
+        address[] memory initialExecutors = vm.parseJsonAddressArray(inputJson, ".initialExecutors");
+        address[] memory additionalCancellers = vm.parseJsonAddressArray(inputJson, ".additionalCancellers");
 
         // start broadcasting transactions
         vm.startBroadcast();
@@ -53,17 +50,16 @@ contract DeployTimelockController is Script, SortedParams, CreateXUtils {
 
         address initialAdmin = additionalCancellers.length > 0 ? deployer : address(0);
 
-        bytes memory constructorArgs =
-            abi.encode(tcParams.initialMinDelay, tcParams.initialProposers, tcParams.initialExecutors, initialAdmin);
+        bytes memory constructorArgs = abi.encode(initialMinDelay, initialProposers, initialExecutors, initialAdmin);
         bytes32 salt = keccak256(constructorArgs);
 
-        deployedInstance = payable(
-            _deployCodeCreateX(abi.encodePacked(type(TimelockController).creationCode, constructorArgs), salt, deployer)
-        );
+        deployedInstance = payable(_deployCodeCreateX(
+                abi.encodePacked(type(TimelockController).creationCode, constructorArgs), salt, deployer
+            ));
 
         if (additionalCancellers.length > 0) {
             // Grant additional cancellers the CANCELLER_ROLE
-            for (uint256 i; i < additionalCancellers.length; i++) {
+            for (uint256 i; i < additionalCancellers.length; ++i) {
                 TimelockController(deployedInstance).grantRole(TIMELOCK_CANCELLER_ROLE, additionalCancellers[i]);
             }
             // Renounce the admin role

@@ -6,11 +6,10 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IPreDepositVault} from "../../src/interfaces/IPreDepositVault.sol";
-import {SortedParams} from "./utils/SortedParams.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
-contract DeployPreDepositVault is Base, Script, SortedParams {
+contract DeployPreDepositVault is Base, Script {
     using stdJson for string;
 
     string private coreOutputJson;
@@ -44,16 +43,16 @@ contract DeployPreDepositVault is Base, Script, SortedParams {
     }
 
     function run() public {
-        PreDepositVaultInitParamsSorted memory pdvParams =
-            abi.decode(vm.parseJson(inputJson, ".preDepositVaultInitParams"), (PreDepositVaultInitParamsSorted));
-        address depositToken = abi.decode(vm.parseJson(inputJson, ".depositToken"), (address));
-        address accountingToken = abi.decode(vm.parseJson(inputJson, ".accountingToken"), (address));
-        string memory shareTokenName = abi.decode(vm.parseJson(inputJson, ".shareTokenName"), (string));
-        string memory shareTokenSymbol = abi.decode(vm.parseJson(inputJson, ".shareTokenSymbol"), (string));
-        bool setupAMFunctionRoles = abi.decode(vm.parseJson(inputJson, ".setupAMFunctionRoles"), (bool));
+        IPreDepositVault.PreDepositVaultInitParams memory pdvParams = abi.decode(
+            vm.parseJson(inputJson, ".preDepositVaultInitParams"), (IPreDepositVault.PreDepositVaultInitParams)
+        );
+        address depositToken = vm.parseJsonAddress(inputJson, ".depositToken");
+        address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
+        string memory shareTokenName = vm.parseJsonString(inputJson, ".shareTokenName");
+        string memory shareTokenSymbol = vm.parseJsonString(inputJson, ".shareTokenSymbol");
+        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        IHubCoreFactory hubCoreFactory =
-            IHubCoreFactory(abi.decode(vm.parseJson(coreOutputJson, ".HubCoreFactory"), (address)));
+        IHubCoreFactory hubCoreFactory = IHubCoreFactory(vm.parseJsonAddress(coreOutputJson, ".HubCoreFactory"));
 
         // Deploy pre-deposit vault
         vm.startBroadcast();
