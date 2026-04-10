@@ -100,9 +100,9 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
     }
 
     struct AMRoleGrant {
-        uint64 roleId;
         address account;
         uint32 executionDelay;
+        uint64 roleId;
     }
 
     ///
