@@ -45,14 +45,11 @@ contract DeploySpokeCaliber is Base, Script {
     }
 
     function run() public {
-        ICaliber.CaliberInitParams memory cParams =
-            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (ICaliber.CaliberInitParams));
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(inputJson, ".makinaGovernableInitParams"), (IMakinaGovernable.MakinaGovernableInitParams)
-        );
-        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
-            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
-        );
+        ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
         address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
         bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
         bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
@@ -62,31 +59,8 @@ contract DeploySpokeCaliber is Base, Script {
         // Deploy caliber
         vm.startBroadcast();
 
-        deployedInstance = spokeCoreFactory.createCaliber(
-            ICaliber.CaliberInitParams(
-                cParams.initialPositionStaleThreshold,
-                cParams.initialAllowedInstrRoot,
-                cParams.initialTimelockDuration,
-                cParams.initialMaxPositionIncreaseLossBps,
-                cParams.initialMaxPositionDecreaseLossBps,
-                cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration,
-                cParams.initialBaseTokens
-            ),
-            IMakinaGovernable.MakinaGovernableInitParams(
-                mgParams.initialMechanic,
-                mgParams.initialSecurityCouncil,
-                mgParams.initialRiskManager,
-                mgParams.initialRiskManagerTimelock,
-                mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode,
-                mgParams.initialAccountingAgents
-            ),
-            baParams,
-            accountingToken,
-            salt,
-            setupAMFunctionRoles
-        );
+        deployedInstance =
+            spokeCoreFactory.createCaliber(cParams, mgParams, baParams, accountingToken, salt, setupAMFunctionRoles);
 
         vm.stopBroadcast();
 

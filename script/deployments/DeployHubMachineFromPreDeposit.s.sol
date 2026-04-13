@@ -49,16 +49,12 @@ contract DeployHubMachineFromPreDeposit is Base, Script {
     }
 
     function run() public {
-        IMachine.MachineInitParams memory mParams =
-            abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (IMachine.MachineInitParams));
-        ICaliber.CaliberInitParams memory cParams =
-            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (ICaliber.CaliberInitParams));
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(inputJson, ".makinaGovernableInitParams"), (IMakinaGovernable.MakinaGovernableInitParams)
-        );
-        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
-            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
-        );
+        IMachine.MachineInitParams memory mParams = parseMachineInitParams(inputJson, ".machineInitParams");
+        ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
         bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
         bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
@@ -68,40 +64,7 @@ contract DeployHubMachineFromPreDeposit is Base, Script {
         vm.startBroadcast();
 
         deployedInstance = hubCoreFactory.createMachineFromPreDeposit(
-            IMachine.MachineInitParams(
-                mParams.initialDepositor,
-                mParams.initialRedeemer,
-                mParams.initialFeeManager,
-                mParams.initialCaliberStaleThreshold,
-                mParams.initialMaxFixedFeeAccrualRate,
-                mParams.initialMaxPerfFeeAccrualRate,
-                mParams.initialFeeMintCooldown,
-                mParams.initialShareLimit,
-                mParams.initialMaxSharePriceChangeRate
-            ),
-            ICaliber.CaliberInitParams(
-                cParams.initialPositionStaleThreshold,
-                cParams.initialAllowedInstrRoot,
-                cParams.initialTimelockDuration,
-                cParams.initialMaxPositionIncreaseLossBps,
-                cParams.initialMaxPositionDecreaseLossBps,
-                cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration,
-                cParams.initialBaseTokens
-            ),
-            IMakinaGovernable.MakinaGovernableInitParams(
-                mgParams.initialMechanic,
-                mgParams.initialSecurityCouncil,
-                mgParams.initialRiskManager,
-                mgParams.initialRiskManagerTimelock,
-                mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode,
-                mgParams.initialAccountingAgents
-            ),
-            baParams,
-            preDepositVault,
-            salt,
-            setupAMFunctionRoles
+            mParams, cParams, mgParams, baParams, preDepositVault, salt, setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

@@ -43,9 +43,8 @@ contract DeployPreDepositVault is Base, Script {
     }
 
     function run() public {
-        IPreDepositVault.PreDepositVaultInitParams memory pdvParams = abi.decode(
-            vm.parseJson(inputJson, ".preDepositVaultInitParams"), (IPreDepositVault.PreDepositVaultInitParams)
-        );
+        IPreDepositVault.PreDepositVaultInitParams memory pdvParams =
+            parsePreDepositVaultInitParams(inputJson, ".preDepositVaultInitParams");
         address depositToken = vm.parseJsonAddress(inputJson, ".depositToken");
         address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
         string memory shareTokenName = vm.parseJsonString(inputJson, ".shareTokenName");
@@ -58,17 +57,7 @@ contract DeployPreDepositVault is Base, Script {
         vm.startBroadcast();
 
         deployedInstance = hubCoreFactory.createPreDepositVault(
-            IPreDepositVault.PreDepositVaultInitParams(
-                pdvParams.initialShareLimit,
-                pdvParams.initialWhitelistMode,
-                pdvParams.initialRiskManager,
-                pdvParams.initialAuthority
-            ),
-            depositToken,
-            accountingToken,
-            shareTokenName,
-            shareTokenSymbol,
-            setupAMFunctionRoles
+            pdvParams, depositToken, accountingToken, shareTokenName, shareTokenSymbol, setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

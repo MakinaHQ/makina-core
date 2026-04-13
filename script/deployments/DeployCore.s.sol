@@ -41,32 +41,30 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
         superAdminRoleGrant = AMRoleGrant({
             roleId: 0,
             account: vm.parseJsonAddress(inputJson, ".superAdminRoleGrant.account"),
-            executionDelay: abi.decode(vm.parseJson(inputJson, ".superAdminRoleGrant.executionDelay"), (uint32))
+            executionDelay: uint32(vm.parseJsonUint(inputJson, ".superAdminRoleGrant.executionDelay"))
         });
 
-        AMRoleGrant[] memory _otherRoleGrants = abi.decode(vm.parseJson(inputJson, ".otherRoleGrants"), (AMRoleGrant[]));
+        AMRoleGrant[] memory _otherRoleGrants = parseAMRoleGrants(inputJson, ".otherRoleGrants");
         for (uint256 i; i < _otherRoleGrants.length; ++i) {
             otherRoleGrants.push(_otherRoleGrants[i]);
         }
 
-        PriceFeedRoute[] memory _priceFeedRoutes =
-            abi.decode(vm.parseJson(inputJson, ".priceFeedRoutes"), (PriceFeedRoute[]));
+        PriceFeedRoute[] memory _priceFeedRoutes = parsePriceFeedRoutes(inputJson, ".priceFeedRoutes");
         for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             priceFeedRoutes.push(_priceFeedRoutes[i]);
         }
 
-        TokenToRegister[] memory _tokensToRegister =
-            abi.decode(vm.parseJson(inputJson, ".foreignTokens"), (TokenToRegister[]));
+        TokenToRegister[] memory _tokensToRegister = parseTokensToRegister(inputJson, ".foreignTokens");
         for (uint256 i; i < _tokensToRegister.length; ++i) {
             tokensToRegister.push(_tokensToRegister[i]);
         }
 
-        SwapperData[] memory _swappersData = abi.decode(vm.parseJson(inputJson, ".swappersTargets"), (SwapperData[]));
+        SwapperData[] memory _swappersData = parseSwappersData(inputJson, ".swappersTargets");
         for (uint256 i; i < _swappersData.length; ++i) {
             swappersData.push(_swappersData[i]);
         }
 
-        BridgeData[] memory _bridgesData = abi.decode(vm.parseJson(inputJson, ".bridgesTargets"), (BridgeData[]));
+        BridgeData[] memory _bridgesData = parseBridgesData(inputJson, ".bridgesTargets");
         for (uint256 i; i < _bridgesData.length; ++i) {
             bridgesData.push(_bridgesData[i]);
         }
