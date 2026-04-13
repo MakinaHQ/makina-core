@@ -872,7 +872,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
                         implem, _proxyOwner, abi.encodeCall(LayerZeroV2BridgeConfig.initialize, (_accessManager))
                     )
                 ),
-                LAYER_ZERO_V2_CONFIG_SALT_DOMAIN
+                LAYER_ZERO_V2_BRIDGE_CONFIG_SALT_DOMAIN
             )
         );
     }
@@ -907,7 +907,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
                     type(TransparentUpgradeableProxy).creationCode,
                     abi.encode(implem, _proxyOwner, abi.encodeCall(CctpV2BridgeConfig.initialize, (_accessManager)))
                 ),
-                CCTP_V2_CONFIG_SALT_DOMAIN
+                CCTP_V2_BRIDGE_CONFIG_SALT_DOMAIN
             )
         );
     }
