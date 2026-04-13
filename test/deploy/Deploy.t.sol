@@ -39,7 +39,7 @@ contract Deploy_Scripts_Test is Base_Test {
     DeploySpokeCaliber public deploySpokeCaliber;
     DeployTimelockController public deployTimelockController;
 
-    function test_LoadedState() public {
+    function setUp() public override {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
 
         vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
@@ -58,7 +58,9 @@ contract Deploy_Scripts_Test is Base_Test {
 
         vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
+    }
 
+    function test_LoadedState() public {
         deployTimelockController = new DeployTimelockController();
         deployHubCore = new DeployHubCore();
         deployHubMachine = new DeployHubMachine();
@@ -97,10 +99,6 @@ contract Deploy_Scripts_Test is Base_Test {
     function testScript_DeployHubCore() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
-
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
 
         // Core deployment
         deployHubCore = new DeployHubCore();
@@ -165,20 +163,24 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_bridgesData[i].executionTarget, executionTarget);
             assertEq(_bridgesData[i].receiveSource, receiveSource);
         }
+
+        AMRoleGrant[] memory _otherRoleGrants =
+            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".otherRoleGrants"), (AMRoleGrant[]));
+        for (uint256 i; i < _otherRoleGrants.length; ++i) {
+            (bool isMember, uint32 executionDelay) =
+                hubCoreDeployment.accessManager.hasRole(_otherRoleGrants[i].roleId, _otherRoleGrants[i].account);
+            assertTrue(isMember);
+            assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
+        }
     }
 
     function testScript_DeployHubMachine() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -240,14 +242,9 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -285,14 +282,9 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -367,10 +359,6 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCore.run();
@@ -425,20 +413,24 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_bridgesData[i].executionTarget, executionTarget);
             assertEq(_bridgesData[i].receiveSource, receiveSource);
         }
+
+        AMRoleGrant[] memory _otherRoleGrants =
+            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".otherRoleGrants"), (AMRoleGrant[]));
+        for (uint256 i; i < _otherRoleGrants.length; ++i) {
+            (bool isMember, uint32 executionDelay) =
+                spokeCoreDeployment.accessManager.hasRole(_otherRoleGrants[i].roleId, _otherRoleGrants[i].account);
+            assertTrue(isMember);
+            assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
+        }
     }
 
     function testScript_DeploySpokeCaliber() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setSkipAMSetup(true);
         deploySpokeCore.run();
 
         (SpokeCore memory spokeCoreDeployment,) = deploySpokeCore.deployment();
@@ -488,9 +480,6 @@ contract Deploy_Scripts_Test is Base_Test {
     function testScript_DeployTimelockController() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
-
-        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         // Timelock Controller deployment
         deployTimelockController = new DeployTimelockController();

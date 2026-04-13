@@ -37,7 +37,7 @@ contract DeployHubCore is DeployCore {
         return (_core, _bridgeAdapterBeacons);
     }
 
-    function _coreSetup() public override {
+    function _coreSetup() internal override {
         address wormhole = vm.parseJsonAddress(inputJson, ".wormhole");
         uint256[] memory supportedChains = vm.parseJsonUintArray(inputJson, ".supportedChains");
         _core = deployHubCore(deployer, wormhole);
@@ -50,7 +50,7 @@ contract DeployHubCore is DeployCore {
         (_bridgeAdapterBeacons, _bridgeConfigs) =
             deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData);
 
-        if (!vm.envOr("SKIP_AM_SETUP", false)) {
+        if (!skipAMSetup) {
             setupHubCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(
                 _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.hubCoreFactory), deployer
@@ -59,7 +59,7 @@ contract DeployHubCore is DeployCore {
         }
     }
 
-    function _deploySetupAfter() public override {
+    function _deploySetupAfter() internal override {
         // finish broadcasting transactions
         vm.stopBroadcast();
 

@@ -23,15 +23,21 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
 
     address public deployer;
 
+    bool public skipAMSetup;
+
     function run() public {
         _deploySetupBefore();
         _coreSetup();
         _deploySetupAfter();
     }
 
-    function _coreSetup() public virtual {}
+    function setSkipAMSetup(bool _skip) public {
+        skipAMSetup = _skip;
+    }
 
-    function _deploySetupBefore() public {
+    function _coreSetup() internal virtual {}
+
+    function _deploySetupBefore() internal {
         superAdminRoleGrant = AMRoleGrant({
             roleId: 0,
             account: vm.parseJsonAddress(inputJson, ".superAdminRoleGrant.account"),
@@ -71,7 +77,7 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
         (, deployer,) = vm.readCallers();
     }
 
-    function _deploySetupAfter() public virtual {}
+    function _deploySetupAfter() internal virtual {}
 
     function _deployCode(bytes memory bytecode, bytes32 salt) internal virtual override returns (address) {
         return _deployCodeCreateX(bytecode, salt, deployer);
