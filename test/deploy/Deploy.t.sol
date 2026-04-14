@@ -39,7 +39,7 @@ contract Deploy_Scripts_Test is Base_Test {
     DeploySpokeCaliber public deploySpokeCaliber;
     DeployTimelockController public deployTimelockController;
 
-    function test_LoadedState() public {
+    function setUp() public override {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
 
         vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
@@ -58,7 +58,9 @@ contract Deploy_Scripts_Test is Base_Test {
 
         vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
         vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
+    }
 
+    function test_LoadedState() public {
         deployTimelockController = new DeployTimelockController();
         deployHubCore = new DeployHubCore();
         deployHubMachine = new DeployHubMachine();
@@ -98,10 +100,6 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
         deployHubCore.run();
@@ -110,8 +108,7 @@ contract Deploy_Scripts_Test is Base_Test {
             deployHubCore.deployment();
 
         // Check that OracleRegistry is correctly set up
-        PriceFeedRoute[] memory _priceFeedRoutes =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".priceFeedRoutes"), (PriceFeedRoute[]));
+        PriceFeedRoute[] memory _priceFeedRoutes = parsePriceFeedRoutes(deployHubCore.inputJson(), ".priceFeedRoutes");
         for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             (address feed1, address feed2) = hubCoreDeployment.oracleRegistry.getFeedRoute(_priceFeedRoutes[i].token);
             assertEq(_priceFeedRoutes[i].feed1, feed1);
@@ -119,8 +116,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that TokenRegistry is correctly set up
-        TokenToRegister[] memory tokensToRegister =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
+        TokenToRegister[] memory tokensToRegister = parseTokensToRegister(deployHubCore.inputJson(), ".foreignTokens");
         for (uint256 i; i < tokensToRegister.length; ++i) {
             assertEq(
                 hubCoreDeployment.tokenRegistry
@@ -135,8 +131,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that SwapModule is correctly set up
-        SwapperData[] memory _swappersData =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".swappersTargets"), (SwapperData[]));
+        SwapperData[] memory _swappersData = parseSwappersData(deployHubCore.inputJson(), ".swappersTargets");
         for (uint256 i; i < _swappersData.length; ++i) {
             (address approvalTarget, address executionTarget) =
                 hubCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
@@ -154,8 +149,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that BridgeAdapterBeacons are correctly set up
-        BridgeData[] memory _bridgesData =
-            abi.decode(vm.parseJson(deployHubCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
+        BridgeData[] memory _bridgesData = parseBridgesData(deployHubCore.inputJson(), ".bridgesTargets");
         for (uint256 i; i < _bridgesData.length; ++i) {
             IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
             address approvalTarget = implementation.approvalTarget();
@@ -165,20 +159,23 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_bridgesData[i].executionTarget, executionTarget);
             assertEq(_bridgesData[i].receiveSource, receiveSource);
         }
+
+        AMRoleGrant[] memory _otherRoleGrants = parseAMRoleGrants(deployHubCore.inputJson(), ".otherRoleGrants");
+        for (uint256 i; i < _otherRoleGrants.length; ++i) {
+            (bool isMember, uint32 executionDelay) =
+                hubCoreDeployment.accessManager.hasRole(_otherRoleGrants[i].roleId, _otherRoleGrants[i].account);
+            assertTrue(isMember);
+            assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
+        }
     }
 
     function testScript_DeployHubMachine() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -189,13 +186,11 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Check that Hub Machine is correctly set up
         IMachine.MachineInitParams memory mParams =
-            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".machineInitParams"), (IMachine.MachineInitParams));
+            parseMachineInitParams(deployHubMachine.inputJson(), ".machineInitParams");
         ICaliber.CaliberInitParams memory cParams =
-            abi.decode(vm.parseJson(deployHubMachine.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams));
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(deployHubMachine.inputJson(), ".makinaGovernableInitParams"),
-            (IMakinaGovernable.MakinaGovernableInitParams)
-        );
+            parseCaliberInitParams(deployHubMachine.inputJson(), ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(deployHubMachine.inputJson(), ".makinaGovernableInitParams");
         address accountingToken = vm.parseJsonAddress(deployHubMachine.inputJson(), ".accountingToken");
         string memory shareTokenName = vm.parseJsonString(deployHubMachine.inputJson(), ".shareTokenName");
         string memory shareTokenSymbol = vm.parseJsonString(deployHubMachine.inputJson(), ".shareTokenSymbol");
@@ -240,14 +235,9 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -257,10 +247,8 @@ contract Deploy_Scripts_Test is Base_Test {
         deployPreDepositVault.run();
 
         // Check that PreDepositVault is correctly set up
-        IPreDepositVault.PreDepositVaultInitParams memory pdvParams = abi.decode(
-            vm.parseJson(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams"),
-            (IPreDepositVault.PreDepositVaultInitParams)
-        );
+        IPreDepositVault.PreDepositVaultInitParams memory pdvParams =
+            parsePreDepositVaultInitParams(deployPreDepositVault.inputJson(), ".preDepositVaultInitParams");
         address depositToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".depositToken");
         address accountingToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".accountingToken");
         string memory shareTokenName = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenName");
@@ -285,14 +273,9 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
@@ -308,16 +291,12 @@ contract Deploy_Scripts_Test is Base_Test {
         deployMachineFromPreDeposit.run();
 
         // Check that Hub Machine is correctly set up
-        IMachine.MachineInitParams memory mParams = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".machineInitParams"), (IMachine.MachineInitParams)
-        );
-        ICaliber.CaliberInitParams memory cParams = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams)
-        );
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams"),
-            (IMakinaGovernable.MakinaGovernableInitParams)
-        );
+        IMachine.MachineInitParams memory mParams =
+            parseMachineInitParams(deployMachineFromPreDeposit.inputJson(), ".machineInitParams");
+        ICaliber.CaliberInitParams memory cParams =
+            parseCaliberInitParams(deployMachineFromPreDeposit.inputJson(), ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(deployMachineFromPreDeposit.inputJson(), ".makinaGovernableInitParams");
         address accountingToken = vm.parseJsonAddress(deployPreDepositVault.inputJson(), ".accountingToken");
         string memory shareTokenName = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenName");
         string memory shareTokenSymbol = vm.parseJsonString(deployPreDepositVault.inputJson(), ".shareTokenSymbol");
@@ -367,10 +346,6 @@ contract Deploy_Scripts_Test is Base_Test {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
         deploySpokeCore.run();
@@ -379,8 +354,7 @@ contract Deploy_Scripts_Test is Base_Test {
             deploySpokeCore.deployment();
 
         // Check that OracleRegistry is correctly set up
-        PriceFeedRoute[] memory _priceFeedRoutes =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".priceFeedRoutes"), (PriceFeedRoute[]));
+        PriceFeedRoute[] memory _priceFeedRoutes = parsePriceFeedRoutes(deploySpokeCore.inputJson(), ".priceFeedRoutes");
         for (uint256 i; i < _priceFeedRoutes.length; ++i) {
             (address feed1, address feed2) = spokeCoreDeployment.oracleRegistry.getFeedRoute(_priceFeedRoutes[i].token);
             assertEq(_priceFeedRoutes[i].feed1, feed1);
@@ -388,8 +362,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that TokenRegistry is correctly set up
-        TokenToRegister[] memory tokensToRegister =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".foreignTokens"), (TokenToRegister[]));
+        TokenToRegister[] memory tokensToRegister = parseTokensToRegister(deploySpokeCore.inputJson(), ".foreignTokens");
         for (uint256 i; i < tokensToRegister.length; ++i) {
             assertEq(
                 spokeCoreDeployment.tokenRegistry
@@ -404,8 +377,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that SwapModule is correctly set up
-        SwapperData[] memory _swappersData =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".swappersTargets"), (SwapperData[]));
+        SwapperData[] memory _swappersData = parseSwappersData(deploySpokeCore.inputJson(), ".swappersTargets");
         for (uint256 i; i < _swappersData.length; ++i) {
             (address approvalTarget, address executionTarget) =
                 spokeCoreDeployment.swapModule.getSwapperTargets(_swappersData[i].swapperId);
@@ -414,8 +386,7 @@ contract Deploy_Scripts_Test is Base_Test {
         }
 
         // Check that BridgeAdapterBeacons are correctly set up
-        BridgeData[] memory _bridgesData =
-            abi.decode(vm.parseJson(deploySpokeCore.inputJson(), ".bridgesTargets"), (BridgeData[]));
+        BridgeData[] memory _bridgesData = parseBridgesData(deploySpokeCore.inputJson(), ".bridgesTargets");
         for (uint256 i; i < _bridgesData.length; ++i) {
             IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeaconsDeployment[i].implementation());
             address approvalTarget = implementation.approvalTarget();
@@ -425,20 +396,23 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_bridgesData[i].executionTarget, executionTarget);
             assertEq(_bridgesData[i].receiveSource, receiveSource);
         }
+
+        AMRoleGrant[] memory _otherRoleGrants = parseAMRoleGrants(deploySpokeCore.inputJson(), ".otherRoleGrants");
+        for (uint256 i; i < _otherRoleGrants.length; ++i) {
+            (bool isMember, uint32 executionDelay) =
+                spokeCoreDeployment.accessManager.hasRole(_otherRoleGrants[i].roleId, _otherRoleGrants[i].account);
+            assertTrue(isMember);
+            assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
+        }
     }
 
     function testScript_DeploySpokeCaliber() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
 
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SKIP_AM_SETUP", "true");
-
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setSkipAMSetup(true);
         deploySpokeCore.run();
 
         (SpokeCore memory spokeCoreDeployment,) = deploySpokeCore.deployment();
@@ -448,13 +422,10 @@ contract Deploy_Scripts_Test is Base_Test {
         deploySpokeCaliber.run();
 
         // Check that Spoke Caliber is correctly set up
-        ICaliber.CaliberInitParams memory cParams = abi.decode(
-            vm.parseJson(deploySpokeCaliber.inputJson(), ".caliberInitParams"), (ICaliber.CaliberInitParams)
-        );
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams"),
-            (IMakinaGovernable.MakinaGovernableInitParams)
-        );
+        ICaliber.CaliberInitParams memory cParams =
+            parseCaliberInitParams(deploySpokeCaliber.inputJson(), ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams");
         address accountingToken = vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".accountingToken");
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
 
@@ -488,9 +459,6 @@ contract Deploy_Scripts_Test is Base_Test {
     function testScript_DeployTimelockController() public {
         ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
         vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
-
-        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
 
         // Timelock Controller deployment
         deployTimelockController = new DeployTimelockController();

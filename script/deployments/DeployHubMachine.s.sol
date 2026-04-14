@@ -46,16 +46,12 @@ contract DeployHubMachine is Base, Script {
     }
 
     function run() public {
-        IMachine.MachineInitParams memory mParams =
-            abi.decode(vm.parseJson(inputJson, ".machineInitParams"), (IMachine.MachineInitParams));
-        ICaliber.CaliberInitParams memory cParams =
-            abi.decode(vm.parseJson(inputJson, ".caliberInitParams"), (ICaliber.CaliberInitParams));
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = abi.decode(
-            vm.parseJson(inputJson, ".makinaGovernableInitParams"), (IMakinaGovernable.MakinaGovernableInitParams)
-        );
-        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams = abi.decode(
-            vm.parseJson(inputJson, ".bridgeAdapterInitParams"), (IBridgeAdapterFactory.BridgeAdapterInitParams[])
-        );
+        IMachine.MachineInitParams memory mParams = parseMachineInitParams(inputJson, ".machineInitParams");
+        ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
+        IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
+            parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
+        IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
+            parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
         address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
         string memory shareTokenName = vm.parseJsonString(inputJson, ".shareTokenName");
         string memory shareTokenSymbol = vm.parseJsonString(inputJson, ".shareTokenSymbol");
@@ -68,36 +64,9 @@ contract DeployHubMachine is Base, Script {
         vm.startBroadcast();
 
         deployedInstance = hubCoreFactory.createMachine(
-            IMachine.MachineInitParams(
-                mParams.initialDepositor,
-                mParams.initialRedeemer,
-                mParams.initialFeeManager,
-                mParams.initialCaliberStaleThreshold,
-                mParams.initialMaxFixedFeeAccrualRate,
-                mParams.initialMaxPerfFeeAccrualRate,
-                mParams.initialFeeMintCooldown,
-                mParams.initialShareLimit,
-                mParams.initialMaxSharePriceChangeRate
-            ),
-            ICaliber.CaliberInitParams(
-                cParams.initialPositionStaleThreshold,
-                cParams.initialAllowedInstrRoot,
-                cParams.initialTimelockDuration,
-                cParams.initialMaxPositionIncreaseLossBps,
-                cParams.initialMaxPositionDecreaseLossBps,
-                cParams.initialMaxSwapLossBps,
-                cParams.initialCooldownDuration,
-                cParams.initialBaseTokens
-            ),
-            IMakinaGovernable.MakinaGovernableInitParams(
-                mgParams.initialMechanic,
-                mgParams.initialSecurityCouncil,
-                mgParams.initialRiskManager,
-                mgParams.initialRiskManagerTimelock,
-                mgParams.initialAuthority,
-                mgParams.initialRestrictedAccountingMode,
-                mgParams.initialAccountingAgents
-            ),
+            mParams,
+            cParams,
+            mgParams,
             baParams,
             accountingToken,
             shareTokenName,

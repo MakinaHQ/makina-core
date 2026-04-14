@@ -32,7 +32,7 @@
   "bridgeAdapterInitParams": [
     {
       "bridgeId": 0,
-      "initData": "",
+      "initData": "0x",
       "initialMaxBridgeLossBps": 0
     }
   ],

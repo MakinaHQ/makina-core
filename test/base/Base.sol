@@ -34,6 +34,7 @@ import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";
 import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
 import {ITokenRegistry} from "../../src/interfaces/ITokenRegistry.sol";
 import {IntegrationIds} from "../utils/IntegrationIds.sol";
+import {JsonParser} from "../utils/JsonParser.sol";
 import {LayerZeroV2BridgeAdapter} from "../../src/bridge/adapters/LayerZeroV2BridgeAdapter.sol";
 import {LayerZeroV2BridgeConfig} from "../../src/bridge/configs/LayerZeroV2BridgeConfig.sol";
 import {Machine} from "../../src/machine/Machine.sol";
@@ -47,7 +48,7 @@ import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
 import {TokenRegistry} from "../../src/registries/TokenRegistry.sol";
 
-abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds {
+abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, IntegrationIds {
     struct HubCore {
         AccessManagerUpgradeable accessManager;
         OracleRegistry oracleRegistry;
@@ -70,39 +71,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
         SpokeCoreFactory spokeCoreFactory;
         UpgradeableBeacon caliberBeacon;
         UpgradeableBeacon caliberMailboxBeacon;
-    }
-
-    struct PriceFeedRoute {
-        address feed1;
-        address feed2;
-        uint256 stalenessThreshold1;
-        uint256 stalenessThreshold2;
-        address token;
-    }
-
-    struct TokenToRegister {
-        uint256 foreignEvmChainId;
-        address foreignToken;
-        address localToken;
-    }
-
-    struct SwapperData {
-        address approvalTarget;
-        address executionTarget;
-        uint16 swapperId;
-    }
-
-    struct BridgeData {
-        address approvalTarget;
-        uint16 bridgeId;
-        address executionTarget;
-        address receiveSource;
-    }
-
-    struct AMRoleGrant {
-        uint64 roleId;
-        address account;
-        uint32 executionDelay;
     }
 
     ///
@@ -872,7 +840,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
                         implem, _proxyOwner, abi.encodeCall(LayerZeroV2BridgeConfig.initialize, (_accessManager))
                     )
                 ),
-                LAYER_ZERO_V2_CONFIG_SALT_DOMAIN
+                LAYER_ZERO_V2_BRIDGE_CONFIG_SALT_DOMAIN
             )
         );
     }
@@ -907,7 +875,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, SaltDomains, IntegrationIds 
                     type(TransparentUpgradeableProxy).creationCode,
                     abi.encode(implem, _proxyOwner, abi.encodeCall(CctpV2BridgeConfig.initialize, (_accessManager)))
                 ),
-                CCTP_V2_CONFIG_SALT_DOMAIN
+                CCTP_V2_BRIDGE_CONFIG_SALT_DOMAIN
             )
         );
     }
