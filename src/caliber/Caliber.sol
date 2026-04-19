@@ -8,13 +8,11 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {ERC721Holder} from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import {ERC1155Holder} from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
-import {SignatureChecker} from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC1271} from "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
@@ -28,15 +26,7 @@ import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {ISwapModule} from "../interfaces/ISwapModule.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
-contract Caliber is
-    MakinaContext,
-    AccessManagedUpgradeable,
-    ReentrancyGuard,
-    ERC721Holder,
-    ERC1155Holder,
-    IERC1271,
-    ICaliber
-{
+contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ERC721Holder, ERC1155Holder, ICaliber {
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
@@ -313,14 +303,6 @@ contract Caliber is
         uint256 netAum = aum > debt ? aum - debt : 0;
 
         return (netAum, positionsValues, baseTokensValues);
-    }
-
-    /// @inheritdoc IERC1271
-    function isValidSignature(bytes32 hash, bytes calldata signature) external view override returns (bytes4) {
-        address operator = IMakinaGovernable(_getCaliberStorage()._hubMachineEndpoint).operator();
-        return SignatureChecker.isValidSignatureNowCalldata(operator, hash, signature)
-            ? IERC1271.isValidSignature.selector
-            : bytes4(0xffffffff);
     }
 
     /// @inheritdoc ICaliber
