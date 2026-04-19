@@ -192,7 +192,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             ""
         );
@@ -265,7 +265,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             extraOptions
         );
@@ -321,12 +321,12 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        vm.expectEmit(false, false, false, false, address(mockOftAdapter));
+        vm.expectEmit(false, false, false, true, address(mockOftAdapter));
         emit MockOFTAdapter.SentParams(
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             ""
         );
@@ -396,7 +396,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             extraOptions
         );

@@ -95,17 +95,18 @@ contract SendOutBridgeTransfer_CctpV2BridgeAdapter_Integration_Concrete_Test is
         );
 
         bytes32 sender = bytes32(uint256(uint160(address(bridgeAdapter1))));
-        bytes32 receiver = bytes32(uint256(uint160(address(bridgeAdapter2))));
+        bytes32 mintRecipient = bytes32(uint256(uint160(address(bridgeAdapter2))));
 
         bytes32 messageDigest = keccak256(
             tokenMessenger.formatMessageForRelay(
                 MockCctpV2TokenMessenger.RelayMessageParams({
                     sourceDomain: CCTP_V2_HUB_DOMAIN,
                     destinationDomain: CCTP_V2_SPOKE_DOMAIN,
-                    destinationCaller: receiver,
+                    recipient: bytes32(uint256(uint160(address(tokenMessenger)))),
+                    destinationCaller: mintRecipient,
                     minFinalityThreshold: CCTP_V2_CONFIRMED_FINALITY_THRESHOLD,
                     burnToken: address(token1),
-                    mintRecipient: receiver,
+                    mintRecipient: mintRecipient,
                     amount: inputAmount,
                     sender: sender,
                     maxFee: 0,
@@ -165,17 +166,18 @@ contract SendOutBridgeTransfer_CctpV2BridgeAdapter_Integration_Concrete_Test is
         );
 
         bytes32 sender = bytes32(uint256(uint160(address(bridgeAdapter1))));
-        bytes32 receiver = bytes32(uint256(uint160(address(bridgeAdapter2))));
+        bytes32 mintRecipient = bytes32(uint256(uint160(address(bridgeAdapter2))));
 
         bytes32 cctpMessageDigest = keccak256(
             tokenMessenger.formatMessageForRelay(
                 MockCctpV2TokenMessenger.RelayMessageParams({
                     sourceDomain: CCTP_V2_HUB_DOMAIN,
                     destinationDomain: CCTP_V2_SPOKE_DOMAIN,
-                    destinationCaller: receiver,
+                    recipient: bytes32(uint256(uint160(address(tokenMessenger)))),
+                    destinationCaller: mintRecipient,
                     minFinalityThreshold: CCTP_V2_CONFIRMED_FINALITY_THRESHOLD,
                     burnToken: address(token1),
-                    mintRecipient: receiver,
+                    mintRecipient: mintRecipient,
                     amount: inputAmount,
                     sender: sender,
                     maxFee: fee,

@@ -19,6 +19,7 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
     struct RelayMessageParams {
         uint32 sourceDomain;
         uint32 destinationDomain;
+        bytes32 recipient;
         bytes32 destinationCaller;
         uint32 minFinalityThreshold;
         address burnToken;
@@ -72,7 +73,7 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
             p.destinationDomain,
             bytes32(0),
             _this,
-            _this,
+            p.recipient,
             p.destinationCaller,
             p.minFinalityThreshold,
             uint32(0),
@@ -106,6 +107,7 @@ contract MockCctpV2TokenMessenger is ICctpV2TokenMessenger {
                     RelayMessageParams({
                         sourceDomain: sourceDomain,
                         destinationDomain: destinationDomain,
+                        recipient: bytes32(uint256(uint160(address(this)))),
                         destinationCaller: destinationCaller,
                         minFinalityThreshold: minFinalityThreshold,
                         burnToken: burnToken,
