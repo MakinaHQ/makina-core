@@ -13,9 +13,8 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
-import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {IWeirollVM} from "../interfaces/IWeirollVM.sol";
 import {ICoreRegistry} from "../interfaces/ICoreRegistry.sol";
@@ -30,7 +29,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
     using Math for uint256;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     /// @dev Full scale value in basis points.
     uint256 private constant MAX_BPS = 10_000;
@@ -294,7 +293,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         bytes[] memory baseTokensValues = new bytes[](len);
         for (uint256 i; i < len; ++i) {
             address bt = $._baseTokens.at(i);
-            uint256 btBal = IERC20(bt).balanceOf(address(this));
+            uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
             uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
             aum += value;
             baseTokensValues[i] = abi.encode(bt, value);
@@ -320,7 +319,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         if (!$._baseTokens.remove(token)) {
             revert Errors.NotBaseToken();
         }
-        if (IERC20(token).balanceOf(address(this)) > 0) {
+        if (IERC20Metadata(token).balanceOf(address(this)) > 0) {
             revert Errors.NonZeroBalance();
         }
 
@@ -462,10 +461,10 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
             revert Errors.InvalidDebtFlag();
         }
         $._isManagingFlashloan = true;
-        IERC20(token).safeTransferFrom(_flashLoanModule, address(this), amount);
+        IERC20Metadata(token).safeTransferFrom(_flashLoanModule, address(this), amount);
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
-        IERC20(token).safeTransfer(_flashLoanModule, amount);
+        IERC20Metadata(token).safeTransfer(_flashLoanModule, amount);
         $._isManagingFlashloan = false;
     }
 
@@ -498,7 +497,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         if ($._positionTokens.contains(token)) {
             revert Errors.PositionToken();
         }
-        IERC20(token).forceApprove($._hubMachineEndpoint, amount);
+        IERC20Metadata(token).forceApprove($._hubMachineEndpoint, amount);
         IMachineEndpoint($._hubMachineEndpoint).manageTransfer(token, amount, data);
         emit TransferToHubMachine(token, amount);
     }
@@ -513,7 +512,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         if (!$._baseTokens.contains(token)) {
             revert Errors.NotBaseToken();
         }
-        IERC20(token).safeTransferFrom(_hubMachineEndpoint, address(this), amount);
+        IERC20Metadata(token).safeTransferFrom(_hubMachineEndpoint, address(this), amount);
         emit IncomingTransfer(token, amount);
     }
 
@@ -680,7 +679,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
                 revert Errors.InvalidAffectedToken();
             }
             affectedTokensValueBefore += _accountingValueOf(
-                _affectedToken, IERC20(_affectedToken).balanceOf(address(this))
+                _affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this))
             );
         }
 
@@ -696,7 +695,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         for (uint256 i; i < atLen; ++i) {
             address _affectedToken = mgmtInstruction.affectedTokens[i];
             affectedTokensValueAfter += _accountingValueOf(
-                _affectedToken, IERC20(_affectedToken).balanceOf(address(this))
+                _affectedToken, IERC20Metadata(_affectedToken).balanceOf(address(this))
             );
         }
 
@@ -861,7 +860,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
             return amount;
         }
         uint256 price = IOracleRegistry(ICoreRegistry(registry).oracleRegistry()).getPrice(token, $._accountingToken);
-        return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
+        return amount.mulDiv(price, 10 ** IERC20Metadata(token).decimals());
     }
 
     /// @dev Checks that absolute position value change is greater than minimum value relative to affected token balance changes and loss tolerance.
@@ -970,9 +969,9 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         }
 
         address _swapModule = ICoreRegistry(registry).swapModule();
-        IERC20(order.inputToken).forceApprove(_swapModule, order.inputAmount);
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, order.inputAmount);
         uint256 amountOut = ISwapModule(_swapModule).swap(order);
-        IERC20(order.inputToken).forceApprove(_swapModule, 0);
+        IERC20Metadata(order.inputToken).forceApprove(_swapModule, 0);
 
         if (isInputBaseToken) {
             uint256 valAfter = _accountingValueOf(order.outputToken, amountOut);

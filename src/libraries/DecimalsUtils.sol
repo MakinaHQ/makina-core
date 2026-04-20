@@ -5,21 +5,29 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
 import {LowLevelCall} from "@openzeppelin/contracts/utils/LowLevelCall.sol";
 import {Memory} from "@openzeppelin/contracts/utils/Memory.sol";
 
+import {Errors} from "./Errors.sol";
+
 library DecimalsUtils {
-    uint8 internal constant DEFAULT_DECIMALS = 18;
-    uint8 internal constant MIN_DECIMALS = 6;
-    uint8 internal constant MAX_DECIMALS = DEFAULT_DECIMALS;
-    uint8 internal constant SHARE_TOKEN_DECIMALS = DEFAULT_DECIMALS;
+    /// @dev Supported decimals range for assets
+    uint8 private constant MIN_DECIMALS = 6;
+    uint8 private constant MAX_DECIMALS = 18;
+
+    /// @dev
+    uint8 internal constant SHARE_TOKEN_DECIMALS = 18;
     uint256 internal constant SHARE_TOKEN_UNIT = 10 ** SHARE_TOKEN_DECIMALS;
 
-    function _getDecimals(address asset) internal view returns (uint8) {
+    /// @dev Checks that asset exposes decimals() and that it is within the supported range.
+    function _checkDecimals(address asset) internal view {
         Memory.Pointer ptr = Memory.getFreeMemoryPointer();
         (bool success, bytes32 returnedDecimals,) =
             LowLevelCall.staticcallReturn64Bytes(address(asset), abi.encodeCall(IERC20Metadata.decimals, ()));
         Memory.unsafeSetFreeMemoryPointer(ptr);
 
-        return (success && LowLevelCall.returnDataSize() >= 32 && uint256(returnedDecimals) <= type(uint8).max)
-            ? uint8(uint256(returnedDecimals))
-            : DEFAULT_DECIMALS;
+        if (
+            !success || LowLevelCall.returnDataSize() < 32 || uint256(returnedDecimals) < MIN_DECIMALS
+                || uint256(returnedDecimals) > MAX_DECIMALS
+        ) {
+            revert Errors.InvalidDecimals();
+        }
     }
 }

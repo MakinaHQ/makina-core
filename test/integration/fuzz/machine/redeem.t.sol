@@ -6,7 +6,6 @@ import {IMachine} from "src/interfaces/IMachine.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
 import {Base_Hub_Test} from "test/base/Base.t.sol";
@@ -27,7 +26,7 @@ contract Redeem_Integration_Fuzz_Test is Base_Hub_Test {
     }
 
     function _fuzzTestSetupAfter(uint256 atDecimals) public {
-        atDecimals = uint8(bound(atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
+        atDecimals = uint8(bound(atDecimals, 6, 18));
 
         accountingToken = new MockERC20("Accounting Token", "ACT", atDecimals);
 

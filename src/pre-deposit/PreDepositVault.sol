@@ -7,7 +7,7 @@ import {
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
@@ -19,7 +19,7 @@ import {Errors} from "../libraries/Errors.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 
 contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaContext, IPreDepositVault {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
     using Math for uint256;
 
     /// @custom:storage-location erc7201:makina.storage.PreDepositVault
@@ -66,7 +66,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
             revert Errors.PriceFeedRouteNotRegistered(_accountingToken);
         }
 
-        uint256 atDecimals = DecimalsUtils._getDecimals(_accountingToken);
+        uint256 atDecimals = IERC20Metadata(_accountingToken).decimals();
 
         $._shareToken = _shareToken;
         IOwnable2Step(_shareToken).acceptOwnership();
@@ -153,7 +153,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
         if ($._shareLimit == type(uint256).max) {
             return type(uint256).max;
         }
-        uint256 _totalAssets = IERC20($._depositToken).balanceOf(address(this));
+        uint256 _totalAssets = IERC20Metadata($._depositToken).balanceOf(address(this));
         uint256 _assetLimit = previewRedeem($._shareLimit);
         if (_totalAssets >= _assetLimit) {
             return 0;
@@ -163,7 +163,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
 
     /// @inheritdoc IPreDepositVault
     function totalAssets() external view override returns (uint256) {
-        return IERC20(_getPreDepositVaultStorage()._depositToken).balanceOf(address(this));
+        return IERC20Metadata(_getPreDepositVaultStorage()._depositToken).balanceOf(address(this));
     }
 
     /// @inheritdoc IPreDepositVault
@@ -173,9 +173,9 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
         address _depositToken = $._depositToken;
         uint256 price_d_a =
             IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
-        uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
-        uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
-        uint256 stSupply = IERC20($._shareToken).totalSupply();
+        uint256 dtUnit = 10 ** IERC20Metadata(_depositToken).decimals();
+        uint256 dtBal = IERC20Metadata(_depositToken).balanceOf(address(this));
+        uint256 stSupply = IERC20Metadata($._shareToken).totalSupply();
 
         // (dtUnit * atUnit * stUnit) / (dtUnit * atUnit) = stUnit
         return assets.mulDiv(price_d_a * (stSupply + 10 ** $._shareTokenDecimalsOffset), (dtBal * price_d_a) + dtUnit);
@@ -188,9 +188,9 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
         address _depositToken = $._depositToken;
         uint256 price_d_a =
             IOracleRegistry(IHubCoreRegistry(registry).oracleRegistry()).getPrice(_depositToken, $._accountingToken);
-        uint256 dtUnit = 10 ** DecimalsUtils._getDecimals(_depositToken);
-        uint256 dtBal = IERC20(_depositToken).balanceOf(address(this));
-        uint256 stSupply = IERC20($._shareToken).totalSupply();
+        uint256 dtUnit = 10 ** IERC20Metadata(_depositToken).decimals();
+        uint256 dtBal = IERC20Metadata(_depositToken).balanceOf(address(this));
+        uint256 stSupply = IERC20Metadata($._shareToken).totalSupply();
 
         // (stUnit * dtUnit * atUnit) / (atUnit * stUnit) = dtUnit
         return shares.mulDiv((dtBal * price_d_a) + dtUnit, price_d_a * (stSupply + 10 ** $._shareTokenDecimalsOffset));
@@ -219,7 +219,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
             revert Errors.SlippageProtection();
         }
 
-        IERC20($._depositToken).safeTransferFrom(msg.sender, address(this), assets);
+        IERC20Metadata($._depositToken).safeTransferFrom(msg.sender, address(this), assets);
         IMachineShare($._shareToken).mint(receiver, shares);
 
         emit Deposit(msg.sender, receiver, assets, shares, referralKey);
@@ -247,7 +247,7 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
         }
 
         IMachineShare($._shareToken).burn(msg.sender, shares);
-        IERC20($._depositToken).safeTransfer(receiver, assets);
+        IERC20Metadata($._depositToken).safeTransfer(receiver, assets);
 
         emit Redeem(msg.sender, receiver, assets, shares);
 
@@ -263,7 +263,8 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
 
         $._migrated = true;
 
-        IERC20($._depositToken).safeTransfer(msg.sender, IERC20($._depositToken).balanceOf(address(this)));
+        IERC20Metadata($._depositToken)
+            .safeTransfer(msg.sender, IERC20Metadata($._depositToken).balanceOf(address(this)));
         IOwnable2Step($._shareToken).transferOwnership(msg.sender);
 
         emit MigrateToMachine($._machine);

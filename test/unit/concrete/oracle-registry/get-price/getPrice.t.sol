@@ -25,12 +25,6 @@ contract GetPrice_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     MockPriceFeed internal quotePriceFeed1;
     MockPriceFeed internal quotePriceFeed2;
 
-    function setUp() public override {
-        OracleRegistry_Unit_Concrete_Test.setUp();
-        baseToken = new MockERC20("Base Token", "BT", 18);
-        quoteToken = new MockERC20("Quote Token", "QT", 8);
-    }
-
     function test_RevertGiven_BaseTokenFeedRouteNotRegistered() public {
         quotePriceFeed1 = new MockPriceFeed(18, 1e18, block.timestamp);
 
