@@ -12,7 +12,7 @@ library DecimalsUtils {
     uint8 private constant MIN_DECIMALS = 6;
     uint8 private constant MAX_DECIMALS = 18;
 
-    /// @dev
+    /// @dev Decimals and unit for machine share token.
     uint8 internal constant SHARE_TOKEN_DECIMALS = 18;
     uint256 internal constant SHARE_TOKEN_UNIT = 10 ** SHARE_TOKEN_DECIMALS;
 
