@@ -63,6 +63,18 @@ contract SetSpokeCaliber_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
     }
 
+    function test_RevertWhen_ZeroSpokeCaliberMailbox() public {
+        bridges = new uint16[](1);
+        bridges[0] = ACROSS_V3_BRIDGE_ID;
+
+        spokeBridgeAdapters = new address[](1);
+        spokeBridgeAdapters[0] = spokeBridgeAdapterAddr;
+
+        vm.expectRevert(Errors.ZeroSpokeCaliberMailbox.selector);
+        vm.prank(dao);
+        machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(0), bridges, spokeBridgeAdapters);
+    }
+
     function test_RevertWhen_ZeroBridgeAdapterAddress() public {
         bridges = new uint16[](1);
         bridges[0] = ACROSS_V3_BRIDGE_ID;

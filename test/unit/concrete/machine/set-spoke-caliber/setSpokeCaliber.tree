@@ -5,19 +5,22 @@ setSpokeCaliber.t.sol
    ├── when the provided EVM chain ID is not registered in ChainRegistry
    │  └── it should revert with EvmChainIdNotRegistered
    └── when the provided EVM chain ID is registered in ChainRegistry
-      ├── given a spoke caliber was registered in this contract for the provided chain ID
+      ├── given a spoke caliber mailbox was already registered in this contract for the provided chain ID
       │  └── it should revert with SpokeCaliberAlreadySet
-      └── given no spoke caliber was registered in this contract for the provided chain ID
-         ├── when the provided bridge ID list and adapter list do not have the same length
-         │  └── it should revert with MismatchedLengths
-         └── when the provided bridge ID list and adapter list have the same length
-            ├── given an adapter address is already set for the provided chain ID and one of the bridge IDs
-            │  └── it should revert with SpokeBridgeAdapterAlreadySet
-            └── given no adapter address is already set for the provided chain ID and bridge IDs
-               ├── when one of the provided adapter addresses is zero
-               │  └── it should revert with ZeroBridgeAdapterAddress
-               └── when none of the provided adapter addresses is zero
-                  ├── it should set the spoke caliber mailbox address in machine storage
-                  ├── it should emit a SpokeCaliberMailboxSet event
-                  ├── it should set each adapter address in machine storage
-                  └── it should emit a SpokeBridgeAdapterSet event for each set adapter
+      └── given no spoke caliber mailbox was already registered in this contract for the provided chain ID
+         ├── when the provided spoke caliber mailbox is the zero address
+         │  └── it should revert with ZeroSpokeCaliberMailbox
+         └── when the provided spoke caliber mailbox is not the zero address
+            ├── when the provided bridge ID list and adapter list do not have the same length
+            │  └── it should revert with MismatchedLengths
+            └── when the provided bridge ID list and adapter list have the same length
+               ├── given an adapter address is already set for the provided chain ID and one of the bridge IDs
+               │  └── it should revert with SpokeBridgeAdapterAlreadySet
+               └── given no adapter address is already set for the provided chain ID and bridge IDs
+                  ├── when one of the provided adapter addresses is zero
+                  │  └── it should revert with ZeroBridgeAdapterAddress
+                  └── when none of the provided adapter addresses is zero
+                     ├── it should set the spoke caliber mailbox address in machine storage
+                     ├── it should emit a SpokeCaliberMailboxSet event
+                     ├── it should set each adapter address in machine storage
+                     └── it should emit a SpokeBridgeAdapterSet event for each set adapter

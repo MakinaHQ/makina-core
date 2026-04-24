@@ -518,6 +518,11 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         if (caliberData.mailbox != address(0)) {
             revert Errors.SpokeCaliberAlreadySet();
         }
+
+        if (spokeCaliberMailbox == address(0)) {
+            revert Errors.ZeroSpokeCaliberMailbox();
+        }
+
         $._foreignChainIds.push(foreignChainId);
         caliberData.mailbox = spokeCaliberMailbox;
 

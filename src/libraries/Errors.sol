@@ -115,5 +115,6 @@ library Errors {
     error ZeroOftAddress();
     error ZeroPositionId();
     error ZeroSalt();
+    error ZeroSpokeCaliberMailbox();
     error ZeroTokenAddress();
 }
