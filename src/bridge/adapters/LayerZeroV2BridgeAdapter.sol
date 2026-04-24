@@ -148,7 +148,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
             revert Errors.InvalidLzSentAmount();
         }
         if (oftr.amountReceivedLD < receipt.minOutputAmount) {
-            revert Errors.MaxValueLossExceeded();
+            revert Errors.AmountOutTooLow();
         }
 
         emit LzGuidCreated(mr.guid, transferId);

@@ -82,8 +82,12 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     function setLzEndpointId(uint256 evmChainId, uint32 lzEndpointId) external override restricted {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
 
-        if (evmChainId == 0 || lzEndpointId == 0) {
+        if (evmChainId == 0) {
             revert Errors.ZeroChainId();
+        }
+
+        if (lzEndpointId == 0) {
+            revert Errors.ZeroLzEndpointId();
         }
 
         uint32 oldLz = $._evmToLzId[evmChainId];
