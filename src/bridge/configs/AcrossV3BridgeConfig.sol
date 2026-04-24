@@ -33,17 +33,7 @@ contract AcrossV3BridgeConfig is AccessManagedUpgradeable, IAcrossV3BridgeConfig
     }
 
     /// @inheritdoc IBridgeConfig
-    function isRouteSupported(
-        address,
-        /*inputToken*/
-        uint256 foreignChainId,
-        address /*outputToken*/
-    )
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isRouteSupported(address, uint256 foreignChainId, address) external view override returns (bool) {
         return isForeignChainSupported(foreignChainId);
     }
 
@@ -55,5 +45,6 @@ contract AcrossV3BridgeConfig is AccessManagedUpgradeable, IAcrossV3BridgeConfig
     /// @inheritdoc IAcrossV3BridgeConfig
     function setForeignChainSupported(uint256 foreignChainId, bool supported) external override restricted {
         _getAcrossV3BridgeConfigStorage()._isForeignChainSupported[foreignChainId] = supported;
+        emit ForeignChainSupportUpdated(foreignChainId, supported);
     }
 }
