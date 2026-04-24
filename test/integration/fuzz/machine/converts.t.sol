@@ -4,7 +4,6 @@ pragma solidity 0.8.28;
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {Machine} from "src/machine/Machine.sol";
-import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
 
 import {Base_Hub_Test} from "test/base/Base.t.sol";
@@ -15,10 +14,10 @@ contract Converts_Integration_Fuzz_Test is Base_Hub_Test {
     MachineShare internal shareToken;
 
     uint256 internal accountingTokenUnit;
-    uint256 internal constant shareTokenUnit = 10 ** DecimalsUtils.SHARE_TOKEN_DECIMALS;
+    uint256 internal constant shareTokenUnit = 1e18;
 
     function _fuzzTestSetupAfter(uint256 atDecimals) public {
-        atDecimals = uint8(bound(atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
+        atDecimals = uint8(bound(atDecimals, 6, 18));
 
         accountingToken = new MockERC20("Accounting Token", "ACT", atDecimals);
         accountingTokenUnit = 10 ** accountingToken.decimals();

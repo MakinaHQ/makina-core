@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {PerChainQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
@@ -39,7 +39,7 @@ library MachineUtils {
         external
         returns (uint256)
     {
-        uint256 _supply = IERC20($._shareToken).totalSupply();
+        uint256 _supply = IERC20Metadata($._shareToken).totalSupply();
         uint256 _previousSharePrice = getSharePrice($._lastTotalAum, _supply, $._shareTokenDecimalsOffset);
 
         $._lastTotalAum = _getTotalAum($, oracleRegistry);
@@ -70,7 +70,7 @@ library MachineUtils {
         if (elapsedTime >= $._feeMintCooldown) {
             address _feeManager = $._feeManager;
             address _shareToken = $._shareToken;
-            uint256 currentShareSupply = IERC20(_shareToken).totalSupply();
+            uint256 currentShareSupply = IERC20Metadata(_shareToken).totalSupply();
 
             uint256 fixedFee = Math.min(
                 IFeeManager(_feeManager).calculateFixedFee(currentShareSupply, elapsedTime),
@@ -109,7 +109,7 @@ library MachineUtils {
 
             $._lastMintedFeesTime = currentTimestamp;
             $._lastMintedFeesSharePrice =
-                getSharePrice($._lastTotalAum, IERC20(_shareToken).totalSupply(), $._shareTokenDecimalsOffset);
+                getSharePrice($._lastTotalAum, IERC20Metadata(_shareToken).totalSupply(), $._shareTokenDecimalsOffset);
 
             return totalFee;
         }
@@ -140,7 +140,7 @@ library MachineUtils {
         }
     }
 
-    /// @dev Manages the migration from a pre-deposit vault to a machine, and initializes the machine's accounting state.
+    /// @dev Manages the migration from a pre-deposit vault to a machine, and initializes the machine's AUM.
     /// @param $ The machine storage struct.
     /// @param preDepositVault The address of the pre-deposit vault.
     /// @param oracleRegistry The address of the oracle registry.
@@ -150,7 +150,7 @@ library MachineUtils {
         IPreDepositVault(preDepositVault).migrateToMachine();
 
         address preDepositToken = IPreDepositVault(preDepositVault).depositToken();
-        uint256 pdtBal = IERC20(preDepositToken).balanceOf(address(this));
+        uint256 pdtBal = IERC20Metadata(preDepositToken).balanceOf(address(this));
         if (pdtBal != 0) {
             $._idleTokens.add(preDepositToken);
             $._lastTotalAum = _accountingValueOf(oracleRegistry, $._accountingToken, preDepositToken, pdtBal);
@@ -282,7 +282,7 @@ library MachineUtils {
         for (uint256 i; i < len; ++i) {
             address token = $._idleTokens.at(i);
             totalAum += _accountingValueOf(
-                oracleRegistry, $._accountingToken, token, IERC20(token).balanceOf(address(this))
+                oracleRegistry, $._accountingToken, token, IERC20Metadata(token).balanceOf(address(this))
             );
         }
 
@@ -314,7 +314,7 @@ library MachineUtils {
             return amount;
         }
         uint256 price = IOracleRegistry(oracleRegistry).getPrice(token, accountingToken);
-        return amount.mulDiv(price, 10 ** DecimalsUtils._getDecimals(token));
+        return amount.mulDiv(price, 10 ** IERC20Metadata(token).decimals());
     }
 
     /// @dev Checks that the relative change between two values does not exceed the maximum allowed rate over elapsed time.

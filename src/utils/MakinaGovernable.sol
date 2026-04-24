@@ -126,7 +126,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
-    function recoveryMode() external view returns (bool) {
+    function recoveryMode() external view override returns (bool) {
         return _getMakinaGovernableStorage()._recoveryMode;
     }
 
@@ -177,7 +177,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
-    function setRecoveryMode(bool enabled) external onlySecurityCouncil {
+    function setRecoveryMode(bool enabled) external override onlySecurityCouncil {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if ($._recoveryMode != enabled) {
             $._recoveryMode = enabled;
@@ -186,7 +186,7 @@ abstract contract MakinaGovernable is AccessManagedUpgradeable, IMakinaGovernabl
     }
 
     /// @inheritdoc IMakinaGovernable
-    function setRestrictedAccountingMode(bool enabled) external restricted {
+    function setRestrictedAccountingMode(bool enabled) external override restricted {
         MakinaGovernableStorage storage $ = _getMakinaGovernableStorage();
         if ($._restrictedAccountingMode != enabled) {
             $._restrictedAccountingMode = enabled;

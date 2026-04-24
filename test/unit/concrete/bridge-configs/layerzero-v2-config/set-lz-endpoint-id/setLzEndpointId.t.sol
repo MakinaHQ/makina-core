@@ -15,12 +15,14 @@ contract SetLzEndpointId_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Conc
     }
 
     function test_RevertWhen_ZeroChainId() public {
-        vm.startPrank(dao);
-
+        vm.prank(dao);
         vm.expectRevert(abi.encodeWithSelector(Errors.ZeroChainId.selector));
         layerZeroV2BridgeConfig.setLzEndpointId(0, 1);
+    }
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroChainId.selector));
+    function test_RevertWhen_ZeroLzEndpointId() public {
+        vm.prank(dao);
+        vm.expectRevert(abi.encodeWithSelector(Errors.ZeroLzEndpointId.selector));
         layerZeroV2BridgeConfig.setLzEndpointId(1, 0);
     }
 

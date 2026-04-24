@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {
     AccessManagedUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagedUpgradeable.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 import {AggregatorV2V3Interface} from "../interfaces/AggregatorV2V3Interface.sol";
@@ -34,8 +35,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         _disableInitializers();
     }
 
-    function initialize(address initialAuthority_) external initializer {
-        __AccessManaged_init(initialAuthority_);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IOracleRegistry
@@ -72,7 +73,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
 
         uint8 baseFRDecimalsSum = _getFeedDecimals(baseFR.feed1) + _getFeedDecimals(baseFR.feed2);
         uint8 quoteFRDecimalsSum = _getFeedDecimals(quoteFR.feed1) + _getFeedDecimals(quoteFR.feed2);
-        uint8 quoteTokenDecimals = DecimalsUtils._getDecimals(quoteToken);
+        uint8 quoteTokenDecimals = IERC20Metadata(quoteToken).decimals();
 
         // price = 10^(quoteTokenDecimals + quoteFeedsDecimalsSum - baseFeedsDecimalsSum) *
         //  (baseFeedPrice1 * baseFeedPrice2) / (quoteFeedPrice1 * quoteFeedPrice2)
@@ -105,10 +106,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
             revert Errors.InvalidFeedRoute();
         }
 
-        uint8 tokenDecimals = DecimalsUtils._getDecimals(token);
-        if (tokenDecimals < DecimalsUtils.MIN_DECIMALS || tokenDecimals > DecimalsUtils.MAX_DECIMALS) {
-            revert Errors.InvalidDecimals();
-        }
+        DecimalsUtils._checkDecimals(token);
 
         $._feedRoutes[token] = FeedRoute({feed1: feed1, feed2: feed2});
 
@@ -133,7 +131,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
-    function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
+    function setFeedStaleThreshold(address feed, uint256 newThreshold) external override restricted {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
         emit FeedStaleThresholdChanged(feed, $._feedStaleThresholds[feed], newThreshold);
         // zero is allowed in order to disable a feed

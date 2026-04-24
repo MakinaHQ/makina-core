@@ -46,5 +46,6 @@ interface ISwapModule {
     /// @notice Sets approval and execution targets for a given swapper ID.
     /// @param swapperId The swapper ID.
     /// @param approvalTarget The approval target.
+    /// @param executionTarget The execution target.
     function setSwapperTargets(uint16 swapperId, address approvalTarget, address executionTarget) external;
 }

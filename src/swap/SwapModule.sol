@@ -35,14 +35,15 @@ contract SwapModule is AccessManagedUpgradeable, MakinaContext, ISwapModule {
         _disableInitializers();
     }
 
-    function initialize(address _initialAuthority) external initializer {
-        __AccessManaged_init(_initialAuthority);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc ISwapModule
     function getSwapperTargets(uint16 swapperId)
         external
         view
+        override
         returns (address approvalTarget, address executionTarget)
     {
         SwapperTargets storage targets = _getSwapModuleStorage()._swapperTargets[swapperId];
@@ -70,7 +71,7 @@ contract SwapModule is AccessManagedUpgradeable, MakinaContext, ISwapModule {
         uint256 balBefore = IERC20(order.outputToken).balanceOf(address(this));
 
         IERC20(order.inputToken).forceApprove(approvalTarget, order.inputAmount);
-        // solhint-disable-next-line
+        // solhint-disable-next-line avoid-low-level-calls
         (bool success,) = executionTarget.call(order.data);
         if (!success) {
             revert Errors.SwapFailed();

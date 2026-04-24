@@ -133,7 +133,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 
-    function test_RevertWhen_MaxValueLossExceeded() public {
+    function test_RevertWhen_AmountOutTooLow() public {
         uint256 inputAmount = 1e18;
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
@@ -149,7 +149,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
 
         mockOftAdapter.setFaultyModeReceive(true);
 
-        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.AmountOutTooLow.selector);
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 
@@ -192,7 +192,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             ""
         );
@@ -265,7 +265,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             extraOptions
         );
@@ -321,12 +321,12 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
         );
 
-        vm.expectEmit(false, false, false, false, address(mockOftAdapter));
+        vm.expectEmit(false, false, false, true, address(mockOftAdapter));
         emit MockOFTAdapter.SentParams(
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             ""
         );
@@ -396,7 +396,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
             LAYER_ZERO_V2_SPOKE_ENDPOINT_ID,
             OFTComposeMsgCodec.addressToBytes32(address(bridgeAdapter2)),
             inputAmount,
-            inputAmount,
+            minOutputAmount,
             encodedMessage,
             extraOptions
         );
