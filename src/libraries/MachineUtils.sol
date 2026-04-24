@@ -140,7 +140,7 @@ library MachineUtils {
         }
     }
 
-    /// @dev Manages the migration from a pre-deposit vault to a machine, and initializes the machine's accounting state.
+    /// @dev Manages the migration from a pre-deposit vault to a machine, and initializes the machine's AUM.
     /// @param $ The machine storage struct.
     /// @param preDepositVault The address of the pre-deposit vault.
     /// @param oracleRegistry The address of the oracle registry.

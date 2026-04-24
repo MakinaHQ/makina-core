@@ -34,7 +34,7 @@ contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
     }
 
     /// @inheritdoc ICctpV2DestinationCaller
-    function receiveCctpV2Message(bytes calldata message, bytes calldata attestation) external nonReentrant {
+    function receiveCctpV2Message(bytes calldata message, bytes calldata attestation) external override nonReentrant {
         message.checkMessageLength();
 
         if (message.getRecipient() != executionTarget || message.getMintRecipient() != address(this)) {

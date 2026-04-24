@@ -38,7 +38,7 @@ contract SetSpokeCaliber_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
     function test_RevertWhen_MismatchedLength() public {
         bridges = new uint16[](1);
 
-        vm.expectRevert(Errors.MismatchedLength.selector);
+        vm.expectRevert(Errors.MismatchedLengths.selector);
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
     }

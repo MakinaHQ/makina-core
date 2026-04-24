@@ -32,7 +32,7 @@ abstract contract BridgeAdapterFactory is Create3Factory, MakinaContext, IBridge
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function isBridgeAdapter(address adapter) external view returns (bool) {
+    function isBridgeAdapter(address adapter) external view override returns (bool) {
         return _getBridgeAdapterFactoryStorage()._isBridgeAdapter[adapter];
     }
 

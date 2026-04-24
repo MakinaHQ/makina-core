@@ -65,7 +65,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     }
 
     /// @inheritdoc IBridgeController
-    function getMaxBridgeLossBps(uint16 bridgeId) external view returns (uint256) {
+    function getMaxBridgeLossBps(uint16 bridgeId) external view override returns (uint256) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
             revert Errors.BridgeAdapterDoesNotExist();
@@ -76,6 +76,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     /// @inheritdoc IBridgeController
     function setBridgeAdapter(uint16 bridgeId, address bridgeAdapter, uint256 initialMaxBridgeLossBps)
         external
+        override
         onlyFactory
     {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();

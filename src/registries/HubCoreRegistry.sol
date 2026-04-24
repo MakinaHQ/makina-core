@@ -30,10 +30,10 @@ contract HubCoreRegistry is CoreRegistry, IHubCoreRegistry {
         address _oracleRegistry,
         address _tokenRegistry,
         address _chainRegistry,
-        address _initialAuthority
+        address initialAuthority
     ) external initializer {
         _getHubCoreRegistryStorage()._chainRegistry = _chainRegistry;
-        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, _initialAuthority);
+        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, initialAuthority);
     }
 
     /// @inheritdoc IHubCoreRegistry

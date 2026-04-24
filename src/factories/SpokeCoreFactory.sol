@@ -44,8 +44,8 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         _disableInitializers();
     }
 
-    function initialize(address _initialAuthority) external initializer {
-        __AccessManaged_init(_initialAuthority);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc ISpokeCoreFactory
@@ -85,18 +85,18 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(address bridgeController, BridgeAdapterInitParams calldata baParams)
+    function createBridgeAdapter(address controller, BridgeAdapterInitParams calldata baParams)
         external
         override
         restricted
         returns (address)
     {
         SpokeCoreFactoryStorage storage $ = _getSpokeCoreFactoryStorage();
-        if (!$._isCaliberMailbox[bridgeController]) {
+        if (!$._isCaliberMailbox[controller]) {
             revert Errors.InvalidBridgeController();
         }
 
-        return _createBridgeAdapter(bridgeController, baParams, $._instanceSalts[bridgeController]);
+        return _createBridgeAdapter(controller, baParams, $._instanceSalts[controller]);
     }
 
     /// @dev Internal logic for caliber mailbox deployment via create3.
@@ -114,7 +114,7 @@ contract SpokeCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAda
         return _create3(CaliberMailboxSaltDomain, salt, bytecode);
     }
 
-    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable.
+    /// @dev Sets function roles for a deployed caliber mailbox instance and its associated caliber in the provided authority.
     function _setupSpokeCaliberBundleAMFunctionRoles(address _authority, address _mailbox, address _caliber) internal {
         _checkAuthority(_authority);
 

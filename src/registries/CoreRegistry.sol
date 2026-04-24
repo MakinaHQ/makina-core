@@ -29,14 +29,14 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
         }
     }
 
-    function __CoreRegistry_init(address _oracleRegistry, address _tokenRegistry, address _initialAuthority)
+    function __CoreRegistry_init(address _oracleRegistry, address _tokenRegistry, address initialAuthority)
         internal
         onlyInitializing
     {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         $._oracleRegistry = _oracleRegistry;
         $._tokenRegistry = _tokenRegistry;
-        __AccessManaged_init(_initialAuthority);
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc ICoreRegistry
@@ -108,7 +108,7 @@ abstract contract CoreRegistry is AccessManagedUpgradeable, ICoreRegistry {
     }
 
     /// @inheritdoc ICoreRegistry
-    function setFlashLoanModule(address _flashLoanModule) external restricted {
+    function setFlashLoanModule(address _flashLoanModule) external override restricted {
         CoreRegistryStorage storage $ = _getCoreRegistryStorage();
         emit FlashLoanModuleChanged($._flashLoanModule, _flashLoanModule);
         $._flashLoanModule = _flashLoanModule;

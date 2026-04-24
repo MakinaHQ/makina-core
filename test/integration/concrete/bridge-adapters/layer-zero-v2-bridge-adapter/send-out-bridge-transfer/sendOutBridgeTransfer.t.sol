@@ -133,7 +133,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 
-    function test_RevertWhen_MaxValueLossExceeded() public {
+    function test_RevertWhen_AmountOutTooLow() public {
         uint256 inputAmount = 1e18;
 
         uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
@@ -149,7 +149,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
 
         mockOftAdapter.setFaultyModeReceive(true);
 
-        vm.expectRevert(Errors.MaxValueLossExceeded.selector);
+        vm.expectRevert(Errors.AmountOutTooLow.selector);
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 

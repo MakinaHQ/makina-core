@@ -42,9 +42,9 @@ interface IBridgeAdapter {
     }
 
     /// @notice Initializer of the contract.
-    /// @param controller The bridge controller contract.
+    /// @param _controller The bridge controller contract.
     /// @param initData The optional initialization data.
-    function initialize(address controller, bytes calldata initData) external;
+    function initialize(address _controller, bytes calldata initData) external;
 
     /// @notice Address of the bridge controller contract.
     function controller() external view returns (address);

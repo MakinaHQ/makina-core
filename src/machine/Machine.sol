@@ -148,7 +148,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function hubCaliber() external view returns (address) {
+    function hubCaliber() external view override returns (address) {
         return _getMachineStorage()._hubCaliber;
     }
 
@@ -238,7 +238,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberMailbox(uint256 chainId) external view returns (address) {
+    function getSpokeCaliberMailbox(uint256 chainId) external view override returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
@@ -247,7 +247,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address) {
+    function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view override returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
@@ -425,6 +425,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     /// @inheritdoc IMachine
     function deposit(uint256 assets, address receiver, uint256 minShares, bytes32 referralKey)
         external
+        override
         nonReentrant
         notRecoveryMode
         returns (uint256)
@@ -506,7 +507,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         address spokeCaliberMailbox,
         uint16[] calldata bridges,
         address[] calldata adapters
-    ) external restricted {
+    ) external override restricted {
         if (!IChainRegistry(IHubCoreRegistry(registry).chainRegistry()).isEvmChainIdRegistered(foreignChainId)) {
             revert Errors.EvmChainIdNotRegistered(foreignChainId);
         }
@@ -524,7 +525,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
         uint256 len = bridges.length;
         if (len != adapters.length) {
-            revert Errors.MismatchedLength();
+            revert Errors.MismatchedLengths();
         }
         for (uint256 i; i < len; ++i) {
             _setSpokeBridgeAdapter(foreignChainId, bridges[i], adapters[i]);

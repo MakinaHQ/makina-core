@@ -9,7 +9,7 @@ interface ISpokeCoreFactory is IBridgeAdapterFactory {
     event CaliberMailboxCreated(address indexed mailbox);
 
     /// @notice Address => Whether this is a CaliberMailbox instance deployed by this factory.
-    function isCaliberMailbox(address mailbox) external view returns (bool);
+    function isCaliberMailbox(address caliberMailbox) external view returns (bool);
 
     /// @notice Deploys a new Caliber instance with an associated CaliberMailbox.
     /// @param cParams The caliber initialization parameters.

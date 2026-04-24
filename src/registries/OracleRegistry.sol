@@ -35,8 +35,8 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
         _disableInitializers();
     }
 
-    function initialize(address initialAuthority_) external initializer {
-        __AccessManaged_init(initialAuthority_);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IOracleRegistry
@@ -131,7 +131,7 @@ contract OracleRegistry is AccessManagedUpgradeable, IOracleRegistry {
     }
 
     /// @inheritdoc IOracleRegistry
-    function setFeedStaleThreshold(address feed, uint256 newThreshold) external restricted {
+    function setFeedStaleThreshold(address feed, uint256 newThreshold) external override restricted {
         OracleRegistryStorage storage $ = _getOracleRegistryStorage();
         emit FeedStaleThresholdChanged(feed, $._feedStaleThresholds[feed], newThreshold);
         // zero is allowed in order to disable a feed

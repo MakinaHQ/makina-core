@@ -53,6 +53,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
     )
         external
         payable
+        override
     {
         if (msg.sender != receiveSource) {
             revert Errors.UnauthorizedSource();

@@ -18,7 +18,7 @@ contract AcrossV3BridgeConfig is AccessManagedUpgradeable, IAcrossV3BridgeConfig
     bytes32 private constant AcrossV3BridgeConfigStorageLocation =
         0x55c9f27624440face9d60f824f50119631f5ca1c165e4b047f325c445d2b2500;
 
-    function _getAcrossV3BridgeConfigStorage() internal pure returns (AcrossV3BridgeConfigStorage storage $) {
+    function _getAcrossV3BridgeConfigStorage() private pure returns (AcrossV3BridgeConfigStorage storage $) {
         assembly {
             $.slot := AcrossV3BridgeConfigStorageLocation
         }
@@ -28,8 +28,8 @@ contract AcrossV3BridgeConfig is AccessManagedUpgradeable, IAcrossV3BridgeConfig
         _disableInitializers();
     }
 
-    function initialize(address _initialAuthority) external initializer {
-        __AccessManaged_init(_initialAuthority);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IBridgeConfig

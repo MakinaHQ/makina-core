@@ -287,10 +287,10 @@ contract PreDepositVault is AccessManagedUpgradeable, ReentrancyGuard, MakinaCon
     }
 
     /// @inheritdoc IPreDepositVault
-    function setRiskManager(address _riskManager) external override restricted notMigrated {
+    function setRiskManager(address newRiskManager) external override restricted notMigrated {
         PreDepositVaultStorage storage $ = _getPreDepositVaultStorage();
-        emit RiskManagerChanged($._riskManager, _riskManager);
-        $._riskManager = _riskManager;
+        emit RiskManagerChanged($._riskManager, newRiskManager);
+        $._riskManager = newRiskManager;
     }
 
     /// @inheritdoc IPreDepositVault
