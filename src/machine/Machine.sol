@@ -247,6 +247,15 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
+    function isSpokeCaliberEnabled(uint256 chainId) external view override returns (bool) {
+        SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
+        if (scData.mailbox == address(0)) {
+            revert Errors.InvalidChainId();
+        }
+        return !scData.disabled;
+    }
+
+    /// @inheritdoc IMachine
     function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view override returns (address) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
@@ -355,6 +364,10 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
         if (caliberData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
+        }
+
+        if (caliberData.disabled) {
+            revert Errors.SpokeCaliberNotEnabled();
         }
 
         address recipient = caliberData.bridgeAdapters[bridgeId];
@@ -542,6 +555,48 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
+    function disableSpokeCaliber(uint256 chainId) external override nonReentrant restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
+
+        if (caliberData.mailbox == address(0)) {
+            revert Errors.InvalidChainId();
+        }
+
+        if (caliberData.disabled) {
+            revert Errors.AlreadyDisabled();
+        }
+
+        if (caliberData.netAum != 0) {
+            revert Errors.CaliberNotEmpty();
+        }
+
+        MachineUtils.checkBridgeTransfersSettled(caliberData);
+
+        caliberData.disabled = true;
+
+        emit SpokeCaliberMailboxDisabled(chainId);
+    }
+
+    /// @inheritdoc IMachine
+    function enableSpokeCaliber(uint256 chainId) external override nonReentrant restricted {
+        MachineStorage storage $ = _getMachineStorage();
+        SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
+
+        if (caliberData.mailbox == address(0)) {
+            revert Errors.InvalidChainId();
+        }
+
+        if (!caliberData.disabled) {
+            revert Errors.AlreadyEnabled();
+        }
+
+        caliberData.disabled = false;
+
+        emit SpokeCaliberMailboxEnabled(chainId);
+    }
+
+    /// @inheritdoc IMachine
     function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter)
         external
         override
@@ -630,7 +685,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IBridgeController
-    function resetBridgingState(address token) external override onlySecurityCouncil {
+    function resetBridgingState(address token) external override nonReentrant onlySecurityCouncil {
         MachineStorage storage $ = _getMachineStorage();
         uint256 len = $._foreignChainIds.length;
         for (uint256 i; i < len; ++i) {

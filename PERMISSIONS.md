@@ -163,6 +163,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the address of the depositor contract.
   - Can set the address of the redeemer contract.
   - Can set the address of the fee manager contract.
+  - Can disable and re-enable a Spoke caliber.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
   - Can set the address of the mechanic.

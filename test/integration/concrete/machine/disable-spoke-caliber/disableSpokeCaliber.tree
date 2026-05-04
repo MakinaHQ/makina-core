@@ -1,0 +1,24 @@
+disableSpokeCaliber.t.sol
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── when caller does not have the relevant role
+   │  └── it should revert with AccessManagedUnauthorized
+   └── when caller has the relevant role
+      ├── given no spoke caliber is registered in this contract for the provided chain ID
+      │  └── it should revert with InvalidChainId
+      └── given a spoke caliber is registered in this contract for the provided chain ID
+         ├── given the spoke caliber is already disabled
+         │  └── it should revert with AlreadyDisabled
+         └── given the spoke caliber is not already disabled
+            ├── when the spoke caliber net AUM is non-zero as per the current accounting data
+            │  └── it should revert with CaliberNotEmpty
+            └── when the spoke caliber net AUM is zero as per the current accounting data
+               ├── when there are pending bridge transfers from this contract to spoke caliber
+               │  └── it should revert with PendingBridgeTransfer
+               └── when there are no pending bridge transfers from this contract to spoke caliber
+                  ├── when there are pending bridge transfers from spoke caliber to this contract as per the current accounting data
+                  │  └── it should revert with PendingBridgeTransfer
+                  └── when there are no pending bridge transfers from spoke caliber to this contract as per the current accounting data
+                     ├── it should mark the spoke caliber as disabled
+                     └── it should emit a SpokeCaliberMailboxDisabled event

@@ -222,12 +222,14 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
 
     /// @dev Sets function roles for a deployed machine instance.
     function _setupMachineAMFunctionRoles(address _authority, address _machine) internal {
-        bytes4[] memory compSetupSelectors = new bytes4[](5);
+        bytes4[] memory compSetupSelectors = new bytes4[](7);
         compSetupSelectors[0] = IMachine.setSpokeCaliber.selector;
         compSetupSelectors[1] = IMachine.setSpokeBridgeAdapter.selector;
         compSetupSelectors[2] = IMachine.setDepositor.selector;
         compSetupSelectors[3] = IMachine.setRedeemer.selector;
         compSetupSelectors[4] = IMachine.setFeeManager.selector;
+        compSetupSelectors[5] = IMachine.disableSpokeCaliber.selector;
+        compSetupSelectors[6] = IMachine.enableSpokeCaliber.selector;
         IAccessManager(_authority)
             .setTargetFunctionRole(_machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE);
 

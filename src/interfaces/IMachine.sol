@@ -23,6 +23,8 @@ interface IMachine is IMachineEndpoint {
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
+    event SpokeCaliberMailboxEnabled(uint256 indexed chainId);
+    event SpokeCaliberMailboxDisabled(uint256 indexed chainId);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
@@ -60,6 +62,7 @@ interface IMachine is IMachineEndpoint {
     /// @param caliberBridgesOut The mapping of spoke caliber outgoing bridge amounts.
     /// @param machineBridgesIn The mapping of machine incoming bridge amounts.
     /// @param machineBridgesOut The mapping of machine outgoing bridge amounts.
+    /// @param disabled Whether the spoke caliber is disabled (ignored in AUM calculations and ineligible for machine transfers until re-enabled).
     struct SpokeCaliberData {
         address mailbox;
         mapping(uint16 bridgeId => address adapter) bridgeAdapters;
@@ -71,6 +74,7 @@ interface IMachine is IMachineEndpoint {
         EnumerableMap.AddressToUintMap caliberBridgesOut;
         EnumerableMap.AddressToUintMap machineBridgesIn;
         EnumerableMap.AddressToUintMap machineBridgesOut;
+        bool disabled;
     }
 
     /// @notice Initializer of the contract.
@@ -166,6 +170,9 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke Chain ID => Spoke Caliber Mailbox Address.
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
 
+    /// @notice Spoke Chain ID => Whether the spoke caliber is enabled.
+    function isSpokeCaliberEnabled(uint256 chainId) external view returns (bool);
+
     /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
     function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address);
 
@@ -236,6 +243,14 @@ interface IMachine is IMachineEndpoint {
         uint16[] calldata bridges,
         address[] calldata adapters
     ) external;
+
+    /// @notice Disables a spoke caliber.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber to disable.
+    function disableSpokeCaliber(uint256 chainId) external;
+
+    /// @notice Re-enables a spoke caliber.
+    /// @param chainId The foreign EVM chain ID of the spoke caliber to enable.
+    function enableSpokeCaliber(uint256 chainId) external;
 
     /// @notice Registers a spoke bridge adapter.
     /// @param chainId The EVM chain ID of the spoke bridge adapter.

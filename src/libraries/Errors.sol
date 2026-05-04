@@ -6,6 +6,8 @@ library Errors {
     error ActiveUpdatePending();
     error AlreadyAccountingAgent();
     error AlreadyBaseToken();
+    error AlreadyDisabled();
+    error AlreadyEnabled();
     error AlreadyPositionToken();
     error AlreadyRootGuardian();
     error AmountOutTooLow();
@@ -15,6 +17,7 @@ library Errors {
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
+    error CaliberNotEmpty();
     error CctpDomainNotRegistered();
     error CctpForeignTokenNotRegistered();
     error CctpMessageReceptionFailed();
@@ -99,6 +102,7 @@ library Errors {
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
+    error SpokeCaliberNotEnabled();
     error StaleData();
     error SwapFailed();
     error SwapperTargetsNotSet();

@@ -494,6 +494,23 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), inputAmount);
     }
 
+    function test_UpdateTotalAum_DisabledSpokeCaliber()
+        public
+        withTokenAsBT(address(baseToken))
+        withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
+    {
+        vm.prank(dao);
+        machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
+
+        uint256 inputAmount = 1e18;
+        deal(address(accountingToken), address(machine), inputAmount, true);
+
+        vm.expectEmit(false, false, false, true, address(machine));
+        emit IMachine.TotalAumUpdated(inputAmount);
+        machine.updateTotalAum();
+        assertEq(machine.lastTotalAum(), inputAmount);
+    }
+
     function test_UpdateTotalAum_PositiveSpokeCaliberValue()
         public
         withTokenAsBT(address(baseToken))

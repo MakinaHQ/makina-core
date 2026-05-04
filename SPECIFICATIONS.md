@@ -40,6 +40,20 @@ To move funds between the Hub Chain and Spoke Chains, the protocol supports mult
 
 See more in the [Liquidity Bridging](#liquidity-bridging) section.
 
+#### Spoke Caliber Disabling
+
+A registered spoke caliber can be disabled, and later re-enabled. A disabled spoke caliber is skipped in the machine's total AUM computation, and the machine can no longer schedule outgoing bridge transfers towards it. This is used once a spoke caliber has become empty and no longer relevant, to avoid having to keep relaying its accounting data to the Machine.
+
+Disabling requires:
+
+- Zero spoke caliber net AUM as per the last received spoke data.
+- No pending outgoing bridge transfer towards it.
+- No pending incoming bridge transfer from it, as per the last received spoke data.
+
+These three conditions correspond to the three ways a spoke caliber contributes to total AUM, so disabling a caliber removes no value that is being counted at that time. The spoke-reported figures used here need not be perfectly up to date: a spoke caliber can only receive funds through an outgoing transfer from the machine, which the machine tracks in its own, always-current records. Since disabling requires no such transfer to be pending, a caliber whose last reported AUM was zero can reasonably be considered still empty.
+
+Disabling can be reversed at any time by re-enabling. Incoming bridge transfers from a disabled spoke caliber also remain accepted by design: should a disabled caliber ever hold funds, they could still be bridged back and received as idle tokens on the Hub, rather than being stranded.
+
 #### Standard Operator Actions:
 
 - Can store the last accounting data from spoke calibers.
