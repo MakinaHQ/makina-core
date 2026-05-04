@@ -2,24 +2,42 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Errors} from "src/libraries/Errors.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 
-import {Machine_Unit_Concrete_Test} from "../Machine.t.sol";
+import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
-contract SetSpokeCaliber_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
+contract SetSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     uint16[] internal bridges;
     address[] internal spokeBridgeAdapters;
+
+    function test_RevertWhen_ReentrantCall() public {
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before,
+            address(machine),
+            abi.encodeCall(IMachine.setSpokeCaliber, (0, address(0), bridges, spokeBridgeAdapters))
+        );
+
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
+        vm.prank(address(caliber));
+        machine.manageTransfer(address(accountingToken), 0, "");
+    }
 
     function test_RevertWhen_CallerWithoutRole() public {
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
         machine.setSpokeCaliber(0, address(0), bridges, spokeBridgeAdapters);
     }
 
-    function test_RevertWhen_EvmChainIdNotRegistered() public {
-        vm.expectRevert(abi.encodeWithSelector(Errors.EvmChainIdNotRegistered.selector, SPOKE_CHAIN_ID + 1));
-        vm.prank(dao);
+    function test_RevertWhen_InvalidChainId() public {
+        vm.startPrank(dao);
+
+        vm.expectRevert(Errors.InvalidChainId.selector);
+        machine.setSpokeCaliber(block.chainid, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
+
+        vm.expectRevert(Errors.InvalidChainId.selector);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID + 1, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
     }
 

@@ -10,6 +10,7 @@ contract MachineStore {
 
     uint256 public totalAum;
 
+    uint256 public hubChainId;
     uint256 public spokeChainId;
 
     address[] public tokens;
@@ -209,6 +210,10 @@ contract MachineStore {
 
     function addToken(address token) external {
         tokens.push(token);
+    }
+
+    function setHubChainId(uint256 _hubChainId) external {
+        hubChainId = _hubChainId;
     }
 
     function setSpokeChainId(uint256 _spokeChainId) external {

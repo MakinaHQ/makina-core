@@ -226,12 +226,12 @@ interface IMachine is IMachineEndpoint {
     function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
-    /// @param foreignChainId The foreign EVM chain ID of the spoke caliber.
+    /// @param chainId The EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
-    /// @param bridges The list of bridges supported with the spoke caliber.
-    /// @param adapters The list of corresponding adapters for each bridge. Must be the same length as `bridges`.
+    /// @param bridges The list of bridges supported with the spoke caliber mailbox.
+    /// @param adapters The list of corresponding spoke adapters for each bridge. Must be the same length as `bridges`.
     function setSpokeCaliber(
-        uint256 foreignChainId,
+        uint256 chainId,
         address spokeCaliberMailbox,
         uint16[] calldata bridges,
         address[] calldata adapters
