@@ -542,17 +542,18 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter)
+    function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter)
         external
         override
+        nonReentrant
         restricted
     {
-        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
+        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[chainId];
 
         if (caliberData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
         }
-        _setSpokeBridgeAdapter(foreignChainId, bridgeId, adapter);
+        _setSpokeBridgeAdapter(chainId, bridgeId, adapter);
     }
 
     /// @inheritdoc IMachine
@@ -653,9 +654,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         emit BridgingStateReset(token);
     }
 
-    /// @dev Sets the spoke bridge adapter for a given foreign chain ID and bridge ID.
-    function _setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter) internal {
-        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[foreignChainId];
+    /// @dev Sets the spoke bridge adapter for a given chain ID and bridge ID.
+    function _setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) internal {
+        SpokeCaliberData storage caliberData = _getMachineStorage()._spokeCalibersData[chainId];
 
         if (caliberData.bridgeAdapters[bridgeId] != address(0)) {
             revert Errors.SpokeBridgeAdapterAlreadySet();
@@ -665,7 +666,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         }
         caliberData.bridgeAdapters[bridgeId] = adapter;
 
-        emit SpokeBridgeAdapterSet(foreignChainId, uint256(bridgeId), adapter);
+        emit SpokeBridgeAdapterSet(chainId, uint256(bridgeId), adapter);
     }
 
     /// @dev Checks token balance, and registers token if needed.

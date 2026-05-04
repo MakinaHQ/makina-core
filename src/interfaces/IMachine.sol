@@ -238,10 +238,10 @@ interface IMachine is IMachineEndpoint {
     ) external;
 
     /// @notice Registers a spoke bridge adapter.
-    /// @param foreignChainId The foreign EVM chain ID of the adapter.
+    /// @param chainId The EVM chain ID of the spoke bridge adapter.
     /// @param bridgeId The ID of the bridge.
-    /// @param adapter The foreign address of the bridge adapter.
-    function setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter) external;
+    /// @param adapter The address of the spoke bridge adapter.
+    function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) external;
 
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.
