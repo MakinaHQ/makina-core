@@ -533,7 +533,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         assertEq(machine.lastTotalAum(), queriedData.netAum);
     }
 
-    function test_UpdateTotalAum_NegativeSpokeCaliberValue()
+    function test_UpdateTotalAum_NullSpokeCaliberValue()
         public
         withTokenAsBT(address(baseToken))
         withSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr)
@@ -582,7 +582,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         machine.updateTotalAum();
-        assertEq(machine.lastTotalAum(), inputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE);
+        assertEq(machine.lastTotalAum(), inputAmount + SPOKE_CALIBER_NET_AUM);
     }
 
     function test_UpdateTotalAum_BridgeCompletedFromMachineToSpokeCaliber()
@@ -615,7 +615,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         machine.updateTotalAum();
-        assertEq(machine.lastTotalAum(), outputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE);
+        assertEq(machine.lastTotalAum(), outputAmount + SPOKE_CALIBER_NET_AUM);
     }
 
     function test_UpdateTotalAum_BridgeInProgressFromSpokeCaliberToMachine()
@@ -643,7 +643,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         machine.updateTotalAum();
-        assertEq(machine.lastTotalAum(), inputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE);
+        assertEq(machine.lastTotalAum(), inputAmount + SPOKE_CALIBER_NET_AUM);
     }
 
     function test_UpdateTotalAum_BridgeCompletedFromSpokeCaliberToMachine()
@@ -683,7 +683,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
         machine.updateTotalAum();
-        assertEq(machine.lastTotalAum(), outputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE);
+        assertEq(machine.lastTotalAum(), outputAmount + SPOKE_CALIBER_NET_AUM);
     }
 
     function test_UpdateTotalAum_BridgeInProgressBothDirection_SameToken()
@@ -716,8 +716,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         machine.updateTotalAum();
         assertEq(
-            machine.lastTotalAum(),
-            machineToCaliberInputAmount + caliberToMachineInputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE
+            machine.lastTotalAum(), machineToCaliberInputAmount + caliberToMachineInputAmount + SPOKE_CALIBER_NET_AUM
         );
     }
 
@@ -752,8 +751,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
         assertEq(
             machine.lastTotalAum(),
-            machineToCaliberInputAmount + (caliberToMachineInputAmount * PRICE_B_A)
-                + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE
+            machineToCaliberInputAmount + (caliberToMachineInputAmount * PRICE_B_A) + SPOKE_CALIBER_NET_AUM
         );
     }
 
@@ -803,8 +801,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
 
         machine.updateTotalAum();
         assertEq(
-            machine.lastTotalAum(),
-            caliberToMachineOutputAmount + machineToCaliberOutputAmount + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE
+            machine.lastTotalAum(), caliberToMachineOutputAmount + machineToCaliberOutputAmount + SPOKE_CALIBER_NET_AUM
         );
     }
 
@@ -855,8 +852,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         machine.updateTotalAum();
         assertEq(
             machine.lastTotalAum(),
-            (caliberToMachineOutputAmount * PRICE_B_A) + machineToCaliberOutputAmount
-                + TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE
+            (caliberToMachineOutputAmount * PRICE_B_A) + machineToCaliberOutputAmount + SPOKE_CALIBER_NET_AUM
         );
     }
 

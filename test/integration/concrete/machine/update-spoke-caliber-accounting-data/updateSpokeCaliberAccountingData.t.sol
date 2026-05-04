@@ -209,25 +209,14 @@ contract UpdateSpokeCaliberAccountingData_Integration_Concrete_Test is Machine_I
 
         machine.updateSpokeCaliberAccountingData(response, signatures);
 
-        (uint256 netAum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp) =
-            machine.getSpokeCaliberDetailedAum(SPOKE_CHAIN_ID);
+        (uint256 netAum, uint256 timestamp) = machine.getSpokeCaliberNetAum(SPOKE_CHAIN_ID);
         assertEq(timestamp, blockTime);
         assertEq(netAum, queriedData.netAum);
-        assertEq(positions.length, queriedData.positions.length);
-        assertEq(baseTokens.length, queriedData.baseTokens.length);
 
         skip(1 days);
 
-        (netAum, positions, baseTokens, timestamp) = machine.getSpokeCaliberDetailedAum(SPOKE_CHAIN_ID);
+        (netAum, timestamp) = machine.getSpokeCaliberNetAum(SPOKE_CHAIN_ID);
         assertEq(timestamp, blockTime);
         assertEq(netAum, queriedData.netAum);
-        assertEq(positions.length, queriedData.positions.length);
-        for (uint256 i; i < queriedData.positions.length; ++i) {
-            assertEq(positions[i], queriedData.positions[i]);
-        }
-        assertEq(baseTokens.length, queriedData.baseTokens.length);
-        for (uint256 i; i < queriedData.baseTokens.length; ++i) {
-            assertEq(baseTokens[i], queriedData.baseTokens[i]);
-        }
     }
 }

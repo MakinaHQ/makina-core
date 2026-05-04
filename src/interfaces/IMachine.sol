@@ -56,8 +56,8 @@ interface IMachine is IMachineEndpoint {
     /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
     /// @param timestamp The timestamp of the last accounting.
     /// @param netAum The net AUM of the spoke caliber.
-    /// @param positions The list of positions of the spoke caliber, each encoded as abi.encode(positionId, value, isDebt).
-    /// @param baseTokens The list of base tokens of the spoke caliber, each encoded as abi.encode(token, value).
+    /// @param deprecated_4 Deprecated field.
+    /// @param deprecated_5 Deprecated field.
     /// @param caliberBridgesIn The mapping of spoke caliber incoming bridge amounts.
     /// @param caliberBridgesOut The mapping of spoke caliber outgoing bridge amounts.
     /// @param machineBridgesIn The mapping of machine incoming bridge amounts.
@@ -68,8 +68,8 @@ interface IMachine is IMachineEndpoint {
         mapping(uint16 bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
-        bytes[] positions;
-        bytes[] baseTokens;
+        bytes[] deprecated_4;
+        bytes[] deprecated_5;
         EnumerableMap.AddressToUintMap caliberBridgesIn;
         EnumerableMap.AddressToUintMap caliberBridgesOut;
         EnumerableMap.AddressToUintMap machineBridgesIn;
@@ -161,11 +161,8 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke caliber index => Spoke chain ID.
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
-    /// @notice Spoke chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
-    function getSpokeCaliberDetailedAum(uint256 chainId)
-        external
-        view
-        returns (uint256 aum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp);
+    /// @notice Spoke chain ID => Spoke caliber's net AUM and accounting timestamp.
+    function getSpokeCaliberNetAum(uint256 chainId) external view returns (uint256, uint256);
 
     /// @notice Spoke chain ID => Spoke caliber mailbox address.
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);

@@ -1,0 +1,10 @@
+getNetAum.t.sol
+├── when call is reentrant
+│  └── it should revert
+└── when call is not reentrant
+   ├── given one of the positions in the caliber is stale
+   │  └── it should revert with PositionAccountingStale
+   └── given no position in the caliber is stale
+      ├── it should account for all base-token positions
+      ├── it should account for all positions, debt and non-debt
+      └── it should return the caliber net AUM

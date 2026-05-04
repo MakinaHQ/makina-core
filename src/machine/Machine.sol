@@ -224,17 +224,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberDetailedAum(uint256 chainId)
-        external
-        view
-        override
-        returns (uint256, bytes[] memory, bytes[] memory, uint256)
-    {
+    function getSpokeCaliberNetAum(uint256 chainId) external view override returns (uint256, uint256) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
         }
-        return (scData.netAum, scData.positions, scData.baseTokens, scData.timestamp);
+        return (scData.netAum, scData.timestamp);
     }
 
     /// @inheritdoc IMachine

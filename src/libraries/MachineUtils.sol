@@ -228,8 +228,6 @@ library MachineUtils {
 
         // Update the spoke caliber data in the machine storage.
         caliberData.netAum = accountingData.netAum;
-        caliberData.positions = accountingData.positions;
-        caliberData.baseTokens = accountingData.baseTokens;
         caliberData.timestamp = responseTimestamp;
         _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn, tokenRegistry);
         _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut, tokenRegistry);
@@ -304,8 +302,7 @@ library MachineUtils {
         }
 
         // hub caliber net AUM
-        (uint256 hcAum,,) = ICaliber($._hubCaliber).getDetailedAum();
-        totalAum += hcAum;
+        totalAum += ICaliber($._hubCaliber).getNetAum();
 
         // idle tokens
         len = $._idleTokens.length();

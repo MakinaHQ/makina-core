@@ -35,18 +35,7 @@ import {
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    uint256 internal constant SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE = 3e18;
-    uint256 internal constant SPOKE_CALIBER_BASE_TOKEN_VALUE = 4e18;
-    uint256 internal constant SPOKE_CALIBER_VAULT_VALUE = 5e18;
-    uint256 internal constant SPOKE_CALIBER_BORROW_VALUE = 20e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB = 30e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB = 20e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
-
-    uint256 internal constant TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE =
-        SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
-    uint256 internal constant TOTAL_SPOKE_CALIBER_NEGATIVE_POSITIONS_VALUE = SPOKE_CALIBER_BORROW_VALUE;
+    uint256 internal constant SPOKE_CALIBER_NET_AUM = 15e18;
 
     address internal spokeAccountingTokenAddr;
     address internal spokeBaseTokenAddr;
@@ -93,55 +82,43 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         return data;
     }
 
-    function _buildSpokeCaliberAccountingData(bool negativeValue)
+    function _buildSpokeCaliberAccountingData(bool nullValue)
         internal
         view
         returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
     {
         ICaliberMailbox.SpokeCaliberAccountingData memory data;
 
-        data.netAum = negativeValue
-            ? 0
-            : SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
+        data.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
 
-        data.positions = new bytes[](negativeValue ? 2 : 1);
-        data.positions[0] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_VALUE, false);
-
-        if (negativeValue) {
-            data.positions[1] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_VALUE, true);
-        }
-
-        data.baseTokens = new bytes[](2);
-        data.baseTokens[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
-        data.baseTokens[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_BASE_TOKEN_VALUE);
+        data.meta = ICaliberMailbox.SpokeSnapshotMeta({
+            chainId: block.chainid,
+            mailbox: spokeCaliberMailboxAddr,
+            blockNumber: uint64(block.number),
+            timestamp: block.timestamp
+        });
 
         return data;
     }
 
     function _buildSpokeCaliberAccountingDataWithTransfers(
-        bool negativeValue,
+        bool nullValue,
         uint256 aumOffsetTransfers,
         bytes[] memory bridgesIn,
         bytes[] memory bridgesOut
     ) internal view returns (ICaliberMailbox.SpokeCaliberAccountingData memory) {
         ICaliberMailbox.SpokeCaliberAccountingData memory data;
 
-        data.netAum = negativeValue
-            ? 0
-            : SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
+        data.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
 
         data.netAum += aumOffsetTransfers;
 
-        data.positions = new bytes[](negativeValue ? 2 : 1);
-        data.positions[0] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_VALUE, false);
-
-        if (negativeValue) {
-            data.positions[1] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_VALUE, true);
-        }
-
-        data.baseTokens = new bytes[](2);
-        data.baseTokens[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
-        data.baseTokens[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_BASE_TOKEN_VALUE);
+        data.meta = ICaliberMailbox.SpokeSnapshotMeta({
+            chainId: block.chainid,
+            mailbox: spokeCaliberMailboxAddr,
+            blockNumber: uint64(block.number),
+            timestamp: block.timestamp
+        });
 
         data.bridgesIn = bridgesIn;
         data.bridgesOut = bridgesOut;

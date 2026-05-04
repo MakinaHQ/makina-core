@@ -261,6 +261,12 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
     }
 
     /// @inheritdoc ICaliber
+    function getNetAum() external view override nonReentrantView returns (uint256) {
+        (uint256 netAum,,) = _getAum(false);
+        return netAum;
+    }
+
+    /// @inheritdoc ICaliber
     function getDetailedAum()
         external
         view
@@ -268,40 +274,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         nonReentrantView
         returns (uint256, bytes[] memory, bytes[] memory)
     {
-        CaliberStorage storage $ = _getCaliberStorage();
-
-        uint256 currentTimestamp = block.timestamp;
-        uint256 aum;
-        uint256 debt;
-
-        uint256 len = $._positionIds.length();
-        bytes[] memory positionsValues = new bytes[](len);
-        for (uint256 i; i < len; ++i) {
-            uint256 posId = $._positionIds.at(i);
-            Position memory pos = $._positionById[posId];
-            if (currentTimestamp - $._positionById[posId].lastAccountingTime >= $._positionStaleThreshold) {
-                revert Errors.PositionAccountingStale(posId);
-            } else if (pos.isDebt) {
-                debt += pos.value;
-            } else {
-                aum += pos.value;
-            }
-            positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
-        }
-
-        len = $._baseTokens.length();
-        bytes[] memory baseTokensValues = new bytes[](len);
-        for (uint256 i; i < len; ++i) {
-            address bt = $._baseTokens.at(i);
-            uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
-            uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
-            aum += value;
-            baseTokensValues[i] = abi.encode(bt, value);
-        }
-
-        uint256 netAum = aum > debt ? aum - debt : 0;
-
-        return (netAum, positionsValues, baseTokensValues);
+        return _getAum(true);
     }
 
     /// @inheritdoc ICaliber
@@ -623,6 +596,62 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
             revert Errors.NotRootGuardian();
         }
         emit InstrRootGuardianRemoved(guardian);
+    }
+
+    /// @dev Computes the net AUM by summing the value of all positions and base token balances, and subtracting total debt.
+    ///      Optionally returns the detail of each position and base token values.
+    function _getAum(bool posDetails) internal view returns (uint256, bytes[] memory, bytes[] memory) {
+        CaliberStorage storage $ = _getCaliberStorage();
+
+        uint256 currentTimestamp = block.timestamp;
+        uint256 aum;
+        uint256 debt;
+
+        uint256 len = $._positionIds.length();
+        bytes[] memory positionsValues;
+        if (posDetails) {
+            positionsValues = new bytes[](len);
+        }
+
+        uint256 _positionStaleThreshold = $._positionStaleThreshold;
+        for (uint256 i; i < len; ++i) {
+            uint256 posId = $._positionIds.at(i);
+            Position memory pos = $._positionById[posId];
+
+            if (currentTimestamp - pos.lastAccountingTime >= _positionStaleThreshold) {
+                revert Errors.PositionAccountingStale(posId);
+            } else if (pos.isDebt) {
+                debt += pos.value;
+            } else {
+                aum += pos.value;
+            }
+
+            if (posDetails) {
+                positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
+            }
+        }
+
+        len = $._baseTokens.length();
+        bytes[] memory baseTokensValues;
+        if (posDetails) {
+            baseTokensValues = new bytes[](len);
+        }
+
+        for (uint256 i; i < len; ++i) {
+            address bt = $._baseTokens.at(i);
+            uint256 btBal = IERC20Metadata(bt).balanceOf(address(this));
+            uint256 value = btBal == 0 ? 0 : _accountingValueOf(bt, btBal);
+
+            aum += value;
+
+            if (posDetails) {
+                baseTokensValues[i] = abi.encode(bt, value);
+            }
+        }
+
+        uint256 netAum = aum > debt ? aum - debt : 0;
+
+        return (netAum, positionsValues, baseTokensValues);
     }
 
     /// @dev Adds a new base token to storage.

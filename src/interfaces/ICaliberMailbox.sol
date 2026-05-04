@@ -9,18 +9,28 @@ interface ICaliberMailbox is IMachineEndpoint {
     event CooldownDurationChanged(uint256 oldDuration, uint256 newDuration);
     event HubBridgeAdapterSet(uint256 indexed bridgeId, address indexed adapter);
 
-    /// @notice Accounting data of the caliber.
-    /// @param netAum The net AUM expressed in caliber's accounting token.
-    /// @param positions The list of positions of the caliber, each encoded as abi.encode(positionId, value, isDebt).
-    /// @param baseTokens The list of base tokens of the caliber, each encoded as abi.encode(token, value).
+    /// @notice Spoke caliber accounting snapshot metadata.
+    /// @param chainId The chain ID of the spoke caliber.
+    /// @param mailbox The address of the spoke caliber mailbox.
+    /// @param blockNumber The block number used as the snapshot reference point.
+    /// @param timestamp The block timestamp used as the snapshot reference point.
+    struct SpokeSnapshotMeta {
+        uint256 chainId;
+        address mailbox;
+        uint64 blockNumber;
+        uint256 timestamp;
+    }
+
+    /// @notice Spoke caliber accounting snapshot data.
+    /// @param netAum The net AUM denominated in the caliber accounting token.
     /// @param bridgesIn The list of incoming bridge amounts, each encoded as abi.encode(token, amount).
     /// @param bridgesOut The list of outgoing bridge amounts, each encoded as abi.encode(token, amount).
+    /// @param meta The snapshot metadata.
     struct SpokeCaliberAccountingData {
         uint256 netAum;
-        bytes[] positions;
-        bytes[] baseTokens;
         bytes[] bridgesIn;
         bytes[] bridgesOut;
+        SpokeSnapshotMeta meta;
     }
 
     /// @notice Initializer of the contract.
