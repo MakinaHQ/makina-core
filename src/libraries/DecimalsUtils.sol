@@ -2,8 +2,6 @@
 pragma solidity 0.8.28;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
-import {LowLevelCall} from "@openzeppelin/contracts/utils/LowLevelCall.sol";
-import {Memory} from "@openzeppelin/contracts/utils/Memory.sol";
 
 import {Errors} from "./Errors.sol";
 
@@ -18,15 +16,11 @@ library DecimalsUtils {
 
     /// @dev Checks that asset exposes decimals() and that it is within the supported range.
     function _checkDecimals(address asset) internal view {
-        Memory.Pointer ptr = Memory.getFreeMemoryPointer();
-        (bool success, bytes32 returnedDecimals,) =
-            LowLevelCall.staticcallReturn64Bytes(address(asset), abi.encodeCall(IERC20Metadata.decimals, ()));
-        Memory.unsafeSetFreeMemoryPointer(ptr);
-
-        if (
-            !success || LowLevelCall.returnDataSize() < 32 || uint256(returnedDecimals) < MIN_DECIMALS
-                || uint256(returnedDecimals) > MAX_DECIMALS
-        ) {
+        try IERC20Metadata(asset).decimals() returns (uint8 decimals_) {
+            if (decimals_ < MIN_DECIMALS || decimals_ > MAX_DECIMALS) {
+                revert Errors.InvalidDecimals();
+            }
+        } catch {
             revert Errors.InvalidDecimals();
         }
     }
