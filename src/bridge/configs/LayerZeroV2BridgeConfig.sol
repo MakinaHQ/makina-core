@@ -35,8 +35,8 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
         _disableInitializers();
     }
 
-    function initialize(address _initialAuthority) external initializer {
-        __AccessManaged_init(_initialAuthority);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IBridgeConfig
@@ -70,7 +70,7 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
-    function getForeignToken(address localToken, uint256 foreignEvmChainId) external view returns (address) {
+    function getForeignToken(address localToken, uint256 foreignEvmChainId) external view override returns (address) {
         address foreignToken = _getLayerZeroV2BridgeConfigStorage()._localToForeignToken[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
             revert Errors.LzForeignTokenNotRegistered();
@@ -82,8 +82,12 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     function setLzEndpointId(uint256 evmChainId, uint32 lzEndpointId) external override restricted {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
 
-        if (evmChainId == 0 || lzEndpointId == 0) {
+        if (evmChainId == 0) {
             revert Errors.ZeroChainId();
+        }
+
+        if (lzEndpointId == 0) {
+            revert Errors.ZeroLzEndpointId();
         }
 
         uint32 oldLz = $._evmToLzId[evmChainId];
@@ -116,7 +120,11 @@ contract LayerZeroV2BridgeConfig is AccessManagedUpgradeable, ILayerZeroV2Bridge
     }
 
     /// @inheritdoc ILayerZeroV2BridgeConfig
-    function setForeignToken(address localToken, uint256 foreignEvmChainId, address foreignToken) external restricted {
+    function setForeignToken(address localToken, uint256 foreignEvmChainId, address foreignToken)
+        external
+        override
+        restricted
+    {
         LayerZeroV2BridgeConfigStorage storage $ = _getLayerZeroV2BridgeConfigStorage();
 
         if (localToken == address(0) || foreignToken == address(0)) {

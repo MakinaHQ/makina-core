@@ -18,6 +18,7 @@ import {Errors} from "../../libraries/Errors.sol";
 contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
     using SafeERC20 for IERC20;
     using EnumerableSet for EnumerableSet.UintSet;
+    using CctpV2Message for *;
 
     uint16 private constant CCTP_V2_BRIDGE_ID = 3;
 
@@ -33,14 +34,15 @@ contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
     }
 
     /// @inheritdoc ICctpV2DestinationCaller
-    function receiveCctpV2Message(bytes calldata message, bytes calldata attestation) external nonReentrant {
-        CctpV2Message.checkMessageLength(message);
-        bytes memory encodedMessage = CctpV2Message.getHookData(message);
-        uint32 srcDomain = CctpV2Message.getSourceDomain(message);
-        bytes32 inputToken = CctpV2Message.getBurnToken(message);
+    function receiveCctpV2Message(bytes calldata message, bytes calldata attestation) external override nonReentrant {
+        message.checkMessageLength();
+
+        if (message.getRecipient() != executionTarget || message.getMintRecipient() != address(this)) {
+            revert Errors.InvalidCctpMessage();
+        }
 
         address tokenMinter = ICctpV2TokenMessenger(executionTarget).localMinter();
-        address token = ICctpV2TokenMinter(tokenMinter).getLocalToken(srcDomain, inputToken);
+        address token = ICctpV2TokenMinter(tokenMinter).getLocalToken(message.getSourceDomain(), message.getBurnToken());
 
         uint256 balBefore = IERC20(token).balanceOf(address(this));
         if (!ICctpV2MessageTransmitter(receiveSource).receiveMessage(message, attestation)) {
@@ -48,7 +50,7 @@ contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
         }
         uint256 amount = IERC20(token).balanceOf(address(this)) - balBefore;
 
-        _receiveInBridgeTransfer(encodedMessage, token, amount);
+        _receiveInBridgeTransfer(message.getHookData(), token, amount);
     }
 
     /// @inheritdoc BridgeAdapter
@@ -82,14 +84,16 @@ contract CctpV2BridgeAdapter is BridgeAdapter, ICctpV2DestinationCaller {
 
         (uint32 minFinalityThreshold) = abi.decode(data, (uint32));
 
+        bytes32 mintRecipient = receipt.recipient.addressToBytes32();
+
         IERC20(receipt.inputToken).forceApprove(approvalTarget, receipt.inputAmount);
         ICctpV2TokenMessenger(executionTarget)
             .depositForBurnWithHook(
                 receipt.inputAmount,
                 destCctpDomain,
-                CctpV2Message.addressToBytes32(receipt.recipient),
+                mintRecipient,
                 receipt.inputToken,
-                CctpV2Message.addressToBytes32(receipt.recipient),
+                mintRecipient,
                 receipt.inputAmount - receipt.minOutputAmount,
                 minFinalityThreshold,
                 receipt.encodedMessage

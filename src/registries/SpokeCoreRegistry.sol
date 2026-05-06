@@ -24,11 +24,11 @@ contract SpokeCoreRegistry is CoreRegistry, ISpokeCoreRegistry {
         _disableInitializers();
     }
 
-    function initialize(address _oracleRegistry, address _tokenRegistry, address _initialAuthority)
+    function initialize(address _oracleRegistry, address _tokenRegistry, address initialAuthority)
         external
         initializer
     {
-        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, _initialAuthority);
+        __CoreRegistry_init(_oracleRegistry, _tokenRegistry, initialAuthority);
     }
 
     /// @inheritdoc ISpokeCoreRegistry

@@ -83,8 +83,7 @@ abstract contract CctpV2BridgeAdapter_Integration_Concrete_Test is BridgeAdapter
 
         bool receiverSide1 = bridgeAdapter == address(bridgeAdapter1);
 
-        bytes32 destinationCaller = bytes32(uint256(uint160(bridgeAdapter)));
-        bytes32 mintRecipient = destinationCaller;
+        bytes32 mintRecipient = bytes32(uint256(uint160(bridgeAdapter)));
         address burnToken = abi.decode(encodedMessage, (IBridgeAdapter.BridgeMessage)).inputToken;
 
         bytes32 sender = receiverSide1
@@ -95,7 +94,8 @@ abstract contract CctpV2BridgeAdapter_Integration_Concrete_Test is BridgeAdapter
             MockCctpV2TokenMessenger.RelayMessageParams({
                 sourceDomain: receiverSide1 ? CCTP_V2_SPOKE_DOMAIN : CCTP_V2_HUB_DOMAIN,
                 destinationDomain: receiverSide1 ? CCTP_V2_HUB_DOMAIN : CCTP_V2_SPOKE_DOMAIN,
-                destinationCaller: destinationCaller,
+                recipient: bytes32(uint256(uint160(address(tokenMessenger)))),
+                destinationCaller: mintRecipient,
                 minFinalityThreshold: CCTP_V2_CONFIRMED_FINALITY_THRESHOLD,
                 burnToken: burnToken,
                 mintRecipient: mintRecipient,

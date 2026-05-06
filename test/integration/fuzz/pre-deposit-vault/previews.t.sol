@@ -31,8 +31,8 @@ contract Previews_Integration_Fuzz_Test is Base_Hub_Test {
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
-        data.dtDecimals = uint8(bound(data.dtDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
-        data.atDecimals = uint8(bound(data.atDecimals, DecimalsUtils.MIN_DECIMALS, DecimalsUtils.MAX_DECIMALS));
+        data.dtDecimals = uint8(bound(data.dtDecimals, 6, 18));
+        data.atDecimals = uint8(bound(data.atDecimals, 6, 18));
         data.dfDecimals = uint8(bound(data.dfDecimals, 6, 18));
         data.afDecimals = uint8(bound(data.afDecimals, 6, 18));
         data.price_a_e = uint32(bound(data.price_a_e, 1, 1e4));

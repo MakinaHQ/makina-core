@@ -47,8 +47,8 @@ interface ICaliberMailbox is IMachineEndpoint {
     function getSpokeCaliberAccountingData() external view returns (SpokeCaliberAccountingData memory);
 
     /// @notice Sets the associated caliber address.
-    /// @param caliber The address of the associated caliber.
-    function setCaliber(address caliber) external;
+    /// @param _caliber The address of the associated caliber.
+    function setCaliber(address _caliber) external;
 
     /// @notice Sets the duration of the cooldown period for outgoing bridge transfers.
     /// @param newCooldownDuration The new duration in seconds.

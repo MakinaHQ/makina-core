@@ -6,17 +6,13 @@
 
 The `Machine` contract is the central and user-facing component of the protocol. It handles deposits, redemptions and share price calculation.
 
-#### Accounting Token
-
-Each Machine manages a dedicated share token representing user ownership in its strategy. The Machine has exclusive minting and burning rights over this token.
-
 #### Machine Share Token
 
-Each machine controls a share token, which represent users shares in a given strategy. The machine has minting and burning rights on the token.
+Each machine controls a share token, which represents users' shares in a given strategy. The machine has minting and burning rights on the token.
 
 #### Share price calculation
 
-The share price consists essentially in the ratio between share token supply and the last calculated total machine AUM. In order to mitigate donation attacks, the conversion includes a `shareTokenDecimalsOffset` value representing the decimal offset between the accounting token and the share token. By setting the ratio between virtual shares and virtual assets in the vault, the offset also determines the initial exchange rate.
+The share price consists essentially of the ratio between share token supply and the last calculated total machine AUM. In order to mitigate donation attacks, the conversion includes a `shareTokenDecimalsOffset` value representing the decimal offset between the accounting token and the share token. By setting the ratio between virtual shares and virtual assets in the vault, the offset also determines the initial exchange rate.
 
 #### Deposits and Redemptions
 
@@ -32,7 +28,7 @@ After each total AUM computation, machines apply three types of fees by inflatin
 - Security Module Fees
 - Performance Fees
 
-Managment and Security Module fees will be calculated based on share supply, independently of performance. Performance fees, on the other hand, are based on both share supply and share price performance. Fee calculations are delegated to a `FeeManager` module, classified as a periphery contract and excluded from this repository’s scope.
+Management and Security Module fees will be calculated based on share supply, independently of performance. Performance fees, on the other hand, are based on both share supply and share price performance. Fee calculations are delegated to a `FeeManager` module, classified as a periphery contract and excluded from this repository’s scope.
 
 #### Cross-chain Accounting
 
@@ -70,10 +66,10 @@ Instructions can be of four different types:
 
 - **ACCOUNTING**: Calculates the current size of a position and updates it in the executing caliber's storage.
 - **MANAGEMENT**: Modifies the size of a position. A `MANAGEMENT` instruction is always paired with an `ACCOUNTING` instruction to account for the changes it introduces.
-- **HARVESTING**: Collects rewards earned by Caliber’s open positions from external protocols. A single `HARVESTING` instruction can aggregate rewards from multiple positions and transfer them to the Caliber contract.
+- **HARVEST**: Collects rewards earned by Caliber’s open positions from external protocols. A single `HARVEST` instruction can aggregate rewards from multiple positions and transfer them to the Caliber contract.
 - **FLASHLOAN_MANAGEMENT**: Modifies the size of a position in the context of a flash loan, as part of an outer `MANAGEMENT` instruction. A `FLASHLOAN_MANAGEMENT` instruction is always associated with a `MANAGEMENT` instruction and can only be executed in its scope.
 
-Each `Instruction` object includes an `affectedTokens` list which can have various purpose for different instruction types. For `HARVESTING` and `FLASHLOAN_MANAGEMENT` instructions, this list is ignored.
+Each `Instruction` object includes an `affectedTokens` list which can have various purposes for different instruction types. For `HARVEST` and `FLASHLOAN_MANAGEMENT` instructions, this list is ignored.
 
 Flash loans are a specialized use case that require a `FlashLoanModule` instance, classified as a periphery contract and excluded from this repository’s scope.
 
@@ -87,7 +83,7 @@ The protocol relies on specific assumptions on the instructions:
   - Their output state must start with an ordered list of amounts (one amount per slot) corresponding to the tokens in `affectedTokens`, followed by an end-of-args flag.
 - **MANAGEMENT**:
   - The `affectedTokens` list must include exactly all tokens spent by the instruction. These tokens must also be registered as base tokens in the executing caliber.
-- **HARVESTING**:
+- **HARVEST**:
   - They are restricted to receive-only operations. They must not spend any tokens that are initially held by the Caliber.
 - **FLASHLOAN_MANAGEMENT**:
   - They must not result in token balance changes for tokens that are not in the `affectedTokens` list of the associated `MANAGEMENT` instruction.
@@ -108,11 +104,11 @@ Furthermore, while positions can be represented by one or more receipt tokens (e
 
 ### SwapModule
 
-The `SwapModule` contract serves as an external module, enabling calibers and machines to securely interact with external swap protocols using unverified calldata. The swapModule pulls funds from caller before execution and sends back output funds upon completion.
+The `SwapModule` contract serves as an external module, enabling calibers and machines to securely interact with external swap protocols using unverified calldata. The swapModule pulls funds from the caller before execution and sends back output funds upon completion.
 
 ### Oracle Registry
 
-The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](https://docs.chain.link/data-feeds/price-feeds), and prices tokens in a reference currency (e.g. USD) using either one feed or a two feeds path.
+The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](https://docs.chain.link/data-feeds/price-feeds), and prices tokens in a reference currency (e.g. USD) using either one feed or a two-feed path.
 
 ### Chain Registry
 
@@ -126,7 +122,7 @@ The `TokenRegistry` contract maintains the association between token addresses o
 
 Liquidity can be bridged between a Hub Machine and a Spoke Caliber via their respective bridge adapters. The protocol provides a dedicated bridge adapter implementation for each supported external bridge protocol.
 
-Bridging is a four-step process, executed by the operator, and functions symmetrically in both directions: Hub → Spoke and Spoke → Hub.
+Bridging is a five-step process, executed by the operator, and functions symmetrically in both directions: Hub → Spoke and Spoke → Hub.
 
 1. Schedule the outgoing transfer on the sender side.
 2. Authorize the incoming transfer on the recipient side by registering the message hash.
@@ -140,7 +136,7 @@ The protocol assumes that the input and output tokens involved in a bridge trans
 
 Contracts in this repository implement the [OpenZeppelin AccessManagerUpgradeable](https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/access/manager/AccessManagerUpgradeable.sol). The Makina protocol provides an instance of `AccessManagerUpgradeable` with addresses defined by the Makina DAO, but institutions that require it can deploy machines with their own `AccessManagerUpgradeable`. See [PERMISSIONS.md](https://github.com/makinaHQ/makina-core/blob/main/PERMISSIONS.md) for full list of permissions.
 
-Roles use in Makina Core contracts are defined as follows:
+Roles used in Makina Core contracts are defined as follows:
 
 - `ADMIN_ROLE` - roleId `0` - Super admin of the Access Manager. Authorized to perform Access Manager configuration actions.
 - `INFRA_CONFIG_ROLE` - roleId `1` - Authorized to configure shared core contracts.

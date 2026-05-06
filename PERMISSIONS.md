@@ -108,10 +108,10 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set mappings of local tokens to corresponding LZ OFTs.
   - Can set mappings of local tokens to their foreign counterparts through OFT bridging.
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
 
-# CctpV2BridgeConfig
+### CctpV2BridgeConfig
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
   - Can set mappings of EVM chain ID to CCTP domain.
@@ -135,7 +135,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
-### CalibrMailbox Beacon
+### CaliberMailbox Beacon
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
@@ -152,7 +152,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 ### CctpV2BridgeAdapter Beacon
 
-- `INFRA_UPGRADE_ROLE` (roleId `5`)
+- `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation.
 
 ### Machine
@@ -247,7 +247,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can add and remove Merkle root guardians.
 
 - **Security Council**
-  - Can account for positions. at any time.
+  - Can account for positions at any time.
 
 - **Risk Manager**
   - Can schedule an update of the root of the Merkle tree containing allowed instructions.

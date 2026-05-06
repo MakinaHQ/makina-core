@@ -4,6 +4,8 @@ pragma solidity ^0.8.28;
 import {IBridgeConfig} from "./IBridgeConfig.sol";
 
 interface IAcrossV3BridgeConfig is IBridgeConfig {
+    event ForeignChainSupportUpdated(uint256 indexed foreignChainId, bool indexed supported);
+
     /// @notice Foreign Chain ID => Whether the chain is supported.
     function isForeignChainSupported(uint256 foreignChainId) external view returns (bool);
 

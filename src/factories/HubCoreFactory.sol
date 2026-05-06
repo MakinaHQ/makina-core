@@ -45,8 +45,8 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         _disableInitializers();
     }
 
-    function initialize(address _initialAuthority) external initializer {
-        __AccessManaged_init(_initialAuthority);
+    function initialize(address initialAuthority) external initializer {
+        __AccessManaged_init(initialAuthority);
     }
 
     /// @inheritdoc IHubCoreFactory
@@ -172,18 +172,18 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
     }
 
     /// @inheritdoc IBridgeAdapterFactory
-    function createBridgeAdapter(address bridgeController, BridgeAdapterInitParams calldata baParams)
+    function createBridgeAdapter(address controller, BridgeAdapterInitParams calldata baParams)
         external
         override
         restricted
         returns (address)
     {
         HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
-        if (!$._isMachine[bridgeController]) {
+        if (!$._isMachine[controller]) {
             revert Errors.InvalidBridgeController();
         }
 
-        return _createBridgeAdapter(bridgeController, baParams, $._instanceSalts[bridgeController]);
+        return _createBridgeAdapter(controller, baParams, $._instanceSalts[controller]);
     }
 
     /// @dev Deploys a machine share token.
@@ -196,7 +196,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         return _shareToken;
     }
 
-    /// @dev Sets function roles for a deployed pre-deposit vault instance.
+    /// @dev Sets function roles for a deployed pre-deposit vault instance in the provided authority.
     function _setupPreDepositVaultAMFunctionRoles(address _authority, address _preDepositVault) internal {
         _checkAuthority(_authority);
 
@@ -206,7 +206,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
             .setTargetFunctionRole(_preDepositVault, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }
 
-    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable.
+    /// @dev Sets function roles for a deployed machine instance, its hub caliber, and its initial fee manager if applicable, in the provided authority.
     function _setupMachineBundleAMFunctionRoles(
         address _authority,
         address _machine,

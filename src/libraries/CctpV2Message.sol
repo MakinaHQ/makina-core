@@ -6,10 +6,12 @@ import {Errors} from "./Errors.sol";
 library CctpV2Message {
     /// @dev Indexes in message
     uint256 private constant MESSAGE_SOURCE_DOMAIN_INDEX = 4;
+    uint256 private constant MESSAGE_RECIPIENT_INDEX = 76;
     uint256 private constant MESSAGE_BODY_INDEX = 148;
 
     /// @dev Indexes in message body
     uint256 private constant BODY_BURN_TOKEN_INDEX = 4;
+    uint256 private constant BODY_MINT_RECIPIENT_INDEX = 36;
     uint256 private constant BODY_HOOK_DATA_INDEX = 228;
 
     /// @dev Checks that `message` has the minimum length required for parsing.
@@ -32,6 +34,16 @@ library CctpV2Message {
         return uint32(bytes4(result));
     }
 
+    /// @dev Returns the recipient.
+    function getRecipient(bytes calldata message) internal pure returns (address) {
+        bytes32 result;
+        assembly {
+            result := calldataload(add(message.offset, MESSAGE_RECIPIENT_INDEX))
+        }
+
+        return bytes32ToAddress(result);
+    }
+
     /// @dev Returns the burn token from the message body.
     function getBurnToken(bytes calldata message) internal pure returns (bytes32) {
         bytes32 result;
@@ -42,6 +54,16 @@ library CctpV2Message {
         return result;
     }
 
+    /// @dev Returns the mint recipient from the message body.
+    function getMintRecipient(bytes calldata message) internal pure returns (address) {
+        bytes32 result;
+        assembly {
+            result := calldataload(add(message.offset, add(MESSAGE_BODY_INDEX, BODY_MINT_RECIPIENT_INDEX)))
+        }
+
+        return bytes32ToAddress(result);
+    }
+
     /// @dev Returns the hook data from the message body.
     function getHookData(bytes calldata message) internal pure returns (bytes memory) {
         return message[MESSAGE_BODY_INDEX + BODY_HOOK_DATA_INDEX:];
@@ -50,5 +72,10 @@ library CctpV2Message {
     /// @dev Converts an address to bytes32.
     function addressToBytes32(address addr) internal pure returns (bytes32) {
         return bytes32(uint256(uint160(addr)));
+    }
+
+    /// @dev Converts a bytes32 to address.
+    function bytes32ToAddress(bytes32 b) internal pure returns (address) {
+        return address(uint160(uint256(b)));
     }
 }

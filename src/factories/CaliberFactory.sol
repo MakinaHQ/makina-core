@@ -31,8 +31,8 @@ abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFacto
     }
 
     /// @inheritdoc ICaliberFactory
-    function isCaliber(address adapter) external view override returns (bool) {
-        return _getCaliberFactoryStorage()._isCaliber[adapter];
+    function isCaliber(address caliber) external view override returns (bool) {
+        return _getCaliberFactoryStorage()._isCaliber[caliber];
     }
 
     /// @dev Internal logic for caliber deployment via create3.
@@ -56,7 +56,7 @@ abstract contract CaliberFactory is Create3Factory, MakinaContext, ICaliberFacto
         return caliber;
     }
 
-    /// @dev Sets function roles in associated access manager for a deployed caliber intance.
+    /// @dev Sets function roles in associated access manager for a deployed caliber instance.
     function _setupCaliberAMFunctionRoles(address _authority, address _caliber) internal {
         bytes4[] memory mgmtSetupSelectors = new bytes4[](2);
         mgmtSetupSelectors[0] = ICaliber.addInstrRootGuardian.selector;

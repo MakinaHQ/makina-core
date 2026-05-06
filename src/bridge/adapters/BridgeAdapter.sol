@@ -108,7 +108,7 @@ abstract contract BridgeAdapter is Initializable, ReentrancyGuard, MakinaContext
     }
 
     /// @inheritdoc IBridgeAdapter
-    function outBridgeTransferCancelDefault(uint256 transferId) public view returns (uint256) {
+    function outBridgeTransferCancelDefault(uint256 transferId) external view override returns (uint256) {
         return _outBridgeTransferCancelDefault(transferId);
     }
 
@@ -226,7 +226,7 @@ abstract contract BridgeAdapter is Initializable, ReentrancyGuard, MakinaContext
     }
 
     /// @inheritdoc IBridgeAdapter
-    function withdrawPendingFunds(address token) external nonReentrant onlyController {
+    function withdrawPendingFunds(address token) external override nonReentrant onlyController {
         BridgeAdapterStorage storage $ = _getBridgeAdapterStorage();
 
         _clearSet($._pendingOutTransferIds[token]);

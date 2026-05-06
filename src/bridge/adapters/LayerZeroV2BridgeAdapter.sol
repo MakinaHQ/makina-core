@@ -53,6 +53,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
     )
         external
         payable
+        override
     {
         if (msg.sender != receiveSource) {
             revert Errors.UnauthorizedSource();
@@ -130,7 +131,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
             dstEid: lzEndpointId,
             to: bytes32(uint256(uint160(receipt.recipient))),
             amountLD: receipt.inputAmount,
-            minAmountLD: receipt.inputAmount,
+            minAmountLD: receipt.minOutputAmount,
             extraOptions: options,
             composeMsg: receipt.encodedMessage,
             oftCmd: ""
@@ -148,7 +149,7 @@ contract LayerZeroV2BridgeAdapter is BridgeAdapter, ILayerZeroComposer {
             revert Errors.InvalidLzSentAmount();
         }
         if (oftr.amountReceivedLD < receipt.minOutputAmount) {
-            revert Errors.MaxValueLossExceeded();
+            revert Errors.AmountOutTooLow();
         }
 
         emit LzGuidCreated(mr.guid, transferId);

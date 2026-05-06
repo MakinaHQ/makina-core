@@ -51,13 +51,13 @@ interface IMakinaGovernable {
     function restrictedAccountingMode() external view returns (bool);
 
     /// @notice User => Whether the user is an accounting agent
-    function isAccountingAgent(address agent) external view returns (bool);
+    function isAccountingAgent(address user) external view returns (bool);
 
     /// @notice User => Whether the user is authorized to perform accounting operations under current settings
     function isAccountingAuthorized(address user) external view returns (bool);
 
     /// @notice Sets a new mechanic.
-    /// @param newMechanic The address of new mechanic.
+    /// @param newMechanic The address of the new mechanic.
     function setMechanic(address newMechanic) external;
 
     /// @notice Sets a new security council.

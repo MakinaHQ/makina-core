@@ -54,7 +54,7 @@ interface IMachine is IMachineEndpoint {
     /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
     /// @param timestamp The timestamp of the last accounting.
     /// @param netAum The net AUM of the spoke caliber.
-    /// @param positions The list of positions of the spoke caliber, each encoded as abi.encode(positionId, value).
+    /// @param positions The list of positions of the spoke caliber, each encoded as abi.encode(positionId, value, isDebt).
     /// @param baseTokens The list of base tokens of the spoke caliber, each encoded as abi.encode(token, value).
     /// @param caliberBridgesIn The mapping of spoke caliber incoming bridge amounts.
     /// @param caliberBridgesOut The mapping of spoke caliber outgoing bridge amounts.
@@ -226,22 +226,22 @@ interface IMachine is IMachineEndpoint {
     function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
-    /// @param chainId The foreign EVM chain ID of the spoke caliber.
+    /// @param foreignChainId The foreign EVM chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
     /// @param bridges The list of bridges supported with the spoke caliber.
     /// @param adapters The list of corresponding adapters for each bridge. Must be the same length as `bridges`.
     function setSpokeCaliber(
-        uint256 chainId,
+        uint256 foreignChainId,
         address spokeCaliberMailbox,
         uint16[] calldata bridges,
         address[] calldata adapters
     ) external;
 
     /// @notice Registers a spoke bridge adapter.
-    /// @param chainId The foreign EVM chain ID of the adapter.
+    /// @param foreignChainId The foreign EVM chain ID of the adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The foreign address of the bridge adapter.
-    function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) external;
+    function setSpokeBridgeAdapter(uint256 foreignChainId, uint16 bridgeId, address adapter) external;
 
     /// @notice Sets the depositor address.
     /// @param newDepositor The address of the new depositor.

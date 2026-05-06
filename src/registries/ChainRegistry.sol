@@ -62,7 +62,7 @@ contract ChainRegistry is AccessManagedUpgradeable, IChainRegistry {
     }
 
     /// @inheritdoc IChainRegistry
-    function setChainIds(uint256 evmChainId, uint16 whChainId) external restricted {
+    function setChainIds(uint256 evmChainId, uint16 whChainId) external override restricted {
         ChainRegistryStorage storage $ = _getChainRegistryStorage();
 
         if (evmChainId == 0 || whChainId == 0) {

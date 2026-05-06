@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable2Step, Ownable} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
@@ -25,12 +25,12 @@ contract MachineShare is ERC20, Ownable2Step, IMachineShare {
     }
 
     /// @inheritdoc IMachineShare
-    function mint(address to, uint256 amount) external onlyOwner {
+    function mint(address to, uint256 amount) external override onlyOwner {
         _mint(to, amount);
     }
 
     /// @inheritdoc IMachineShare
-    function burn(address from, uint256 amount) external {
+    function burn(address from, uint256 amount) external override {
         if (from != msg.sender) {
             _checkOwner();
         }

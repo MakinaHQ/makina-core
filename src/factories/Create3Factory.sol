@@ -42,8 +42,7 @@ abstract contract Create3Factory {
     /// @dev keccak256 hash of `PROXY_BYTECODE`.
     bytes32 internal constant PROXY_BYTECODE_HASH = 0x21c35dbe1b344a2488cf3321d6ce542f8e9f305544ff09e4993a62319a497c1f;
 
-    /// @notice Creates a new contract using CREATE3.
-    /// @dev
+    /// @dev Creates a new contract using CREATE3.
     function _create3(bytes32 _saltDomain, bytes32 _salt, bytes memory _initCode) internal returns (address) {
         bytes memory _proxyInitcode = PROXY_BYTECODE;
 
@@ -75,8 +74,8 @@ abstract contract Create3Factory {
         return newContract;
     }
 
-    /// @notice Computes the resulting address of a contract deployed via CREATE3 from this factory, using address(this) and the given salt
-    /// @dev The address creation formula is: keccak256(rlp([keccak256(0xff ++ address(this) ++ _salt ++ keccak256(initCode))[12:], 0x01]))
+    /// @dev Computes the resulting address of a contract deployed via CREATE3 from this factory, using address(this) and the given salt
+    ///      The address creation formula is: keccak256(rlp([keccak256(0xff ++ address(this) ++ _salt ++ keccak256(initCode))[12:], 0x01]))
     function _computeAddress(bytes32 _namespacedSalt) internal view returns (address) {
         address proxy = address(
             uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), _namespacedSalt, PROXY_BYTECODE_HASH))))
@@ -84,7 +83,7 @@ abstract contract Create3Factory {
         return address(uint160(uint256(keccak256(abi.encodePacked(hex"d694", proxy, hex"01")))));
     }
 
-    /// @notice Computes a namespaced salt from a domain and user-provided salt.
+    /// @dev Computes a namespaced salt from a domain and user-provided salt.
     function _computeNamespacedSalt(bytes32 domain, bytes32 userSalt) internal pure returns (bytes32) {
         return keccak256(abi.encode(domain, userSalt));
     }

@@ -45,6 +45,7 @@ contract CctpV2BridgeConfig is AccessManagedUpgradeable, ICctpV2BridgeConfig {
     function isRouteSupported(address inputToken, uint256 foreignChainId, address outputToken)
         external
         view
+        override
         returns (bool)
     {
         CctpV2BridgeConfigStorage storage $ = _getCctpV2BridgeConfigStorage();

@@ -18,7 +18,7 @@ library CaliberAccountingCCQ {
         address wormhole,
         bytes calldata response,
         GuardianSignature[] calldata signatures
-    ) external view returns (QueryResponse memory ret) {
+    ) external view returns (QueryResponse memory) {
         return QueryResponseLib.decodeAndVerifyQueryResponseCd(
             wormhole, response, signatures, ICoreBridge(wormhole).getCurrentGuardianSetIndex()
         );

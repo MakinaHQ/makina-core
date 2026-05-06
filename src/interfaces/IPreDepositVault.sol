@@ -21,14 +21,14 @@ interface IPreDepositVault {
 
     /// @notice Initializer of the contract.
     /// @param params The initialization parameters.
-    /// @param shareToken The address of the share token.
-    /// @param depositToken The address of the deposit token.
-    /// @param accountingToken The address of the accounting token.
+    /// @param _shareToken The address of the share token.
+    /// @param _depositToken The address of the deposit token.
+    /// @param _accountingToken The address of the accounting token.
     function initialize(
         PreDepositVaultInitParams calldata params,
-        address shareToken,
-        address depositToken,
-        address accountingToken
+        address _shareToken,
+        address _depositToken,
+        address _accountingToken
     ) external;
 
     /// @notice True if the vault has migrated to a machine instance, false otherwise.
@@ -96,13 +96,13 @@ interface IPreDepositVault {
     /// @param machine The address of the machine.
     function setPendingMachine(address machine) external;
 
+    /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
+    /// @param newShareLimit The new share limit.
+    function setShareLimit(uint256 newShareLimit) external;
+
     /// @notice Sets the risk manager address.
     /// @param newRiskManager The address of the new risk manager.
     function setRiskManager(address newRiskManager) external;
-
-    /// @notice Sets the new share token supply limit that cannot be exceeded by new deposits.
-    /// @param newShareLimit The new share limit
-    function setShareLimit(uint256 newShareLimit) external;
 
     /// @notice Whitelist or unwhitelist a list of users.
     /// @param users The addresses of the users to update.

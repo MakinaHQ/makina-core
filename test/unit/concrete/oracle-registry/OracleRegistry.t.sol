@@ -12,6 +12,9 @@ abstract contract OracleRegistry_Unit_Concrete_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
 
+        baseToken = new MockERC20("Base Token", "BT", 18);
+        quoteToken = new MockERC20("Quote Token", "QT", 8);
+
         accessManager = _deployAccessManager(deployer, deployer);
         oracleRegistry = _deployOracleRegistry(address(accessManager), address(accessManager));
 

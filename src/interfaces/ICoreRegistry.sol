@@ -65,8 +65,8 @@ interface ICoreRegistry {
 
     /// @notice Sets the bridge adapter beacon address.
     /// @param bridgeId The bridge ID.
-    /// @param _bridgeAdapter The bridge adapter beacon address.
-    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapter) external;
+    /// @param _bridgeAdapterBeacon The bridge adapter beacon address.
+    function setBridgeAdapterBeacon(uint16 bridgeId, address _bridgeAdapterBeacon) external;
 
     /// @notice Sets the bridge config address.
     /// @param bridgeId The bridge ID.

@@ -19,6 +19,7 @@ library Errors {
     error CctpForeignTokenNotRegistered();
     error CctpMessageReceptionFailed();
     error Create3ContractDeploymentFailed();
+    error Create3ProxyDeploymentFailed();
     error DirectManageFlashLoanCall();
     error EvmChainIdNotRegistered(uint256 chainId);
     error ExceededMaxDeposit();
@@ -26,14 +27,15 @@ library Errors {
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
     error ForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error GroupIdNotProvided();
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
-    error GroupIdNotProvided();
     error InstructionsMismatch();
     error InsufficientBalance();
     error InvalidAccounting();
     error InvalidAffectedToken();
     error InvalidBridgeController();
+    error InvalidBridgeId();
     error InvalidBridgeTransferRoute();
     error InvalidCctpMessage();
     error InvalidChainId();
@@ -53,14 +55,12 @@ library Errors {
     error LocalTokenNotRegistered(address token, uint256 foreignEvmChainId);
     error LzEndpointIdNotRegistered();
     error LzForeignTokenNotRegistered();
-    error OftNotRegistered();
     error ManageFlashLoanReentrantCall();
     error MaxAuthorizedPriceChangeExceeded();
     error MaxValueLossExceeded();
     error MessageAlreadyAuthorized();
     error Migrated();
     error MinOutputAmountExceedsInputAmount();
-    error MismatchedLength();
     error MismatchedLengths();
     error MissingInstructionForGroup(uint256 groupId);
     error NegativeTokenPrice(address priceFeed);
@@ -69,7 +69,6 @@ library Errors {
     error NotAccountingAgent();
     error NotBaseToken();
     error NotCaliber();
-    error NotCaliberMailbox();
     error NotController();
     error NotFactory();
     error NotFactoryAuthority();
@@ -79,6 +78,7 @@ library Errors {
     error NotPendingMachine();
     error NotPreDepositVault();
     error NotRootGuardian();
+    error OftNotRegistered();
     error OngoingCooldown();
     error OutTransferDisabled();
     error PendingBridgeTransfer();
@@ -90,10 +90,9 @@ library Errors {
     error PriceFeedRouteNotRegistered(address token);
     error PriceFeedStale(address priceFeed, uint256 updatedAt);
     error ProtectedAccountingAgent();
-    error ProtectedChainId();
     error ProtectedCctpDomain();
+    error ProtectedChainId();
     error ProtectedRootGuardian();
-    error Create3ProxyDeploymentFailed();
     error RecoveryMode();
     error SameRoot();
     error SlippageProtection();
@@ -108,13 +107,14 @@ library Errors {
     error UnauthorizedSource();
     error UnexpectedMessage();
     error UnexpectedResultLength();
-    error InvalidBridgeId();
     error WhChainIdNotRegistered(uint16 chainId);
     error ZeroBridgeAdapterAddress();
     error ZeroChainId();
     error ZeroGroupId();
+    error ZeroLzEndpointId();
     error ZeroOftAddress();
     error ZeroPositionId();
     error ZeroSalt();
+    error ZeroSpokeCaliberMailbox();
     error ZeroTokenAddress();
 }

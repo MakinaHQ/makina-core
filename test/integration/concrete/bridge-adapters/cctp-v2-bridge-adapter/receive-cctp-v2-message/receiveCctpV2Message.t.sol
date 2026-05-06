@@ -23,23 +23,40 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
     }
 
     function test_RevertWhen_InvalidCctpMessage() public {
+        // message has wrong length
         vm.expectRevert(Errors.InvalidCctpMessage.selector);
         cctpV2BridgeAdapter1.receiveCctpV2Message("", "");
+
+        // recipient is not the CCTP TokenMessenger
+        (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
+            address(token2), 0, address(0), address(0), address(bridgeAdapter1), 0, ""
+        );
+        vm.expectRevert(Errors.InvalidCctpMessage.selector);
+        cctpV2BridgeAdapter1.receiveCctpV2Message(cctpMessage, attestation);
+
+        // mintRecipient is not the destination bridge adapter
+        (cctpMessage, attestation) = _craftCctpV2MessageAndAttestation(
+            address(token2), 0, address(0), address(tokenMessenger), address(0), 0, ""
+        );
+        vm.expectRevert(Errors.InvalidCctpMessage.selector);
+        cctpV2BridgeAdapter1.receiveCctpV2Message(cctpMessage, attestation);
     }
 
     function test_RevertGiven_CctpMessageReceptionFailed() public {
         messageTransmitter.setFaultyMode(true);
 
-        (bytes memory cctpMessage,) =
-            _craftCctpV2MessageAndAttestation(address(token2), 0, address(0), address(0), 0, "");
+        (bytes memory cctpMessage,) = _craftCctpV2MessageAndAttestation(
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, ""
+        );
 
         vm.expectRevert(Errors.CctpMessageReceptionFailed.selector);
         cctpV2BridgeAdapter1.receiveCctpV2Message(cctpMessage, "");
     }
 
     function test_RevertWhen_UnexpectedMessage() public {
-        (bytes memory cctpMessage, bytes memory attestation) =
-            _craftCctpV2MessageAndAttestation(address(token2), 0, address(0), address(bridgeAdapter1), 0, "");
+        (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, ""
+        );
 
         vm.expectRevert(Errors.UnexpectedMessage.selector);
         cctpV2BridgeAdapter1.receiveCctpV2Message(cctpMessage, attestation);
@@ -49,7 +66,7 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
         bytes memory encodedMessage =
             abi.encode(IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, 0, address(0), 0, address(0), 0));
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), 0, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -64,7 +81,7 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(1), 0, address(0), 0)
         );
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), 0, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -80,7 +97,7 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(token1), 1)
         );
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), 0, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -94,7 +111,7 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 1e18, address(token1), 0)
         );
         (cctpMessage, attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), 0, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2), 0, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -109,7 +126,7 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             IBridgeAdapter.BridgeMessage(0, address(0), address(0), 0, chainId1, address(0), 0, address(token1), 1)
         );
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), 1, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2), 1, address(0), address(tokenMessenger), address(bridgeAdapter1), 0, encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -128,7 +145,13 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             )
         );
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), inputAmount, address(0), address(bridgeAdapter1), 0, encodedMessage
+            address(token2),
+            inputAmount,
+            address(0),
+            address(tokenMessenger),
+            address(bridgeAdapter1),
+            0,
+            encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -154,7 +177,13 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
             )
         );
         (bytes memory cctpMessage, bytes memory attestation) = _craftCctpV2MessageAndAttestation(
-            address(token2), inputAmount, address(0), address(bridgeAdapter1), fee, encodedMessage
+            address(token2),
+            inputAmount,
+            address(0),
+            address(tokenMessenger),
+            address(bridgeAdapter1),
+            fee,
+            encodedMessage
         );
 
         vm.prank(address(bridgeController1));
@@ -173,23 +202,24 @@ contract ReceiveCctpV2Message_CctpV2BridgeAdapter_Integration_Concrete_Test is
         address burnToken,
         uint256 amount,
         address sender,
-        address receiver,
+        address recipient,
+        address mintRecipient,
         uint256 feeExecuted,
         bytes memory encodedMessage
     ) internal view returns (bytes memory, bytes memory) {
-        bytes32 _sender = bytes32(uint256(uint160(sender)));
-        bytes32 _receiver = bytes32(uint256(uint160(receiver)));
+        bytes32 _mintRecipient = bytes32(uint256(uint160(mintRecipient)));
 
         bytes memory cctpMessage = tokenMessenger.formatMessageForRelay(
             MockCctpV2TokenMessenger.RelayMessageParams({
                 sourceDomain: CCTP_V2_SPOKE_DOMAIN,
                 destinationDomain: CCTP_V2_HUB_DOMAIN,
-                destinationCaller: _receiver,
+                recipient: bytes32(uint256(uint160(address(recipient)))),
+                destinationCaller: _mintRecipient,
                 minFinalityThreshold: CCTP_V2_CONFIRMED_FINALITY_THRESHOLD,
                 burnToken: burnToken,
-                mintRecipient: _receiver,
+                mintRecipient: _mintRecipient,
                 amount: amount,
-                sender: _sender,
+                sender: bytes32(uint256(uint160(sender))),
                 maxFee: 0,
                 feeExecuted: feeExecuted,
                 hookData: encodedMessage

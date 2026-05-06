@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 
 import {AcrossV3BridgeConfig} from "src/bridge/configs/AcrossV3BridgeConfig.sol";
+import {IAcrossV3BridgeConfig} from "src/interfaces/IAcrossV3BridgeConfig.sol";
 
 import {Base_Test} from "../../../../base/Base.t.sol";
 
@@ -33,21 +34,29 @@ contract AcrossV3BridgeConfig_Unit_Concrete_Test is Base_Test {
     function test_SetForeignChainSupported() public {
         vm.startPrank(address(dao));
 
+        vm.expectEmit(true, true, false, false, address(acrossV3BridgeConfig));
+        emit IAcrossV3BridgeConfig.ForeignChainSupportUpdated(1, true);
         acrossV3BridgeConfig.setForeignChainSupported(1, true);
         assertTrue(acrossV3BridgeConfig.isRouteSupported(address(0), 1, address(0)));
         assertTrue(acrossV3BridgeConfig.isRouteSupported(address(2), 1, address(3)));
         assertTrue(acrossV3BridgeConfig.isForeignChainSupported(1));
 
+        vm.expectEmit(true, true, false, false, address(acrossV3BridgeConfig));
+        emit IAcrossV3BridgeConfig.ForeignChainSupportUpdated(1, true);
         acrossV3BridgeConfig.setForeignChainSupported(1, true);
         assertTrue(acrossV3BridgeConfig.isRouteSupported(address(0), 1, address(0)));
         assertTrue(acrossV3BridgeConfig.isRouteSupported(address(2), 1, address(3)));
         assertTrue(acrossV3BridgeConfig.isForeignChainSupported(1));
 
+        vm.expectEmit(true, true, false, false, address(acrossV3BridgeConfig));
+        emit IAcrossV3BridgeConfig.ForeignChainSupportUpdated(1, false);
         acrossV3BridgeConfig.setForeignChainSupported(1, false);
         assertFalse(acrossV3BridgeConfig.isRouteSupported(address(0), 1, address(0)));
         assertFalse(acrossV3BridgeConfig.isRouteSupported(address(2), 1, address(3)));
         assertFalse(acrossV3BridgeConfig.isForeignChainSupported(1));
 
+        vm.expectEmit(true, true, false, false, address(acrossV3BridgeConfig));
+        emit IAcrossV3BridgeConfig.ForeignChainSupportUpdated(1, false);
         acrossV3BridgeConfig.setForeignChainSupported(1, false);
         assertFalse(acrossV3BridgeConfig.isRouteSupported(address(0), 1, address(0)));
         assertFalse(acrossV3BridgeConfig.isRouteSupported(address(2), 1, address(3)));

@@ -34,7 +34,7 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     }
 
     /// @inheritdoc ITokenRegistry
-    function getForeignToken(address localToken, uint256 foreignEvmChainId) external view returns (address) {
+    function getForeignToken(address localToken, uint256 foreignEvmChainId) external view override returns (address) {
         address foreignToken = _getTokenRegistryStorage()._localToForeignTokens[localToken][foreignEvmChainId];
         if (foreignToken == address(0)) {
             revert Errors.ForeignTokenNotRegistered(localToken, foreignEvmChainId);
@@ -43,7 +43,7 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     }
 
     /// @inheritdoc ITokenRegistry
-    function getLocalToken(address foreignToken, uint256 foreignEvmChainId) external view returns (address) {
+    function getLocalToken(address foreignToken, uint256 foreignEvmChainId) external view override returns (address) {
         address localToken = _getTokenRegistryStorage()._foreignToLocalTokens[foreignToken][foreignEvmChainId];
         if (localToken == address(0)) {
             revert Errors.LocalTokenNotRegistered(foreignToken, foreignEvmChainId);
@@ -52,7 +52,11 @@ contract TokenRegistry is AccessManagedUpgradeable, ITokenRegistry {
     }
 
     /// @inheritdoc ITokenRegistry
-    function setToken(address localToken, uint256 foreignEvmChainId, address foreignToken) external restricted {
+    function setToken(address localToken, uint256 foreignEvmChainId, address foreignToken)
+        external
+        override
+        restricted
+    {
         TokenRegistryStorage storage $ = _getTokenRegistryStorage();
 
         if (localToken == address(0) || foreignToken == address(0)) {

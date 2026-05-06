@@ -141,7 +141,7 @@ interface ICaliber {
     function getPositionId(uint256 idx) external view returns (uint256);
 
     /// @notice Position ID => Position data
-    function getPosition(uint256 id) external view returns (Position memory);
+    function getPosition(uint256 posId) external view returns (Position memory);
 
     /// @notice Token => Registered as base token in this caliber
     function isBaseToken(address token) external view returns (bool);
@@ -197,7 +197,7 @@ interface ICaliber {
         external
         returns (uint256[] memory values, int256[] memory changes);
 
-    /// @notice Manages a position's state through paired management and accounting instructions
+    /// @notice Manages a position's state through paired management and accounting instructions.
     /// @dev Performs accounting updates and modifies contract storage by:
     /// - Adding new positions to storage when created.
     /// - Removing positions from storage when value reaches zero.
@@ -205,22 +205,22 @@ interface ICaliber {
     /// economic inconsistencies between position changes and token flows.
     ///
     /// The matrix evaluates three factors to determine required validations:
-    /// - Base Token flow - Whether the contract globally spent or received base tokens during operation
+    /// - Base Tokens flow - Whether the contract globally spent or received base tokens during operation
     /// - Debt Position - Whether position represents protocol liability (true) vs asset (false)
-    /// - Position Δ direction - Direction of position value change (increase/decrease)
+    /// - Position Δ direction - Direction of position value change (increase/decrease/null)
     ///
-    /// ┌─────────────────┬───────────────┬──────────────────────┬───────────────────────────┐
-    /// │ Base Token flow │ Debt Position │ Position Δ direction │ Action                    │
-    /// ├─────────────────┼───────────────┼──────────────────────┼───────────────────────────┤
-    /// │ Outflow         │ No            │ Decrease             │ Revert: Invalid direction │
-    /// │ Outflow         │ Yes           │ Increase             │ Revert: Invalid direction │
-    /// │ Outflow         │ No            │ Increase / Null      │ Minimum Δ Check           │
-    /// │ Outflow         │ Yes           │ Decrease / Null      │ Minimum Δ Check           │
-    /// │ Inflow / Null   │ No            │ Decrease             │ Maximum Δ Check           │
-    /// │ Inflow / Null   │ Yes           │ Increase             │ Maximum Δ Check           │
-    /// │ Inflow / Null   │ No            │ Increase / Null      │ No check (favorable move) │
-    /// │ Inflow / Null   │ Yes           │ Decrease / Null      │ No check (favorable move) │
-    /// └─────────────────┴───────────────┴──────────────────────┴───────────────────────────┘
+    /// ┌──────────────────┬───────────────┬──────────────────────┬───────────────────────────┐
+    /// │ Base Tokens flow │ Debt Position │ Position Δ direction │ Action                    │
+    /// ├──────────────────┼───────────────┼──────────────────────┼───────────────────────────┤
+    /// │ Outflow          │ No            │ Decrease             │ Revert: Invalid direction │
+    /// │ Outflow          │ Yes           │ Increase             │ Revert: Invalid direction │
+    /// │ Outflow          │ No            │ Increase / Null      │ Minimum Δ Check           │
+    /// │ Outflow          │ Yes           │ Decrease / Null      │ Minimum Δ Check           │
+    /// │ Inflow / Null    │ No            │ Decrease             │ Maximum Δ Check           │
+    /// │ Inflow / Null    │ Yes           │ Increase             │ Maximum Δ Check           │
+    /// │ Inflow / Null    │ No            │ Increase / Null      │ No check (favorable move) │
+    /// │ Inflow / Null    │ Yes           │ Decrease / Null      │ No check (favorable move) │
+    /// └──────────────────┴───────────────┴──────────────────────┴───────────────────────────┘
     ///
     /// @param mgmtInstruction The management instruction.
     /// @param acctInstruction The accounting instruction.
@@ -277,8 +277,8 @@ interface ICaliber {
     /// @notice Schedules an update of the root of the Merkle tree containing allowed instructions.
     /// @dev The update will take effect after the timelock duration stored in the contract
     /// at the time of the call.
-    /// @param newMerkleRoot The new Merkle root.
-    function scheduleAllowedInstrRootUpdate(bytes32 newMerkleRoot) external;
+    /// @param newAllowedInstrRoot The new Merkle root.
+    function scheduleAllowedInstrRootUpdate(bytes32 newAllowedInstrRoot) external;
 
     /// @notice Cancels a scheduled update of the root of the Merkle tree containing allowed instructions.
     /// @dev Reverts if no pending update exists or if the timelock has expired.

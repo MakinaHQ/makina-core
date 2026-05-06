@@ -49,11 +49,12 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
         _disableInitializers();
     }
 
-    function initialize(
-        IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
-        uint256 _initialCooldownDuration
-    ) external override initializer {
-        _getCaliberMailboxStorage()._cooldownDuration = _initialCooldownDuration;
+    function initialize(IMakinaGovernable.MakinaGovernableInitParams calldata mgParams, uint256 initialCooldownDuration)
+        external
+        override
+        initializer
+    {
+        _getCaliberMailboxStorage()._cooldownDuration = initialCooldownDuration;
         __MakinaGovernable_init(mgParams);
     }
 
