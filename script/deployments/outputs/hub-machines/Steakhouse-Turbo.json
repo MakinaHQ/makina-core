@@ -1,0 +1,7 @@
+{
+  "hubCaliber": "0xbeef3ccD0473F70D7e8e09997E1b270EAE197C44",
+  "machine": "0x7a3A49042aE1A2020c69552d49BF5E11B666BfBF",
+  "bridgeAdapters": {
+    "1": "0xf356cfbed8f3598ec528454ca929ddb5345794ca"
+  }
+}
