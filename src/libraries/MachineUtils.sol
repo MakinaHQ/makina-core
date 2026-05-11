@@ -258,9 +258,9 @@ library MachineUtils {
 
         // spoke calibers net AUM
         uint256 currentTimestamp = block.timestamp;
-        uint256 len = $._foreignChainIds.length;
+        uint256 len = $._spokeChainIds.length;
         for (uint256 i; i < len; ++i) {
-            uint256 chainId = $._foreignChainIds[i];
+            uint256 chainId = $._spokeChainIds[i];
             IMachine.SpokeCaliberData storage spokeCaliberData = $._spokeCalibersData[chainId];
 
             if (spokeCaliberData.disabled) {

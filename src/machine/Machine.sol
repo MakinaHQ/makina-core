@@ -55,8 +55,8 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         uint256 _shareLimit;
         uint256 _hubChainId;
         address _hubCaliber;
-        uint256[] _foreignChainIds;
-        mapping(uint256 foreignChainId => SpokeCaliberData data) _spokeCalibersData;
+        uint256[] _spokeChainIds;
+        mapping(uint256 chainId => SpokeCaliberData data) _spokeCalibersData;
         EnumerableSet.AddressSet _idleTokens;
         uint256 _maxSharePriceChangeRate;
     }
@@ -215,12 +215,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
     /// @inheritdoc IMachine
     function getSpokeCalibersLength() external view override returns (uint256) {
-        return _getMachineStorage()._foreignChainIds.length;
+        return _getMachineStorage()._spokeChainIds.length;
     }
 
     /// @inheritdoc IMachine
     function getSpokeChainId(uint256 idx) external view override returns (uint256) {
-        return _getMachineStorage()._foreignChainIds[idx];
+        return _getMachineStorage()._spokeChainIds[idx];
     }
 
     /// @inheritdoc IMachine
@@ -540,7 +540,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
             revert Errors.ZeroSpokeCaliberMailbox();
         }
 
-        $._foreignChainIds.push(chainId);
+        $._spokeChainIds.push(chainId);
         caliberData.mailbox = spokeCaliberMailbox;
 
         emit SpokeCaliberMailboxSet(chainId, spokeCaliberMailbox);
@@ -687,9 +687,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     /// @inheritdoc IBridgeController
     function resetBridgingState(address token) external override nonReentrant onlySecurityCouncil {
         MachineStorage storage $ = _getMachineStorage();
-        uint256 len = $._foreignChainIds.length;
+        uint256 len = $._spokeChainIds.length;
         for (uint256 i; i < len; ++i) {
-            SpokeCaliberData storage caliberData = $._spokeCalibersData[$._foreignChainIds[i]];
+            SpokeCaliberData storage caliberData = $._spokeCalibersData[$._spokeChainIds[i]];
 
             caliberData.caliberBridgesIn.remove(token);
             caliberData.caliberBridgesOut.remove(token);
