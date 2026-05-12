@@ -248,8 +248,8 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
         return SpokeSnapshotMeta({
             chainId: block.chainid,
             mailbox: address(this),
-            blockNumber: uint64(block.number),
-            timestamp: uint64(block.timestamp)
+            blockNum: uint64(block.number),
+            blockTime: uint64(block.timestamp)
         });
     }
 }

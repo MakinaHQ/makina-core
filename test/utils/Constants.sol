@@ -32,8 +32,6 @@ abstract contract Constants {
 
     uint256 internal constant LENDING_MARKET_POS_GROUP_ID = 1;
 
-    uint16 internal constant WORMHOLE_HUB_CHAIN_ID = 2;
-
     uint32 internal constant LAYER_ZERO_V2_SPOKE_ENDPOINT_ID = 30184;
     uint128 internal constant DEFAULT_LAYER_ZERO_V2_VERIFY_GAS = 80000;
     uint128 internal constant DEFAULT_LAYER_ZERO_V2_LZ_RECEIVE_GAS = 120000;

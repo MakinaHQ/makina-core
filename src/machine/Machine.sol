@@ -8,12 +8,9 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
@@ -32,9 +29,6 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-
-    /// @inheritdoc IMachine
-    address public immutable wormhole;
 
     /// @custom:storage-location erc7201:makina.storage.Machine
     struct MachineStorage {
@@ -71,8 +65,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         }
     }
 
-    constructor(address _registry, address _wormhole) MakinaContext(_registry) {
-        wormhole = _wormhole;
+    constructor(address _registry) MakinaContext(_registry) {
         _disableInitializers();
     }
 
@@ -494,18 +487,9 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures)
-        external
-        override
-        nonReentrant
-    {
+    function updateSpokeCaliberAccountingData(bytes calldata report) external override nonReentrant {
         MachineUtils.updateSpokeCaliberAccountingData(
-            _getMachineStorage(),
-            IHubCoreRegistry(registry).tokenRegistry(),
-            IHubCoreRegistry(registry).chainRegistry(),
-            wormhole,
-            response,
-            signatures
+            _getMachineStorage(), IHubCoreRegistry(registry).tokenRegistry(), report
         );
     }
 
@@ -518,10 +502,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     ) external override nonReentrant restricted {
         MachineStorage storage $ = _getMachineStorage();
 
-        if (
-            chainId == $._hubChainId
-                || !IChainRegistry(IHubCoreRegistry(registry).chainRegistry()).isEvmChainIdRegistered(chainId)
-        ) {
+        if (chainId == $._hubChainId) {
             revert Errors.InvalidChainId();
         }
 

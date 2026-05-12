@@ -12,13 +12,13 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @notice Spoke caliber accounting snapshot metadata.
     /// @param chainId The chain ID of the spoke caliber.
     /// @param mailbox The address of the spoke caliber mailbox.
-    /// @param blockNumber The block number used as the snapshot reference point.
-    /// @param timestamp The block timestamp used as the snapshot reference point.
+    /// @param blockNum The block number used as the snapshot reference point.
+    /// @param blockTime The block timestamp used as the snapshot reference point.
     struct SpokeSnapshotMeta {
         uint256 chainId;
         address mailbox;
-        uint64 blockNumber;
-        uint256 timestamp;
+        uint64 blockNum;
+        uint256 blockTime;
     }
 
     /// @notice Spoke caliber accounting snapshot data.

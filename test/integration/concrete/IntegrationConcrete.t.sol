@@ -145,7 +145,6 @@ abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
 
 abstract contract Integration_Concrete_Hub_Test is Integration_Concrete_Test, Base_Hub_Test {
     uint256 internal constant SPOKE_CHAIN_ID = 1000;
-    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
     Machine internal machine;
     Caliber internal caliber;

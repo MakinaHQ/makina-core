@@ -57,8 +57,8 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.bridgesOut.length, 0);
         assertEq(data.meta.chainId, block.chainid);
         assertEq(data.meta.mailbox, address(caliberMailbox));
-        assertEq(data.meta.blockNumber, uint64(block.number));
-        assertEq(data.meta.timestamp, block.timestamp);
+        assertEq(data.meta.blockNum, uint64(block.number));
+        assertEq(data.meta.blockTime, uint64(block.timestamp));
 
         skip(1 hours);
         vm.roll(block.number + 300);
@@ -72,7 +72,7 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.bridgesOut.length, 0);
         assertEq(data.meta.chainId, block.chainid);
         assertEq(data.meta.mailbox, address(caliberMailbox));
-        assertEq(data.meta.blockNumber, uint64(block.number));
-        assertEq(data.meta.timestamp, block.timestamp);
+        assertEq(data.meta.blockNum, uint64(block.number));
+        assertEq(data.meta.blockTime, uint64(block.timestamp));
     }
 }

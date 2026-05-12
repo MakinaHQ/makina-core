@@ -3,8 +3,6 @@ pragma solidity ^0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
 
 interface IMachine is IMachineEndpoint {
@@ -92,9 +90,6 @@ interface IMachine is IMachineEndpoint {
         address _accountingToken,
         address _hubCaliber
     ) external;
-
-    /// @notice Address of the Wormhole Core Bridge.
-    function wormhole() external view returns (address);
 
     /// @notice Address of the depositor.
     function depositor() external view returns (address);
@@ -223,11 +218,9 @@ interface IMachine is IMachineEndpoint {
     /// @return assets The amount of accounting tokens transferred.
     function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
 
-    /// @notice Updates spoke caliber accounting data using Wormhole Cross-Chain Queries (CCQ).
-    /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
-    /// @param response The Wormhole CCQ response payload containing the accounting data.
-    /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
-    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
+    /// @notice Updates spoke caliber accounting data.
+    /// @param report The report payload containing the accounting data.
+    function updateSpokeCaliberAccountingData(bytes calldata report) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The chain ID of the spoke caliber.

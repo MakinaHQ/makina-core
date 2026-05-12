@@ -6,19 +6,14 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 import {IERC20Metadata} from "@openzeppelin/contracts/interfaces/IERC20Metadata.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {PerChainQueryResponse} from "@wormhole/sdk/libraries/QueryResponse.sol";
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {ICaliber} from "../interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "../interfaces/ICaliberMailbox.sol";
-import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
 import {IFeeManager} from "../interfaces/IFeeManager.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineShare} from "../interfaces/IMachineShare.sol";
 import {IOracleRegistry} from "../interfaces/IOracleRegistry.sol";
 import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
 import {ITokenRegistry} from "../interfaces/ITokenRegistry.sol";
-import {CaliberAccountingCCQ} from "./CaliberAccountingCCQ.sol";
 import {Errors} from "./Errors.sol";
 import {DecimalsUtils} from "./DecimalsUtils.sol";
 import {Machine} from "../machine/Machine.sol";
@@ -119,24 +114,18 @@ library MachineUtils {
     /// @dev Updates the spoke caliber accounting data in the machine storage.
     /// @param $ The machine storage struct.
     /// @param tokenRegistry The address of the token registry.
-    /// @param chainRegistry The address of the chain registry.
-    /// @param wormhole The address of the Core Wormhole contract.
-    /// @param response The Wormhole CCQ response payload containing the accounting data.
-    /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
+    /// @param report The report payload containing the accounting data.
     function updateSpokeCaliberAccountingData(
         Machine.MachineStorage storage $,
         address tokenRegistry,
-        address chainRegistry,
-        address wormhole,
-        bytes calldata response,
-        GuardianSignature[] calldata signatures
+        bytes calldata report
     ) external {
-        PerChainQueryResponse[] memory responses =
-        CaliberAccountingCCQ.decodeAndVerifyQueryResponse(wormhole, response, signatures).responses;
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            abi.decode(report, (ICaliberMailbox.SpokeCaliberAccountingData[]));
 
-        uint256 len = responses.length;
+        uint256 len = snapshots.length;
         for (uint256 i; i < len; ++i) {
-            _handlePerChainQueryResponse($, tokenRegistry, chainRegistry, responses[i]);
+            _handlePerChainSnapshot($, tokenRegistry, snapshots[i]);
         }
     }
 
@@ -194,43 +183,38 @@ library MachineUtils {
         return DecimalsUtils.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
     }
 
-    /// @dev Handles a received Wormhole CCQ PerChainQueryResponse object and updates the corresponding caliber accounting data in the machine storage.
+    /// @dev Handles a received spoke caliber accounting snapshot object, and updates the corresponding accounting data in the machine storage.
     /// @param $ The machine storage struct.
     /// @param tokenRegistry The address of the token registry.
-    /// @param chainRegistry The address of the chain registry.
-    /// @param pcr The PerChainQueryResponse object containing the accounting data.
-    function _handlePerChainQueryResponse(
+    /// @param snapshot The accounting snapshot data.
+    function _handlePerChainSnapshot(
         Machine.MachineStorage storage $,
         address tokenRegistry,
-        address chainRegistry,
-        PerChainQueryResponse memory pcr
+        ICaliberMailbox.SpokeCaliberAccountingData memory snapshot
     ) private {
-        uint256 _evmChainId = IChainRegistry(chainRegistry).whToEvmChainId(pcr.chainId);
+        uint256 _spokeChainId = snapshot.meta.chainId;
 
-        IMachine.SpokeCaliberData storage caliberData = $._spokeCalibersData[_evmChainId];
+        IMachine.SpokeCaliberData storage caliberData = $._spokeCalibersData[_spokeChainId];
 
         if (caliberData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
         }
 
-        // Decode and validate accounting data.
-        (ICaliberMailbox.SpokeCaliberAccountingData memory accountingData, uint256 responseTimestamp) =
-            CaliberAccountingCCQ.getAccountingData(pcr, caliberData.mailbox);
-
         // Validate that update is not older than current chain last update, nor stale.
+        uint256 snapshotTimestamp = snapshot.meta.blockTime;
         if (
-            responseTimestamp <= caliberData.timestamp
-                || (block.timestamp > responseTimestamp
-                    && block.timestamp - responseTimestamp >= $._caliberStaleThreshold)
+            snapshotTimestamp <= caliberData.timestamp
+                || (block.timestamp > snapshotTimestamp
+                    && block.timestamp - snapshotTimestamp >= $._caliberStaleThreshold)
         ) {
             revert Errors.StaleData();
         }
 
         // Update the spoke caliber data in the machine storage.
-        caliberData.netAum = accountingData.netAum;
-        caliberData.timestamp = responseTimestamp;
-        _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesIn, caliberData.caliberBridgesIn, tokenRegistry);
-        _decodeAndMapBridgeAmounts(_evmChainId, accountingData.bridgesOut, caliberData.caliberBridgesOut, tokenRegistry);
+        caliberData.netAum = snapshot.netAum;
+        caliberData.timestamp = snapshotTimestamp;
+        _decodeAndMapBridgeAmounts(_spokeChainId, snapshot.bridgesIn, caliberData.caliberBridgesIn, tokenRegistry);
+        _decodeAndMapBridgeAmounts(_spokeChainId, snapshot.bridgesOut, caliberData.caliberBridgesOut, tokenRegistry);
     }
 
     /// @dev Decodes (foreignToken, amount) pairs, resolves local tokens, and stores amounts in the map.

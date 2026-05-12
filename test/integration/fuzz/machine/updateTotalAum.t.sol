@@ -3,13 +3,9 @@ pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
@@ -19,7 +15,6 @@ import {Base_Hub_Test} from "test/base/Base.t.sol";
 
 contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
     uint256 internal constant SPOKE_CHAIN_ID = 1000;
-    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
 
     MockERC20 internal accountingToken;
     MockERC20 internal baseToken;
@@ -43,13 +38,6 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         uint256 machineIdleBaseTokens;
         uint256 hubCaliberNetAum;
         uint256 spokeCaliberNetAum;
-    }
-
-    function setUp() public override {
-        Base_Hub_Test.setUp();
-
-        vm.prank(dao);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
     }
 
     function _fuzzTestSetupAfter(Data memory data) public {
@@ -116,15 +104,15 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         // update spoke caliber accounting data
         uint64 blockNum = 1e10;
         uint64 blockTime = uint64(block.timestamp);
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData;
-        queriedData.netAum = data.spokeCaliberNetAum;
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
-        );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
+        snapshots[0].netAum = data.spokeCaliberNetAum;
+        snapshots[0].meta = ICaliberMailbox.SpokeSnapshotMeta({
+            chainId: SPOKE_CHAIN_ID, mailbox: spokeCaliberMailboxAddr, blockNum: blockNum, blockTime: blockTime
+        });
+
+        machine.updateSpokeCaliberAccountingData(abi.encode(snapshots));
 
         machine.updateTotalAum();
 

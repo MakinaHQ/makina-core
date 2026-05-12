@@ -8,12 +8,9 @@ import {
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {ICoreBridge} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
-
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
-import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
@@ -24,7 +21,6 @@ import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
-import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
@@ -85,12 +81,9 @@ abstract contract Base_Test is Base, Constants, Test {
 
 abstract contract Base_Hub_Test is Base_Test {
     HubCoreRegistry internal hubCoreRegistry;
-    ChainRegistry internal chainRegistry;
     HubCoreFactory internal hubCoreFactory;
     UpgradeableBeacon internal machineBeacon;
     UpgradeableBeacon internal preDepositVaultBeacon;
-
-    ICoreBridge internal wormhole;
 
     address internal machineDepositor = makeAddr("MachineDepositor");
     address internal machineRedeemer = makeAddr("MachineRedeemer");
@@ -100,15 +93,13 @@ abstract contract Base_Hub_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
         hubChainId = block.chainid;
-        _setupWormhole();
 
-        HubCore memory deployment = deployHubCore(deployer, address(wormhole));
+        HubCore memory deployment = deployHubCore(deployer);
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
         hubCoreRegistry = deployment.hubCoreRegistry;
         tokenRegistry = deployment.tokenRegistry;
-        chainRegistry = deployment.chainRegistry;
         hubCoreFactory = deployment.hubCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         machineBeacon = deployment.machineBeacon;
@@ -119,10 +110,6 @@ abstract contract Base_Hub_Test is Base_Test {
 
         coreFactory = address(hubCoreFactory);
         setupAccessManagerRolesAndOwnership();
-    }
-
-    function _setupWormhole() internal {
-        wormhole = ICoreBridge(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
     function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)

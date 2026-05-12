@@ -18,9 +18,6 @@ abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
     function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();
 
-        vm.prank(dao);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
-
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
         spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
     }

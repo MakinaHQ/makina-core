@@ -18,7 +18,6 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
 
     function test_HubCoreRegistryGetters() public view {
         assertEq(hubCoreRegistry.caliberBeacon(), address(caliberBeacon));
-        assertEq(hubCoreRegistry.chainRegistry(), address(chainRegistry));
         assertEq(hubCoreRegistry.machineBeacon(), address(machineBeacon));
         assertEq(hubCoreRegistry.authority(), address(accessManager));
     }
@@ -35,20 +34,6 @@ contract HubCoreRegistry_Util_Concrete_Test is CoreRegistry_Util_Concrete_Test, 
         vm.prank(dao);
         hubCoreRegistry.setCaliberBeacon(newCaliberBeacon);
         assertEq(hubCoreRegistry.caliberBeacon(), newCaliberBeacon);
-    }
-
-    function test_SetChainRegistry_RevertWhen_CallerWithoutRole() public {
-        vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubCoreRegistry.setChainRegistry(address(0));
-    }
-
-    function test_SetChainRegistry() public {
-        address newChainRegistry = makeAddr("newChainRegistry");
-        vm.expectEmit(true, true, false, false, address(hubCoreRegistry));
-        emit IHubCoreRegistry.ChainRegistryChanged(address(chainRegistry), newChainRegistry);
-        vm.prank(dao);
-        hubCoreRegistry.setChainRegistry(newChainRegistry);
-        assertEq(hubCoreRegistry.chainRegistry(), newChainRegistry);
     }
 
     function test_SetMachineBeacon_RevertWhen_CallerWithoutRole() public {

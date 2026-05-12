@@ -5,7 +5,6 @@
 ### Anyone
 
 - Can run authorized accounting instructions in calibers, provided the calibers are neither in restricted accounting mode nor recovery mode.
-- Can submit accounting data from a spoke caliber to its corresponding machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
 - Can update a machine’s total AUM, provided all caliber accounting data is up to date, the machine is neither in restricted accounting mode nor recovery mode, and the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
 
 ## Roles Permissions List
@@ -18,7 +17,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can upgrade implementation via associated ProxyAdmin.
   - Can set address of OracleRegistry.
   - Can set address of TokenRegistry.
-  - Can set address of ChainRegistry.
   - Can set address of SwapModule.
   - Can set address of FlashLoanModule.
   - Can set address of HubCoreFactory.
@@ -45,14 +43,6 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
   - Can set token price feed route.
   - Can set feeds staleness threshold.
-
-- `INFRA_UPGRADE_ROLE` (roleId `6`)
-  - Can upgrade implementation via associated ProxyAdmin.
-
-### ChainRegistry
-
-- `INFRA_CONFIG_ROLE` (roleId `1`)
-  - Can set mappings of EVM and WH chain IDs.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.

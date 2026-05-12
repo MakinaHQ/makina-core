@@ -45,8 +45,6 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
         _setUpCaliberMerkleRoot(caliber);
-        vm.prank(dao);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
         spokeAccountingTokenAddr = makeAddr("spokeAccountingToken");
@@ -72,58 +70,49 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
     /// Helper functions
     ///
 
-    function _buildSpokeCaliberAccountingData_Null()
-        internal
-        pure
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
-    {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
+    function _buildSpokeCaliberAccountingReport_Empty() internal pure returns (bytes memory) {
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
 
-        return data;
+        return abi.encode(snapshots);
     }
 
-    function _buildSpokeCaliberAccountingData(bool nullValue)
+    function _buildSpokeCaliberAccountingReport(uint256 chainId, uint256 blockNum, uint256 blockTime, bool nullValue)
         internal
         view
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
+        returns (bytes memory)
     {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
-
-        data.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
-
-        data.meta = ICaliberMailbox.SpokeSnapshotMeta({
-            chainId: block.chainid,
-            mailbox: spokeCaliberMailboxAddr,
-            blockNumber: uint64(block.number),
-            timestamp: block.timestamp
-        });
-
-        return data;
+        return _buildSpokeCaliberAccountingReportWithTransfers(
+            chainId, blockNum, blockTime, nullValue, 0, new bytes[](0), new bytes[](0)
+        );
     }
 
-    function _buildSpokeCaliberAccountingDataWithTransfers(
+    function _buildSpokeCaliberAccountingReportWithTransfers(
+        uint256 chainId,
+        uint256 blockNum,
+        uint256 blockTime,
         bool nullValue,
         uint256 aumOffsetTransfers,
         bytes[] memory bridgesIn,
         bytes[] memory bridgesOut
-    ) internal view returns (ICaliberMailbox.SpokeCaliberAccountingData memory) {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
+    ) internal view returns (bytes memory) {
+        ICaliberMailbox.SpokeCaliberAccountingData memory snapshot;
 
-        data.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
+        snapshot.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
+        snapshot.netAum += aumOffsetTransfers;
 
-        data.netAum += aumOffsetTransfers;
-
-        data.meta = ICaliberMailbox.SpokeSnapshotMeta({
-            chainId: block.chainid,
-            mailbox: spokeCaliberMailboxAddr,
-            blockNumber: uint64(block.number),
-            timestamp: block.timestamp
+        snapshot.meta = ICaliberMailbox.SpokeSnapshotMeta({
+            chainId: chainId, mailbox: spokeCaliberMailboxAddr, blockNum: uint64(blockNum), blockTime: blockTime
         });
 
-        data.bridgesIn = bridgesIn;
-        data.bridgesOut = bridgesOut;
+        snapshot.bridgesIn = bridgesIn;
+        snapshot.bridgesOut = bridgesOut;
 
-        return data;
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
+        snapshots[0] = snapshot;
+
+        return abi.encode(snapshots);
     }
 }
 

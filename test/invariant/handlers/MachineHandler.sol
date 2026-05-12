@@ -9,12 +9,8 @@ import {Vm} from "forge-std/Vm.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
-import {IChainRegistry} from "src/interfaces/IChainRegistry.sol";
-import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMockAcrossV3SpokePool} from "../../mocks/IMockAcrossV3SpokePool.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
@@ -22,8 +18,6 @@ import {Constants} from "../../utils/Constants.sol";
 import {IntegrationIds} from "../../utils/IntegrationIds.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineStore} from "../stores/MachineStore.sol";
-import {PerChainData} from "../../utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "../../utils/WormholeQueryTestHelpers.sol";
 
 contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, IntegrationIds {
     using Math for uint256;
@@ -342,24 +336,15 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
 
     /// @dev Notifies machine of the current state of the spoke caliber accounting
     function notifySpokeCaliberAccounting() public {
-        uint16 whChainId = IChainRegistry(IHubCoreRegistry(machine.registry()).chainRegistry())
-            .evmToWhChainId(machineStore.spokeChainId());
-
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            spokeCaliberMailbox.getSpokeCaliberAccountingData();
-
         skip(1);
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            whChainId,
-            uint64(block.number),
-            uint64(block.timestamp),
-            address(spokeCaliberMailbox),
-            abi.encode(queriedData)
-        );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+
+        vm.chainId(machineStore.spokeChainId());
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
+        snapshots[0] = spokeCaliberMailbox.getSpokeCaliberAccountingData();
+        vm.chainId(machineStore.hubChainId());
+
+        machine.updateSpokeCaliberAccountingData(abi.encode(snapshots));
 
         for (uint256 i; i < machineStore.tokensLength(); ++i) {
             address token = machineStore.tokens(i);

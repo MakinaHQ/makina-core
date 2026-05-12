@@ -139,15 +139,6 @@ contract Deploy_Scripts_Test is Base_Test {
             assertEq(_swappersData[i].executionTarget, executionTarget);
         }
 
-        // Check that ChainRegistry is correctly set up
-        uint256[] memory supportedChains = vm.parseJsonUintArray(deployHubCore.inputJson(), ".supportedChains");
-        for (uint256 i; i < supportedChains.length; ++i) {
-            assertEq(
-                hubCoreDeployment.chainRegistry.evmToWhChainId(supportedChains[i]),
-                ChainsInfo.getChainInfo(supportedChains[i]).wormholeChainId
-            );
-        }
-
         // Check that BridgeAdapterBeacons are correctly set up
         BridgeData[] memory _bridgesData = parseBridgesData(deployHubCore.inputJson(), ".bridgesTargets");
         for (uint256 i; i < _bridgesData.length; ++i) {

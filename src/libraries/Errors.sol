@@ -23,7 +23,6 @@ library Errors {
     error Create3ContractDeploymentFailed();
     error Create3ProxyDeploymentFailed();
     error DirectManageFlashLoanCall();
-    error EvmChainIdNotRegistered(uint256 chainId);
     error ExceededMaxDeposit();
     error ExceededMaxFee(uint256 fee, uint256 max);
     error ExceededMaxMint(uint256 shares, uint256 max);
@@ -109,8 +108,6 @@ library Errors {
     error UnauthorizedCaller();
     error UnauthorizedSource();
     error UnexpectedMessage();
-    error UnexpectedResultLength();
-    error WhChainIdNotRegistered(uint16 chainId);
     error ZeroBridgeAdapterAddress();
     error ZeroChainId();
     error ZeroGroupId();
