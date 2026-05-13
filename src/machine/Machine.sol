@@ -11,6 +11,7 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
+import {ICreReceiver} from "../interfaces/ICreReceiver.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
@@ -20,11 +21,12 @@ import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {MachineUtils} from "../libraries/MachineUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
-import {MachineUtils} from "../libraries/MachineUtils.sol";
+import {SpokeSnapshotConsumer} from "../utils/SpokeSnapshotConsumer.sol";
 
-contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachine {
+contract Machine is MakinaGovernable, BridgeController, SpokeSnapshotConsumer, ReentrancyGuard, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -65,7 +67,10 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         }
     }
 
-    constructor(address _registry) MakinaContext(_registry) {
+    constructor(address _registry, address _creForwarder)
+        MakinaContext(_registry)
+        SpokeSnapshotConsumer(_creForwarder)
+    {
         _disableInitializers();
     }
 
@@ -73,6 +78,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     function initialize(
         MachineInitParams calldata mParams,
         MakinaGovernableInitParams calldata mgParams,
+        SpokeSnapshotConsumerInitParams calldata sscParams,
         address _preDepositVault,
         address _shareToken,
         address _accountingToken,
@@ -118,6 +124,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         $._shareLimit = mParams.initialShareLimit;
         $._maxSharePriceChangeRate = mParams.initialMaxSharePriceChangeRate;
         __MakinaGovernable_init(mgParams);
+        __SpokeSnapshotConsumer_init(sscParams);
     }
 
     /// @inheritdoc IMachine
@@ -486,9 +493,16 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         return assets;
     }
 
-    /// @inheritdoc IMachine
-    function updateSpokeCaliberAccountingData(bytes calldata report) external override nonReentrant {
-        MachineUtils.updateSpokeCaliberAccountingData(
+    /// @inheritdoc ICreReceiver
+    function onReport(bytes calldata metadata, bytes calldata report) external override nonReentrant {
+        address sender = msg.sender;
+        if (sender == creForwarder) {
+            _validateMetadata(metadata);
+        } else if (sender != securityCouncil()) {
+            revert Errors.UnauthorizedCaller();
+        }
+
+        MachineUtils.reportSpokeAccountingSnapshots(
             _getMachineStorage(), IHubCoreRegistry(registry).tokenRegistry(), report
         );
     }

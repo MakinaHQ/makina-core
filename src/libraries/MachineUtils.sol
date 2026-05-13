@@ -111,11 +111,11 @@ library MachineUtils {
         return 0;
     }
 
-    /// @dev Updates the spoke caliber accounting data in the machine storage.
+    /// @dev Reports spoke caliber accounting snapshots by decoding the report payload and updating the machine storage accordingly.
     /// @param $ The machine storage struct.
     /// @param tokenRegistry The address of the token registry.
     /// @param report The report payload containing the accounting data.
-    function updateSpokeCaliberAccountingData(
+    function reportSpokeAccountingSnapshots(
         Machine.MachineStorage storage $,
         address tokenRegistry,
         bytes calldata report
@@ -192,7 +192,7 @@ library MachineUtils {
         address tokenRegistry,
         ICaliberMailbox.SpokeCaliberAccountingData memory snapshot
     ) private {
-        uint256 _spokeChainId = snapshot.meta.chainId;
+        uint256 _spokeChainId = snapshot.context.chainId;
 
         IMachine.SpokeCaliberData storage caliberData = $._spokeCalibersData[_spokeChainId];
 
@@ -200,8 +200,12 @@ library MachineUtils {
             revert Errors.InvalidChainId();
         }
 
+        if (snapshot.context.mailbox != caliberData.mailbox) {
+            revert Errors.InvalidSpokeCaliberMailbox();
+        }
+
         // Validate that update is not older than current chain last update, nor stale.
-        uint256 snapshotTimestamp = snapshot.meta.blockTime;
+        uint256 snapshotTimestamp = snapshot.context.blockTime;
         if (
             snapshotTimestamp <= caliberData.timestamp
                 || (block.timestamp > snapshotTimestamp

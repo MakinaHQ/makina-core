@@ -89,5 +89,6 @@
       "executionTarget": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5",
       "receiveSource": "0x5c7BCd6E7De5423a257D81B442095A1a6ced35C5"
     }
-  ]
+  ],
+  "creForwarder": "0x0b93082D9b3C7C97fAcd250082899BAcf3af3885"
 }

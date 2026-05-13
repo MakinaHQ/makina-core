@@ -22,6 +22,11 @@ library Errors {
     error CctpMessageReceptionFailed();
     error Create3ContractDeploymentFailed();
     error Create3ProxyDeploymentFailed();
+    error CreWorkflowAuthorRequired();
+    error CreWorkflowIdAlreadyAuthorized();
+    error CreWorkflowIdNotAuthorized();
+    error CreWorkflowNameAlreadyAuthorized();
+    error CreWorkflowNameNotAuthorized();
     error DirectManageFlashLoanCall();
     error ExceededMaxDeposit();
     error ExceededMaxFee(uint256 fee, uint256 max);
@@ -40,6 +45,10 @@ library Errors {
     error InvalidBridgeTransferRoute();
     error InvalidCctpMessage();
     error InvalidChainId();
+    error InvalidCreMetadataLength();
+    error InvalidCreWorkflowAuthor();
+    error InvalidCreWorkflowId();
+    error InvalidCreWorkflowName();
     error InvalidDebtFlag();
     error InvalidDecimals();
     error InvalidFeedRoute();
@@ -52,6 +61,7 @@ library Errors {
     error InvalidOutputToken();
     error InvalidPositionChangeDirection();
     error InvalidRecipientChainId();
+    error InvalidSpokeCaliberMailbox();
     error InvalidTransferStatus();
     error LocalTokenNotRegistered(address token, uint256 foreignEvmChainId);
     error LzEndpointIdNotRegistered();
@@ -65,8 +75,8 @@ library Errors {
     error MismatchedLengths();
     error MissingInstructionForGroup(uint256 groupId);
     error NegativeTokenPrice(address priceFeed);
-    error NoPendingUpdate();
     error NonZeroBalance();
+    error NoPendingUpdate();
     error NotAccountingAgent();
     error NotBaseToken();
     error NotCaliber();

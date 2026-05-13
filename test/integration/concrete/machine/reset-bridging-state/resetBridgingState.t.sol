@@ -217,14 +217,14 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         // simulate the machine transfer being received and claimed by spoke caliber
         skip(1);
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn = new bytes[](1);
         cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // aum update now reverts
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
@@ -239,9 +239,9 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         // simulate caliber notifying reset counters
         skip(1);
-        blockTime = uint64(block.timestamp);
+        blockTime = block.timestamp;
         report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // aum update still works
         skip(1);

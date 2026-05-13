@@ -18,6 +18,7 @@ import {IMachine} from "../interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../interfaces/IMakinaGovernable.sol";
 import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {IPreDepositVault} from "../interfaces/IPreDepositVault.sol";
+import {ISpokeSnapshotConsumer} from "../interfaces/ISpokeSnapshotConsumer.sol";
 import {MachineShare} from "../machine/MachineShare.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {Roles} from "../libraries/Roles.sol";
@@ -92,6 +93,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams calldata sscParams,
         BridgeAdapterInitParams[] calldata baParams,
         address preDepositVault,
         bytes32 salt,
@@ -103,31 +105,35 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
             revert Errors.NotPreDepositVault();
         }
         address accountingToken = IPreDepositVault(preDepositVault).accountingToken();
-        address shareToken = IPreDepositVault(preDepositVault).shareToken();
 
-        address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, accountingToken, machine, salt);
+        MachineBundle memory bundle;
+        bundle.shareToken = IPreDepositVault(preDepositVault).shareToken();
+        bundle.machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
+        bundle.caliber = _createCaliber(cParams, accountingToken, bundle.machine, salt);
 
-        IPreDepositVault(preDepositVault).setPendingMachine(machine);
+        IPreDepositVault(preDepositVault).setPendingMachine(bundle.machine);
 
-        IMachine(machine).initialize(mParams, mgParams, preDepositVault, shareToken, accountingToken, caliber);
+        IMachine(bundle.machine)
+            .initialize(
+                mParams, mgParams, sscParams, preDepositVault, bundle.shareToken, accountingToken, bundle.caliber
+            );
 
-        $._isMachine[machine] = true;
-        $._instanceSalts[machine] = salt;
+        $._isMachine[bundle.machine] = true;
+        $._instanceSalts[bundle.machine] = salt;
 
         for (uint256 i; i < baParams.length; ++i) {
-            _createBridgeAdapter(machine, baParams[i], salt);
+            _createBridgeAdapter(bundle.machine, baParams[i], salt);
         }
 
         if (setupAMFunctionRoles) {
             address initialAuthority = mgParams.initialAuthority;
             address initialFeeManager = mParams.initialFeeManager;
-            _setupMachineBundleAMFunctionRoles(initialAuthority, machine, caliber, initialFeeManager);
+            _setupMachineBundleAMFunctionRoles(initialAuthority, bundle.machine, bundle.caliber, initialFeeManager);
         }
 
-        emit MachineCreated(machine, shareToken);
+        emit MachineCreated(bundle.machine, bundle.shareToken);
 
-        return machine;
+        return bundle.machine;
     }
 
     /// @inheritdoc IHubCoreFactory
@@ -135,6 +141,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams calldata sscParams,
         BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
         string memory tokenName,
@@ -142,33 +149,34 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         bytes32 salt,
         bool setupAMFunctionRoles
     ) external override restricted returns (address) {
-        address shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
-        address machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
-        address caliber = _createCaliber(cParams, accountingToken, machine, salt);
+        MachineBundle memory bundle;
+        bundle.shareToken = _createShareToken(tokenName, tokenSymbol, address(this));
+        bundle.machine = address(new BeaconProxy(IHubCoreRegistry(registry).machineBeacon(), ""));
+        bundle.caliber = _createCaliber(cParams, accountingToken, bundle.machine, salt);
+        IOwnable2Step(bundle.shareToken).transferOwnership(bundle.machine);
 
-        IOwnable2Step(shareToken).transferOwnership(machine);
-
-        IMachine(machine).initialize(mParams, mgParams, address(0), shareToken, accountingToken, caliber);
+        IMachine(bundle.machine)
+            .initialize(mParams, mgParams, sscParams, address(0), bundle.shareToken, accountingToken, bundle.caliber);
 
         {
             HubCoreFactoryStorage storage $ = _getHubCoreFactoryStorage();
-            $._isMachine[machine] = true;
-            $._instanceSalts[machine] = salt;
+            $._isMachine[bundle.machine] = true;
+            $._instanceSalts[bundle.machine] = salt;
         }
 
         for (uint256 i; i < baParams.length; ++i) {
-            _createBridgeAdapter(machine, baParams[i], salt);
+            _createBridgeAdapter(bundle.machine, baParams[i], salt);
         }
 
         if (setupAMFunctionRoles) {
             address initialAuthority = mgParams.initialAuthority;
             address initialFeeManager = mParams.initialFeeManager;
-            _setupMachineBundleAMFunctionRoles(initialAuthority, machine, caliber, initialFeeManager);
+            _setupMachineBundleAMFunctionRoles(initialAuthority, bundle.machine, bundle.caliber, initialFeeManager);
         }
 
-        emit MachineCreated(machine, shareToken);
+        emit MachineCreated(bundle.machine, bundle.shareToken);
 
-        return machine;
+        return bundle.machine;
     }
 
     /// @inheritdoc IBridgeAdapterFactory
@@ -233,7 +241,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IAccessManager(_authority)
             .setTargetFunctionRole(_machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE);
 
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](7);
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](12);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
         mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
         mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
@@ -241,6 +249,11 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         mgmtSetupSelectors[4] = IMakinaGovernable.setRestrictedAccountingMode.selector;
         mgmtSetupSelectors[5] = IMakinaGovernable.addAccountingAgent.selector;
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
+        mgmtSetupSelectors[7] = ISpokeSnapshotConsumer.addCreWorkflowId.selector;
+        mgmtSetupSelectors[8] = ISpokeSnapshotConsumer.removeCreWorkflowId.selector;
+        mgmtSetupSelectors[9] = ISpokeSnapshotConsumer.addCreWorkflowName.selector;
+        mgmtSetupSelectors[10] = ISpokeSnapshotConsumer.removeCreWorkflowName.selector;
+        mgmtSetupSelectors[11] = ISpokeSnapshotConsumer.setCreWorkflowAuthor.selector;
         IAccessManager(_authority)
             .setTargetFunctionRole(_machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }

@@ -15,6 +15,7 @@ import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
@@ -28,21 +29,27 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.expectRevert(abi.encodeWithSelector(IAccessManaged.AccessManagedUnauthorized.selector, address(this)));
-        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, baParams, address(0), bytes32(0), false);
+        hubCoreFactory.createMachineFromPreDeposit(
+            mParams, cParams, mgParams, sscParams, baParams, address(0), bytes32(0), false
+        );
     }
 
     function test_RevertWhen_InvalidPreDepositVault() public {
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.NotPreDepositVault.selector);
-        hubCoreFactory.createMachineFromPreDeposit(mParams, cParams, mgParams, baParams, address(0), bytes32(0), false);
+        hubCoreFactory.createMachineFromPreDeposit(
+            mParams, cParams, mgParams, sscParams, baParams, address(0), bytes32(0), false
+        );
     }
 
     function test_RevertWhen_ZeroSalt() public {
@@ -52,12 +59,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.ZeroSalt.selector);
         hubCoreFactory.createMachineFromPreDeposit(
-            mParams, cParams, mgParams, baParams, address(preDepositVault), bytes32(0), false
+            mParams, cParams, mgParams, sscParams, baParams, address(preDepositVault), bytes32(0), false
         );
     }
 
@@ -68,12 +76,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.TargetAlreadyExists.selector);
         hubCoreFactory.createMachineFromPreDeposit(
-            mParams, cParams, mgParams, baParams, address(preDepositVault), TEST_DEPLOYMENT_SALT, false
+            mParams, cParams, mgParams, sscParams, baParams, address(preDepositVault), TEST_DEPLOYMENT_SALT, false
         );
     }
 
@@ -94,12 +103,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         IMachine.MachineInitParams memory mParams;
         ICaliber.CaliberInitParams memory cParams;
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams;
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams;
 
         vm.prank(dao);
         vm.expectRevert(Errors.Create3ProxyDeploymentFailed.selector);
         hubCoreFactory.createMachineFromPreDeposit(
-            mParams, cParams, mgParams, baParams, address(preDepositVault), salt, false
+            mParams, cParams, mgParams, sscParams, baParams, address(preDepositVault), salt, false
         );
     }
 
@@ -145,6 +155,11 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
+                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+                    initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+                    initialCreWorkflowIds: new bytes32[](0),
+                    initialCreWorkflowNames: new bytes10[](0)
+                }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 address(preDepositVault),
                 salt,
@@ -172,6 +187,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
 
         address[] memory initialAccountingAgents = new address[](1);
         initialAccountingAgents[0] = accountingAgent;
+
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
+        sscParams.initialCreWorkflowAuthor = DEFAULT_CRE_WORKFLOW_AUTHOR;
+        sscParams.initialCreWorkflowIds = new bytes32[](1);
+        sscParams.initialCreWorkflowIds[0] = bytes32("id");
+        sscParams.initialCreWorkflowNames = new bytes10[](1);
+        sscParams.initialCreWorkflowNames[0] = bytes10("name");
 
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
@@ -223,6 +245,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: initialAccountingAgents
                 }),
+                sscParams,
                 baParams,
                 address(preDepositVault),
                 salt,
@@ -256,6 +279,10 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
+
+        assertTrue(machine.isCreWorkflowIdAuthorized(sscParams.initialCreWorkflowIds[0]));
+        assertTrue(machine.isCreWorkflowNameAuthorized(sscParams.initialCreWorkflowNames[0]));
+        assertEq(machine.creWorkflowAuthor(), DEFAULT_CRE_WORKFLOW_AUTHOR);
 
         assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
         assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
@@ -385,6 +412,13 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         address[] memory initialAccountingAgents = new address[](1);
         initialAccountingAgents[0] = accountingAgent;
 
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
+        sscParams.initialCreWorkflowAuthor = DEFAULT_CRE_WORKFLOW_AUTHOR;
+        sscParams.initialCreWorkflowIds = new bytes32[](1);
+        sscParams.initialCreWorkflowIds[0] = bytes32("id");
+        sscParams.initialCreWorkflowNames = new bytes10[](1);
+        sscParams.initialCreWorkflowNames[0] = bytes10("name");
+
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
         baParams[0] = IBridgeAdapterFactory.BridgeAdapterInitParams({
@@ -443,6 +477,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: initialAccountingAgents
                 }),
+                sscParams,
                 baParams,
                 address(preDepositVault),
                 salt,
@@ -476,6 +511,10 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
 
         assertTrue(machine.isIdleToken(address(accountingToken)));
         assertEq(machine.getSpokeCalibersLength(), 0);
+
+        assertTrue(machine.isCreWorkflowIdAuthorized(sscParams.initialCreWorkflowIds[0]));
+        assertTrue(machine.isCreWorkflowNameAuthorized(sscParams.initialCreWorkflowNames[0]));
+        assertEq(machine.creWorkflowAuthor(), DEFAULT_CRE_WORKFLOW_AUTHOR);
 
         assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
         assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));

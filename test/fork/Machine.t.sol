@@ -8,6 +8,7 @@ import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
@@ -81,6 +82,11 @@ contract Machine_Fork_Test is Fork_Test {
                         initialAuthority: address(hubCore.accessManager),
                         initialRestrictedAccountingMode: false,
                         initialAccountingAgents: new address[](0)
+                    }),
+                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+                        initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+                        initialCreWorkflowIds: new bytes32[](0),
+                        initialCreWorkflowNames: new bytes10[](0)
                     }),
                     new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                     ethForkData.usdc,
@@ -175,7 +181,10 @@ contract Machine_Fork_Test is Fork_Test {
         machine.setSpokeCaliber(ChainsInfo.CHAIN_ID_BASE, spokeCaliberMailbox, new uint16[](0), new address[](0));
 
         // write spoke caliber accounting data in machine
-        machine.updateSpokeCaliberAccountingData(abi.encode(snapshots));
+        vm.prank(machine.creForwarder());
+        machine.onReport(
+            abi.encodePacked(bytes32(0), bytes10(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes2(0)), abi.encode(snapshots)
+        );
 
         // check machine aum
         skip(1);

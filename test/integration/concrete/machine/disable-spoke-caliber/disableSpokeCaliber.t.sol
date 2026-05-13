@@ -64,12 +64,12 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), new uint16[](0), new address[](0));
 
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 1, new bytes[](0), new bytes[](0)
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         vm.expectRevert(Errors.CaliberNotEmpty.selector);
         vm.prank(dao);
@@ -96,8 +96,8 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         // simulate a pending Spoke -> Hub transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn = new bytes[](1);
         cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
         bytes[] memory cBridgeOut = new bytes[](1);
@@ -105,7 +105,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, true, 0, cBridgeIn, cBridgeOut
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // 1 complete Hub -> Spoke transfer + 1 pending Spoke -> Hub transfer
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
@@ -125,7 +125,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum + 1, blockTime + 1, true, 0, cBridgeIn, cBridgeOut
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
         vm.prank(dao);

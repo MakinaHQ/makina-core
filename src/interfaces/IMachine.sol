@@ -4,8 +4,9 @@ pragma solidity ^0.8.28;
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
+import {ISpokeSnapshotConsumer} from "./ISpokeSnapshotConsumer.sol";
 
-interface IMachine is IMachineEndpoint {
+interface IMachine is IMachineEndpoint, ISpokeSnapshotConsumer {
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(
         address indexed sender, address indexed receiver, uint256 assets, uint256 shares, bytes32 indexed referralKey
@@ -78,6 +79,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Initializer of the contract.
     /// @param mParams The machine initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param sscParams The spoke snapshot consumer initialization parameters.
     /// @param _preDepositVault The address of the pre-deposit vault.
     /// @param _shareToken The address of the share token.
     /// @param _accountingToken The address of the accounting token.
@@ -85,6 +87,7 @@ interface IMachine is IMachineEndpoint {
     function initialize(
         MachineInitParams calldata mParams,
         MakinaGovernableInitParams calldata mgParams,
+        SpokeSnapshotConsumerInitParams calldata sscParams,
         address _preDepositVault,
         address _shareToken,
         address _accountingToken,
@@ -217,10 +220,6 @@ interface IMachine is IMachineEndpoint {
     /// @param minAssets The minimum amount of accounting tokens to be transferred.
     /// @return assets The amount of accounting tokens transferred.
     function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
-
-    /// @notice Updates spoke caliber accounting data.
-    /// @param report The report payload containing the accounting data.
-    function updateSpokeCaliberAccountingData(bytes calldata report) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The chain ID of the spoke caliber.

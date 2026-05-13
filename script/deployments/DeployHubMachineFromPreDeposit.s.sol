@@ -6,9 +6,10 @@ import {stdJson} from "forge-std/StdJson.sol";
 
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
-import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
+import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
@@ -53,6 +54,8 @@ contract DeployHubMachineFromPreDeposit is Base, Script {
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
             parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams =
+            parseSpokeSnapshotConsumerInitParams(inputJson, ".spokeSnapshotConsumerInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
         bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
@@ -64,7 +67,7 @@ contract DeployHubMachineFromPreDeposit is Base, Script {
         vm.startBroadcast();
 
         deployedInstance = hubCoreFactory.createMachineFromPreDeposit(
-            mParams, cParams, mgParams, baParams, preDepositVault, salt, setupAMFunctionRoles
+            mParams, cParams, mgParams, sscParams, baParams, preDepositVault, salt, setupAMFunctionRoles
         );
 
         vm.stopBroadcast();

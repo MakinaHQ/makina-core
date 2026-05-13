@@ -38,7 +38,8 @@ contract DeployHubCore is DeployCore {
     }
 
     function _coreSetup() internal override {
-        _core = deployHubCore(deployer);
+        address creForwarder = vm.parseJsonAddress(inputJson, ".creForwarder");
+        _core = deployHubCore(deployer, creForwarder);
 
         setupHubCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);

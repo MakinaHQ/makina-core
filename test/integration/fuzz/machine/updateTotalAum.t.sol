@@ -102,17 +102,19 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
         }
 
         // update spoke caliber accounting data
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
 
         ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
             new ICaliberMailbox.SpokeCaliberAccountingData[](1);
         snapshots[0].netAum = data.spokeCaliberNetAum;
-        snapshots[0].meta = ICaliberMailbox.SpokeSnapshotMeta({
+        snapshots[0].context = ICaliberMailbox.SpokeSnapshotContext({
             chainId: SPOKE_CHAIN_ID, mailbox: spokeCaliberMailboxAddr, blockNum: blockNum, blockTime: blockTime
         });
 
-        machine.updateSpokeCaliberAccountingData(abi.encode(snapshots));
+        creForwarder.forwardReport(
+            address(machine), abi.encode(snapshots), bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0)
+        );
 
         machine.updateTotalAum();
 

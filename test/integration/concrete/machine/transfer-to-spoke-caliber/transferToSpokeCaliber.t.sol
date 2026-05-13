@@ -112,14 +112,14 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         vm.stopPrank();
 
         // simulate spoke caliber having a bridgeIn value abnormally high
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn = new bytes[](1);
         cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount + 1);
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
         vm.prank(mechanic);
@@ -336,14 +336,14 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         vm.stopPrank();
 
         // simulate spoke caliber having received the transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn = new bytes[](1);
         cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, transferAmount1);
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         uint256 transferAmount2 = 2e18;
 

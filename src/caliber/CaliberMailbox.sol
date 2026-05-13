@@ -81,7 +81,7 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
     function getSpokeCaliberAccountingData() external view override returns (SpokeCaliberAccountingData memory data) {
         data.netAum = ICaliber(_getCaliberMailboxStorage()._caliber).getNetAum();
         (data.bridgesIn, data.bridgesOut) = _getBridgeCounters();
-        data.meta = _getSnapshotMeta();
+        data.context = _getSnapshotContext();
     }
 
     /// @inheritdoc IMachineEndpoint
@@ -243,13 +243,10 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
         }
     }
 
-    /// @dev Constructs the snapshot metadata for the current state.
-    function _getSnapshotMeta() internal view returns (SpokeSnapshotMeta memory) {
-        return SpokeSnapshotMeta({
-            chainId: block.chainid,
-            mailbox: address(this),
-            blockNum: uint64(block.number),
-            blockTime: uint64(block.timestamp)
+    /// @dev Constructs the snapshot context for the current state.
+    function _getSnapshotContext() internal view returns (SpokeSnapshotContext memory) {
+        return SpokeSnapshotContext({
+            chainId: block.chainid, mailbox: address(this), blockNum: block.number, blockTime: block.timestamp
         });
     }
 }

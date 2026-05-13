@@ -73,7 +73,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     /// CORE DEPLOYMENTS
     ///
 
-    function deployHubCore(address initialAMAdmin) internal returns (HubCore memory deployment) {
+    function deployHubCore(address initialAMAdmin, address creForwarder) internal returns (HubCore memory deployment) {
         // Access Manager
         deployment.accessManager = _deployAccessManager(initialAMAdmin, initialAMAdmin);
 
@@ -112,7 +112,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
 
         // Machine Beacon
         deployment.machineBeacon =
-            _deployMachineBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry));
+            _deployMachineBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry), creForwarder);
 
         // PreDeposit Vault Beacon
         deployment.preDepositVaultBeacon =
@@ -685,11 +685,13 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         return _deployCode(getWeirollVMCode(), WEIROLL_VM_SALT_DOMAIN);
     }
 
-    function _deployMachineBeacon(address _proxyOwner, address _hubCoreRegistry)
+    function _deployMachineBeacon(address _proxyOwner, address _hubCoreRegistry, address _creForwarder)
         internal
         returns (UpgradeableBeacon caliberBeacon)
     {
-        address implem = _deployCode(abi.encodePacked(type(Machine).creationCode, abi.encode(_hubCoreRegistry)), 0);
+        address implem = _deployCode(
+            abi.encodePacked(type(Machine).creationCode, abi.encode(_hubCoreRegistry, _creForwarder)), 0
+        );
         return UpgradeableBeacon(
             _deployCode(
                 abi.encodePacked(type(UpgradeableBeacon).creationCode, abi.encode(implem, _proxyOwner)),

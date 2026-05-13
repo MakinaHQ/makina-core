@@ -61,7 +61,8 @@ abstract contract Fork_Test is Base, Test, Constants {
 
         // deploy core contracts
         if (isHub) {
-            hubCore = deployHubCore(address(this));
+            address creForwarder = vm.parseJsonAddress(inputJson, ".creForwarder");
+            hubCore = deployHubCore(address(this), creForwarder);
         } else {
             spokeCores[chainId] = deploySpokeCore(address(this), hubChainId);
         }

@@ -101,8 +101,8 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         snapshot.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
         snapshot.netAum += aumOffsetTransfers;
 
-        snapshot.meta = ICaliberMailbox.SpokeSnapshotMeta({
-            chainId: chainId, mailbox: spokeCaliberMailboxAddr, blockNum: uint64(blockNum), blockTime: blockTime
+        snapshot.context = ICaliberMailbox.SpokeSnapshotContext({
+            chainId: chainId, mailbox: spokeCaliberMailboxAddr, blockNum: blockNum, blockTime: blockTime
         });
 
         snapshot.bridgesIn = bridgesIn;

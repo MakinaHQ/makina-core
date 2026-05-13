@@ -55,10 +55,10 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
         assertEq(data.bridgesIn.length, 0);
         assertEq(data.bridgesOut.length, 0);
-        assertEq(data.meta.chainId, block.chainid);
-        assertEq(data.meta.mailbox, address(caliberMailbox));
-        assertEq(data.meta.blockNum, uint64(block.number));
-        assertEq(data.meta.blockTime, uint64(block.timestamp));
+        assertEq(data.context.chainId, block.chainid);
+        assertEq(data.context.mailbox, address(caliberMailbox));
+        assertEq(data.context.blockNum, block.number);
+        assertEq(data.context.blockTime, block.timestamp);
 
         skip(1 hours);
         vm.roll(block.number + 300);
@@ -70,9 +70,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
         assertEq(data.bridgesIn.length, 0);
         assertEq(data.bridgesOut.length, 0);
-        assertEq(data.meta.chainId, block.chainid);
-        assertEq(data.meta.mailbox, address(caliberMailbox));
-        assertEq(data.meta.blockNum, uint64(block.number));
-        assertEq(data.meta.blockTime, uint64(block.timestamp));
+        assertEq(data.context.chainId, block.chainid);
+        assertEq(data.context.mailbox, address(caliberMailbox));
+        assertEq(data.context.blockNum, block.number);
+        assertEq(data.context.blockTime, block.timestamp);
     }
 }

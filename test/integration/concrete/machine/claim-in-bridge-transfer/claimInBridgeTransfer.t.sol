@@ -55,15 +55,15 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
         // simulate the caliber having sent the transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn;
         bytes[] memory cBridgeOut = new bytes[](1);
         cBridgeOut[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, cBridgeOut
         );
-        machine.updateSpokeCaliberAccountingData(report);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);

@@ -18,6 +18,7 @@ import {Constants} from "../../utils/Constants.sol";
 import {IntegrationIds} from "../../utils/IntegrationIds.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineStore} from "../stores/MachineStore.sol";
+import {MockCreForwarder} from "../../mocks/MockCreForwarder.sol";
 
 contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, IntegrationIds {
     using Math for uint256;
@@ -344,7 +345,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
         snapshots[0] = spokeCaliberMailbox.getSpokeCaliberAccountingData();
         vm.chainId(machineStore.hubChainId());
 
-        machine.updateSpokeCaliberAccountingData(abi.encode(snapshots));
+        MockCreForwarder(machine.creForwarder())
+            .forwardReport(address(machine), abi.encode(snapshots), bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         for (uint256 i; i < machineStore.tokensLength(); ++i) {
             address token = machineStore.tokens(i);

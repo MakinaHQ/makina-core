@@ -18,10 +18,12 @@ import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
+import {MockCreForwarder} from "../mocks/MockCreForwarder.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
@@ -85,6 +87,8 @@ abstract contract Base_Hub_Test is Base_Test {
     UpgradeableBeacon internal machineBeacon;
     UpgradeableBeacon internal preDepositVaultBeacon;
 
+    MockCreForwarder internal creForwarder;
+
     address internal machineDepositor = makeAddr("MachineDepositor");
     address internal machineRedeemer = makeAddr("MachineRedeemer");
 
@@ -94,7 +98,9 @@ abstract contract Base_Hub_Test is Base_Test {
         Base_Test.setUp();
         hubChainId = block.chainid;
 
-        HubCore memory deployment = deployHubCore(deployer);
+        creForwarder = new MockCreForwarder();
+
+        HubCore memory deployment = deployHubCore(deployer, address(creForwarder));
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
@@ -148,6 +154,11 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialAuthority: address(accessManager),
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
+                }),
+                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+                    initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+                    initialCreWorkflowIds: new bytes32[](0),
+                    initialCreWorkflowNames: new bytes10[](0)
                 }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,

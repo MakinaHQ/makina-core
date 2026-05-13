@@ -32,6 +32,13 @@
       "0x00000000000000000000000000000000000000a2"
     ]
   },
+  "spokeSnapshotConsumerInitParams": {
+    "initialCreWorkflowIds": [
+      "0x000000000000000000000000000000000000000000000000000000000000C31D"
+    ],
+    "initialCreWorkflowNames": ["0x00000000000000000C32"],
+    "initialCreWorkflowAuthor": "0x0000000000000000000000000000000000000C3A"
+  },
   "bridgeAdapterInitParams": [
     {
       "bridgeId": 1,
