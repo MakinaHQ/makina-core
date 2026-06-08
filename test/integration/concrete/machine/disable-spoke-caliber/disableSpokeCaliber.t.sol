@@ -154,7 +154,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
 
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IMachine.SpokeCaliberMailboxDisabled(SPOKE_CHAIN_ID);
+        emit IMachine.SpokeCaliberDisabled(SPOKE_CHAIN_ID);
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         assertFalse(machine.isSpokeCaliberEnabled(SPOKE_CHAIN_ID));
@@ -167,7 +167,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.setSpokeCaliber(SPOKE_CHAIN_ID + 1, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
 
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IMachine.SpokeCaliberMailboxDisabled(SPOKE_CHAIN_ID);
+        emit IMachine.SpokeCaliberDisabled(SPOKE_CHAIN_ID);
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         assertEq(machine.getSpokeCalibersLength(), 3);

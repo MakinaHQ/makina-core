@@ -36,13 +36,13 @@ In order to compute a machine's total AUM, accounting data of each caliber needs
 
 #### Cross-chain Transfers
 
-To move funds between the Hub Chain and Spoke Chains, the protocol supports multiple liquidity bridging protocols through a modular bridge adapter system. At each stage of a bridge transfer, the involved funds are accounted for in the Machine’s AUM calculation.
+To move funds between the hub chain and spoke chains, the protocol supports multiple liquidity bridging protocols through a modular bridge adapter system. At each stage of a bridge transfer, the involved funds are accounted for in the machine’s AUM calculation.
 
 See more in the [Liquidity Bridging](#liquidity-bridging) section.
 
 #### Spoke Caliber Disabling
 
-A registered spoke caliber can be disabled, and later re-enabled. A disabled spoke caliber is skipped in the machine's total AUM computation, and the machine can no longer schedule outgoing bridge transfers towards it. This is used once a spoke caliber has become empty and no longer relevant, to avoid having to keep relaying its accounting data to the Machine.
+A registered spoke caliber can be disabled, and later re-enabled. A disabled spoke caliber is skipped in the machine's total AUM computation, and the machine can no longer schedule outgoing bridge transfers towards it. This is used once a spoke caliber has become empty and no longer relevant, to avoid having to keep relaying its accounting data to the machine.
 
 Disabling requires:
 
@@ -52,13 +52,13 @@ Disabling requires:
 
 These three conditions correspond to the three ways a spoke caliber contributes to total AUM, so disabling a caliber removes no value that is being counted at that time. The spoke-reported figures used here need not be perfectly up to date: a spoke caliber can only receive funds through an outgoing transfer from the machine, which the machine tracks in its own, always-current records. Since disabling requires no such transfer to be pending, a caliber whose last reported AUM was zero can reasonably be considered still empty.
 
-Disabling can be reversed at any time by re-enabling. Incoming bridge transfers from a disabled spoke caliber also remain accepted by design: should a disabled caliber ever hold funds, they could still be bridged back and received as idle tokens on the Hub, rather than being stranded.
+Disabling can be reversed at any time by re-enabling. Incoming bridge transfers from a disabled spoke caliber also remain accepted by design: should a disabled caliber ever hold funds, they could still be bridged back and received as idle tokens on the hub, rather than being stranded.
 
 #### Standard Operator Actions:
 
 - Can store the last accounting data from spoke calibers.
 - Can recompute and update the total AUM, and mint fees.
-- Can initiate a transfer towards a Caliber.
+- Can initiate a transfer towards a caliber.
 
 ### Pre-Deposit Vault
 
@@ -66,11 +66,11 @@ The `PreDepositVault` is used during pre-deposit campaigns to onboard users capi
 
 ### Caliber
 
-The `Caliber` contract serves as the execution engine, responsible for deploying assets to external protocols. On the Hub Chain, the Machine communicates directly with its associated Hub Caliber. Additional Caliber instances can be deployed on Spoke Chains to expand the protocol across networks.
+The `Caliber` contract serves as the execution engine, responsible for deploying assets to external protocols. On the hub chain, the machine communicates directly with its associated hub caliber. An additional caliber can be deployed on any supported spoke chain to expand the strategy.
 
 #### Mailbox
 
-Cross-chain communication between the Hub Machine and Spoke calibers is facilitated through `CaliberMailbox` contracts. Each Spoke `Caliber` is deployed alongside a `CaliberMailbox` on its respective Spoke Chain. The `CaliberMailbox` acts as a machine endpoint from the `Caliber`’s perspective. It abstracts away chain-specific logic, managing liquidity bridging for transfers to and from the Hub Machine, and it also handles access control setup.
+Cross-chain communication between the hub machine and spoke calibers is facilitated through `CaliberMailbox` contracts. Each spoke `Caliber` is deployed alongside a `CaliberMailbox` on its respective spoke chain. The `CaliberMailbox` acts as a machine endpoint from the `Caliber`’s perspective. It abstracts away chain-specific logic, managing liquidity bridging for transfers to and from the hub machine, and it also handles access control setup.
 
 #### Instructions
 
@@ -98,7 +98,7 @@ The protocol relies on specific assumptions on the instructions:
 - **MANAGEMENT**:
   - The `affectedTokens` list must include exactly all tokens spent by the instruction. These tokens must also be registered as base tokens in the executing caliber.
 - **HARVEST**:
-  - They are restricted to receive-only operations. They must not spend any tokens that are initially held by the Caliber.
+  - They are restricted to receive-only operations. They must not spend any tokens that are initially held by the caliber.
 - **FLASHLOAN_MANAGEMENT**:
   - They must not result in token balance changes for tokens that are not in the `affectedTokens` list of the associated `MANAGEMENT` instruction.
 
@@ -114,7 +114,7 @@ Furthermore, while positions can be represented by one or more receipt tokens (e
 - Can harvest and swap external reward assets.
 - Can swap a token into any base token.
 - Can fetch net caliber aum and positions detail.
-- Can initiate a transfer towards Hub Machine.
+- Can initiate a transfer towards the hub machine.
 
 ### SwapModule
 
@@ -126,15 +126,15 @@ The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](h
 
 ### Chain Registry
 
-The protocol uses Wormhole Cross-Chain Queries to relay accounting data from Spoke Calibers to the Hub Machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
+The protocol uses Wormhole Cross-Chain Queries to relay accounting data from spoke calibers to the hub machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
 
 ### Token Registry
 
-The `TokenRegistry` contract maintains the association between token addresses on the Hub and Spoke Chains. It enables consistent identification and pricing of bridged assets across networks, ensuring accurate cross-chain accounting.
+The `TokenRegistry` contract maintains the association between token addresses on the hub and spoke chains. It enables consistent identification and pricing of bridged assets across networks, ensuring accurate cross-chain accounting.
 
 ### Liquidity Bridging
 
-Liquidity can be bridged between a Hub Machine and a Spoke Caliber via their respective bridge adapters. The protocol provides a dedicated bridge adapter implementation for each supported external bridge protocol.
+Liquidity can be bridged between a hub machine and a spoke caliber via their respective bridge adapters. The protocol provides a dedicated bridge adapter implementation for each supported external bridge protocol.
 
 Bridging is a five-step process, executed by the operator, and functions symmetrically in both directions: Hub → Spoke and Spoke → Hub.
 

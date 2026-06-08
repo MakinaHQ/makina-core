@@ -81,14 +81,14 @@ contract SetSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Concre
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
     }
 
-    function test_RevertWhen_ZeroSpokeCaliberMailbox() public {
+    function test_RevertWhen_ZeroSpokeCaliberMailboxAddress() public {
         bridges = new uint16[](1);
         bridges[0] = ACROSS_V3_BRIDGE_ID;
 
         spokeBridgeAdapters = new address[](1);
         spokeBridgeAdapters[0] = spokeBridgeAdapterAddr;
 
-        vm.expectRevert(Errors.ZeroSpokeCaliberMailbox.selector);
+        vm.expectRevert(Errors.ZeroSpokeCaliberMailboxAddress.selector);
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(0), bridges, spokeBridgeAdapters);
     }

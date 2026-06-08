@@ -65,7 +65,7 @@ contract EnableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Con
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         vm.expectEmit(true, false, false, false, address(machine));
-        emit IMachine.SpokeCaliberMailboxEnabled(SPOKE_CHAIN_ID);
+        emit IMachine.SpokeCaliberEnabled(SPOKE_CHAIN_ID);
         machine.enableSpokeCaliber(SPOKE_CHAIN_ID);
 
         assertEq(machine.getSpokeCalibersLength(), 1);

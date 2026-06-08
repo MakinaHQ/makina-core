@@ -4,9 +4,9 @@
 
 ### Anyone
 
-- Can run authorized accounting instructions in Calibers, provided the Calibers are neither in restricted accounting mode nor recovery mode.
-- Can submit accounting data from a Spoke Caliber to its corresponding Machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
-- Can update a Machine’s total AUM, provided all Caliber accounting data is up to date, the Machine is neither in restricted accounting mode nor recovery mode, and the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
+- Can run authorized accounting instructions in calibers, provided the calibers are neither in restricted accounting mode nor recovery mode.
+- Can submit accounting data from a spoke caliber to its corresponding machine, provided it is signed by Wormhole Guardians via the Wormhole CCQ network.
+- Can update a machine’s total AUM, provided all caliber accounting data is up to date, the machine is neither in restricted accounting mode nor recovery mode, and the resulting share price change is within the bounds imposed by the maximum allowed change rate over the elapsed time.
 
 ## Roles Permissions List
 
@@ -68,10 +68,10 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### HubCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
-  - Can deploy machine shares.
-  - Can deploy pre-deposit vaults.
-  - Can deploy machines and calibers.
-  - Can deploy bridge adapters.
+  - Can deploy MachineShare instances.
+  - Can deploy PreDepositVault instances.
+  - Can deploy Machine and Caliber instances.
+  - Can deploy BridgeAdapter instances.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
@@ -79,8 +79,8 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### SpokeCoreFactory
 
 - `STRATEGY_DEPLOYMENT_ROLE` (roleId `2`)
-  - Can deploy mailboxes and calibers.
-  - Can deploy bridge adapters.
+  - Can deploy CaliberMailbox and Caliber instances.
+  - Can deploy BridgeAdapter instances.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
   - Can upgrade implementation via associated ProxyAdmin.
@@ -158,12 +158,12 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Machine
 
 - `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
-  - Can set the address of a Spoke caliber mailbox.
-  - Can set the address of a Spoke bridge adapter.
+  - Can set the address of a spoke caliber mailbox.
+  - Can set the address of a spoke bridge adapter.
   - Can set the address of the depositor contract.
   - Can set the address of the redeemer contract.
   - Can set the address of the fee manager contract.
-  - Can disable and re-enable a Spoke caliber.
+  - Can disable and re-enable a spoke caliber.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
   - Can set the address of the mechanic.
@@ -215,7 +215,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 ### Caliber Mailbox
 
 - `STRATEGY_COMPONENTS_LINKING_ROLE` (roleId `3`)
-  - Can set the address of a Hub bridge adapter.
+  - Can set the address of a hub bridge adapter.
 
 - `STRATEGY_MANAGEMENT_CONFIG_ROLE` (roleId `4`)
   - Can set the address of the mechanic.
@@ -236,11 +236,11 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 - **Mechanic / Security Council**
 
   The following permissions are attributed to mechanic by default, and passed on to the security council when recovery mode is triggered.
-  - Can schedule outgoing bridge transfer towards the Hub Machine.
+  - Can schedule outgoing bridge transfer towards the hub machine.
   - Can cancel outgoing bridge transfer.
   - Can send outgoing bridge transfer.
-  - Can authorize incoming bridge transfer from the Hub Machine.
-  - Can claim incoming bridge transfer from the Hub Machine.
+  - Can authorize incoming bridge transfer from the hub machine.
+  - Can claim incoming bridge transfer from the hub machine.
 
 ### Caliber
 

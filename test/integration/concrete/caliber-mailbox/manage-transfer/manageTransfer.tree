@@ -7,10 +7,10 @@ manageTransfer.t.sol
    │  │  └── it should revert with HubBridgeAdapterNotSet
    │  └── given a hub bridge adapter is set for the provided bridge ID
    │     ├── given no local bridge adapter is set for the provided bridge ID
-   │     │  └── it should revert with BridgeAdapterDoesNotExist
+   │     │  └── it should revert with InvalidBridgeId
    │     └── given a local bridge adapter is set for the provided bridge ID
    │        ├── given outgoing bridge transfers through the given bridge are marked as disabled
-   │        │  └── it should revert with BridgeAdapterDoesNotExist
+   │        │  └── it should revert with InvalidBridgeId
    │        └── given outgoing bridge transfers through the given bridge are marked as enabled
    │           ├── given the maximum allowed value loss induced by the bridge transfer is higher than maxBridgeLossBps
    │           │  └── it should revert with MaxValueLossExceeded

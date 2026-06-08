@@ -59,7 +59,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function getBridgeAdapter(uint16 bridgeId) public view override returns (address) {
         address adapter = _getBridgeControllerStorage()._bridgeAdapters[bridgeId];
         if (adapter == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         return adapter;
     }
@@ -68,7 +68,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function getMaxBridgeLossBps(uint16 bridgeId) external view override returns (uint256) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         return $._maxBridgeLossBps[bridgeId];
     }
@@ -82,7 +82,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
 
         if ($._bridgeAdapters[bridgeId] != address(0)) {
-            revert Errors.BridgeAdapterAlreadyExists();
+            revert Errors.BridgeAdapterAlreadySet();
         }
         if (bridgeAdapter == address(0)) {
             revert Errors.ZeroBridgeAdapterAddress();
@@ -101,7 +101,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function _disableOutTransfer(uint16 bridgeId) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         if (!$._isOutTransferEnabled[bridgeId]) {
             revert Errors.AlreadyDisabled();
@@ -114,7 +114,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function _enableOutTransfer(uint16 bridgeId) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         if ($._isOutTransferEnabled[bridgeId]) {
             revert Errors.AlreadyEnabled();
@@ -127,7 +127,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function _setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         emit MaxBridgeLossBpsChanged(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;

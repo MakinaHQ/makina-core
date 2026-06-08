@@ -12,8 +12,8 @@ abstract contract EnableOutTransfer_Integration_Concrete_Test is BridgeControlle
         bridgeController.enableOutTransfer(ACROSS_V3_BRIDGE_ID);
     }
 
-    function test_RevertGiven_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
+    function test_RevertGiven_InvalidBridgeId() public {
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
         vm.prank(riskManagerTimelock);
         bridgeController.enableOutTransfer(ACROSS_V3_BRIDGE_ID);
     }

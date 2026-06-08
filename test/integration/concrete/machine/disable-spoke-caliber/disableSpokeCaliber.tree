@@ -21,4 +21,4 @@ disableSpokeCaliber.t.sol
                   │  └── it should revert with PendingBridgeTransfer
                   └── when there are no pending bridge transfers from spoke caliber to this contract as per the current accounting data
                      ├── it should mark the spoke caliber as disabled
-                     └── it should emit a SpokeCaliberMailboxDisabled event
+                     └── it should emit a SpokeCaliberDisabled event

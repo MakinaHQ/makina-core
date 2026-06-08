@@ -12,4 +12,4 @@ enableSpokeCaliber.t.sol
          │  └── it should revert with AlreadyEnabled
          └── given the spoke caliber is not already enabled
             ├── it should mark the spoke caliber as enabled
-            └── it should emit a SpokeCaliberMailboxEnabled event
+            └── it should emit a SpokeCaliberEnabled event

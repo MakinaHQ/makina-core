@@ -35,7 +35,7 @@ interface ICaliberMailbox is IMachineEndpoint {
     /// @notice Duration of the cooldown period for outgoing bridge transfers.
     function cooldownDuration() external view returns (uint256);
 
-    /// @notice Returns the foreign address of the Hub bridge adapter for a given bridge ID.
+    /// @notice Returns the address of the hub bridge adapter for a given bridge ID.
     /// @param bridgeId The ID of the bridge.
     function getHubBridgeAdapter(uint16 bridgeId) external view returns (address);
 
@@ -56,6 +56,6 @@ interface ICaliberMailbox is IMachineEndpoint {
 
     /// @notice Registers a hub bridge adapter.
     /// @param bridgeId The ID of the bridge.
-    /// @param adapter The foreign address of the bridge adapter.
+    /// @param adapter The address of the hub bridge adapter.
     function setHubBridgeAdapter(uint16 bridgeId, address adapter) external;
 }

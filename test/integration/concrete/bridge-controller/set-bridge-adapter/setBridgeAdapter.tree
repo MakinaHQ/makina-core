@@ -3,7 +3,7 @@ setBridgeAdapter.t.sol
 │  └── it should revert with NotFactory
 └── when caller has the relevant role
    ├── given an adapter already exists for the provided bridge ID
-   │  └── it should revert with BridgeAdapterAlreadyExists
+   │  └── it should revert with BridgeAdapterAlreadySet
    └── given an adapter does not already exists for the provided bridge ID
       ├── given the provide bridge adapter is the zero address
       │  └── it should revert with ZeroBridgeAdapterAddress

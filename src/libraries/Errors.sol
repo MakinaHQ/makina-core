@@ -11,8 +11,7 @@ library Errors {
     error AlreadyPositionToken();
     error AlreadyRootGuardian();
     error AmountOutTooLow();
-    error BridgeAdapterAlreadyExists();
-    error BridgeAdapterDoesNotExist();
+    error BridgeAdapterAlreadySet();
     error BridgeConfigNotSet();
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
@@ -119,6 +118,6 @@ library Errors {
     error ZeroOftAddress();
     error ZeroPositionId();
     error ZeroSalt();
-    error ZeroSpokeCaliberMailbox();
+    error ZeroSpokeCaliberMailboxAddress();
     error ZeroTokenAddress();
 }

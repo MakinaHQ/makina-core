@@ -537,7 +537,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         }
 
         if (spokeCaliberMailbox == address(0)) {
-            revert Errors.ZeroSpokeCaliberMailbox();
+            revert Errors.ZeroSpokeCaliberMailboxAddress();
         }
 
         $._spokeChainIds.push(chainId);
@@ -575,7 +575,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
         caliberData.disabled = true;
 
-        emit SpokeCaliberMailboxDisabled(chainId);
+        emit SpokeCaliberDisabled(chainId);
     }
 
     /// @inheritdoc IMachine
@@ -593,7 +593,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
 
         caliberData.disabled = false;
 
-        emit SpokeCaliberMailboxEnabled(chainId);
+        emit SpokeCaliberEnabled(chainId);
     }
 
     /// @inheritdoc IMachine

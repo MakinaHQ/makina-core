@@ -3,7 +3,7 @@ disableOutTransfer.t.sol
 │  └── it should revert with UnauthorizedCaller
 └── when caller is the risk manager timelock
    ├── given no adapter for the provided bridge ID is registered in this contract
-   │  └── it should revert with BridgeAdapterDoesNotExist
+   │  └── it should revert with InvalidBridgeId
    └── given an adapter for the provided bridge ID is registered in this contract
       ├── given outgoing transfers are already disabled for the corresponding bridge
       │  └── it should revert with AlreadyDisabled

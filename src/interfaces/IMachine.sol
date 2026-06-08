@@ -23,8 +23,8 @@ interface IMachine is IMachineEndpoint {
     event RedeemerChanged(address indexed oldRedeemer, address indexed newRedeemer);
     event ShareLimitChanged(uint256 indexed oldShareLimit, uint256 indexed newShareLimit);
     event SpokeBridgeAdapterSet(uint256 indexed chainId, uint256 indexed bridgeId, address indexed adapter);
-    event SpokeCaliberMailboxEnabled(uint256 indexed chainId);
-    event SpokeCaliberMailboxDisabled(uint256 indexed chainId);
+    event SpokeCaliberDisabled(uint256 indexed chainId);
+    event SpokeCaliberEnabled(uint256 indexed chainId);
     event SpokeCaliberMailboxSet(uint256 indexed chainId, address indexed caliberMailbox);
     event TotalAumUpdated(uint256 totalAum);
     event TransferToCaliber(uint256 indexed chainId, address indexed token, uint256 amount);
@@ -52,7 +52,7 @@ interface IMachine is IMachineEndpoint {
     }
 
     /// @dev State data for each spoke caliber.
-    /// @param mailbox The foreign address of the spoke caliber mailbox.
+    /// @param mailbox The address of the spoke caliber mailbox.
     /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
     /// @param timestamp The timestamp of the last accounting.
     /// @param netAum The net AUM of the spoke caliber.
@@ -158,30 +158,30 @@ interface IMachine is IMachineEndpoint {
     /// @notice Number of calibers associated with the machine.
     function getSpokeCalibersLength() external view returns (uint256);
 
-    /// @notice Spoke caliber index => Spoke Chain ID.
+    /// @notice Spoke caliber index => Spoke chain ID.
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
-    /// @notice Spoke Chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
+    /// @notice Spoke chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
     function getSpokeCaliberDetailedAum(uint256 chainId)
         external
         view
         returns (uint256 aum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp);
 
-    /// @notice Spoke Chain ID => Spoke Caliber Mailbox Address.
+    /// @notice Spoke chain ID => Spoke caliber mailbox address.
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
 
-    /// @notice Spoke Chain ID => Whether the spoke caliber is enabled.
+    /// @notice Spoke chain ID => Whether the spoke caliber is enabled.
     function isSpokeCaliberEnabled(uint256 chainId) external view returns (bool);
 
-    /// @notice Spoke Chain ID => Spoke Bridge ID => Spoke Bridge Adapter.
+    /// @notice Spoke chain ID => Spoke bridge ID => Spoke bridge adapter.
     function getSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId) external view returns (address);
 
-    /// @notice Returns the amount of shares that the Machine would exchange for the amount of accounting tokens provided.
+    /// @notice Returns the amount of shares that the machine would exchange for the amount of accounting tokens provided.
     /// @param assets The amount of accounting tokens.
     /// @return shares The amount of shares.
     function convertToShares(uint256 assets) external view returns (uint256);
 
-    /// @notice Returns the amount of accounting tokens that the Machine would exchange for the amount of shares provided.
+    /// @notice Returns the amount of accounting tokens that the machine would exchange for the amount of shares provided.
     /// @param shares The amount of shares.
     /// @return assets The amount of accounting tokens.
     function convertToAssets(uint256 shares) external view returns (uint256);
@@ -193,7 +193,7 @@ interface IMachine is IMachineEndpoint {
 
     /// @notice Initiates a token transfer to the spoke caliber.
     /// @param bridgeId The ID of the bridge to use for the transfer.
-    /// @param chainId The foreign EVM chain ID of the spoke caliber.
+    /// @param chainId The chain ID of the spoke caliber.
     /// @param token The address of the token to transfer.
     /// @param amount The amount of token to transfer.
     /// @param minOutputAmount The minimum output amount expected from the transfer.
@@ -233,7 +233,7 @@ interface IMachine is IMachineEndpoint {
     function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
-    /// @param chainId The EVM chain ID of the spoke caliber.
+    /// @param chainId The chain ID of the spoke caliber.
     /// @param spokeCaliberMailbox The address of the spoke caliber mailbox.
     /// @param bridges The list of bridges supported with the spoke caliber mailbox.
     /// @param adapters The list of corresponding spoke adapters for each bridge. Must be the same length as `bridges`.
@@ -253,7 +253,7 @@ interface IMachine is IMachineEndpoint {
     function enableSpokeCaliber(uint256 chainId) external;
 
     /// @notice Registers a spoke bridge adapter.
-    /// @param chainId The EVM chain ID of the spoke bridge adapter.
+    /// @param chainId The chain ID of the spoke bridge adapter.
     /// @param bridgeId The ID of the bridge.
     /// @param adapter The address of the spoke bridge adapter.
     function setSpokeBridgeAdapter(uint256 chainId, uint16 bridgeId, address adapter) external;

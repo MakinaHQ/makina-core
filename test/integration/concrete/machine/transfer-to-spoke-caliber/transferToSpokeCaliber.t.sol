@@ -137,11 +137,11 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 1, 1);
     }
 
-    function test_RevertWhen_BridgeAdapterDoesNotExist()
+    function test_RevertWhen_InvalidBridgeId()
         public
         withSpokeBridgeAdapter(SPOKE_CHAIN_ID, DUMMY_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
-        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(DUMMY_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
