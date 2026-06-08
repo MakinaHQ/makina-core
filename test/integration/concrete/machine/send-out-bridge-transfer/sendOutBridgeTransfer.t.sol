@@ -58,11 +58,11 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
-    function test_RevertGiven_OutTransferDisabled() public {
+    function test_RevertGiven_OutTransferNotEnabled() public {
         vm.prank(riskManagerTimelock);
-        machine.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        machine.disableOutTransfer(ACROSS_V3_BRIDGE_ID);
 
-        vm.expectRevert(Errors.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferNotEnabled.selector);
         vm.prank(mechanic);
         machine.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }

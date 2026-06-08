@@ -245,11 +245,11 @@ interface IMachine is IMachineEndpoint {
     ) external;
 
     /// @notice Disables a spoke caliber.
-    /// @param chainId The foreign EVM chain ID of the spoke caliber to disable.
+    /// @param chainId The chain ID of the spoke caliber to disable.
     function disableSpokeCaliber(uint256 chainId) external;
 
     /// @notice Re-enables a spoke caliber.
-    /// @param chainId The foreign EVM chain ID of the spoke caliber to enable.
+    /// @param chainId The chain ID of the spoke caliber to enable.
     function enableSpokeCaliber(uint256 chainId) external;
 
     /// @notice Registers a spoke bridge adapter.

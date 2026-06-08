@@ -675,8 +675,13 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IBridgeController
-    function setOutTransferEnabled(uint16 bridgeId, bool enabled) external override onlyRiskManagerTimelock {
-        _setOutTransferEnabled(bridgeId, enabled);
+    function disableOutTransfer(uint16 bridgeId) external override onlyRiskManagerTimelock {
+        _disableOutTransfer(bridgeId);
+    }
+
+    /// @inheritdoc IBridgeController
+    function enableOutTransfer(uint16 bridgeId) external override onlyRiskManagerTimelock {
+        _enableOutTransfer(bridgeId);
     }
 
     /// @inheritdoc IBridgeController

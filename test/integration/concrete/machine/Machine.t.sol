@@ -27,8 +27,11 @@ import {
     SetMaxBridgeLossBps_Integration_Concrete_Test
 } from "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
 import {
-    SetOutTransferEnabled_Integration_Concrete_Test
-} from "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
+    EnableOutTransfer_Integration_Concrete_Test
+} from "../bridge-controller/enable-out-transfer/enableOutTransfer.t.sol";
+import {
+    DisableOutTransfer_Integration_Concrete_Test
+} from "../bridge-controller/disable-out-transfer/disableOutTransfer.t.sol";
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
@@ -242,9 +245,22 @@ contract SetMaxBridgeLossBps_Machine_Integration_Concrete_Test is
     }
 }
 
-contract SetOutTransferEnabled_Machine_Integration_Concrete_Test is
+contract EnableOutTransfer_Machine_Integration_Concrete_Test is
     BridgeController_Machine_Integration_Concrete_Test,
-    SetOutTransferEnabled_Integration_Concrete_Test
+    EnableOutTransfer_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_Machine_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
+    {
+        BridgeController_Machine_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract DisableOutTransfer_Machine_Integration_Concrete_Test is
+    BridgeController_Machine_Integration_Concrete_Test,
+    DisableOutTransfer_Integration_Concrete_Test
 {
     function setUp()
         public

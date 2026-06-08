@@ -182,7 +182,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set the share token supply limit that cannot be exceeded by new deposits.
 
 - **Risk Manager Timelock**
-  - Can set the outgoing transfer enabled status for a bridge.
+  - Can disable and re-enable outgoing transfers for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
   - Can set the caliber accounting staleness threshold.
   - Can set the maximum fixed and perf fee accrual rates.
@@ -230,7 +230,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can reset the bridging state for any token.
 
 - **Risk Manager Timelock**
-  - Can set the outgoing transfer enabled status for a bridge.
+  - Can disable and re-enable outgoing transfers for a bridge.
   - Can set the maximum allowed value loss in basis points for a bridge.
 
 - **Mechanic / Security Council**

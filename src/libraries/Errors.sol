@@ -83,7 +83,7 @@ library Errors {
     error NotRootGuardian();
     error OftNotRegistered();
     error OngoingCooldown();
-    error OutTransferDisabled();
+    error OutTransferNotEnabled();
     error PendingBridgeTransfer();
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();

@@ -54,11 +54,11 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         caliberMailbox.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
-    function test_RevertGiven_OutTransferDisabled() public {
+    function test_RevertGiven_OutTransferNotEnabled() public {
         vm.prank(riskManagerTimelock);
-        caliberMailbox.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        caliberMailbox.disableOutTransfer(ACROSS_V3_BRIDGE_ID);
 
-        vm.expectRevert(Errors.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferNotEnabled.selector);
         vm.prank(mechanic);
         caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
@@ -94,11 +94,11 @@ contract SendOutBridgeTransfer_Integration_Concrete_Test is CaliberMailbox_Integ
         caliberMailbox.sendOutBridgeTransfer(DUMMY_BRIDGE_ID, 0, "");
     }
 
-    function test_RevertGiven_OutTransferDisabled_WhileInRecoveryMode() public whileInRecoveryMode {
+    function test_RevertGiven_OutTransferNotEnabled_WhileInRecoveryMode() public whileInRecoveryMode {
         vm.prank(riskManagerTimelock);
-        caliberMailbox.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        caliberMailbox.disableOutTransfer(ACROSS_V3_BRIDGE_ID);
 
-        vm.expectRevert(Errors.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferNotEnabled.selector);
         vm.prank(securityCouncil);
         caliberMailbox.sendOutBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0, "");
     }
