@@ -33,6 +33,7 @@ library Errors {
     error ExceededMaxMint(uint256 shares, uint256 max);
     error ExceededMaxWithdraw(uint256 assets, uint256 max);
     error ForeignTokenNotRegistered(address token, uint256 foreignEvmChainId);
+    error FutureSnapshot();
     error GroupIdNotProvided();
     error HubBridgeAdapterAlreadySet();
     error HubBridgeAdapterNotSet();
@@ -111,7 +112,7 @@ library Errors {
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
     error SpokeCaliberNotEnabled();
-    error StaleData();
+    error StaleSnapshot();
     error SwapFailed();
     error SwapperTargetsNotSet();
     error TargetAlreadyExists();

@@ -183,7 +183,7 @@ library MachineUtils {
         return DecimalsUtils.SHARE_TOKEN_UNIT.mulDiv(aum + 1, supply + 10 ** shareTokenDecimalsOffset);
     }
 
-    /// @dev Handles a received spoke caliber accounting snapshot object, and updates the corresponding accounting data in the machine storage.
+    /// @dev Handles an accounting snapshot received from a spoke chain and updates the corresponding accounting state stored in the machine.
     /// @param $ The machine storage struct.
     /// @param tokenRegistry The address of the token registry.
     /// @param snapshot The accounting snapshot data.
@@ -206,12 +206,14 @@ library MachineUtils {
 
         // Validate that update is not older than current chain last update, nor stale.
         uint256 snapshotTimestamp = snapshot.context.blockTime;
+        if (block.timestamp < snapshotTimestamp) {
+            revert Errors.FutureSnapshot();
+        }
         if (
             snapshotTimestamp <= caliberData.timestamp
-                || (block.timestamp > snapshotTimestamp
-                    && block.timestamp - snapshotTimestamp >= $._caliberStaleThreshold)
+                || block.timestamp - snapshotTimestamp >= $._caliberStaleThreshold
         ) {
-            revert Errors.StaleData();
+            revert Errors.StaleSnapshot();
         }
 
         // Update the spoke caliber data in the machine storage.

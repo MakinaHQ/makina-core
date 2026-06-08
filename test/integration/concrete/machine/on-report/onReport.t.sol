@@ -89,7 +89,21 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         machine.onReport("", report);
     }
 
-    function test_RevertWhen_StaleData() public {
+    function test_RevertWhen_FutureSnapshot() public {
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp + 1 seconds;
+
+        bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
+
+        vm.expectRevert(Errors.FutureSnapshot.selector);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+
+        vm.expectRevert(Errors.FutureSnapshot.selector);
+        vm.prank(securityCouncil);
+        machine.onReport("", report);
+    }
+
+    function test_RevertWhen_StaleSnapshot() public {
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
 
@@ -102,7 +116,7 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
             SPOKE_CHAIN_ID, blockNum, blockTime - machine.caliberStaleThreshold(), false
         );
 
-        vm.expectRevert(Errors.StaleData.selector);
+        vm.expectRevert(Errors.StaleSnapshot.selector);
         creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // update data
@@ -112,10 +126,10 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         // data is older than previous data
         report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime - 1, false);
 
-        vm.expectRevert(Errors.StaleData.selector);
+        vm.expectRevert(Errors.StaleSnapshot.selector);
         creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
-        vm.expectRevert(Errors.StaleData.selector);
+        vm.expectRevert(Errors.StaleSnapshot.selector);
         vm.prank(securityCouncil);
         machine.onReport("", report);
     }

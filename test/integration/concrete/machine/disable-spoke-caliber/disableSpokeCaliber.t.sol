@@ -118,6 +118,8 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
         vm.stopPrank();
 
+        skip(1);
+
         // 1 complete Hub -> Spoke transfer + 1 complete Spoke -> Hub transfer + 1 pending Spoke -> Hub transfer
         cBridgeOut = new bytes[](2);
         cBridgeOut[0] = abi.encode(spokeBaseTokenAddr, inputAmount);
