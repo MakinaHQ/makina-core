@@ -116,12 +116,14 @@ abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
         bytes memory encodedData,
         uint256 expectedId,
         uint256 expectedValue,
-        bool expectedIsDebt
+        bool expectedIsDebt,
+        bool expectedIsStale
     ) internal pure {
-        (uint256 id, uint256 value, bool isDebt) = abi.decode(encodedData, (uint256, uint256, bool));
+        (uint256 id, uint256 value, bool isDebt, bool isStale) = abi.decode(encodedData, (uint256, uint256, bool, bool));
         assertEq(id, expectedId);
         assertEq(value, expectedValue);
         assertEq(isDebt, expectedIsDebt);
+        assertEq(isStale, expectedIsStale);
     }
 
     function _checkEncodedCaliberBTValue(bytes memory encodedData, address expectedAddress, uint256 expectedValue)
