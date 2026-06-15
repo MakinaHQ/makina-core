@@ -1,8 +1,0 @@
-setOutTransferEnabled.t.sol
-├── when caller is not the risk manager timelock
-│  └── it should revert with UnauthorizedCaller
-└── when caller is the risk manager timelock
-   ├── given no adapter for the provided bridge ID was deployed by this contract
-   │  └── it should revert with BridgeAdapterDoesNotExist
-   └── given an adapter for the provided bridge ID was deployed by this contract
-      └── it should set the outgoing bridge transfers enablence status for the corresponding bridge

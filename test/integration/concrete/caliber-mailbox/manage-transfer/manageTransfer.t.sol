@@ -83,20 +83,20 @@ contract ManageTransfer_Integration_Concrete_Test is CaliberMailbox_Integration_
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(DUMMY_BRIDGE_ID, 0));
     }
 
-    function test_RevertGiven_BridgeAdapterDoesNotExist_FromCaliber()
+    function test_RevertGiven_InvalidBridgeId_FromCaliber()
         public
         withHubBridgeAdapter(DUMMY_BRIDGE_ID, hubBridgeAdapterAddr)
     {
-        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
         vm.prank(address(caliber));
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(DUMMY_BRIDGE_ID, 0));
     }
 
-    function test_RevertGiven_OutTransferDisabled_FromCaliber() public {
+    function test_RevertGiven_OutTransferNotEnabled_FromCaliber() public {
         vm.prank(riskManagerTimelock);
-        caliberMailbox.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        caliberMailbox.disableOutTransfer(ACROSS_V3_BRIDGE_ID);
 
-        vm.expectRevert(Errors.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferNotEnabled.selector);
         vm.prank(address(caliber));
         caliberMailbox.manageTransfer(address(accountingToken), 0, abi.encode(ACROSS_V3_BRIDGE_ID, 0));
     }

@@ -41,7 +41,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mgParams The makina governable initialization parameters.
     /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param preDepositVault The address of the PreDepositVault instance to migrate.
-    /// @param salt The salt used to deploy the Hub Caliber deterministically.
+    /// @param salt The salt used to deploy the hub caliber deterministically.
     /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return machine The address of the deployed Machine instance.
     function createMachineFromPreDeposit(
@@ -62,7 +62,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param accountingToken The address of the accounting token.
     /// @param tokenName The name of the share token.
     /// @param tokenSymbol The symbol of the share token.
-    /// @param salt The salt used to deploy the Hub Caliber deterministically.
+    /// @param salt The salt used to deploy the hub caliber deterministically.
     /// @param setupAMFunctionRoles Whether to set roles for restricted functions on the deployed instance.
     /// @return machine The address of the deployed Machine instance.
     function createMachine(

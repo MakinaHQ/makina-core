@@ -310,6 +310,14 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
             Roles.STRATEGY_COMPONENTS_LINKING_ROLE
         );
         assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.disableSpokeCaliber.selector),
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(machine), IMachine.enableSpokeCaliber.selector),
+            Roles.STRATEGY_COMPONENTS_LINKING_ROLE
+        );
+        assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setMechanic.selector),
             Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE
         );
@@ -506,6 +514,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setDepositor.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setRedeemer.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.setFeeManager.selector), 0);
+        assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.disableSpokeCaliber.selector), 0);
+        assertEq(accessManager.getTargetFunctionRole(address(machine), IMachine.enableSpokeCaliber.selector), 0);
         assertEq(accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setMechanic.selector), 0);
         assertEq(
             accessManager.getTargetFunctionRole(address(machine), IMakinaGovernable.setSecurityCouncil.selector), 0

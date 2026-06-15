@@ -157,6 +157,30 @@ library MachineUtils {
         }
     }
 
+    /// @dev Checks that there are no pending bridge transfers between the machine and a spoke caliber.
+    /// @param spokeCaliberData The spoke caliber data struct containing the bridge transfer records.
+    function checkBridgeTransfersSettled(IMachine.SpokeCaliberData storage spokeCaliberData) external view {
+        // check for funds sent by machine but not yet received by spoke caliber
+        uint256 len = spokeCaliberData.machineBridgesOut.length();
+        for (uint256 i; i < len; ++i) {
+            (address token, uint256 mOut) = spokeCaliberData.machineBridgesOut.at(i);
+            (, uint256 cIn) = spokeCaliberData.caliberBridgesIn.tryGet(token);
+            if (mOut > cIn) {
+                revert Errors.PendingBridgeTransfer();
+            }
+        }
+
+        // check for funds sent by spoke caliber but not yet received by machine
+        len = spokeCaliberData.caliberBridgesOut.length();
+        for (uint256 i; i < len; ++i) {
+            (address token, uint256 cOut) = spokeCaliberData.caliberBridgesOut.at(i);
+            (, uint256 mIn) = spokeCaliberData.machineBridgesIn.tryGet(token);
+            if (cOut > mIn) {
+                revert Errors.PendingBridgeTransfer();
+            }
+        }
+    }
+
     /// @dev Calculates the share price based on given AUM, share supply and share token decimals offset.
     /// @param aum The AUM of the machine.
     /// @param supply The supply of the share token.
@@ -234,16 +258,22 @@ library MachineUtils {
 
         // spoke calibers net AUM
         uint256 currentTimestamp = block.timestamp;
-        uint256 len = $._foreignChainIds.length;
+        uint256 len = $._spokeChainIds.length;
         for (uint256 i; i < len; ++i) {
-            uint256 chainId = $._foreignChainIds[i];
+            uint256 chainId = $._spokeChainIds[i];
             IMachine.SpokeCaliberData storage spokeCaliberData = $._spokeCalibersData[chainId];
+
+            if (spokeCaliberData.disabled) {
+                continue;
+            }
+
             if (
                 currentTimestamp > spokeCaliberData.timestamp
                     && currentTimestamp - spokeCaliberData.timestamp >= $._caliberStaleThreshold
             ) {
                 revert Errors.CaliberAccountingStale(chainId);
             }
+
             totalAum += spokeCaliberData.netAum;
 
             // check for funds received by machine but not declared by spoke caliber
@@ -323,7 +353,7 @@ library MachineUtils {
         uint256 newValue,
         uint256 maxPercentDeltaPerSecond,
         uint256 elapsedTime
-    ) internal pure {
+    ) private pure {
         if (previousValue == 0) {
             return;
         }

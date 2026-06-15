@@ -7,7 +7,8 @@ interface IBridgeController {
         uint16 indexed bridgeId, uint256 indexed oldMaxBridgeLossBps, uint256 indexed newMaxBridgeLossBps
     );
     event BridgingStateReset(address indexed token);
-    event OutTransferEnabledSet(uint256 indexed bridgeId, bool enabled);
+    event OutTransferDisabled(uint16 indexed bridgeId);
+    event OutTransferEnabled(uint16 indexed bridgeId);
 
     /// @notice Bridge ID => Is bridge adapter deployed.
     function isBridgeSupported(uint16 bridgeId) external view returns (bool);
@@ -32,10 +33,13 @@ interface IBridgeController {
     /// @param maxBridgeLossBps The maximum allowed value loss in basis points.
     function setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) external;
 
-    /// @notice Sets the outgoing transfer enabled status for a bridge.
+    /// @notice Disables outgoing transfers for a bridge.
     /// @param bridgeId The ID of the bridge.
-    /// @param enabled True to enable outgoing transfer for the given bridge ID, false to disable.
-    function setOutTransferEnabled(uint16 bridgeId, bool enabled) external;
+    function disableOutTransfer(uint16 bridgeId) external;
+
+    /// @notice Enables outgoing transfers for a bridge.
+    /// @param bridgeId The ID of the bridge.
+    function enableOutTransfer(uint16 bridgeId) external;
 
     /// @notice Executes a scheduled outgoing bridge transfer.
     /// @param bridgeId The ID of the bridge.

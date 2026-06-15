@@ -28,6 +28,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
     uint256 internal constant ACROSS_V3_FEE_BPS = 50;
 
+    uint256 internal spokeChainId = 100;
+
     MockERC20 internal accountingToken;
     MockERC20 internal baseToken;
 
@@ -50,7 +52,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         machineStore = new MachineStore();
 
-        machineStore.setSpokeChainId(hubChainId);
+        machineStore.setHubChainId(hubChainId);
+        machineStore.setSpokeChainId(spokeChainId);
 
         // deploy tokens and price feeds
         accountingToken = new MockERC20("accountingToken", "ACT", 18);
@@ -68,9 +71,11 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         // set up registries
         vm.startPrank(dao);
-        chainRegistry.setChainIds(machineStore.spokeChainId(), WORMHOLE_SPOKE_CHAIN_ID);
-        tokenRegistry.setToken(address(accountingToken), machineStore.spokeChainId(), address(accountingToken));
-        tokenRegistry.setToken(address(baseToken), machineStore.spokeChainId(), address(baseToken));
+        chainRegistry.setChainIds(spokeChainId, WORMHOLE_SPOKE_CHAIN_ID);
+        tokenRegistry.setToken(address(accountingToken), spokeChainId, address(accountingToken));
+        tokenRegistry.setToken(address(baseToken), spokeChainId, address(baseToken));
+        tokenRegistry.setToken(address(accountingToken), hubChainId, address(accountingToken));
+        tokenRegistry.setToken(address(baseToken), hubChainId, address(baseToken));
         oracleRegistry.setFeedRoute(
             address(accountingToken), address(aPriceFeed1), 2 * DEFAULT_PF_STALE_THRSHLD, address(0), 0
         );
@@ -96,7 +101,8 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
         hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         spokeCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
-        config.setForeignChainSupported(machineStore.spokeChainId(), true);
+        config.setForeignChainSupported(hubChainId, true);
+        config.setForeignChainSupported(spokeChainId, true);
         vm.stopPrank();
 
         // deploy hub and spoke chain contracts
@@ -109,9 +115,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         spokeCaliber.addBaseToken(address(baseToken));
 
         vm.startPrank(dao);
-        machine.setSpokeCaliber(
-            machineStore.spokeChainId(), address(spokeCaliberMailbox), new uint16[](0), new address[](0)
-        );
+        machine.setSpokeCaliber(spokeChainId, address(spokeCaliberMailbox), new uint16[](0), new address[](0));
         address hubBridgeAdapterAddr = hubCoreFactory.createBridgeAdapter(
             address(machine),
             IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
@@ -120,7 +124,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
             address(spokeCaliberMailbox),
             IBridgeAdapterFactory.BridgeAdapterInitParams(ACROSS_V3_BRIDGE_ID, "", DEFAULT_MAX_BRIDGE_LOSS_BPS)
         );
-        machine.setSpokeBridgeAdapter(machineStore.spokeChainId(), ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
+        machine.setSpokeBridgeAdapter(spokeChainId, ACROSS_V3_BRIDGE_ID, spokeBridgeAdapterAddr);
         spokeCaliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, hubBridgeAdapterAddr);
         vm.stopPrank();
 

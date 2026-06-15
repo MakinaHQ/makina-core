@@ -70,7 +70,7 @@ Set the `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` values in y
 forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> --account <keystore-name> --slow --broadcast --verify -vvvv
 ```
 
-Note: Same as for Hub Chain shared contacts deployment, this script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
+Note: Same as for hub chain shared contracts deployment, this script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx).
 
 ### Strategy instances
 

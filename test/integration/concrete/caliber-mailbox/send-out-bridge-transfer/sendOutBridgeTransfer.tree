@@ -4,10 +4,10 @@ sendOutBridgeTransfer.t.sol
 │  │  └── it should revert with UnauthorizedCaller
 │  └── when caller is the Mechanic
 │     ├── given no local bridge adapter is set for the provided bridge ID
-│     │  └── it should revert with BridgeAdapterDoesNotExist
+│     │  └── it should revert with InvalidBridgeId
 │     └── given a local bridge adapter is set for the provided bridge ID
 │        ├── given outgoing bridge transfers through the given bridge are marked as disabled
-│        │  └── it should revert with BridgeAdapterDoesNotExist
+│        │  └── it should revert with InvalidBridgeId
 │        └── given outgoing bridge transfers through the given bridge are marked as enabled
 │           ├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
 │           │  └── it should revert with InvalidTransferStatus
@@ -19,10 +19,10 @@ sendOutBridgeTransfer.t.sol
    │  └── it should revert with UnauthorizedCaller
    └── when caller is the Security Council
       ├── given no local bridge adapter is set for the provided bridge ID
-      │  └── it should revert with BridgeAdapterDoesNotExist
+      │  └── it should revert with InvalidBridgeId
       └── given a local bridge adapter is set for the provided bridge ID
          ├── given outgoing bridge transfers through the given bridge are marked as disabled
-         │  └── it should revert with BridgeAdapterDoesNotExist
+         │  └── it should revert with InvalidBridgeId
          └── given outgoing bridge transfers through the given bridge are marked as enabled
             ├── given the provided transfer ID does not corresponds to a outgoing transfer in adapter's storage
             │  └── it should revert with InvalidTransferStatus

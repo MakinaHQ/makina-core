@@ -1,0 +1,15 @@
+enableSpokeCaliber.t.sol
+├── when call is reentrant
+│  └── it should revert with ReentrancyGuardReentrantCall
+└── when call is not reentrant
+   ├── when caller does not have the relevant role
+   │  └── it should revert with AccessManagedUnauthorized
+   └── when caller has the relevant role
+      ├── given no spoke caliber is registered in this contract for the provided chain ID
+      │  └── it should revert with InvalidChainId
+      └── given a spoke caliber is registered in this contract for the provided chain ID
+         ├── given the spoke caliber is already enabled
+         │  └── it should revert with AlreadyEnabled
+         └── given the spoke caliber is not already enabled
+            ├── it should mark the spoke caliber as enabled
+            └── it should emit a SpokeCaliberEnabled event

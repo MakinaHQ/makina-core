@@ -6,8 +6,8 @@ import {Errors} from "src/libraries/Errors.sol";
 import {BridgeController_Integration_Concrete_Test} from "../BridgeController.t.sol";
 
 abstract contract GetBridgeAdapter_Integration_Concrete_Test is BridgeController_Integration_Concrete_Test {
-    function test_RevertWhen_BridgeAdapterDoesNotExist() public {
-        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
+    function test_RevertWhen_InvalidBridgeId() public {
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
         bridgeController.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
     }
 

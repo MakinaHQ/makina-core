@@ -166,6 +166,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
         address bridgeAdapter = spokeCaliberMailbox.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);
         uint256 transferId = IBridgeAdapter(bridgeAdapter).nextOutTransferId();
 
+        vm.chainId(machineStore.spokeChainId());
+
         vm.recordLogs();
         spokeCaliber.transferToHubMachine(
             token, amount, abi.encode(ACROSS_V3_BRIDGE_ID, _applyBridgeFee(ACROSS_V3_BRIDGE_ID, amount))
@@ -173,6 +175,8 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
         Vm.Log[] memory entries = vm.getRecordedLogs();
         // 2nd topic of 5th emitted event
         bytes32 messageHash = entries[4].topics[2];
+
+        vm.chainId(machineStore.hubChainId());
 
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
@@ -297,7 +301,10 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
 
         IMockAcrossV3SpokePool.DepositV3Params memory depositV3Params =
             IMockAcrossV3SpokePool(acrossV3SpokePool).getTransferData(acrossV3TransferId);
+
+        vm.chainId(machineStore.spokeChainId());
         IMockAcrossV3SpokePool(acrossV3SpokePool).settleTransfer(acrossV3TransferId);
+        vm.chainId(machineStore.hubChainId());
 
         machineStore.clearPendingMachineSentOutTransferId(token);
         machineStore.setPendingCaliberReceivedInTransferId(token, inTransferId);

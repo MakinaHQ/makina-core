@@ -68,15 +68,21 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
     }
 
     function test_RevertWhen_InvalidChainId() public {
-        vm.prank(dao);
-        tokenRegistry.setToken(address(accountingToken), SPOKE_CHAIN_ID + 1, spokeAccountingTokenAddr);
-
         vm.expectRevert(Errors.InvalidChainId.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID + 1, address(accountingToken), 0, 0);
     }
 
-    function test_RevertWhen_SpokeBridgeAdapterNotSet() public {
+    function test_RevertGiven_SpokeCaliberNotEnabled() public {
+        vm.prank(dao);
+        machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
+
+        vm.expectRevert(Errors.SpokeCaliberNotEnabled.selector);
+        vm.prank(mechanic);
+        machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
+    }
+
+    function test_RevertGiven_SpokeBridgeAdapterNotSet() public {
         vm.expectRevert(Errors.SpokeBridgeAdapterNotSet.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(DUMMY_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
@@ -131,20 +137,20 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 1, 1);
     }
 
-    function test_RevertWhen_BridgeAdapterDoesNotExist()
+    function test_RevertWhen_InvalidBridgeId()
         public
         withSpokeBridgeAdapter(SPOKE_CHAIN_ID, DUMMY_BRIDGE_ID, spokeBridgeAdapterAddr)
     {
-        vm.expectRevert(Errors.BridgeAdapterDoesNotExist.selector);
+        vm.expectRevert(Errors.InvalidBridgeId.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(DUMMY_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }
 
-    function test_RevertGiven_OutTransferDisabled() public {
+    function test_RevertGiven_OutTransferNotEnabled() public {
         vm.prank(riskManagerTimelock);
-        machine.setOutTransferEnabled(ACROSS_V3_BRIDGE_ID, false);
+        machine.disableOutTransfer(ACROSS_V3_BRIDGE_ID);
 
-        vm.expectRevert(Errors.OutTransferDisabled.selector);
+        vm.expectRevert(Errors.OutTransferNotEnabled.selector);
         vm.prank(mechanic);
         machine.transferToSpokeCaliber(ACROSS_V3_BRIDGE_ID, SPOKE_CHAIN_ID, address(accountingToken), 0, 0);
     }

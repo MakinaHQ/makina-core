@@ -2,18 +2,30 @@
 pragma solidity 0.8.28;
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Errors} from "src/libraries/Errors.sol";
+import {MockERC20} from "test/mocks/MockERC20.sol";
 
-import {Machine_Unit_Concrete_Test} from "../Machine.t.sol";
+import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
-contract SetSpokeBridgeAdapter_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
+contract SetSpokeBridgeAdapter_Integration_Concrete_Test is Machine_Integration_Concrete_Test {
     function setUp() public virtual override {
-        Machine_Unit_Concrete_Test.setUp();
+        Machine_Integration_Concrete_Test.setUp();
 
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), new uint16[](0), new address[](0));
+    }
+
+    function test_RevertWhen_ReentrantCall() public {
+        accountingToken.scheduleReenter(
+            MockERC20.Type.Before, address(machine), abi.encodeCall(IMachine.setSpokeBridgeAdapter, (0, 0, address(0)))
+        );
+
+        vm.expectRevert(ReentrancyGuard.ReentrancyGuardReentrantCall.selector);
+        vm.prank(address(caliber));
+        machine.manageTransfer(address(accountingToken), 0, "");
     }
 
     function test_RevertWhen_CallerWithoutRole() public {

@@ -26,8 +26,11 @@ import {
     SetMaxBridgeLossBps_Integration_Concrete_Test
 } from "../bridge-controller/set-max-bridge-loss-bps/setMaxBridgeLossBps.t.sol";
 import {
-    SetOutTransferEnabled_Integration_Concrete_Test
-} from "../bridge-controller/set-out-transfer-enabled/setOutTransferEnabled.t.sol";
+    EnableOutTransfer_Integration_Concrete_Test
+} from "../bridge-controller/enable-out-transfer/enableOutTransfer.t.sol";
+import {
+    DisableOutTransfer_Integration_Concrete_Test
+} from "../bridge-controller/disable-out-transfer/disableOutTransfer.t.sol";
 import {Integration_Concrete_Spoke_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract CaliberMailbox_Integration_Concrete_Test is Integration_Concrete_Spoke_Test {
@@ -151,9 +154,22 @@ contract SetMaxBridgeLossBps_CaliberMailbox_Integration_Concrete_Test is
     }
 }
 
-contract SetOutTransferEnabled_CaliberMailbox_Integration_Concrete_Test is
+contract EnableOutTransfer_CaliberMailbox_Integration_Concrete_Test is
     BridgeController_CaliberMailbox_Integration_Concrete_Test,
-    SetOutTransferEnabled_Integration_Concrete_Test
+    EnableOutTransfer_Integration_Concrete_Test
+{
+    function setUp()
+        public
+        virtual
+        override(BridgeController_CaliberMailbox_Integration_Concrete_Test, BridgeController_Integration_Concrete_Test)
+    {
+        BridgeController_CaliberMailbox_Integration_Concrete_Test.setUp();
+    }
+}
+
+contract DisableOutTransfer_CaliberMailbox_Integration_Concrete_Test is
+    BridgeController_CaliberMailbox_Integration_Concrete_Test,
+    DisableOutTransfer_Integration_Concrete_Test
 {
     function setUp()
         public

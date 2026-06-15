@@ -12,14 +12,14 @@ abstract contract SetBridgeAdapter_Integration_Concrete_Test is BridgeController
         bridgeController.setBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(0), DEFAULT_MAX_BRIDGE_LOSS_BPS);
     }
 
-    function test_RevertGiven_BridgeAdapterAlreadyExists() public {
+    function test_RevertGiven_BridgeAdapterAlreadySet() public {
         address bridgeAdapter = makeAddr("bridgeAdapter");
 
         vm.startPrank(address(coreFactory));
 
         bridgeController.setBridgeAdapter(ACROSS_V3_BRIDGE_ID, bridgeAdapter, DEFAULT_MAX_BRIDGE_LOSS_BPS);
 
-        vm.expectRevert(Errors.BridgeAdapterAlreadyExists.selector);
+        vm.expectRevert(Errors.BridgeAdapterAlreadySet.selector);
         bridgeController.setBridgeAdapter(ACROSS_V3_BRIDGE_ID, bridgeAdapter, DEFAULT_MAX_BRIDGE_LOSS_BPS);
     }
 

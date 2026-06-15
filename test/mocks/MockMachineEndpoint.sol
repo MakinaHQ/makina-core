@@ -111,7 +111,11 @@ contract MockMachineEndpoint is IMachineEndpoint {
         _maxBridgeLossBps[bridgeId] = newMaxBridgeLossBps;
     }
 
-    function setOutTransferEnabled(uint16, bool) external pure {
+    function enableOutTransfer(uint16) external pure {
+        return;
+    }
+
+    function disableOutTransfer(uint16) external pure {
         return;
     }
 

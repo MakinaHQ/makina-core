@@ -6,15 +6,17 @@ library Errors {
     error ActiveUpdatePending();
     error AlreadyAccountingAgent();
     error AlreadyBaseToken();
+    error AlreadyDisabled();
+    error AlreadyEnabled();
     error AlreadyPositionToken();
     error AlreadyRootGuardian();
     error AmountOutTooLow();
-    error BridgeAdapterAlreadyExists();
-    error BridgeAdapterDoesNotExist();
+    error BridgeAdapterAlreadySet();
     error BridgeConfigNotSet();
     error BridgeStateMismatch();
     error CaliberAccountingStale(uint256 caliberChainId);
     error CaliberAlreadySet();
+    error CaliberNotEmpty();
     error CctpDomainNotRegistered();
     error CctpForeignTokenNotRegistered();
     error CctpMessageReceptionFailed();
@@ -80,7 +82,7 @@ library Errors {
     error NotRootGuardian();
     error OftNotRegistered();
     error OngoingCooldown();
-    error OutTransferDisabled();
+    error OutTransferNotEnabled();
     error PendingBridgeTransfer();
     error PositionAccountingStale(uint256 posId);
     error PositionDoesNotExist();
@@ -99,6 +101,7 @@ library Errors {
     error SpokeBridgeAdapterAlreadySet();
     error SpokeBridgeAdapterNotSet();
     error SpokeCaliberAlreadySet();
+    error SpokeCaliberNotEnabled();
     error StaleData();
     error SwapFailed();
     error SwapperTargetsNotSet();
@@ -115,6 +118,6 @@ library Errors {
     error ZeroOftAddress();
     error ZeroPositionId();
     error ZeroSalt();
-    error ZeroSpokeCaliberMailbox();
+    error ZeroSpokeCaliberMailboxAddress();
     error ZeroTokenAddress();
 }

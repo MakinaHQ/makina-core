@@ -1,0 +1,12 @@
+enableOutTransfer.t.sol
+├── when caller is not the risk manager timelock
+│  └── it should revert with UnauthorizedCaller
+└── when caller is the risk manager timelock
+   ├── given no adapter for the provided bridge ID is registered in this contract
+   │  └── it should revert with InvalidBridgeId
+   └── given an adapter for the provided bridge ID is registered in this contract
+      ├── given outgoing transfers are already enabled for the corresponding bridge
+      │  └── it should revert with AlreadyEnabled
+      └── given outgoing transfers are not already enabled for the corresponding bridge
+         ├── it should enable outgoing transfers for the corresponding bridge
+         └── it should emit an OutTransferEnabled event

@@ -59,7 +59,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function getBridgeAdapter(uint16 bridgeId) public view override returns (address) {
         address adapter = _getBridgeControllerStorage()._bridgeAdapters[bridgeId];
         if (adapter == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         return adapter;
     }
@@ -68,7 +68,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function getMaxBridgeLossBps(uint16 bridgeId) external view override returns (uint256) {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         return $._maxBridgeLossBps[bridgeId];
     }
@@ -82,7 +82,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
 
         if ($._bridgeAdapters[bridgeId] != address(0)) {
-            revert Errors.BridgeAdapterAlreadyExists();
+            revert Errors.BridgeAdapterAlreadySet();
         }
         if (bridgeAdapter == address(0)) {
             revert Errors.ZeroBridgeAdapterAddress();
@@ -97,21 +97,37 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         emit BridgeAdapterSet(bridgeId, bridgeAdapter);
     }
 
-    /// @dev Internal logic to set the outgoing transfer enabled status for a given bridge.
-    function _setOutTransferEnabled(uint16 bridgeId, bool enabled) internal {
+    /// @dev Internal logic to disable outgoing transfers for a given bridge.
+    function _disableOutTransfer(uint16 bridgeId) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
-        emit OutTransferEnabledSet(uint256(bridgeId), enabled);
-        $._isOutTransferEnabled[bridgeId] = enabled;
+        if (!$._isOutTransferEnabled[bridgeId]) {
+            revert Errors.AlreadyDisabled();
+        }
+        $._isOutTransferEnabled[bridgeId] = false;
+        emit OutTransferDisabled(bridgeId);
+    }
+
+    /// @dev Internal logic to enable outgoing transfers for a given bridge.
+    function _enableOutTransfer(uint16 bridgeId) internal {
+        BridgeControllerStorage storage $ = _getBridgeControllerStorage();
+        if ($._bridgeAdapters[bridgeId] == address(0)) {
+            revert Errors.InvalidBridgeId();
+        }
+        if ($._isOutTransferEnabled[bridgeId]) {
+            revert Errors.AlreadyEnabled();
+        }
+        $._isOutTransferEnabled[bridgeId] = true;
+        emit OutTransferEnabled(bridgeId);
     }
 
     /// @dev Internal logic to set the max allowed value loss in basis points for transfers via a given bridge.
     function _setMaxBridgeLossBps(uint16 bridgeId, uint256 maxBridgeLossBps) internal {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         if ($._bridgeAdapters[bridgeId] == address(0)) {
-            revert Errors.BridgeAdapterDoesNotExist();
+            revert Errors.InvalidBridgeId();
         }
         emit MaxBridgeLossBpsChanged(bridgeId, $._maxBridgeLossBps[bridgeId], maxBridgeLossBps);
         $._maxBridgeLossBps[bridgeId] = maxBridgeLossBps;
@@ -134,7 +150,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
         BridgeControllerStorage storage $ = _getBridgeControllerStorage();
         address adapter = getBridgeAdapter(bridgeId);
         if (!$._isOutTransferEnabled[bridgeId]) {
-            revert Errors.OutTransferDisabled();
+            revert Errors.OutTransferNotEnabled();
         }
         if (minOutputAmount < inputAmount.mulDiv(MAX_BPS - $._maxBridgeLossBps[bridgeId], MAX_BPS, Math.Rounding.Ceil))
         {
@@ -156,7 +172,7 @@ abstract contract BridgeController is MakinaContext, IBridgeController {
     function _sendOutBridgeTransfer(uint16 bridgeId, uint256 transferId, bytes calldata data) internal {
         address adapter = getBridgeAdapter(bridgeId);
         if (!_getBridgeControllerStorage()._isOutTransferEnabled[bridgeId]) {
-            revert Errors.OutTransferDisabled();
+            revert Errors.OutTransferNotEnabled();
         }
         IBridgeAdapter(adapter).sendOutBridgeTransfer(transferId, data);
     }
