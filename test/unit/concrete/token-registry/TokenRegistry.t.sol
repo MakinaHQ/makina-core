@@ -5,7 +5,6 @@ import {Base_Test} from "test/base/Base.t.sol";
 
 abstract contract TokenRegistry_Unit_Concrete_Test is Base_Test {
     uint256 internal evmChainId;
-    uint16 internal whChainId;
 
     function setUp() public virtual override {
         Base_Test.setUp();

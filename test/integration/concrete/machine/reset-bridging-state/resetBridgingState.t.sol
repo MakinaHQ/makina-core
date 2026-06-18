@@ -1,16 +1,11 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IAcrossV3MessageHandler} from "src/interfaces/IAcrossV3MessageHandler.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "src/interfaces/IBridgeController.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -222,18 +217,14 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         // simulate the machine transfer being received and claimed by spoke caliber
         skip(1);
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData = _buildSpokeCaliberAccountingData(false);
-        queriedData.bridgesIn = new bytes[](1);
-        queriedData.bridgesIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
+        bytes[] memory cBridgeIn = new bytes[](1);
+        cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // aum update now reverts
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
@@ -248,15 +239,9 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
 
         // simulate caliber notifying reset counters
         skip(1);
-        blockTime = uint64(block.timestamp);
-        queriedData.bridgesIn = new bytes[](0);
-        perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
-        );
-        (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        blockTime = block.timestamp;
+        report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // aum update still works
         skip(1);

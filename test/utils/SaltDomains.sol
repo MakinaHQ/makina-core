@@ -10,8 +10,6 @@ abstract contract SaltDomains {
 
     bytes32 internal constant ORACLE_REGISTRY_SALT_DOMAIN = keccak256("makina.salt.OracleRegistry");
 
-    bytes32 internal constant CHAIN_REGISTRY_SALT_DOMAIN = keccak256("makina.salt.ChainRegistry");
-
     bytes32 internal constant TOKEN_REGISTRY_SALT_DOMAIN = keccak256("makina.salt.TokenRegistry");
 
     bytes32 internal constant SWAP_MODULE_SALT_DOMAIN = keccak256("makina.salt.SwapModule");

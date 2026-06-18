@@ -2,21 +2,17 @@
 pragma solidity 0.8.28;
 
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-import "@wormhole/sdk/constants/Chains.sol" as WormholeChains;
 
 import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {ChainsInfo} from "test/utils/ChainsInfo.sol";
-import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeCoreHijack} from "test/utils/WormholeCoreHijack.sol";
 
 import {Fork_Test} from "./Fork.t.sol";
 
@@ -87,6 +83,11 @@ contract Machine_Fork_Test is Fork_Test {
                         initialRestrictedAccountingMode: false,
                         initialAccountingAgents: new address[](0)
                     }),
+                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+                        initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+                        initialCreWorkflowIds: new bytes32[](0),
+                        initialCreWorkflowNames: new bytes10[](0)
+                    }),
                     new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                     ethForkData.usdc,
                     DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -118,10 +119,6 @@ contract Machine_Fork_Test is Fork_Test {
 
         // check machine aum
         assertEq(machine.updateTotalAum(), depositAmount);
-
-        // upgrade wormhole core with devnet guardian
-        address wormhole = machine.wormhole();
-        WormholeCoreHijack.hijackWormholeCore(wormhole);
 
         ///
         /// SWITCH TO BASE
@@ -166,33 +163,29 @@ contract Machine_Fork_Test is Fork_Test {
         deal({token: baseForkData.usdc, to: address(spokeCaliber), give: spokeCaliberFund});
 
         // check spoke caliber aum
-        (uint256 spokeCaliberAum,,) = spokeCaliber.getDetailedAum();
-        assertEq(spokeCaliberAum, spokeCaliberFund);
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
+        snapshots[0] = ICaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData();
 
-        // read spoke caliber accounting data
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WormholeChains.CHAIN_ID_BASE,
-            uint64(block.number),
-            uint64(block.timestamp),
-            spokeCaliberMailbox,
-            abi.encode(ICaliberMailbox(spokeCaliberMailbox).getSpokeCaliberAccountingData())
-        );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
+        uint256 spokeCaliberAum = snapshots[0].netAum;
+        assertEq(spokeCaliberAum, spokeCaliberFund);
 
         ///
         /// SWITCH TO ETHEREUM
         ///
 
         vm.selectFork(ethForkData.forkId);
+        skip(15 seconds);
 
         // register spoke caliber mailbox in machine
         vm.prank(ethForkData.dao);
         machine.setSpokeCaliber(ChainsInfo.CHAIN_ID_BASE, spokeCaliberMailbox, new uint16[](0), new address[](0));
 
         // write spoke caliber accounting data in machine
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        vm.prank(machine.creForwarder());
+        machine.onReport(
+            abi.encodePacked(bytes32(0), bytes10(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes2(0)), abi.encode(snapshots)
+        );
 
         // check machine aum
         skip(1);

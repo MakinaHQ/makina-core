@@ -5,9 +5,9 @@ setSpokeCaliber.t.sol
    ├── when caller does not have the relevant role
    │  └── it should revert with AccessManagedUnauthorized
    └── when caller has the relevant role
-      ├── when the provided EVM chain ID is that of hub chain, or not registered in ChainRegistry
+      ├── when the provided EVM chain ID is that of hub chain
       │  └── it should revert with InvalidChainId
-      └── when the provided EVM chain ID is not that of hub chain, and is registered in ChainRegistry
+      └── when the provided EVM chain ID is not that of hub chain
          ├── given a spoke caliber mailbox was already registered in this contract for the provided chain ID
          │  └── it should revert with SpokeCaliberAlreadySet
          └── given no spoke caliber mailbox was already registered in this contract for the provided chain ID

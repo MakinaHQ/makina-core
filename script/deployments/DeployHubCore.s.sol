@@ -38,14 +38,12 @@ contract DeployHubCore is DeployCore {
     }
 
     function _coreSetup() internal override {
-        address wormhole = vm.parseJsonAddress(inputJson, ".wormhole");
-        uint256[] memory supportedChains = vm.parseJsonUintArray(inputJson, ".supportedChains");
-        _core = deployHubCore(deployer, wormhole);
+        address creForwarder = vm.parseJsonAddress(inputJson, ".creForwarder");
+        _core = deployHubCore(deployer, creForwarder);
 
         setupHubCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
-        setupChainRegistry(_core.chainRegistry, supportedChains);
         setupSwapModule(_core.swapModule, swappersData);
         (_bridgeAdapterBeacons, _bridgeConfigs) =
             deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData);
@@ -71,7 +69,6 @@ contract DeployHubCore is DeployCore {
         vm.serializeAddress(key, "MachineBeacon", address(_core.machineBeacon));
         vm.serializeAddress(key, "PreDepositVaultBeacon", address(_core.preDepositVaultBeacon));
         vm.serializeAddress(key, "HubCoreFactory", address(_core.hubCoreFactory));
-        vm.serializeAddress(key, "ChainRegistry", address(_core.chainRegistry));
         vm.serializeAddress(key, "HubCoreRegistry", address(_core.hubCoreRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_core.oracleRegistry));
         vm.serializeAddress(key, "TokenRegistry", address(_core.tokenRegistry));

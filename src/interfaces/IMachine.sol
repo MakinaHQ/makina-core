@@ -3,11 +3,10 @@ pragma solidity ^0.8.28;
 
 import {EnumerableMap} from "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IMachineEndpoint} from "./IMachineEndpoint.sol";
+import {ISpokeSnapshotConsumer} from "./ISpokeSnapshotConsumer.sol";
 
-interface IMachine is IMachineEndpoint {
+interface IMachine is IMachineEndpoint, ISpokeSnapshotConsumer {
     event CaliberStaleThresholdChanged(uint256 indexed oldThreshold, uint256 indexed newThreshold);
     event Deposit(
         address indexed sender, address indexed receiver, uint256 assets, uint256 shares, bytes32 indexed referralKey
@@ -56,8 +55,8 @@ interface IMachine is IMachineEndpoint {
     /// @param bridgeAdapters The mapping of bridge IDs to their corresponding adapters.
     /// @param timestamp The timestamp of the last accounting.
     /// @param netAum The net AUM of the spoke caliber.
-    /// @param positions The list of positions of the spoke caliber, each encoded as abi.encode(positionId, value, isDebt).
-    /// @param baseTokens The list of base tokens of the spoke caliber, each encoded as abi.encode(token, value).
+    /// @param deprecated_4 Deprecated field.
+    /// @param deprecated_5 Deprecated field.
     /// @param caliberBridgesIn The mapping of spoke caliber incoming bridge amounts.
     /// @param caliberBridgesOut The mapping of spoke caliber outgoing bridge amounts.
     /// @param machineBridgesIn The mapping of machine incoming bridge amounts.
@@ -68,8 +67,8 @@ interface IMachine is IMachineEndpoint {
         mapping(uint16 bridgeId => address adapter) bridgeAdapters;
         uint256 timestamp;
         uint256 netAum;
-        bytes[] positions;
-        bytes[] baseTokens;
+        bytes[] deprecated_4;
+        bytes[] deprecated_5;
         EnumerableMap.AddressToUintMap caliberBridgesIn;
         EnumerableMap.AddressToUintMap caliberBridgesOut;
         EnumerableMap.AddressToUintMap machineBridgesIn;
@@ -80,6 +79,7 @@ interface IMachine is IMachineEndpoint {
     /// @notice Initializer of the contract.
     /// @param mParams The machine initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param sscParams The spoke snapshot consumer initialization parameters.
     /// @param _preDepositVault The address of the pre-deposit vault.
     /// @param _shareToken The address of the share token.
     /// @param _accountingToken The address of the accounting token.
@@ -87,14 +87,12 @@ interface IMachine is IMachineEndpoint {
     function initialize(
         MachineInitParams calldata mParams,
         MakinaGovernableInitParams calldata mgParams,
+        SpokeSnapshotConsumerInitParams calldata sscParams,
         address _preDepositVault,
         address _shareToken,
         address _accountingToken,
         address _hubCaliber
     ) external;
-
-    /// @notice Address of the Wormhole Core Bridge.
-    function wormhole() external view returns (address);
 
     /// @notice Address of the depositor.
     function depositor() external view returns (address);
@@ -161,11 +159,8 @@ interface IMachine is IMachineEndpoint {
     /// @notice Spoke caliber index => Spoke chain ID.
     function getSpokeChainId(uint256 idx) external view returns (uint256);
 
-    /// @notice Spoke chain ID => Spoke caliber's AUM, individual positions values and accounting timestamp.
-    function getSpokeCaliberDetailedAum(uint256 chainId)
-        external
-        view
-        returns (uint256 aum, bytes[] memory positions, bytes[] memory baseTokens, uint256 timestamp);
+    /// @notice Spoke chain ID => Spoke caliber's net AUM and accounting timestamp.
+    function getSpokeCaliberNetAum(uint256 chainId) external view returns (uint256, uint256);
 
     /// @notice Spoke chain ID => Spoke caliber mailbox address.
     function getSpokeCaliberMailbox(uint256 chainId) external view returns (address);
@@ -225,12 +220,6 @@ interface IMachine is IMachineEndpoint {
     /// @param minAssets The minimum amount of accounting tokens to be transferred.
     /// @return assets The amount of accounting tokens transferred.
     function redeem(uint256 shares, address receiver, uint256 minAssets) external returns (uint256);
-
-    /// @notice Updates spoke caliber accounting data using Wormhole Cross-Chain Queries (CCQ).
-    /// @dev Validates the Wormhole CCQ response and guardian signatures before updating state.
-    /// @param response The Wormhole CCQ response payload containing the accounting data.
-    /// @param signatures The array of Wormhole guardians signatures attesting to the validity of the response.
-    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures) external;
 
     /// @notice Registers a spoke caliber mailbox and related bridge adapters.
     /// @param chainId The chain ID of the spoke caliber.

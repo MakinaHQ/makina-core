@@ -8,12 +8,9 @@ import {
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {ICoreBridge} from "@wormhole/sdk/interfaces/ICoreBridge.sol";
-
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
-import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
@@ -21,11 +18,12 @@ import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Machine} from "../../src/machine/Machine.sol";
 import {HubCoreFactory} from "../../src/factories/HubCoreFactory.sol";
 import {MockFeeManager} from "../mocks/MockFeeManager.sol";
-import {MockWormhole} from "../mocks/MockWormhole.sol";
 import {OracleRegistry} from "../../src/registries/OracleRegistry.sol";
+import {MockCreForwarder} from "../mocks/MockCreForwarder.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 import {SpokeCoreRegistry} from "../../src/registries/SpokeCoreRegistry.sol";
 import {SwapModule} from "../../src/swap/SwapModule.sol";
@@ -85,12 +83,11 @@ abstract contract Base_Test is Base, Constants, Test {
 
 abstract contract Base_Hub_Test is Base_Test {
     HubCoreRegistry internal hubCoreRegistry;
-    ChainRegistry internal chainRegistry;
     HubCoreFactory internal hubCoreFactory;
     UpgradeableBeacon internal machineBeacon;
     UpgradeableBeacon internal preDepositVaultBeacon;
 
-    ICoreBridge internal wormhole;
+    MockCreForwarder internal creForwarder;
 
     address internal machineDepositor = makeAddr("MachineDepositor");
     address internal machineRedeemer = makeAddr("MachineRedeemer");
@@ -100,15 +97,15 @@ abstract contract Base_Hub_Test is Base_Test {
     function setUp() public virtual override {
         Base_Test.setUp();
         hubChainId = block.chainid;
-        _setupWormhole();
 
-        HubCore memory deployment = deployHubCore(deployer, address(wormhole));
+        creForwarder = new MockCreForwarder();
+
+        HubCore memory deployment = deployHubCore(deployer, address(creForwarder));
         accessManager = deployment.accessManager;
         oracleRegistry = deployment.oracleRegistry;
         swapModule = deployment.swapModule;
         hubCoreRegistry = deployment.hubCoreRegistry;
         tokenRegistry = deployment.tokenRegistry;
-        chainRegistry = deployment.chainRegistry;
         hubCoreFactory = deployment.hubCoreFactory;
         caliberBeacon = deployment.caliberBeacon;
         machineBeacon = deployment.machineBeacon;
@@ -119,10 +116,6 @@ abstract contract Base_Hub_Test is Base_Test {
 
         coreFactory = address(hubCoreFactory);
         setupAccessManagerRolesAndOwnership();
-    }
-
-    function _setupWormhole() internal {
-        wormhole = ICoreBridge(address(new MockWormhole(WORMHOLE_HUB_CHAIN_ID, hubChainId)));
     }
 
     function _deployMachine(address _accountingToken, bytes32 _allowedInstrMerkleRoot, bytes32 _salt)
@@ -161,6 +154,11 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialAuthority: address(accessManager),
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
+                }),
+                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+                    initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+                    initialCreWorkflowIds: new bytes32[](0),
+                    initialCreWorkflowNames: new bytes10[](0)
                 }),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,

@@ -32,7 +32,11 @@ Management and Security Module fees will be calculated based on share supply, in
 
 #### Cross-chain Accounting
 
-In order to compute a machine's total AUM, accounting data of each caliber needs to be aggregated. For spoke calibers, the protocol relies on [Wormhole Cross-Chain Queries](https://wormhole.com/products/queries). Each caliber mailbox (see [Caliber](#mailbox) section) exposes a view function returning the detailed AUM of the associated caliber. This data can be retrieved by the Wormhole CCQ network, signed, and then aggregated in the machine contract storage.
+In order to compute a machine's total AUM, accounting data of each caliber needs to be aggregated. Each caliber mailbox (see [Caliber](#mailbox) section) exposes a view function returning the detailed AUM of the associated caliber. This data can be retrieved and then aggregated in the machine contract storage.
+
+For spoke calibers, the protocol relies on the [Chainlink Runtime Environment (CRE)](https://docs.chain.link/cre) to relay this accounting data to the Hub Machine. CRE is Chainlink's off-chain compute platform, where a workflow reads spoke calibers accounting data, and resulting reports are delivered on-chain by a Chainlink forwarder. The Machine receives them through its `onReport` callback, which authenticates the forwarder and validates the reports workflow metadata (id, name, and author) against the set of authorized values before the snapshots are aggregated into storage.
+
+The Security Council is fully trusted to bypass CRE: it can call `onReport` directly to publish spoke caliber accounting data itself, without going through the CRE forwarder or the associated metadata validation. This serves as a fallback should the CRE relaying path become unavailable.
 
 #### Cross-chain Transfers
 
@@ -123,10 +127,6 @@ The `SwapModule` contract serves as an external module, enabling calibers and ma
 ### Oracle Registry
 
 The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](https://docs.chain.link/data-feeds/price-feeds), and prices tokens in a reference currency (e.g. USD) using either one feed or a two-feed path.
-
-### Chain Registry
-
-The protocol uses Wormhole Cross-Chain Queries to relay accounting data from spoke calibers to the hub machine. Since Wormhole relies on its own custom chain ID system, the `ChainRegistry` contract provides a mapping between standard EVM chain IDs and Wormhole chain IDs.
 
 ### Token Registry
 

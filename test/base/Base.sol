@@ -12,17 +12,14 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 
 import {AcrossV3BridgeAdapter} from "../../src/bridge/adapters/AcrossV3BridgeAdapter.sol";
 import {AcrossV3BridgeConfig} from "../../src/bridge/configs/AcrossV3BridgeConfig.sol";
-import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {CctpV2BridgeAdapter} from "../../src/bridge/adapters/CctpV2BridgeAdapter.sol";
 import {CctpV2BridgeConfig} from "../../src/bridge/configs/CctpV2BridgeConfig.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
-import {ChainRegistry} from "../../src/registries/ChainRegistry.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IAcrossV3BridgeConfig} from "../../src/interfaces/IAcrossV3BridgeConfig.sol";
 import {ICctpV2BridgeConfig} from "../../src/interfaces/ICctpV2BridgeConfig.sol";
-import {IChainRegistry} from "../../src/interfaces/IChainRegistry.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IHubCoreRegistry} from "../../src/interfaces/IHubCoreRegistry.sol";
@@ -54,7 +51,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         OracleRegistry oracleRegistry;
         SwapModule swapModule;
         TokenRegistry tokenRegistry;
-        ChainRegistry chainRegistry;
         HubCoreRegistry hubCoreRegistry;
         HubCoreFactory hubCoreFactory;
         UpgradeableBeacon caliberBeacon;
@@ -77,7 +73,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     /// CORE DEPLOYMENTS
     ///
 
-    function deployHubCore(address initialAMAdmin, address wormhole) internal returns (HubCore memory deployment) {
+    function deployHubCore(address initialAMAdmin, address creForwarder) internal returns (HubCore memory deployment) {
         // Access Manager
         deployment.accessManager = _deployAccessManager(initialAMAdmin, initialAMAdmin);
 
@@ -89,16 +85,11 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         deployment.tokenRegistry =
             _deployTokenRegistry(address(deployment.accessManager), address(deployment.accessManager));
 
-        // Chain Registry
-        deployment.chainRegistry =
-            _deployChainRegistry(address(deployment.accessManager), address(deployment.accessManager));
-
         // Hub Core Registry
         deployment.hubCoreRegistry = _deployHubCoreRegistry(
             address(deployment.accessManager),
             address(deployment.oracleRegistry),
             address(deployment.tokenRegistry),
-            address(deployment.chainRegistry),
             address(deployment.accessManager)
         );
 
@@ -121,7 +112,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
 
         // Machine Beacon
         deployment.machineBeacon =
-            _deployMachineBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry), wormhole);
+            _deployMachineBeacon(address(deployment.accessManager), address(deployment.hubCoreRegistry), creForwarder);
 
         // PreDeposit Vault Beacon
         deployment.preDepositVaultBeacon =
@@ -182,7 +173,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         deployment.hubCoreRegistry.setOracleRegistry(address(deployment.oracleRegistry));
         deployment.hubCoreRegistry.setSwapModule(address(deployment.swapModule));
         deployment.hubCoreRegistry.setTokenRegistry(address(deployment.tokenRegistry));
-        deployment.hubCoreRegistry.setChainRegistry(address(deployment.chainRegistry));
         deployment.hubCoreRegistry.setCoreFactory(address(deployment.hubCoreFactory));
         deployment.hubCoreRegistry.setCaliberBeacon(address(deployment.caliberBeacon));
         deployment.hubCoreRegistry.setMachineBeacon(address(deployment.machineBeacon));
@@ -207,13 +197,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
                 priceFeedRoutes[i].feed2,
                 priceFeedRoutes[i].stalenessThreshold2
             );
-        }
-    }
-
-    function setupChainRegistry(ChainRegistry chainRegistry, uint256[] memory evmChainIds) internal {
-        for (uint256 i; i < evmChainIds.length; ++i) {
-            uint256 evmChainId = evmChainIds[i];
-            chainRegistry.setChainIds(evmChainId, ChainsInfo.getChainInfo(evmChainId).wormholeChainId);
         }
     }
 
@@ -346,10 +329,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             );
         deployment.accessManager
             .setTargetFunctionRole(
-                getProxyAdmin(address(deployment.chainRegistry)), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
-            );
-        deployment.accessManager
-            .setTargetFunctionRole(
                 getProxyAdmin(address(deployment.swapModule)), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
             );
         deployment.accessManager
@@ -368,7 +347,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             .setTargetFunctionRole(address(deployment.preDepositVaultBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE);
 
         // HubCoreRegistry
-        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](12);
+        bytes4[] memory hubCoreRegistrySelectors = new bytes4[](10);
         hubCoreRegistrySelectors[0] = ICoreRegistry.setCoreFactory.selector;
         hubCoreRegistrySelectors[1] = ICoreRegistry.setOracleRegistry.selector;
         hubCoreRegistrySelectors[2] = ICoreRegistry.setTokenRegistry.selector;
@@ -377,9 +356,8 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         hubCoreRegistrySelectors[5] = ICoreRegistry.setCaliberBeacon.selector;
         hubCoreRegistrySelectors[6] = ICoreRegistry.setBridgeAdapterBeacon.selector;
         hubCoreRegistrySelectors[7] = ICoreRegistry.setBridgeConfig.selector;
-        hubCoreRegistrySelectors[8] = IHubCoreRegistry.setChainRegistry.selector;
-        hubCoreRegistrySelectors[9] = IHubCoreRegistry.setMachineBeacon.selector;
-        hubCoreRegistrySelectors[10] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
+        hubCoreRegistrySelectors[8] = IHubCoreRegistry.setMachineBeacon.selector;
+        hubCoreRegistrySelectors[9] = IHubCoreRegistry.setPreDepositVaultBeacon.selector;
         deployment.accessManager
             .setTargetFunctionRole(
                 address(deployment.hubCoreRegistry), hubCoreRegistrySelectors, Roles.INFRA_UPGRADE_ROLE
@@ -390,9 +368,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
 
         // TokenRegistry
         _setupTokenRegistryAMFunctionRoles(deployment.accessManager, address(deployment.tokenRegistry));
-
-        // ChainRegistry
-        _setupChainRegistryAMFunctionRoles(deployment.accessManager, address(deployment.chainRegistry));
 
         // SwapModule
         _setupSwapModuleAMFunctionRoles(deployment.accessManager, address(deployment.swapModule));
@@ -494,14 +469,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         accessManager.setTargetFunctionRole(_swapModule, swapModuleSelectors, Roles.INFRA_CONFIG_ROLE);
     }
 
-    function _setupChainRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _chainRegistry)
-        internal
-    {
-        bytes4[] memory chainRegistrySelectors = new bytes4[](1);
-        chainRegistrySelectors[0] = IChainRegistry.setChainIds.selector;
-        accessManager.setTargetFunctionRole(_chainRegistry, chainRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
-    }
-
     function _setupHubCoreFactoryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _hubCoreFactory)
         internal
     {
@@ -591,7 +558,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         address _proxyOwner,
         address _oracleRegistry,
         address _tokenRegistry,
-        address _chainRegistry,
         address _accessManager
     ) internal returns (HubCoreRegistry hubCoreRegistry) {
         address implem = _deployCode(type(HubCoreRegistry).creationCode, 0);
@@ -602,10 +568,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
                     abi.encode(
                         implem,
                         _proxyOwner,
-                        abi.encodeCall(
-                            HubCoreRegistry.initialize,
-                            (_oracleRegistry, _tokenRegistry, _chainRegistry, _accessManager)
-                        )
+                        abi.encodeCall(HubCoreRegistry.initialize, (_oracleRegistry, _tokenRegistry, _accessManager))
                     )
                 ),
                 CORE_REGISTRY_SALT_DOMAIN
@@ -686,22 +649,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         );
     }
 
-    function _deployChainRegistry(address _proxyOwner, address _accessManager)
-        internal
-        returns (ChainRegistry tokenRegistry)
-    {
-        address implem = _deployCode(type(ChainRegistry).creationCode, 0);
-        tokenRegistry = ChainRegistry(
-            _deployCode(
-                abi.encodePacked(
-                    type(TransparentUpgradeableProxy).creationCode,
-                    abi.encode(implem, _proxyOwner, abi.encodeCall(ChainRegistry.initialize, (_accessManager)))
-                ),
-                CHAIN_REGISTRY_SALT_DOMAIN
-            )
-        );
-    }
-
     function _deployTokenRegistry(address _proxyOwner, address _accessManager)
         internal
         returns (TokenRegistry tokenRegistry)
@@ -738,12 +685,12 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         return _deployCode(getWeirollVMCode(), WEIROLL_VM_SALT_DOMAIN);
     }
 
-    function _deployMachineBeacon(address _proxyOwner, address _hubCoreRegistry, address _wormhole)
+    function _deployMachineBeacon(address _proxyOwner, address _hubCoreRegistry, address _creForwarder)
         internal
         returns (UpgradeableBeacon caliberBeacon)
     {
         address implem = _deployCode(
-            abi.encodePacked(type(Machine).creationCode, abi.encode(_hubCoreRegistry, _wormhole)), 0
+            abi.encodePacked(type(Machine).creationCode, abi.encode(_hubCoreRegistry, _creForwarder)), 0
         );
         return UpgradeableBeacon(
             _deployCode(

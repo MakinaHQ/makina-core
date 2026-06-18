@@ -24,8 +24,6 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
     uint256 internal constant A_START_BALANCE = 1_000_000e18;
     uint256 internal constant B_START_BALANCE = 2_000_000e18;
 
-    uint16 internal constant WORMHOLE_SPOKE_CHAIN_ID = 2000;
-
     uint256 internal constant ACROSS_V3_FEE_BPS = 50;
 
     uint256 internal spokeChainId = 100;
@@ -71,7 +69,6 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
 
         // set up registries
         vm.startPrank(dao);
-        chainRegistry.setChainIds(spokeChainId, WORMHOLE_SPOKE_CHAIN_ID);
         tokenRegistry.setToken(address(accountingToken), spokeChainId, address(accountingToken));
         tokenRegistry.setToken(address(baseToken), spokeChainId, address(baseToken));
         tokenRegistry.setToken(address(accountingToken), hubChainId, address(accountingToken));

@@ -35,18 +35,7 @@ import {
 import {Integration_Concrete_Hub_Test} from "../IntegrationConcrete.t.sol";
 
 abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_Test {
-    uint256 internal constant SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE = 3e18;
-    uint256 internal constant SPOKE_CALIBER_BASE_TOKEN_VALUE = 4e18;
-    uint256 internal constant SPOKE_CALIBER_VAULT_VALUE = 5e18;
-    uint256 internal constant SPOKE_CALIBER_BORROW_VALUE = 20e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_RECEIVED_FROM_HUB = 30e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_RECEIVED_FROM_HUB = 20e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_ACCOUNTING_TOKEN_SENT_TO_HUB = 10e18;
-    uint256 internal constant SPOKE_CALIBER_TOTAL_BASE_TOKEN_SENT_TO_HUB = 5e18;
-
-    uint256 internal constant TOTAL_SPOKE_CALIBER_POSITIVE_POSITIONS_VALUE =
-        SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
-    uint256 internal constant TOTAL_SPOKE_CALIBER_NEGATIVE_POSITIONS_VALUE = SPOKE_CALIBER_BORROW_VALUE;
+    uint256 internal constant SPOKE_CALIBER_NET_AUM = 15e18;
 
     address internal spokeAccountingTokenAddr;
     address internal spokeBaseTokenAddr;
@@ -56,8 +45,6 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
     function setUp() public virtual override {
         Integration_Concrete_Hub_Test.setUp();
         _setUpCaliberMerkleRoot(caliber);
-        vm.prank(dao);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
         spokeAccountingTokenAddr = makeAddr("spokeAccountingToken");
@@ -83,70 +70,49 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
     /// Helper functions
     ///
 
-    function _buildSpokeCaliberAccountingData_Null()
-        internal
-        pure
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
-    {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
+    function _buildSpokeCaliberAccountingReport_Empty() internal pure returns (bytes memory) {
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
 
-        return data;
+        return abi.encode(snapshots);
     }
 
-    function _buildSpokeCaliberAccountingData(bool negativeValue)
+    function _buildSpokeCaliberAccountingReport(uint256 chainId, uint256 blockNum, uint256 blockTime, bool nullValue)
         internal
         view
-        returns (ICaliberMailbox.SpokeCaliberAccountingData memory)
+        returns (bytes memory)
     {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
-
-        data.netAum = negativeValue
-            ? 0
-            : SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
-
-        data.positions = new bytes[](negativeValue ? 2 : 1);
-        data.positions[0] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_VALUE, false);
-
-        if (negativeValue) {
-            data.positions[1] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_VALUE, true);
-        }
-
-        data.baseTokens = new bytes[](2);
-        data.baseTokens[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
-        data.baseTokens[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_BASE_TOKEN_VALUE);
-
-        return data;
+        return _buildSpokeCaliberAccountingReportWithTransfers(
+            chainId, blockNum, blockTime, nullValue, 0, new bytes[](0), new bytes[](0)
+        );
     }
 
-    function _buildSpokeCaliberAccountingDataWithTransfers(
-        bool negativeValue,
+    function _buildSpokeCaliberAccountingReportWithTransfers(
+        uint256 chainId,
+        uint256 blockNum,
+        uint256 blockTime,
+        bool nullValue,
         uint256 aumOffsetTransfers,
         bytes[] memory bridgesIn,
         bytes[] memory bridgesOut
-    ) internal view returns (ICaliberMailbox.SpokeCaliberAccountingData memory) {
-        ICaliberMailbox.SpokeCaliberAccountingData memory data;
+    ) internal view returns (bytes memory) {
+        ICaliberMailbox.SpokeCaliberAccountingData memory snapshot;
 
-        data.netAum = negativeValue
-            ? 0
-            : SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE + SPOKE_CALIBER_BASE_TOKEN_VALUE + SPOKE_CALIBER_VAULT_VALUE;
+        snapshot.netAum = nullValue ? 0 : SPOKE_CALIBER_NET_AUM;
+        snapshot.netAum += aumOffsetTransfers;
 
-        data.netAum += aumOffsetTransfers;
+        snapshot.context = ICaliberMailbox.SpokeSnapshotContext({
+            chainId: chainId, mailbox: spokeCaliberMailboxAddr, blockNum: blockNum, blockTime: blockTime
+        });
 
-        data.positions = new bytes[](negativeValue ? 2 : 1);
-        data.positions[0] = abi.encode(VAULT_POS_ID, SPOKE_CALIBER_VAULT_VALUE, false);
+        snapshot.bridgesIn = bridgesIn;
+        snapshot.bridgesOut = bridgesOut;
 
-        if (negativeValue) {
-            data.positions[1] = abi.encode(BORROW_POS_ID, SPOKE_CALIBER_BORROW_VALUE, true);
-        }
+        ICaliberMailbox.SpokeCaliberAccountingData[] memory snapshots =
+            new ICaliberMailbox.SpokeCaliberAccountingData[](1);
+        snapshots[0] = snapshot;
 
-        data.baseTokens = new bytes[](2);
-        data.baseTokens[0] = abi.encode(spokeAccountingTokenAddr, SPOKE_CALIBER_ACCOUNTING_TOKEN_VALUE);
-        data.baseTokens[1] = abi.encode(spokeBaseTokenAddr, SPOKE_CALIBER_BASE_TOKEN_VALUE);
-
-        data.bridgesIn = bridgesIn;
-        data.bridgesOut = bridgesOut;
-
-        return data;
+        return abi.encode(snapshots);
     }
 }
 

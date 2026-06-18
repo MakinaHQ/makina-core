@@ -1,16 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
 import {ICaliber} from "./ICaliber.sol";
 import {IMachine} from "./IMachine.sol";
-import {IPreDepositVault} from "./IPreDepositVault.sol";
 import {IMakinaGovernable} from "./IMakinaGovernable.sol";
-import {IBridgeAdapterFactory} from "./IBridgeAdapterFactory.sol";
+import {IPreDepositVault} from "./IPreDepositVault.sol";
+import {ISpokeSnapshotConsumer} from "./ISpokeSnapshotConsumer.sol";
 
 interface IHubCoreFactory is IBridgeAdapterFactory {
     event MachineCreated(address indexed machine, address indexed shareToken);
     event PreDepositVaultCreated(address indexed preDepositVault, address indexed shareToken);
     event ShareTokenCreated(address indexed shareToken);
+
+    /// @dev The core components of a new machine instance.
+    struct MachineBundle {
+        address machine;
+        address shareToken;
+        address caliber;
+    }
 
     /// @notice Address => Whether this is a PreDepositVault instance deployed by this factory.
     function isPreDepositVault(address preDepositVault) external view returns (bool);
@@ -39,6 +47,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param sscParams The spoke snapshot consumer initialization parameters.
     /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param preDepositVault The address of the PreDepositVault instance to migrate.
     /// @param salt The salt used to deploy the hub caliber deterministically.
@@ -48,6 +57,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams calldata sscParams,
         BridgeAdapterInitParams[] calldata baParams,
         address preDepositVault,
         bytes32 salt,
@@ -58,6 +68,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
     /// @param mParams The machine initialization parameters.
     /// @param cParams The caliber initialization parameters.
     /// @param mgParams The makina governable initialization parameters.
+    /// @param sscParams The spoke snapshot consumer initialization parameters.
     /// @param baParams The list of bridge adapter initialization parameters and controller configuration.
     /// @param accountingToken The address of the accounting token.
     /// @param tokenName The name of the share token.
@@ -69,6 +80,7 @@ interface IHubCoreFactory is IBridgeAdapterFactory {
         IMachine.MachineInitParams calldata mParams,
         ICaliber.CaliberInitParams calldata cParams,
         IMakinaGovernable.MakinaGovernableInitParams calldata mgParams,
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams calldata sscParams,
         BridgeAdapterInitParams[] calldata baParams,
         address accountingToken,
         string memory tokenName,

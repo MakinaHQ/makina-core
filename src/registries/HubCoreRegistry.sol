@@ -7,7 +7,7 @@ import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 contract HubCoreRegistry is CoreRegistry, IHubCoreRegistry {
     /// @custom:storage-location erc7201:makina.storage.HubCoreRegistry
     struct HubCoreRegistryStorage {
-        address _chainRegistry;
+        address _deprecated_0;
         address _machineBeacon;
         address _preDepositVaultBeacon;
     }
@@ -26,19 +26,11 @@ contract HubCoreRegistry is CoreRegistry, IHubCoreRegistry {
         _disableInitializers();
     }
 
-    function initialize(
-        address _oracleRegistry,
-        address _tokenRegistry,
-        address _chainRegistry,
-        address initialAuthority
-    ) external initializer {
-        _getHubCoreRegistryStorage()._chainRegistry = _chainRegistry;
+    function initialize(address _oracleRegistry, address _tokenRegistry, address initialAuthority)
+        external
+        initializer
+    {
         __CoreRegistry_init(_oracleRegistry, _tokenRegistry, initialAuthority);
-    }
-
-    /// @inheritdoc IHubCoreRegistry
-    function chainRegistry() external view override returns (address) {
-        return _getHubCoreRegistryStorage()._chainRegistry;
     }
 
     /// @inheritdoc IHubCoreRegistry
@@ -49,13 +41,6 @@ contract HubCoreRegistry is CoreRegistry, IHubCoreRegistry {
     /// @inheritdoc IHubCoreRegistry
     function preDepositVaultBeacon() external view override returns (address) {
         return _getHubCoreRegistryStorage()._preDepositVaultBeacon;
-    }
-
-    /// @inheritdoc IHubCoreRegistry
-    function setChainRegistry(address _chainRegistry) external override restricted {
-        HubCoreRegistryStorage storage $ = _getHubCoreRegistryStorage();
-        emit ChainRegistryChanged($._chainRegistry, _chainRegistry);
-        $._chainRegistry = _chainRegistry;
     }
 
     /// @inheritdoc IHubCoreRegistry

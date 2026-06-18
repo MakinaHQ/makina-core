@@ -5,10 +5,12 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol";
 import {DecimalsUtils} from "src/libraries/DecimalsUtils.sol";
 import {Errors} from "src/libraries/Errors.sol";
 
 import {MakinaGovernable_Unit_Concrete_Test} from "../makina-governable/MakinaGovernable.t.sol";
+import {SpokeSnapshotConsumer_Unit_Concrete_Test} from "../spoke-snapshot-consumer/SpokeSnapshotConsumer.t.sol";
 import {Unit_Concrete_Hub_Test} from "../UnitConcrete.t.sol";
 
 abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
@@ -17,9 +19,6 @@ abstract contract Machine_Unit_Concrete_Test is Unit_Concrete_Hub_Test {
 
     function setUp() public virtual override {
         Unit_Concrete_Hub_Test.setUp();
-
-        vm.prank(dao);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID, WORMHOLE_SPOKE_CHAIN_ID);
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
         spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
@@ -30,6 +29,16 @@ contract MakinaGovernable_Machine_Unit_Concrete_Test is MakinaGovernable_Unit_Co
     function setUp() public override(MakinaGovernable_Unit_Concrete_Test, Unit_Concrete_Hub_Test) {
         Unit_Concrete_Hub_Test.setUp();
         governable = IMakinaGovernable(address(machine));
+    }
+}
+
+contract SpokeSnapshotConsumer_Machine_Unit_Concrete_Test is
+    SpokeSnapshotConsumer_Unit_Concrete_Test,
+    Unit_Concrete_Hub_Test
+{
+    function setUp() public override(Unit_Concrete_Hub_Test, SpokeSnapshotConsumer_Unit_Concrete_Test) {
+        Unit_Concrete_Hub_Test.setUp();
+        spokeSnapshotConsumer = ISpokeSnapshotConsumer(address(machine));
     }
 }
 

@@ -61,8 +61,8 @@ abstract contract Fork_Test is Base, Test, Constants {
 
         // deploy core contracts
         if (isHub) {
-            address wormhole = vm.parseJsonAddress(inputJson, ".wormhole");
-            hubCore = deployHubCore(address(this), wormhole);
+            address creForwarder = vm.parseJsonAddress(inputJson, ".creForwarder");
+            hubCore = deployHubCore(address(this), creForwarder);
         } else {
             spokeCores[chainId] = deploySpokeCore(address(this), hubChainId);
         }
@@ -70,8 +70,6 @@ abstract contract Fork_Test is Base, Test, Constants {
         // setup makina registry and chain registry
         if (isHub) {
             setupHubCoreRegistry(hubCore);
-            uint256[] memory evmChainIds = vm.parseJsonUintArray(inputJson, ".supportedChains");
-            setupChainRegistry(hubCore.chainRegistry, evmChainIds);
         } else {
             setupSpokeCoreRegistry(spokeCores[chainId]);
         }

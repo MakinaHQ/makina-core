@@ -81,7 +81,7 @@ interface ICaliber {
 
     /// @notice Position data.
     /// @param lastAccountingTime The last block timestamp when the position was accounted for.
-    /// @param value The value of the position expressed in accounting token.
+    /// @param value The value of the position denominated in accounting token.
     /// @param isDebt Whether the position is a debt.
     struct Position {
         uint256 lastAccountingTime;
@@ -160,6 +160,9 @@ interface ICaliber {
 
     /// @notice Checks if the accounting age of each position is below the position staleness threshold.
     function isAccountingFresh() external view returns (bool);
+
+    /// @notice Returns the caliber's net AUM denominated in the accounting token.
+    function getNetAum() external view returns (uint256);
 
     /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
     /// @return netAum The total value of all base token balances and positive positions, minus total debts.

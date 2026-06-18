@@ -15,6 +15,8 @@ abstract contract Constants {
     uint256 internal constant DEFAULT_MACHINE_SHARE_LIMIT = type(uint256).max;
     uint256 internal constant DEFAULT_MACHINE_MAX_SHARE_PRICE_CHANGE_RATE = type(uint256).max;
 
+    address internal constant DEFAULT_CRE_WORKFLOW_AUTHOR = address(0xC3A);
+
     uint256 internal constant DEFAULT_CALIBER_POS_STALE_THRESHOLD = 20 minutes;
     uint256 internal constant DEFAULT_CALIBER_ROOT_UPDATE_TIMELOCK = 1 hours;
     uint256 internal constant DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS = 100;
@@ -31,8 +33,6 @@ abstract contract Constants {
     uint256 internal constant LOOP_POS_ID = 7;
 
     uint256 internal constant LENDING_MARKET_POS_GROUP_ID = 1;
-
-    uint16 internal constant WORMHOLE_HUB_CHAIN_ID = 2;
 
     uint32 internal constant LAYER_ZERO_V2_SPOKE_ENDPOINT_ID = 30184;
     uint128 internal constant DEFAULT_LAYER_ZERO_V2_VERIFY_GAS = 80000;

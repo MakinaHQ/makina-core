@@ -4,16 +4,11 @@ pragma solidity 0.8.28;
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -69,17 +64,12 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         vm.prank(dao);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, address(spokeCaliberMailboxAddr), new uint16[](0), new address[](0));
 
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData;
-        queriedData.netAum = 1;
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, false, 1, new bytes[](0), new bytes[](0)
         );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         vm.expectRevert(Errors.CaliberNotEmpty.selector);
         vm.prank(dao);
@@ -106,20 +96,16 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         // simulate a pending Spoke -> Hub transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData;
-        queriedData.bridgesIn = new bytes[](1);
-        queriedData.bridgesIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
-        queriedData.bridgesOut = new bytes[](1);
-        queriedData.bridgesOut[0] = abi.encode(spokeBaseTokenAddr, inputAmount);
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
+        bytes[] memory cBridgeIn = new bytes[](1);
+        cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        bytes[] memory cBridgeOut = new bytes[](1);
+        cBridgeOut[0] = abi.encode(spokeBaseTokenAddr, inputAmount);
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, true, 0, cBridgeIn, cBridgeOut
         );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // 1 complete Hub -> Spoke transfer + 1 pending Spoke -> Hub transfer
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
@@ -132,17 +118,16 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.manageTransfer(address(baseToken), inputAmount, abi.encode(SPOKE_CHAIN_ID, inputAmount, false));
         vm.stopPrank();
 
+        skip(1);
+
         // 1 complete Hub -> Spoke transfer + 1 complete Spoke -> Hub transfer + 1 pending Spoke -> Hub transfer
-        queriedData.bridgesOut = new bytes[](2);
-        queriedData.bridgesOut[0] = abi.encode(spokeBaseTokenAddr, inputAmount);
-        queriedData.bridgesOut[1] = abi.encode(spokeAccountingTokenAddr, inputAmount);
-        perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum + 1, blockTime + 1, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        cBridgeOut = new bytes[](2);
+        cBridgeOut[0] = abi.encode(spokeBaseTokenAddr, inputAmount);
+        cBridgeOut[1] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum + 1, blockTime + 1, true, 0, cBridgeIn, cBridgeOut
         );
-        (response, signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
         vm.prank(dao);
@@ -158,9 +143,6 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         machine.disableSpokeCaliber(SPOKE_CHAIN_ID);
 
         assertFalse(machine.isSpokeCaliberEnabled(SPOKE_CHAIN_ID));
-
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID - 1, WORMHOLE_SPOKE_CHAIN_ID - 1);
-        chainRegistry.setChainIds(SPOKE_CHAIN_ID + 1, WORMHOLE_SPOKE_CHAIN_ID + 1);
 
         machine.setSpokeCaliber(SPOKE_CHAIN_ID - 1, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
         machine.enableSpokeCaliber(SPOKE_CHAIN_ID);

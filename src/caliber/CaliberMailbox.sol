@@ -79,22 +79,9 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
 
     /// @inheritdoc ICaliberMailbox
     function getSpokeCaliberAccountingData() external view override returns (SpokeCaliberAccountingData memory data) {
-        CaliberMailboxStorage storage $ = _getCaliberMailboxStorage();
-        (data.netAum, data.positions, data.baseTokens) = ICaliber($._caliber).getDetailedAum();
-
-        uint256 len = $._bridgesIn.length();
-        data.bridgesIn = new bytes[](len);
-        for (uint256 i; i < len; ++i) {
-            (address token, uint256 amount) = $._bridgesIn.at(i);
-            data.bridgesIn[i] = abi.encode(token, amount);
-        }
-
-        len = $._bridgesOut.length();
-        data.bridgesOut = new bytes[](len);
-        for (uint256 i; i < len; ++i) {
-            (address token, uint256 amount) = $._bridgesOut.at(i);
-            data.bridgesOut[i] = abi.encode(token, amount);
-        }
+        data.netAum = ICaliber(_getCaliberMailboxStorage()._caliber).getNetAum();
+        (data.bridgesIn, data.bridgesOut) = _getBridgeCounters();
+        data.context = _getSnapshotContext();
     }
 
     /// @inheritdoc IMachineEndpoint
@@ -235,5 +222,31 @@ contract CaliberMailbox is MakinaGovernable, ReentrancyGuard, BridgeController, 
         ICaliber($._caliber).notifyIncomingTransfer(token, amount);
 
         emit BridgingStateReset(token);
+    }
+
+    /// @dev Returns the current bridge counters for both incoming and outgoing transfers.
+    function _getBridgeCounters() internal view returns (bytes[] memory bridgesIn, bytes[] memory bridgesOut) {
+        CaliberMailboxStorage storage $ = _getCaliberMailboxStorage();
+
+        uint256 len = $._bridgesIn.length();
+        bridgesIn = new bytes[](len);
+        for (uint256 i; i < len; ++i) {
+            (address token, uint256 amount) = $._bridgesIn.at(i);
+            bridgesIn[i] = abi.encode(token, amount);
+        }
+
+        len = $._bridgesOut.length();
+        bridgesOut = new bytes[](len);
+        for (uint256 i; i < len; ++i) {
+            (address token, uint256 amount) = $._bridgesOut.at(i);
+            bridgesOut[i] = abi.encode(token, amount);
+        }
+    }
+
+    /// @dev Constructs the snapshot context for the current state.
+    function _getSnapshotContext() internal view returns (SpokeSnapshotContext memory) {
+        return SpokeSnapshotContext({
+            chainId: block.chainid, mailbox: address(this), blockNum: block.number, blockTime: block.timestamp
+        });
     }
 }

@@ -55,13 +55,13 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
         assertEq(data.bridgesIn.length, 0);
         assertEq(data.bridgesOut.length, 0);
-        assertEq(data.positions.length, 1);
-        assertEq(data.baseTokens.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], VAULT_POS_ID, PRICE_B_A * bInputAmount, false);
-        _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
-        _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
+        assertEq(data.context.chainId, block.chainid);
+        assertEq(data.context.mailbox, address(caliberMailbox));
+        assertEq(data.context.blockNum, block.number);
+        assertEq(data.context.blockTime, block.timestamp);
 
         skip(1 hours);
+        vm.roll(block.number + 300);
 
         caliber.accountForPosition(acctInstruction);
 
@@ -70,10 +70,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         assertEq(data.netAum, aInputAmount + PRICE_B_A * bInputAmount);
         assertEq(data.bridgesIn.length, 0);
         assertEq(data.bridgesOut.length, 0);
-        assertEq(data.positions.length, 1);
-        assertEq(data.baseTokens.length, 2);
-        _checkEncodedCaliberPosValue(data.positions[0], VAULT_POS_ID, PRICE_B_A * bInputAmount, false);
-        _checkEncodedCaliberBTValue(data.baseTokens[0], address(accountingToken), aInputAmount);
-        _checkEncodedCaliberBTValue(data.baseTokens[1], address(baseToken), 0);
+        assertEq(data.context.chainId, block.chainid);
+        assertEq(data.context.mailbox, address(caliberMailbox));
+        assertEq(data.context.blockNum, block.number);
+        assertEq(data.context.blockTime, block.timestamp);
     }
 }

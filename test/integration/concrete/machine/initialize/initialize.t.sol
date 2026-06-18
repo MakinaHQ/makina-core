@@ -9,6 +9,7 @@ import {IHubCoreRegistry} from "src/interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {MachineShare} from "src/machine/MachineShare.sol";
@@ -44,6 +45,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
                 (
                     _getMachineInitParams(),
                     _getMakinaGovernableInitParams(),
+                    _getSpokeSnapshotConsumerInitParams(),
                     address(0),
                     address(shareToken),
                     address(accountingToken2),
@@ -63,6 +65,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             .initialize(
                 _getMachineInitParams(),
                 _getMakinaGovernableInitParams(),
+                _getSpokeSnapshotConsumerInitParams(),
                 address(0),
                 address(shareToken),
                 address(accountingToken),
@@ -78,6 +81,7 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             .initialize(
                 _getMachineInitParams(),
                 _getMakinaGovernableInitParams(),
+                _getSpokeSnapshotConsumerInitParams(),
                 address(0),
                 address(shareToken),
                 address(accountingToken),
@@ -104,7 +108,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         // deploy caliber to be called in machine initializer
         ICaliber.CaliberInitParams memory cParams;
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
         hubCaliberAddr = address(
             new BeaconProxy(
                 IHubCoreRegistry(hubCoreRegistry).caliberBeacon(),
@@ -140,7 +143,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         IMachine(machine)
             .initialize(
                 _getMachineInitParams(),
-                mgParams,
+                _getMakinaGovernableInitParams(),
+                _getSpokeSnapshotConsumerInitParams(),
                 address(preDepositVault),
                 address(shareToken),
                 address(accountingToken),
@@ -185,7 +189,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
 
         // deploy caliber to be called in machine initializer
         ICaliber.CaliberInitParams memory cParams;
-        IMakinaGovernable.MakinaGovernableInitParams memory mgParams = _getMakinaGovernableInitParams();
         hubCaliberAddr = address(
             new BeaconProxy(
                 IHubCoreRegistry(hubCoreRegistry).caliberBeacon(),
@@ -227,7 +230,8 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         IMachine(machine)
             .initialize(
                 _getMachineInitParams(),
-                mgParams,
+                _getMakinaGovernableInitParams(),
+                _getSpokeSnapshotConsumerInitParams(),
                 address(preDepositVault),
                 address(shareToken),
                 address(accountingToken),
@@ -298,6 +302,18 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
             initialAuthority: address(accessManager),
             initialRestrictedAccountingMode: false,
             initialAccountingAgents: accountingAgents
+        });
+    }
+
+    function _getSpokeSnapshotConsumerInitParams()
+        internal
+        pure
+        returns (ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory)
+    {
+        return ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
+            initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
+            initialCreWorkflowIds: new bytes32[](0),
+            initialCreWorkflowNames: new bytes10[](0)
         });
     }
 }

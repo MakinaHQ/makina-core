@@ -3,16 +3,11 @@ pragma solidity 0.8.28;
 
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
-import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
 import {IMachineEndpoint} from "src/interfaces/IMachineEndpoint.sol";
 import {Errors} from "src/libraries/Errors.sol";
 import {MockERC20} from "test/mocks/MockERC20.sol";
-import {PerChainData} from "test/utils/WormholeQueryTestHelpers.sol";
-import {WormholeQueryTestHelpers} from "test/utils/WormholeQueryTestHelpers.sol";
 
 import {Machine_Integration_Concrete_Test} from "../Machine.t.sol";
 
@@ -244,20 +239,14 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         vm.stopPrank();
 
         // simulate caliber having received the transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeIn = new bytes[](1);
         cBridgeIn[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
-        bytes[] memory cBridgeOut;
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
 
         // try to refund the transfer to machine
         vm.startPrank(address(bridgeAdapter));
@@ -333,19 +322,13 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
 
     function _simulateDeclaredTransferFromCaliber(address spokeToken, uint256 inputAmount) internal {
         // simulate caliber having sent the transfer
-        uint64 blockNum = 1e10;
-        uint64 blockTime = uint64(block.timestamp);
-        bytes[] memory cBridgeIn;
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
         bytes[] memory cBridgeOut = new bytes[](1);
         cBridgeOut[0] = abi.encode(spokeToken, inputAmount);
-        ICaliberMailbox.SpokeCaliberAccountingData memory queriedData =
-            _buildSpokeCaliberAccountingDataWithTransfers(false, 0, cBridgeIn, cBridgeOut);
-        PerChainData[] memory perChainData = WormholeQueryTestHelpers.buildSinglePerChainData(
-            WORMHOLE_SPOKE_CHAIN_ID, blockNum, blockTime, spokeCaliberMailboxAddr, abi.encode(queriedData)
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), cBridgeOut
         );
-        (bytes memory response, GuardianSignature[] memory signatures) = WormholeQueryTestHelpers.prepareResponses(
-            perChainData, "", ICaliberMailbox.getSpokeCaliberAccountingData.selector, ""
-        );
-        machine.updateSpokeCaliberAccountingData(response, signatures);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
     }
 }

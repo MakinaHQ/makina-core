@@ -8,12 +8,10 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {GuardianSignature} from "@wormhole/sdk/libraries/VaaLib.sol";
-
 import {IBridgeAdapter} from "../interfaces/IBridgeAdapter.sol";
 import {IBridgeController} from "../interfaces/IBridgeController.sol";
 import {ICaliber} from "../interfaces/ICaliber.sol";
-import {IChainRegistry} from "../interfaces/IChainRegistry.sol";
+import {ICreReceiver} from "../interfaces/ICreReceiver.sol";
 import {IHubCoreRegistry} from "../interfaces/IHubCoreRegistry.sol";
 import {IMachine} from "../interfaces/IMachine.sol";
 import {IMachineEndpoint} from "../interfaces/IMachineEndpoint.sol";
@@ -23,18 +21,16 @@ import {IOwnable2Step} from "../interfaces/IOwnable2Step.sol";
 import {BridgeController} from "../bridge/controller/BridgeController.sol";
 import {Errors} from "../libraries/Errors.sol";
 import {DecimalsUtils} from "../libraries/DecimalsUtils.sol";
+import {MachineUtils} from "../libraries/MachineUtils.sol";
 import {MakinaContext} from "../utils/MakinaContext.sol";
 import {MakinaGovernable} from "../utils/MakinaGovernable.sol";
-import {MachineUtils} from "../libraries/MachineUtils.sol";
+import {SpokeSnapshotConsumer} from "../utils/SpokeSnapshotConsumer.sol";
 
-contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachine {
+contract Machine is MakinaGovernable, BridgeController, SpokeSnapshotConsumer, ReentrancyGuard, IMachine {
     using Math for uint256;
     using SafeERC20 for IERC20Metadata;
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-
-    /// @inheritdoc IMachine
-    address public immutable wormhole;
 
     /// @custom:storage-location erc7201:makina.storage.Machine
     struct MachineStorage {
@@ -71,8 +67,10 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         }
     }
 
-    constructor(address _registry, address _wormhole) MakinaContext(_registry) {
-        wormhole = _wormhole;
+    constructor(address _registry, address _creForwarder)
+        MakinaContext(_registry)
+        SpokeSnapshotConsumer(_creForwarder)
+    {
         _disableInitializers();
     }
 
@@ -80,6 +78,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     function initialize(
         MachineInitParams calldata mParams,
         MakinaGovernableInitParams calldata mgParams,
+        SpokeSnapshotConsumerInitParams calldata sscParams,
         address _preDepositVault,
         address _shareToken,
         address _accountingToken,
@@ -125,6 +124,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         $._shareLimit = mParams.initialShareLimit;
         $._maxSharePriceChangeRate = mParams.initialMaxSharePriceChangeRate;
         __MakinaGovernable_init(mgParams);
+        __SpokeSnapshotConsumer_init(sscParams);
     }
 
     /// @inheritdoc IMachine
@@ -224,17 +224,12 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     }
 
     /// @inheritdoc IMachine
-    function getSpokeCaliberDetailedAum(uint256 chainId)
-        external
-        view
-        override
-        returns (uint256, bytes[] memory, bytes[] memory, uint256)
-    {
+    function getSpokeCaliberNetAum(uint256 chainId) external view override returns (uint256, uint256) {
         SpokeCaliberData storage scData = _getMachineStorage()._spokeCalibersData[chainId];
         if (scData.mailbox == address(0)) {
             revert Errors.InvalidChainId();
         }
-        return (scData.netAum, scData.positions, scData.baseTokens, scData.timestamp);
+        return (scData.netAum, scData.timestamp);
     }
 
     /// @inheritdoc IMachine
@@ -498,19 +493,17 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
         return assets;
     }
 
-    /// @inheritdoc IMachine
-    function updateSpokeCaliberAccountingData(bytes calldata response, GuardianSignature[] calldata signatures)
-        external
-        override
-        nonReentrant
-    {
-        MachineUtils.updateSpokeCaliberAccountingData(
-            _getMachineStorage(),
-            IHubCoreRegistry(registry).tokenRegistry(),
-            IHubCoreRegistry(registry).chainRegistry(),
-            wormhole,
-            response,
-            signatures
+    /// @inheritdoc ICreReceiver
+    function onReport(bytes calldata metadata, bytes calldata report) external override nonReentrant {
+        address sender = msg.sender;
+        if (sender == creForwarder) {
+            _validateMetadata(metadata);
+        } else if (sender != securityCouncil()) {
+            revert Errors.UnauthorizedCaller();
+        }
+
+        MachineUtils.reportSpokeAccountingSnapshots(
+            _getMachineStorage(), IHubCoreRegistry(registry).tokenRegistry(), report
         );
     }
 
@@ -523,10 +516,7 @@ contract Machine is MakinaGovernable, BridgeController, ReentrancyGuard, IMachin
     ) external override nonReentrant restricted {
         MachineStorage storage $ = _getMachineStorage();
 
-        if (
-            chainId == $._hubChainId
-                || !IChainRegistry(IHubCoreRegistry(registry).chainRegistry()).isEvmChainIdRegistered(chainId)
-        ) {
+        if (chainId == $._hubChainId) {
             revert Errors.InvalidChainId();
         }
 

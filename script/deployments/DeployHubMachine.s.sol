@@ -9,6 +9,7 @@ import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 
 import {Base} from "../../test/base/Base.sol";
 
@@ -50,6 +51,8 @@ contract DeployHubMachine is Base, Script {
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
             parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
+        ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams =
+            parseSpokeSnapshotConsumerInitParams(inputJson, ".spokeSnapshotConsumerInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
         address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
@@ -67,6 +70,7 @@ contract DeployHubMachine is Base, Script {
             mParams,
             cParams,
             mgParams,
+            sscParams,
             baParams,
             accountingToken,
             shareTokenName,

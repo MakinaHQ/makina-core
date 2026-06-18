@@ -39,11 +39,7 @@ abstract contract BridgeAdapter_Integration_Concrete_Test is Base_Test {
 
         accessManager = _deployAccessManager(deployer, deployer);
         coreRegistry = ICoreRegistry(
-            address(
-                _deployHubCoreRegistry(
-                    address(accessManager), address(0), address(0), address(0), address(accessManager)
-                )
-            )
+            address(_deployHubCoreRegistry(address(accessManager), address(0), address(0), address(accessManager)))
         );
     }
 
