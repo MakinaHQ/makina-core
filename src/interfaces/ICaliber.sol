@@ -166,7 +166,7 @@ interface ICaliber {
 
     /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
     /// @return netAum The total value of all base token balances and positive positions, minus total debts.
-    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt).
+    /// @return positions The array of encoded tuples of the form (positionId, value, isDebt, isStale).
     /// @return baseTokens The array of encoded tuples of the form (token, value).
     function getDetailedAum()
         external

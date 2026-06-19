@@ -618,16 +618,20 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
             uint256 posId = $._positionIds.at(i);
             Position memory pos = $._positionById[posId];
 
-            if (currentTimestamp - pos.lastAccountingTime >= _positionStaleThreshold) {
+            bool isStale = currentTimestamp - pos.lastAccountingTime >= _positionStaleThreshold;
+
+            if (isStale && !posDetails) {
                 revert Errors.PositionAccountingStale(posId);
-            } else if (pos.isDebt) {
+            }
+
+            if (pos.isDebt) {
                 debt += pos.value;
             } else {
                 aum += pos.value;
             }
 
             if (posDetails) {
-                positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt);
+                positionsValues[i] = abi.encode(posId, pos.value, pos.isDebt, isStale);
             }
         }
 

@@ -2,34 +2,12 @@
 pragma solidity 0.8.28;
 
 import {ICaliber} from "src/interfaces/ICaliber.sol";
-import {Errors} from "src/libraries/Errors.sol";
 
 import {MockERC20} from "test/mocks/MockERC20.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
-    function test_RevertGiven_PositionStale() public withTokenAsBT(address(baseToken)) {
-        // create a vault position
-        uint256 inputAmount = 3e18;
-        deal(address(baseToken), address(caliber), inputAmount, true);
-        ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
-        ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
-        vm.prank(mechanic);
-        caliber.managePosition(mgmtInstruction, acctInstruction);
-
-        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
-
-        caliber.getDetailedAum();
-
-        skip(1);
-
-        vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, VAULT_POS_ID));
-        caliber.getDetailedAum();
-    }
-
     function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
         uint256 supplyInputAmount = 1e18;
         deal(address(baseToken), address(caliber), supplyInputAmount, true);
@@ -105,7 +83,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, inputAmount * PRICE_B_A);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], SUPPLY_POS_ID, inputAmount * PRICE_B_A, false);
+        _checkEncodedCaliberPosValue(positionsValues[0], SUPPLY_POS_ID, inputAmount * PRICE_B_A, false, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
     }
@@ -128,7 +106,7 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, inputAmount * PRICE_B_A, true);
+        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, inputAmount * PRICE_B_A, true, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), inputAmount * PRICE_B_A);
 
@@ -141,9 +119,42 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, 0);
         assertEq(positionsValues.length, 1);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 2 * inputAmount * PRICE_B_A, true);
+        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 2 * inputAmount * PRICE_B_A, true, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), inputAmount * PRICE_B_A);
+    }
+
+    function test_GetDetailedAum_StalePosition() public withTokenAsBT(address(baseToken)) {
+        uint256 inputAmount = 1e18;
+        deal(address(baseToken), address(caliber), inputAmount, true);
+
+        ICaliber.Instruction memory mgmtInstruction =
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
+        ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+
+        skip(DEFAULT_CALIBER_POS_STALE_THRESHOLD - 1);
+
+        (uint256 netAum, bytes[] memory positionsValues, bytes[] memory baseTokensValues) = caliber.getDetailedAum();
+        assertEq(netAum, inputAmount * PRICE_B_A);
+        assertEq(positionsValues.length, 1);
+        assertEq(baseTokensValues.length, 2);
+        _checkEncodedCaliberPosValue(positionsValues[0], SUPPLY_POS_ID, inputAmount * PRICE_B_A, false, false);
+        _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
+        _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
+
+        skip(1);
+
+        (netAum, positionsValues, baseTokensValues) = caliber.getDetailedAum();
+        assertEq(netAum, inputAmount * PRICE_B_A);
+        assertEq(positionsValues.length, 1);
+        assertEq(baseTokensValues.length, 2);
+        _checkEncodedCaliberPosValue(positionsValues[0], SUPPLY_POS_ID, inputAmount * PRICE_B_A, false, true);
+        _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), 0);
+        _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
     }
 
     function test_GetDetailedAum_MultiplePositions() public withTokenAsBT(address(baseToken)) {
@@ -188,8 +199,8 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, bInputAmount * PRICE_B_A, true);
-        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false);
+        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, bInputAmount * PRICE_B_A, true, false);
+        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), aInputAmount);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
 
@@ -203,8 +214,8 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 2 * bInputAmount * PRICE_B_A, true);
-        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false);
+        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 2 * bInputAmount * PRICE_B_A, true, false);
+        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), aInputAmount);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
 
@@ -218,8 +229,8 @@ contract GetDetailedAum_Integration_Concrete_Test is Caliber_Integration_Concret
         assertEq(netAum, expectedNetAUM);
         assertEq(positionsValues.length, 2);
         assertEq(baseTokensValues.length, 2);
-        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 1e2 * bInputAmount * PRICE_B_A, true);
-        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false);
+        _checkEncodedCaliberPosValue(positionsValues[0], BORROW_POS_ID, 1e2 * bInputAmount * PRICE_B_A, true, false);
+        _checkEncodedCaliberPosValue(positionsValues[1], SUPPLY_POS_ID, bInputAmount * PRICE_B_A, false, false);
         _checkEncodedCaliberBTValue(baseTokensValues[0], address(accountingToken), aInputAmount);
         _checkEncodedCaliberBTValue(baseTokensValues[1], address(baseToken), 0);
     }

@@ -9,6 +9,22 @@ import {MockERC20} from "test/mocks/MockERC20.sol";
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
 contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+    function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
+        uint256 supplyInputAmount = 1e18;
+        deal(address(baseToken), address(caliber), supplyInputAmount, true);
+        ICaliber.Instruction memory supplyMgmtInstruction =
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), supplyInputAmount);
+        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
+            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        );
+
+        baseToken.scheduleReenter(MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.getNetAum, ()));
+
+        vm.expectRevert();
+        vm.prank(mechanic);
+        caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
+    }
+
     function test_RevertGiven_PositionStale() public withTokenAsBT(address(baseToken)) {
         // create a vault position
         uint256 inputAmount = 3e18;
@@ -28,22 +44,6 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
 
         vm.expectRevert(abi.encodeWithSelector(Errors.PositionAccountingStale.selector, VAULT_POS_ID));
         caliber.getNetAum();
-    }
-
-    function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
-        uint256 supplyInputAmount = 1e18;
-        deal(address(baseToken), address(caliber), supplyInputAmount, true);
-        ICaliber.Instruction memory supplyMgmtInstruction =
-            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), supplyInputAmount);
-        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
-        );
-
-        baseToken.scheduleReenter(MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.getNetAum, ()));
-
-        vm.expectRevert();
-        vm.prank(mechanic);
-        caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);
     }
 
     function test_GetNetAum_WithZeroAum() public view {
