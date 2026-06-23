@@ -3,13 +3,19 @@ claimInBridgeTransfer.t.sol
 │  ├── when caller is not the Mechanic
 │  │  └── it should revert with UnauthorizedCaller
 │  └── when caller is the Mechanic
-│     ├── it should decrease the corresponding adapter's token balance by amount
-│     ├── it should increase the caliber's token balance by amount
-│     └── it should emit a InBridgeTransferClaimed event
+│     ├── given the spoke snapshot recording the outbound transfer was not reported
+│     │  └── it should revert with BridgeStateMismatch
+│     └── given the spoke snapshot recording the outbound transfer was reported
+│        ├── it should decrease the corresponding adapter's token balance by amount
+│        ├── it should increase the machine's token balance by amount
+│        └── it should emit an InBridgeTransferClaimed event
 └── given recovery mode is on
    ├── when caller is not the Security Council
    │  └── it should revert with UnauthorizedCaller
    └── when caller is the Security Council
-      ├── it should decrease the corresponding adapter's token balance by amount
-      ├── it should increase the caliber's token balance by amount
-      └── it should emit a InBridgeTransferClaimed event
+      ├── given the spoke snapshot recording the outbound transfer was not reported
+      │  └── it should revert with BridgeStateMismatch
+      └── given the spoke snapshot recording the outbound transfer was reported
+         ├── it should decrease the corresponding adapter's token balance by amount
+         ├── it should increase the machine's token balance by amount
+         └── it should emit an InBridgeTransferClaimed event

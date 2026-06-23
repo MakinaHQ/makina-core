@@ -21,7 +21,7 @@ onReport.t.sol
    │                 └── it should update the accounting data for all given spoke chains
    └── when caller is not the CRE forwarder
       ├── when caller is not the Security Council
-      │  └── it should revert with UnauthorizedSource
+      │  └── it should revert with UnauthorizedCaller
       └── when caller is the Security Council
          ├── when one of the provided snapshots references a chain that is not a registered spoke chain
          │  └── it should revert with InvalidChainId
