@@ -89,9 +89,10 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         machine.onReport("", report);
     }
 
-    function test_RevertWhen_FutureSnapshot() public {
+    function test_RevertWhen_FutureSnapshotExceedsTolerance() public {
         uint256 blockNum = 1e10;
-        uint256 blockTime = block.timestamp + 1 seconds;
+        // Exceeds the hub blockTime by more than max tolerance.
+        uint256 blockTime = block.timestamp + 61;
 
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
 
@@ -163,6 +164,18 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
 
     function test_OnReport_FromSecurityCouncil() public {
         _test_OnReport(securityCouncil);
+    }
+
+    function test_OnReport_WithinFutureTolerance() public {
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp + 60;
+
+        bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
+        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+
+        (uint256 netAum, uint256 timestamp) = machine.getSpokeCaliberNetAum(SPOKE_CHAIN_ID);
+        assertEq(timestamp, blockTime);
+        assertEq(netAum, SPOKE_CALIBER_NET_AUM);
     }
 
     function _test_OnReport(address reporter) internal {
