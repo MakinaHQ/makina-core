@@ -168,7 +168,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can trigger total AUM update at any time.
   - Can trigger recovery mode.
   - Can reset the bridging state for any token.
-  - Can report a spoke accounting snapshot and bypass metadat validation.
+  - Can report a spoke accounting snapshot and bypass metadata validation.
 
 - **Risk Manager**
   - Can set the share token supply limit that cannot be exceeded by new deposits.

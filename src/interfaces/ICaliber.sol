@@ -162,9 +162,11 @@ interface ICaliber {
     function isAccountingFresh() external view returns (bool);
 
     /// @notice Returns the caliber's net AUM denominated in the accounting token.
+    /// @dev Reverts if any position's accounting is stale.
     function getNetAum() external view returns (uint256);
 
     /// @notice Returns the caliber's net AUM along with detailed position and base token breakdowns.
+    /// @dev Does not revert on stale positions. Staleness is surfaced per position via the isStale flag instead.
     /// @return netAum The total value of all base token balances and positive positions, minus total debts.
     /// @return positions The array of encoded tuples of the form (positionId, value, isDebt, isStale).
     /// @return baseTokens The array of encoded tuples of the form (token, value).

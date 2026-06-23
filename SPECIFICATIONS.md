@@ -54,7 +54,7 @@ Disabling requires:
 - No pending outgoing bridge transfer towards it.
 - No pending incoming bridge transfer from it, as per the last received spoke data.
 
-These three conditions correspond to the three ways a spoke caliber contributes to total AUM, so disabling a caliber removes no value that is being counted at that time. The spoke-reported figures used here need not be perfectly up to date: a spoke caliber can only receive funds through an outgoing transfer from the machine, which the machine tracks in its own, always-current records. Since disabling requires no such transfer to be pending, a caliber whose last reported AUM was zero can reasonably be considered still empty.
+These three conditions correspond to the three ways a spoke caliber contributes to total AUM, so disabling a caliber removes no value that is being counted at that time. Figures reported by the spoke need not be recent, and disabling remains permitted even when the last report is older than the caliber accounting staleness threshold. A spoke caliber can only receive funds through an outgoing transfer from the machine, which the machine tracks in its own, always-current records. Since disabling requires no such transfer to be pending, a caliber whose last reported AUM was zero can reasonably be considered still empty.
 
 Disabling can be reversed at any time by re-enabling. Incoming bridge transfers from a disabled spoke caliber also remain accepted by design: should a disabled caliber ever hold funds, they could still be bridged back and received as idle tokens on the hub, rather than being stranded.
 
@@ -130,7 +130,7 @@ The `OracleRegistry` contract acts as an aggregator of [Chainlink price feeds](h
 
 ### Token Registry
 
-The `TokenRegistry` contract maintains the association between token addresses on the hub and spoke chains. It enables consistent identification and pricing of bridged assets across networks, ensuring accurate cross-chain accounting.
+The `TokenRegistry` maps each token to its equivalent token addresses on the hub and spoke chains. Bridge transfers rely on these mappings to identify their input and output tokens, which are assumed to represent the same asset and use the same number of decimals. Correct configuration on every chain is required for consistent identification, pricing, and accounting across chains.
 
 ### Liquidity Bridging
 
@@ -144,7 +144,19 @@ Bridging is a five-step process, executed by the operator, and functions symmetr
 4. Receive the incoming transfer from the bridge protocol on the recipient side.
 5. Claim the transfer on the recipient side to finalize fund delivery.
 
-The protocol assumes that the input and output tokens involved in a bridge transfer are homologous and share the same number of decimals. This assumption relies on the Token Registry, which maintains the mapping between local and equivalent foreign token addresses and must be correctly configured on all chains.
+For transfers from a spoke caliber to the hub machine, the spoke accounting snapshot that records the outbound transfer must be reported to the machine before the inbound transfer is claimed. The machine rejects the claim until the recorded cumulative outbound amount covers the transfer. This ordering ensures that the funds are removed from the spoke side of the machine's accounting view before they are added to the hub side.
+
+#### Emergency Bridge State Reset
+
+If an operator or external bridge protocol deviates from expected behavior, the Security Council can reset the bridging state for a given token on the Machine and each involved CaliberMailbox. Each reset clears the bridge counters for that token and withdraws all funds held by the endpoint's bridge adapters to their parent Machine or Caliber.
+
+The reset is a coordinated emergency procedure. Calling it while transfers are still in flight or omitting an involved chain can make later receipts inconsistent with the cleared counters. The Security Council may use the following procedure:
+
+1. Enable recovery mode on the Machine and on the Caliber and CaliberMailbox contracts for every involved spoke.
+2. Wait until every pending bridge transfer involving the token has reached its destination bridge adapter.
+3. Reset the bridging state for the token on every involved CaliberMailbox using its local token address.
+4. Report a fresh accounting snapshot for every reset CaliberMailbox.
+5. Reset the bridging state on the Machine using the token address on the hub chain.
 
 ### Access Control
 
