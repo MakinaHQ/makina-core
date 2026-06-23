@@ -52,6 +52,9 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         spokeBridgeAdapterAddr = makeAddr("spokeBridgeAdapter");
 
         vm.startPrank(address(dao));
+
+        machine.addCreWorkflowId(DEFAULT_CRE_WORKFLOW_ID);
+
         hubCoreRegistry.setBridgeAdapterBeacon(
             ACROSS_V3_BRIDGE_ID,
             address(
@@ -63,6 +66,7 @@ abstract contract Machine_Integration_Concrete_Test is Integration_Concrete_Hub_
         AcrossV3BridgeConfig config = _deployAcrossV3BridgeConfig(address(accessManager), address(accessManager));
         hubCoreRegistry.setBridgeConfig(ACROSS_V3_BRIDGE_ID, address(config));
         config.setForeignChainSupported(SPOKE_CHAIN_ID, true);
+
         vm.stopPrank();
     }
 

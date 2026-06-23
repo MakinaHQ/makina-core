@@ -18,14 +18,10 @@ abstract contract SpokeSnapshotConsumer is AccessManagedUpgradeable, ERC165, ISp
     address public immutable override creForwarder;
 
     uint256 private constant CRE_METADATA_LENGTH = 64;
-    uint256 private constant CRE_METADATA_WORKFLOW_NAME_INDEX = 32;
-    uint256 private constant CRE_METADATA_WORKFLOW_AUTHOR_INDEX = 42;
 
     /// @custom:storage-location erc7201:makina.storage.SpokeSnapshotConsumer
     struct SpokeSnapshotConsumerStorage {
         EnumerableSet.Bytes32Set _creWorkflowIds;
-        EnumerableSet.Bytes32Set _creWorkflowNames;
-        address _creWorkflowAuthor;
     }
 
     // keccak256(abi.encode(uint256(keccak256("makina.storage.SpokeSnapshotConsumer")) - 1)) & ~bytes32(uint256(0xff))
@@ -46,28 +42,15 @@ abstract contract SpokeSnapshotConsumer is AccessManagedUpgradeable, ERC165, ISp
         internal
         onlyInitializing
     {
-        for (uint256 i; i < sscParams.initialCreWorkflowIds.length; ++i) {
+        uint256 len = sscParams.initialCreWorkflowIds.length;
+        for (uint256 i; i < len; ++i) {
             _addCreWorkflowId(sscParams.initialCreWorkflowIds[i]);
         }
-        for (uint256 i; i < sscParams.initialCreWorkflowNames.length; ++i) {
-            _addCreWorkflowName(sscParams.initialCreWorkflowNames[i]);
-        }
-        _setCreWorkflowAuthor(sscParams.initialCreWorkflowAuthor);
     }
 
     /// @inheritdoc ISpokeSnapshotConsumer
     function isCreWorkflowIdAuthorized(bytes32 creWorkflowId) external view override returns (bool) {
         return _getSpokeSnapshotConsumerStorage()._creWorkflowIds.contains(creWorkflowId);
-    }
-
-    /// @inheritdoc ISpokeSnapshotConsumer
-    function isCreWorkflowNameAuthorized(bytes10 creWorkflowName) external view override returns (bool) {
-        return _getSpokeSnapshotConsumerStorage()._creWorkflowNames.contains(bytes32(creWorkflowName));
-    }
-
-    /// @inheritdoc ISpokeSnapshotConsumer
-    function creWorkflowAuthor() external view override returns (address) {
-        return _getSpokeSnapshotConsumerStorage()._creWorkflowAuthor;
     }
 
     /// @inheritdoc IERC165
@@ -85,25 +68,9 @@ abstract contract SpokeSnapshotConsumer is AccessManagedUpgradeable, ERC165, ISp
         _removeCreWorkflowId(creWorkflowId);
     }
 
-    /// @inheritdoc ISpokeSnapshotConsumer
-    function addCreWorkflowName(bytes10 newCreWorkflowName) external override restricted {
-        _addCreWorkflowName(newCreWorkflowName);
-    }
-
-    /// @inheritdoc ISpokeSnapshotConsumer
-    function removeCreWorkflowName(bytes10 creWorkflowName) external override restricted {
-        _removeCreWorkflowName(creWorkflowName);
-    }
-
-    /// @inheritdoc ISpokeSnapshotConsumer
-    function setCreWorkflowAuthor(address newCreWorkflowAuthor) external override restricted {
-        _setCreWorkflowAuthor(newCreWorkflowAuthor);
-    }
-
     /// @dev Internal logic for adding a CRE workflow ID.
     function _addCreWorkflowId(bytes32 newCreWorkflowId) internal {
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-        if (!$._creWorkflowIds.add(newCreWorkflowId)) {
+        if (!_getSpokeSnapshotConsumerStorage()._creWorkflowIds.add(newCreWorkflowId)) {
             revert Errors.CreWorkflowIdAlreadyAuthorized();
         }
         emit CreWorkflowIdAdded(newCreWorkflowId);
@@ -111,42 +78,10 @@ abstract contract SpokeSnapshotConsumer is AccessManagedUpgradeable, ERC165, ISp
 
     /// @dev Internal logic for removing a CRE workflow ID.
     function _removeCreWorkflowId(bytes32 creWorkflowId) internal {
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-        if (!$._creWorkflowIds.remove(creWorkflowId)) {
+        if (!_getSpokeSnapshotConsumerStorage()._creWorkflowIds.remove(creWorkflowId)) {
             revert Errors.CreWorkflowIdNotAuthorized();
         }
-        if ($._creWorkflowIds.length() == 0 && $._creWorkflowAuthor == address(0)) {
-            revert Errors.CreWorkflowAuthorRequired();
-        }
         emit CreWorkflowIdRemoved(creWorkflowId);
-    }
-
-    /// @dev Internal logic for adding a CRE workflow name.
-    function _addCreWorkflowName(bytes10 newCreWorkflowName) internal {
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-        if (!$._creWorkflowNames.add(bytes32(newCreWorkflowName))) {
-            revert Errors.CreWorkflowNameAlreadyAuthorized();
-        }
-        emit CreWorkflowNameAdded(newCreWorkflowName);
-    }
-
-    /// @dev Internal logic for removing a CRE workflow name.
-    function _removeCreWorkflowName(bytes10 creWorkflowName) internal {
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-        if (!$._creWorkflowNames.remove(bytes32(creWorkflowName))) {
-            revert Errors.CreWorkflowNameNotAuthorized();
-        }
-        emit CreWorkflowNameRemoved(creWorkflowName);
-    }
-
-    /// @dev Internal logic for setting the CRE workflow author.
-    function _setCreWorkflowAuthor(address newCreWorkflowAuthor) internal {
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-        if (newCreWorkflowAuthor == address(0) && $._creWorkflowIds.length() == 0) {
-            revert Errors.CreWorkflowAuthorRequired();
-        }
-        emit CreWorkflowAuthorChanged($._creWorkflowAuthor, newCreWorkflowAuthor);
-        $._creWorkflowAuthor = newCreWorkflowAuthor;
     }
 
     /// @dev Extracts fields from a CRE report metadata and validates them against stored values if any are set.
@@ -156,33 +91,14 @@ abstract contract SpokeSnapshotConsumer is AccessManagedUpgradeable, ERC165, ISp
         }
 
         bytes32 workflowId;
-        bytes10 workflowName;
-        address workflowAuthor;
 
         // metadata (64 bytes): [0:32) id | [32:42) name | [42:62) author | [62:64) unused
         assembly {
-            let offset := metadata.offset
-            workflowId := calldataload(offset)
-            workflowName := calldataload(add(offset, CRE_METADATA_WORKFLOW_NAME_INDEX))
-            // reads [42:74); shr drops the low 12 bytes incl. the [64:74) out-of-bounds tail, leaving address [42:62)
-            workflowAuthor := shr(96, calldataload(add(offset, CRE_METADATA_WORKFLOW_AUTHOR_INDEX)))
+            workflowId := calldataload(metadata.offset)
         }
 
-        SpokeSnapshotConsumerStorage storage $ = _getSpokeSnapshotConsumerStorage();
-
-        EnumerableSet.Bytes32Set storage ids = $._creWorkflowIds;
-        if (ids.length() != 0 && !ids.contains(workflowId)) {
+        if (!_getSpokeSnapshotConsumerStorage()._creWorkflowIds.contains(workflowId)) {
             revert Errors.InvalidCreWorkflowId();
-        }
-
-        EnumerableSet.Bytes32Set storage names = $._creWorkflowNames;
-        if (names.length() != 0 && !names.contains(bytes32(workflowName))) {
-            revert Errors.InvalidCreWorkflowName();
-        }
-
-        address author = $._creWorkflowAuthor;
-        if (author != address(0) && workflowAuthor != author) {
-            revert Errors.InvalidCreWorkflowAuthor();
         }
     }
 }

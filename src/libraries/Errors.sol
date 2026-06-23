@@ -22,11 +22,8 @@ library Errors {
     error CctpMessageReceptionFailed();
     error Create3ContractDeploymentFailed();
     error Create3ProxyDeploymentFailed();
-    error CreWorkflowAuthorRequired();
     error CreWorkflowIdAlreadyAuthorized();
     error CreWorkflowIdNotAuthorized();
-    error CreWorkflowNameAlreadyAuthorized();
-    error CreWorkflowNameNotAuthorized();
     error DirectManageFlashLoanCall();
     error ExceededMaxDeposit();
     error ExceededMaxFee(uint256 fee, uint256 max);
@@ -47,9 +44,7 @@ library Errors {
     error InvalidCctpMessage();
     error InvalidChainId();
     error InvalidCreMetadataLength();
-    error InvalidCreWorkflowAuthor();
     error InvalidCreWorkflowId();
-    error InvalidCreWorkflowName();
     error InvalidDebtFlag();
     error InvalidDecimals();
     error InvalidFeedRoute();

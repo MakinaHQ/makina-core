@@ -48,6 +48,9 @@ contract Machine_Fork_Test is Fork_Test {
         feeManager =
             new MockFeeManager(ethForkData.dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
 
+        bytes32[] memory creWorkflowIds = new bytes32[](1);
+        creWorkflowIds[0] = DEFAULT_CRE_WORKFLOW_ID;
+
         // deploy machine
         vm.prank(ethForkData.dao);
         machine = Machine(
@@ -83,11 +86,7 @@ contract Machine_Fork_Test is Fork_Test {
                         initialRestrictedAccountingMode: false,
                         initialAccountingAgents: new address[](0)
                     }),
-                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-                        initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
-                        initialCreWorkflowIds: new bytes32[](0),
-                        initialCreWorkflowNames: new bytes10[](0)
-                    }),
+                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: creWorkflowIds}),
                     new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                     ethForkData.usdc,
                     DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -184,7 +183,7 @@ contract Machine_Fork_Test is Fork_Test {
         // write spoke caliber accounting data in machine
         vm.prank(machine.creForwarder());
         machine.onReport(
-            abi.encodePacked(bytes32(0), bytes10(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes2(0)), abi.encode(snapshots)
+            abi.encodePacked(DEFAULT_CRE_WORKFLOW_ID, bytes10(0), address(0), bytes2(0)), abi.encode(snapshots)
         );
 
         // check machine aum

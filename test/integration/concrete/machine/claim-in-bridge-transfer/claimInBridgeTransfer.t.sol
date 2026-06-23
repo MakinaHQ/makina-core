@@ -63,7 +63,7 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, cBridgeOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);

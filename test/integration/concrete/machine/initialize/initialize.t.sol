@@ -310,10 +310,6 @@ contract Initialize_Integration_Concrete_Test is Machine_Integration_Concrete_Te
         pure
         returns (ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory)
     {
-        return ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-            initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
-            initialCreWorkflowIds: new bytes32[](0),
-            initialCreWorkflowNames: new bytes10[](0)
-        });
+        return ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: new bytes32[](0)});
     }
 }

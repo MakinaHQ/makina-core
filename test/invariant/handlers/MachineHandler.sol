@@ -346,7 +346,7 @@ contract MachineHandler is CommonBase, StdCheats, StdUtils, Constants, Integrati
         vm.chainId(machineStore.hubChainId());
 
         MockCreForwarder(machine.creForwarder())
-            .forwardReport(address(machine), abi.encode(snapshots), bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+            .forwardReport(address(machine), abi.encode(snapshots), DEFAULT_CRE_WORKFLOW_ID);
 
         for (uint256 i; i < machineStore.tokensLength(); ++i) {
             address token = machineStore.tokens(i);

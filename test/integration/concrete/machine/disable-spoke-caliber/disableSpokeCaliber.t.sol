@@ -69,7 +69,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 1, new bytes[](0), new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.CaliberNotEmpty.selector);
         vm.prank(dao);
@@ -105,7 +105,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, true, 0, cBridgeIn, cBridgeOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // 1 complete Hub -> Spoke transfer + 1 pending Spoke -> Hub transfer
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
@@ -127,7 +127,7 @@ contract DisableSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Co
         report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum + 1, blockTime + 1, true, 0, cBridgeIn, cBridgeOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.PendingBridgeTransfer.selector);
         vm.prank(dao);

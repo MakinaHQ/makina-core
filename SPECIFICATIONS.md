@@ -34,9 +34,9 @@ Management and Security Module fees will be calculated based on share supply, in
 
 In order to compute a machine's total AUM, accounting data of each caliber needs to be aggregated. Each caliber mailbox (see [Caliber](#mailbox) section) exposes a view function returning the detailed AUM of the associated caliber. This data can be retrieved and then aggregated in the machine contract storage.
 
-For spoke calibers, the protocol relies on the [Chainlink Runtime Environment (CRE)](https://docs.chain.link/cre) to relay this accounting data to the Hub Machine. CRE is Chainlink's off-chain compute platform, where a workflow reads spoke calibers accounting data, and resulting reports are delivered on-chain by a Chainlink forwarder. The Machine receives them through its `onReport` callback, which authenticates the forwarder and validates the reports workflow metadata (id, name, and author) against the set of authorized values before the snapshots are aggregated into storage.
+For spoke calibers, the protocol relies on the [Chainlink Runtime Environment (CRE)](https://docs.chain.link/cre) to relay this accounting data to the Hub Machine. CRE is Chainlink's off-chain compute platform, where a workflow reads spoke calibers accounting snapshots, and resulting reports are delivered on-chain by a Chainlink forwarder. The Machine receives them through its `onReport` callback, which authenticates the forwarder and validates the reports workflow metadata against the set of authorized IDs before the snapshots are aggregated into storage.
 
-The Security Council is fully trusted to bypass CRE: it can call `onReport` directly to publish spoke caliber accounting data itself, without going through the CRE forwarder or the associated metadata validation. This serves as a fallback should the CRE relaying path become unavailable.
+The Security Council is fully trusted to bypass CRE: it can call `onReport` directly to publish spoke caliber accounting snapshots itself, without going through the CRE forwarder or the associated metadata validation. This serves as a fallback should the CRE relaying path become unavailable.
 
 #### Cross-chain Transfers
 
