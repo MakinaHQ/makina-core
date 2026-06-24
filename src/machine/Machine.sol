@@ -516,8 +516,11 @@ contract Machine is MakinaGovernable, BridgeController, SpokeSnapshotConsumer, R
     ) external override nonReentrant restricted {
         MachineStorage storage $ = _getMachineStorage();
 
+        if (chainId == 0) {
+            revert Errors.ZeroChainId();
+        }
         if (chainId == $._hubChainId) {
-            revert Errors.InvalidChainId();
+            revert Errors.ProtectedChainId();
         }
 
         SpokeCaliberData storage caliberData = $._spokeCalibersData[chainId];
