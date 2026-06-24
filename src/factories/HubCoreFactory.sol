@@ -241,7 +241,7 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         IAccessManager(_authority)
             .setTargetFunctionRole(_machine, compSetupSelectors, Roles.STRATEGY_COMPONENTS_LINKING_ROLE);
 
-        bytes4[] memory mgmtSetupSelectors = new bytes4[](12);
+        bytes4[] memory mgmtSetupSelectors = new bytes4[](9);
         mgmtSetupSelectors[0] = IMakinaGovernable.setMechanic.selector;
         mgmtSetupSelectors[1] = IMakinaGovernable.setSecurityCouncil.selector;
         mgmtSetupSelectors[2] = IMakinaGovernable.setRiskManager.selector;
@@ -251,9 +251,6 @@ contract HubCoreFactory is AccessManagedUpgradeable, CaliberFactory, BridgeAdapt
         mgmtSetupSelectors[6] = IMakinaGovernable.removeAccountingAgent.selector;
         mgmtSetupSelectors[7] = ISpokeSnapshotConsumer.addCreWorkflowId.selector;
         mgmtSetupSelectors[8] = ISpokeSnapshotConsumer.removeCreWorkflowId.selector;
-        mgmtSetupSelectors[9] = ISpokeSnapshotConsumer.addCreWorkflowName.selector;
-        mgmtSetupSelectors[10] = ISpokeSnapshotConsumer.removeCreWorkflowName.selector;
-        mgmtSetupSelectors[11] = ISpokeSnapshotConsumer.setCreWorkflowAuthor.selector;
         IAccessManager(_authority)
             .setTargetFunctionRole(_machine, mgmtSetupSelectors, Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE);
     }

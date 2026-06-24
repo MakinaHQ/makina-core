@@ -155,11 +155,7 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
-                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-                    initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
-                    initialCreWorkflowIds: new bytes32[](0),
-                    initialCreWorkflowNames: new bytes10[](0)
-                }),
+                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: new bytes32[](0)}),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 address(preDepositVault),
                 salt,
@@ -189,11 +185,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         initialAccountingAgents[0] = accountingAgent;
 
         ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
-        sscParams.initialCreWorkflowAuthor = DEFAULT_CRE_WORKFLOW_AUTHOR;
         sscParams.initialCreWorkflowIds = new bytes32[](1);
         sscParams.initialCreWorkflowIds[0] = bytes32("id");
-        sscParams.initialCreWorkflowNames = new bytes10[](1);
-        sscParams.initialCreWorkflowNames[0] = bytes10("name");
 
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
@@ -281,8 +274,6 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(machine.getSpokeCalibersLength(), 0);
 
         assertTrue(machine.isCreWorkflowIdAuthorized(sscParams.initialCreWorkflowIds[0]));
-        assertTrue(machine.isCreWorkflowNameAuthorized(sscParams.initialCreWorkflowNames[0]));
-        assertEq(machine.creWorkflowAuthor(), DEFAULT_CRE_WORKFLOW_AUTHOR);
 
         assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
         assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));
@@ -413,11 +404,8 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         initialAccountingAgents[0] = accountingAgent;
 
         ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams memory sscParams;
-        sscParams.initialCreWorkflowAuthor = DEFAULT_CRE_WORKFLOW_AUTHOR;
         sscParams.initialCreWorkflowIds = new bytes32[](1);
         sscParams.initialCreWorkflowIds[0] = bytes32("id");
-        sscParams.initialCreWorkflowNames = new bytes10[](1);
-        sscParams.initialCreWorkflowNames[0] = bytes10("name");
 
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             new IBridgeAdapterFactory.BridgeAdapterInitParams[](1);
@@ -513,8 +501,6 @@ contract CreateMachineFromPreDeposit_Integration_Concrete_Test is HubCoreFactory
         assertEq(machine.getSpokeCalibersLength(), 0);
 
         assertTrue(machine.isCreWorkflowIdAuthorized(sscParams.initialCreWorkflowIds[0]));
-        assertTrue(machine.isCreWorkflowNameAuthorized(sscParams.initialCreWorkflowNames[0]));
-        assertEq(machine.creWorkflowAuthor(), DEFAULT_CRE_WORKFLOW_AUTHOR);
 
         assertTrue(machine.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
         assertTrue(machine.isOutTransferEnabled(ACROSS_V3_BRIDGE_ID));

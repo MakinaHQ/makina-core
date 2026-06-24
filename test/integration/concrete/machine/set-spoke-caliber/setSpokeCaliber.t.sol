@@ -31,10 +31,15 @@ contract SetSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Concre
         machine.setSpokeCaliber(0, address(0), bridges, spokeBridgeAdapters);
     }
 
-    function test_RevertWhen_InvalidChainId() public {
-        vm.startPrank(dao);
+    function test_RevertWhen_ZeroChainId() public {
+        vm.expectRevert(Errors.ZeroChainId.selector);
+        vm.prank(dao);
+        machine.setSpokeCaliber(0, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
+    }
 
-        vm.expectRevert(Errors.InvalidChainId.selector);
+    function test_RevertWhen_ProtectedChainId() public {
+        vm.expectRevert(Errors.ProtectedChainId.selector);
+        vm.prank(dao);
         machine.setSpokeCaliber(block.chainid, address(spokeCaliberMailboxAddr), bridges, spokeBridgeAdapters);
     }
 

@@ -246,7 +246,7 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // try to refund the transfer to machine
         vm.startPrank(address(bridgeAdapter));
@@ -329,6 +329,6 @@ contract ManageTransfer_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), cBridgeOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
     }
 }

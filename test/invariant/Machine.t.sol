@@ -112,6 +112,7 @@ contract Machine_Invariant_Test is Base_CrossChain_Test {
         spokeCaliber.addBaseToken(address(baseToken));
 
         vm.startPrank(dao);
+        machine.addCreWorkflowId(DEFAULT_CRE_WORKFLOW_ID);
         machine.setSpokeCaliber(spokeChainId, address(spokeCaliberMailbox), new uint16[](0), new address[](0));
         address hubBridgeAdapterAddr = hubCoreFactory.createBridgeAdapter(
             address(machine),

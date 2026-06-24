@@ -25,6 +25,9 @@ library MachineUtils {
 
     uint256 private constant RATE_SCALE = 1e18;
 
+    /// @dev Max seconds a snapshot timestamp may be ahead of the current hub block timestamp and still be accepted, to absorb cross-chain clock skew.
+    uint256 private constant MAX_SNAPSHOT_FUTURE_TOLERANCE = 60;
+
     /// @dev Updates the total AUM of the machine and performs share price change check.
     /// @param $ The machine storage struct.
     /// @param oracleRegistry The address of the oracle registry.
@@ -204,14 +207,15 @@ library MachineUtils {
             revert Errors.InvalidSpokeCaliberMailbox();
         }
 
-        // Validate that update is not older than current chain last update, nor stale.
+        // Validate that snapshot is not too far ahead of the hub block timestamp, not older than current chain last update, nor stale.
         uint256 snapshotTimestamp = snapshot.context.blockTime;
-        if (block.timestamp < snapshotTimestamp) {
+        if (snapshotTimestamp > block.timestamp + MAX_SNAPSHOT_FUTURE_TOLERANCE) {
             revert Errors.FutureSnapshot();
         }
         if (
             snapshotTimestamp <= caliberData.timestamp
-                || block.timestamp - snapshotTimestamp >= $._caliberStaleThreshold
+                || (block.timestamp > snapshotTimestamp
+                    && block.timestamp - snapshotTimestamp >= $._caliberStaleThreshold)
         ) {
             revert Errors.StaleSnapshot();
         }

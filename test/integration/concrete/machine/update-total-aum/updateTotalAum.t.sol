@@ -143,7 +143,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         skip(DEFAULT_MACHINE_CALIBER_STALE_THRESHOLD - 1);
 
@@ -186,7 +186,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), cBridgeOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // aum update now reverts
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
@@ -223,7 +223,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // aum update now reverts
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
@@ -500,7 +500,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(SPOKE_CALIBER_NET_AUM);
@@ -516,7 +516,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, true);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectEmit(false, false, false, true, address(machine));
         emit IMachine.TotalAumUpdated(0);
@@ -538,7 +538,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount + SPOKE_CALIBER_NET_AUM);
@@ -565,7 +565,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, aumOffsetTransfers, bridgesIn, new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), outputAmount + SPOKE_CALIBER_NET_AUM);
@@ -586,7 +586,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), inputAmount + SPOKE_CALIBER_NET_AUM);
@@ -619,7 +619,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(machine.lastTotalAum(), outputAmount + SPOKE_CALIBER_NET_AUM);
@@ -644,7 +644,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(
@@ -671,7 +671,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(
@@ -716,7 +716,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, machineToCaliberOutputAmount, bridgesIn, bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(
@@ -760,7 +760,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, machineToCaliberOutputAmount, bridgesIn, bridgesOut
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
         assertEq(
@@ -1221,7 +1221,7 @@ contract UpdateTotalAum_Integration_Concrete_Test is Machine_Integration_Concret
             bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
                 SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), cBridgeOut
             );
-            creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+            creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
         }
         // send funds with message from bridge
         if (bridgeId == ACROSS_V3_BRIDGE_ID) {

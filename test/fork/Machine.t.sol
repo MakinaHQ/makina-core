@@ -16,6 +16,18 @@ import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 
 import {Fork_Test} from "./Fork.t.sol";
 
+interface ICreForwarder {
+    function owner() external view returns (address);
+    function addForwarder(address forwarder) external;
+    function route(
+        bytes32 transmissionId,
+        address transmitter,
+        address receiver,
+        bytes calldata metadata,
+        bytes calldata validatedReport
+    ) external returns (bool);
+}
+
 contract Machine_Fork_Test is Fork_Test {
     Machine public machine;
     Caliber public hubCaliber;
@@ -47,6 +59,9 @@ contract Machine_Fork_Test is Fork_Test {
 
         feeManager =
             new MockFeeManager(ethForkData.dao, DEFAULT_FEE_MANAGER_FIXED_FEE_RATE, DEFAULT_FEE_MANAGER_PERF_FEE_RATE);
+
+        bytes32[] memory creWorkflowIds = new bytes32[](1);
+        creWorkflowIds[0] = DEFAULT_CRE_WORKFLOW_ID;
 
         // deploy machine
         vm.prank(ethForkData.dao);
@@ -83,11 +98,7 @@ contract Machine_Fork_Test is Fork_Test {
                         initialRestrictedAccountingMode: false,
                         initialAccountingAgents: new address[](0)
                     }),
-                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-                        initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
-                        initialCreWorkflowIds: new bytes32[](0),
-                        initialCreWorkflowNames: new bytes10[](0)
-                    }),
+                    ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: creWorkflowIds}),
                     new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                     ethForkData.usdc,
                     DEFAULT_MACHINE_SHARE_TOKEN_NAME,
@@ -181,11 +192,17 @@ contract Machine_Fork_Test is Fork_Test {
         vm.prank(ethForkData.dao);
         machine.setSpokeCaliber(ChainsInfo.CHAIN_ID_BASE, spokeCaliberMailbox, new uint16[](0), new address[](0));
 
-        // write spoke caliber accounting data in machine
-        vm.prank(machine.creForwarder());
-        machine.onReport(
-            abi.encodePacked(bytes32(0), bytes10(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes2(0)), abi.encode(snapshots)
-        );
+        // relay spoke caliber accounting data to the machine through the CRE forwarder
+        ICreForwarder forwarder = ICreForwarder(machine.creForwarder());
+        address creTransmitter = makeAddr("CreTransmitter");
+        vm.prank(forwarder.owner());
+        forwarder.addForwarder(creTransmitter);
+
+        bytes memory metadata = abi.encodePacked(DEFAULT_CRE_WORKFLOW_ID, bytes10(0), address(0), bytes2(0));
+        vm.prank(creTransmitter);
+        bool delivered =
+            forwarder.route(bytes32(uint256(1)), creTransmitter, address(machine), metadata, abi.encode(snapshots));
+        assertTrue(delivered);
 
         // check machine aum
         skip(1);

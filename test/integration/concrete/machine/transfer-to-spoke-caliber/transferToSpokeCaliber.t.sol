@@ -119,7 +119,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.BridgeStateMismatch.selector);
         vm.prank(mechanic);
@@ -343,7 +343,7 @@ contract TransferToSpokeCaliber_Integration_Concrete_Test is Machine_Integration
         bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
             SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, new bytes[](0)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         uint256 transferAmount2 = 2e18;
 

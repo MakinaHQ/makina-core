@@ -12,16 +12,16 @@ onReport.t.sol
    │        ├── when one of the provided snapshots references a mailbox address that is not the one registered for the given spoke chain
    │        │  └── it should revert with InvalidChainId
    │        └── when all provided snapshots reference the registered mailbox address for the given spoke chain
-   │           ├── when one of the provided snapshots references a block timestamp that is greater than the current chain timestamp
+   │           ├── when one of the provided snapshots references a block timestamp that exceeds the current chain timestamp by more than the max future tolerance
    │           │  └── it should revert with FutureSnapshot
-   │           └── when all provided snapshots reference a block timestamp that is smaller than the current chain timestamp
+   │           └── when all provided snapshots reference a block timestamp that does not exceed the current chain timestamp by more than the max future tolerance
    │              ├── when one of the provided snapshots references a block timestamp that is either older than current stored snapshot or which age exceeds the max caliber staleness threshold
    │              │  └── it should revert with StaleSnapshot
    │              └── when all provided snapshots reference a block timestamp that is newer than current stored snapshot and which age is lower than the max caliber staleness threshold
    │                 └── it should update the accounting data for all given spoke chains
    └── when caller is not the CRE forwarder
       ├── when caller is not the Security Council
-      │  └── it should revert with UnauthorizedSource
+      │  └── it should revert with UnauthorizedCaller
       └── when caller is the Security Council
          ├── when one of the provided snapshots references a chain that is not a registered spoke chain
          │  └── it should revert with InvalidChainId
@@ -29,9 +29,9 @@ onReport.t.sol
             ├── when one of the provided snapshots references a mailbox address that is not the one registered for the given spoke chain
             │  └── it should revert with InvalidChainId
             └── when all provided snapshots reference the registered mailbox address for the given spoke chain
-               ├── when one of the provided snapshots references a block timestamp that is greater than the current chain timestamp
+               ├── when one of the provided snapshots references a block timestamp that exceeds the current chain timestamp by more than the max future tolerance
                │  └── it should revert with FutureSnapshot
-               └── when all provided snapshots reference a block timestamp that is smaller than the current chain timestamp
+               └── when all provided snapshots reference a block timestamp that does not exceed the current chain timestamp by more than the max future tolerance
                   ├── when one of the provided snapshots references a block timestamp that is either older than current stored snapshot or which age exceeds the max caliber staleness threshold
                   │  └── it should revert with StaleSnapshot
                   └── when all provided snapshots reference a block timestamp that is newer than current stored snapshot and which age is lower than the max caliber staleness threshold

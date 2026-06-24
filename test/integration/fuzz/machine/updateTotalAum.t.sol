@@ -74,8 +74,10 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
 
         spokeCaliberMailboxAddr = makeAddr("spokeCaliberMailbox");
 
-        vm.prank(dao);
+        vm.startPrank(dao);
+        machine.addCreWorkflowId(DEFAULT_CRE_WORKFLOW_ID);
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, spokeCaliberMailboxAddr, new uint16[](0), new address[](0));
+        vm.stopPrank();
 
         skip(caliber.timelockDuration() + 1);
     }
@@ -112,9 +114,7 @@ contract UpdateTotalAum_Integration_Fuzz_Test is Base_Hub_Test {
             chainId: SPOKE_CHAIN_ID, mailbox: spokeCaliberMailboxAddr, blockNum: blockNum, blockTime: blockTime
         });
 
-        creForwarder.forwardReport(
-            address(machine), abi.encode(snapshots), bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0)
-        );
+        creForwarder.forwardReport(address(machine), abi.encode(snapshots), DEFAULT_CRE_WORKFLOW_ID);
 
         machine.updateTotalAum();
 

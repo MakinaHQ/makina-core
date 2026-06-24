@@ -33,26 +33,16 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         vm.prank(address(creForwarder));
         machine.onReport("", "");
 
-        // invalid workflow author
-        address workflowAuthor = makeAddr("author");
-        vm.prank(dao);
-        machine.setCreWorkflowAuthor(workflowAuthor);
-        vm.expectRevert(Errors.InvalidCreWorkflowAuthor.selector);
-        creForwarder.forwardReport(address(machine), "", bytes32(0), address(0), bytes10(0));
-
-        // invalid workflow name
-        bytes10 workflowName = bytes10("name");
-        vm.prank(dao);
-        machine.addCreWorkflowName(workflowName);
-        vm.expectRevert(Errors.InvalidCreWorkflowName.selector);
-        creForwarder.forwardReport(address(machine), "", bytes32(0), workflowAuthor, bytes10(0));
-
         // invalid workflow id
-        bytes32 workflowId = bytes32("id");
-        vm.prank(dao);
-        machine.addCreWorkflowId(workflowId);
+        vm.startPrank(dao);
+
         vm.expectRevert(Errors.InvalidCreWorkflowId.selector);
-        creForwarder.forwardReport(address(machine), "", bytes32(0), address(0), bytes10(0));
+        creForwarder.forwardReport(address(machine), "", bytes32(0));
+
+        machine.addCreWorkflowId(bytes32("id"));
+
+        vm.expectRevert(Errors.InvalidCreWorkflowId.selector);
+        creForwarder.forwardReport(address(machine), "", bytes32(0));
     }
 
     function test_RevertWhen_UnauthorizedCaller() public {
@@ -67,7 +57,7 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID + 1, blockNum, blockTime, false);
 
         vm.expectRevert(Errors.InvalidChainId.selector);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.InvalidChainId.selector);
         vm.prank(securityCouncil);
@@ -82,21 +72,22 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
 
         vm.expectRevert(Errors.InvalidSpokeCaliberMailbox.selector);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.InvalidSpokeCaliberMailbox.selector);
         vm.prank(securityCouncil);
         machine.onReport("", report);
     }
 
-    function test_RevertWhen_FutureSnapshot() public {
+    function test_RevertWhen_FutureSnapshotExceedsTolerance() public {
         uint256 blockNum = 1e10;
-        uint256 blockTime = block.timestamp + 1 seconds;
+        // Exceeds the hub blockTime by more than max tolerance.
+        uint256 blockTime = block.timestamp + 61;
 
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
 
         vm.expectRevert(Errors.FutureSnapshot.selector);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.FutureSnapshot.selector);
         vm.prank(securityCouncil);
@@ -117,17 +108,17 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         );
 
         vm.expectRevert(Errors.StaleSnapshot.selector);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // update data
         report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         // data is older than previous data
         report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime - 1, false);
 
         vm.expectRevert(Errors.StaleSnapshot.selector);
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(Errors.StaleSnapshot.selector);
         vm.prank(securityCouncil);
@@ -148,7 +139,7 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         vm.expectRevert(
             abi.encodeWithSelector(Errors.LocalTokenNotRegistered.selector, spokeAccountingTokenAddr, SPOKE_CHAIN_ID)
         );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
 
         vm.expectRevert(
             abi.encodeWithSelector(Errors.LocalTokenNotRegistered.selector, spokeAccountingTokenAddr, SPOKE_CHAIN_ID)
@@ -165,6 +156,18 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
         _test_OnReport(securityCouncil);
     }
 
+    function test_OnReport_WithinFutureTolerance() public {
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp + 60;
+
+        bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
+
+        (uint256 netAum, uint256 timestamp) = machine.getSpokeCaliberNetAum(SPOKE_CHAIN_ID);
+        assertEq(timestamp, blockTime);
+        assertEq(netAum, SPOKE_CALIBER_NET_AUM);
+    }
+
     function _test_OnReport(address reporter) internal {
         uint256 blockNum = 1e10;
         uint256 blockTime = block.timestamp;
@@ -176,7 +179,7 @@ contract OnReport_Integration_Concrete_Test is Machine_Integration_Concrete_Test
 
         bytes memory report = _buildSpokeCaliberAccountingReport(SPOKE_CHAIN_ID, blockNum, blockTime, false);
         if (reporter == address(creForwarder)) {
-            creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
+            creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
         } else {
             vm.prank(reporter);
             machine.onReport("", report);

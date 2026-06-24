@@ -239,19 +239,7 @@ abstract contract JsonParser {
                 vm.parseJsonBytes32(inputJson, string.concat(key, ".initialCreWorkflowIds[", vm.toString(i), "]"));
         }
 
-        uint256 creWorkflowNamesLen = _getArrayLength(inputJson, string.concat(key, ".initialCreWorkflowNames"));
-        bytes10[] memory initialCreWorkflowNames = new bytes10[](creWorkflowNamesLen);
-        for (uint256 i; i < creWorkflowNamesLen; ++i) {
-            initialCreWorkflowNames[i] = bytes10(
-                vm.parseJsonBytes(inputJson, string.concat(key, ".initialCreWorkflowNames[", vm.toString(i), "]"))
-            );
-        }
-
-        return ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-            initialCreWorkflowIds: initialCreWorkflowIds,
-            initialCreWorkflowNames: initialCreWorkflowNames,
-            initialCreWorkflowAuthor: vm.parseJsonAddress(inputJson, string.concat(key, ".initialCreWorkflowAuthor"))
-        });
+        return ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: initialCreWorkflowIds});
     }
 
     function parseBridgeAdaptersInitParams(string memory inputJson, string memory key)

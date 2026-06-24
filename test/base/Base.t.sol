@@ -155,11 +155,7 @@ abstract contract Base_Hub_Test is Base_Test {
                     initialRestrictedAccountingMode: false,
                     initialAccountingAgents: new address[](0)
                 }),
-                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({
-                    initialCreWorkflowAuthor: DEFAULT_CRE_WORKFLOW_AUTHOR,
-                    initialCreWorkflowIds: new bytes32[](0),
-                    initialCreWorkflowNames: new bytes10[](0)
-                }),
+                ISpokeSnapshotConsumer.SpokeSnapshotConsumerInitParams({initialCreWorkflowIds: new bytes32[](0)}),
                 new IBridgeAdapterFactory.BridgeAdapterInitParams[](0),
                 _accountingToken,
                 DEFAULT_MACHINE_SHARE_TOKEN_NAME,

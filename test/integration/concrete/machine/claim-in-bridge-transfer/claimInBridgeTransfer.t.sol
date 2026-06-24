@@ -54,17 +54,6 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         vm.prank(mechanic);
         machine.authorizeInBridgeTransfer(ACROSS_V3_BRIDGE_ID, messageHash);
 
-        // simulate the caliber having sent the transfer
-        uint256 blockNum = 1e10;
-        uint256 blockTime = block.timestamp;
-        bytes[] memory cBridgeIn;
-        bytes[] memory cBridgeOut = new bytes[](1);
-        cBridgeOut[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
-        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
-            SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, cBridgeIn, cBridgeOut
-        );
-        creForwarder.forwardReport(address(machine), report, bytes32(0), DEFAULT_CRE_WORKFLOW_AUTHOR, bytes10(0));
-
         // simulate the incoming transfer
         deal(address(accountingToken), address(bridgeAdapter), outputAmount, true);
         vm.prank(address(acrossV3SpokePool));
@@ -89,7 +78,15 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, nextInTransferId);
     }
 
+    function test_RevertGiven_SpokeSnapshotNotReported() public {
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
+        vm.prank(mechanic);
+        machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
+    }
+
     function test_ClaimInBridgeTransfer() public {
+        _reportSpokeOutboundTransfer();
+
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.InBridgeTransferClaimed(transferId);
 
@@ -109,7 +106,15 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
         machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, 0);
     }
 
+    function test_RevertGiven_SpokeSnapshotNotReported_WhileInRecoveryMode() public whileInRecoveryMode {
+        vm.expectRevert(Errors.BridgeStateMismatch.selector);
+        vm.prank(securityCouncil);
+        machine.claimInBridgeTransfer(ACROSS_V3_BRIDGE_ID, transferId);
+    }
+
     function test_ClaimInBridgeTransfer_WhileInRecoveryMode() public whileInRecoveryMode {
+        _reportSpokeOutboundTransfer();
+
         vm.expectEmit(true, false, false, false, address(bridgeAdapter));
         emit IBridgeAdapter.InBridgeTransferClaimed(transferId);
 
@@ -118,5 +123,16 @@ contract ClaimInBridgeTransfer_Integration_Concrete_Test is Machine_Integration_
 
         assertEq(IERC20(address(accountingToken)).balanceOf(address(machine)), outputAmount);
         assertEq(IERC20(address(accountingToken)).balanceOf(address(bridgeAdapter)), 0);
+    }
+
+    function _reportSpokeOutboundTransfer() internal {
+        uint256 blockNum = 1e10;
+        uint256 blockTime = block.timestamp;
+        bytes[] memory cBridgeOut = new bytes[](1);
+        cBridgeOut[0] = abi.encode(spokeAccountingTokenAddr, inputAmount);
+        bytes memory report = _buildSpokeCaliberAccountingReportWithTransfers(
+            SPOKE_CHAIN_ID, blockNum, blockTime, false, 0, new bytes[](0), cBridgeOut
+        );
+        creForwarder.forwardReport(address(machine), report, DEFAULT_CRE_WORKFLOW_ID);
     }
 }
