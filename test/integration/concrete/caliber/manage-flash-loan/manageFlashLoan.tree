@@ -1,4 +1,4 @@
-manageFlashloan.t.sol
+manageFlashLoan.t.sol
 ├── when call is reentrant
 │  └── it should revert
 └── when call is not reentrant
@@ -21,5 +21,5 @@ manageFlashloan.t.sol
                   │  └── it should revert with InvalidInstructionProof
                   └── when the instruction proof is valid against the merkle root set in the caliber
                      ├── it should execute the instruction
-                     └── it should transfer the flashLoan funds back to the calling flashloanModule
+                     └── it should transfer the flashLoan funds back to the calling flashLoanModule
                     

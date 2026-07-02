@@ -690,7 +690,7 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         address _flashLoanModule,
         address _token,
         uint256 _amount,
-        ICaliber.Instruction memory _manageFlashloanInstruction
+        ICaliber.Instruction memory _manageFlashLoanInstruction
     ) internal view returns (ICaliber.Instruction memory) {
         bytes32[] memory commands = new bytes32[](1);
         // "0xa3b14e5101820001ffffffff" + _flashLoanModule
@@ -706,16 +706,16 @@ abstract contract VMInstructionHelper is MerkleProofHelper {
         state[0] = abi.encode(_token);
         state[1] = abi.encode(_amount);
         state[2] = abi.encode(
-            _manageFlashloanInstruction.positionId,
-            _manageFlashloanInstruction.isDebt,
-            _manageFlashloanInstruction.groupId,
-            _manageFlashloanInstruction.instructionType,
-            _manageFlashloanInstruction.affectedTokens,
-            _manageFlashloanInstruction.positionTokens,
-            _manageFlashloanInstruction.commands,
-            _manageFlashloanInstruction.state,
-            _manageFlashloanInstruction.stateBitmap,
-            _manageFlashloanInstruction.merkleProof
+            _manageFlashLoanInstruction.positionId,
+            _manageFlashLoanInstruction.isDebt,
+            _manageFlashLoanInstruction.groupId,
+            _manageFlashLoanInstruction.instructionType,
+            _manageFlashLoanInstruction.affectedTokens,
+            _manageFlashLoanInstruction.positionTokens,
+            _manageFlashLoanInstruction.commands,
+            _manageFlashLoanInstruction.state,
+            _manageFlashLoanInstruction.stateBitmap,
+            _manageFlashLoanInstruction.merkleProof
         );
 
         bytes32[] memory merkleProof = _getDummyLoopMockFlashLoanModuleInstrProof();

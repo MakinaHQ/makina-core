@@ -1,7 +1,5 @@
 ## Makina Core Specifications
 
-## Protocol
-
 ### Machine
 
 The `Machine` contract is the central and user-facing component of the protocol. It handles deposits, redemptions and share price calculation.
