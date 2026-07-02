@@ -54,7 +54,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         uint256 _maxSwapLossBps;
         uint256 _managedPositionId;
         bool _isManagedPositionDebt;
-        bool _isManagingFlashloan;
+        bool _isManagingFlashLoan;
         uint256 _cooldownDuration;
         uint256 _lastBTSwapTimestamp;
         mapping(bytes32 executionHash => uint256 timestamp) _lastExecTimestamps;
@@ -413,7 +413,7 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
     function manageFlashLoan(Instruction calldata instruction, address token, uint256 amount) external override {
         CaliberStorage storage $ = _getCaliberStorage();
 
-        if ($._isManagingFlashloan) {
+        if ($._isManagingFlashLoan) {
             revert Errors.ManageFlashLoanReentrantCall();
         }
 
@@ -433,12 +433,12 @@ contract Caliber is MakinaContext, AccessManagedUpgradeable, ReentrancyGuard, ER
         if (instruction.isDebt) {
             revert Errors.InvalidDebtFlag();
         }
-        $._isManagingFlashloan = true;
+        $._isManagingFlashLoan = true;
         IERC20Metadata(token).safeTransferFrom(_flashLoanModule, address(this), amount);
         _checkInstructionIsAllowed(instruction);
         _execute(instruction.commands, instruction.state);
         IERC20Metadata(token).safeTransfer(_flashLoanModule, amount);
-        $._isManagingFlashloan = false;
+        $._isManagingFlashLoan = false;
     }
 
     /// @inheritdoc ICaliber
