@@ -24,6 +24,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set address of Caliber Beacon.
   - Can set address of PreDepositVault Beacon.
   - Can set address of BridgeAdapter Beacons.
+  - Can set address of BridgeConfigs.
 
 ### SpokeCoreRegistry
 
@@ -37,6 +38,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
   - Can set address of Caliber Beacon.
   - Can set address of CaliberMailbox Beacon.
   - Can set address of BridgeAdapter Beacons.
+  - Can set address of BridgeConfigs.
 
 ### OracleRegistry
 
