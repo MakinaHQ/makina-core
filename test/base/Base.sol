@@ -270,6 +270,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             }
             bridgeAdapterBeacons[i] = baBeacon;
             bridgeConfigs[i] = bc;
+            _setupBridgeAdapterBeaconAMFunctionRoles(address(accessManager), address(baBeacon));
             coreRegistry.setBridgeAdapterBeacon(bridgeId, address(baBeacon));
             coreRegistry.setBridgeConfig(bridgeId, address(bc));
         }
@@ -309,8 +310,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
 
     function setupHubCoreAMFunctionRoles(HubCore memory deployment) internal {
         // Transparent Proxy Admins
-        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
-        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        bytes4[] memory proxyAdminSelectors = _proxyAdminAMSelectors();
         deployment.accessManager
             .setTargetFunctionRole(
                 getProxyAdmin(address(deployment.accessManager)), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
@@ -337,8 +337,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             );
 
         // Upgradeable Beacons
-        bytes4[] memory beaconSelectors = new bytes4[](1);
-        beaconSelectors[0] = UpgradeableBeacon.upgradeTo.selector;
+        bytes4[] memory beaconSelectors = _beaconAMSelectors();
         deployment.accessManager
             .setTargetFunctionRole(address(deployment.machineBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE);
         deployment.accessManager
@@ -378,8 +377,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
 
     function setupSpokeCoreAMFunctionRoles(SpokeCore memory deployment) internal {
         // Transparent Proxy Admins
-        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
-        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        bytes4[] memory proxyAdminSelectors = _proxyAdminAMSelectors();
         deployment.accessManager
             .setTargetFunctionRole(
                 getProxyAdmin(address(deployment.accessManager)), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
@@ -406,8 +404,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             );
 
         // Upgradeable Beacons
-        bytes4[] memory beaconSelectors = new bytes4[](1);
-        beaconSelectors[0] = UpgradeableBeacon.upgradeTo.selector;
+        bytes4[] memory beaconSelectors = _beaconAMSelectors();
         deployment.accessManager
             .setTargetFunctionRole(address(deployment.caliberMailboxBeacon), beaconSelectors, Roles.INFRA_UPGRADE_ROLE);
         deployment.accessManager
@@ -445,6 +442,20 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     ///
     /// ACCESS MANAGER INFRA UTILS
     ///
+
+    function _proxyAdminAMSelectors() internal pure returns (bytes4[] memory selectors) {
+        selectors = new bytes4[](3);
+        selectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        selectors[1] = Ownable.transferOwnership.selector;
+        selectors[2] = Ownable.renounceOwnership.selector;
+    }
+
+    function _beaconAMSelectors() internal pure returns (bytes4[] memory selectors) {
+        selectors = new bytes4[](3);
+        selectors[0] = UpgradeableBeacon.upgradeTo.selector;
+        selectors[1] = Ownable.transferOwnership.selector;
+        selectors[2] = Ownable.renounceOwnership.selector;
+    }
 
     function _setupOracleRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _oracleRegistry)
         internal
@@ -490,8 +501,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     }
 
     function _setupAcrossV3BridgeConfigAMFunctionRoles(address _accessManager, address _acrossV3BridgeConfig) internal {
-        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
-        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        bytes4[] memory proxyAdminSelectors = _proxyAdminAMSelectors();
         IAccessManager(_accessManager)
             .setTargetFunctionRole(getProxyAdmin(_acrossV3BridgeConfig), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE);
 
@@ -504,8 +514,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     function _setupLayerZeroV2BridgeConfigAMFunctionRoles(address _accessManager, address _layerZeroV2BridgeConfig)
         internal
     {
-        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
-        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        bytes4[] memory proxyAdminSelectors = _proxyAdminAMSelectors();
         IAccessManager(_accessManager)
             .setTargetFunctionRole(
                 getProxyAdmin(_layerZeroV2BridgeConfig), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE
@@ -520,8 +529,7 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     }
 
     function _setupCctpV2BridgeConfigAMFunctionRoles(address _accessManager, address _cctpV2BridgeConfig) internal {
-        bytes4[] memory proxyAdminSelectors = new bytes4[](1);
-        proxyAdminSelectors[0] = ProxyAdmin.upgradeAndCall.selector;
+        bytes4[] memory proxyAdminSelectors = _proxyAdminAMSelectors();
         IAccessManager(_accessManager)
             .setTargetFunctionRole(getProxyAdmin(_cctpV2BridgeConfig), proxyAdminSelectors, Roles.INFRA_UPGRADE_ROLE);
 
@@ -530,6 +538,11 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
         cctpV2BridgeConfigSelectors[1] = ICctpV2BridgeConfig.setForeignToken.selector;
         IAccessManager(_accessManager)
             .setTargetFunctionRole(_cctpV2BridgeConfig, cctpV2BridgeConfigSelectors, Roles.INFRA_CONFIG_ROLE);
+    }
+
+    function _setupBridgeAdapterBeaconAMFunctionRoles(address _accessManager, address _bridgeAdapterBeacon) internal {
+        AccessManagerUpgradeable(_accessManager)
+            .setTargetFunctionRole(_bridgeAdapterBeacon, _beaconAMSelectors(), Roles.INFRA_UPGRADE_ROLE);
     }
 
     ///
