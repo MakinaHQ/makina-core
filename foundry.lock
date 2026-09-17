@@ -9,7 +9,10 @@
     "rev": "900250114203727ff236d3f6313673c17c2d90dd"
   },
   "lib/forge-std": {
-    "rev": "3b20d60d14b343ee4f908cb8079495c07f5e8981"
+    "tag": {
+      "name": "v1.16.2",
+      "rev": "bf647bd6046f2f7da30d0c2bf435e5c76a780c1b"
+    }
   },
   "lib/openzeppelin-contracts-upgradeable": {
     "tag": {

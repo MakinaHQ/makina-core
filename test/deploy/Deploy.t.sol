@@ -277,7 +277,8 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // PreDeposit Vault migration to Machine
         deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
-        stdstore.target(address(deployMachineFromPreDeposit)).sig("preDepositVault()")
+        stdstore.target(address(deployMachineFromPreDeposit))
+            .sig("preDepositVault()")
             .checked_write(deployPreDepositVault.deployedInstance());
         deployMachineFromPreDeposit.run();
 
