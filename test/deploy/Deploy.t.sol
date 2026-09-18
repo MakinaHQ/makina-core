@@ -8,7 +8,6 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
 import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
 import {DeployHubMachineFromPreDeposit} from "script/deployments/DeployHubMachineFromPreDeposit.s.sol";
@@ -40,24 +39,24 @@ contract Deploy_Scripts_Test is Base_Test {
     DeployTimelockController public deployTimelockController;
 
     function setUp() public override {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
+        string memory hubFilename = string.concat(getChain(ETHEREUM_CHAIN_ID).name, "-Test.json");
 
-        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", hubFilename);
+        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", hubFilename);
 
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", hubFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", hubFilename);
 
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("HUB_STRAT_INPUT_FILENAME", hubFilename);
+        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", hubFilename);
 
-        chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
+        string memory spokeFilename = string.concat(getChain(BASE_CHAIN_ID).name, "-Test.json");
 
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", spokeFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", spokeFilename);
 
-        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", chainInfo.constantsFilename);
-        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", chainInfo.constantsFilename);
+        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", spokeFilename);
+        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", spokeFilename);
     }
 
     function test_LoadedState() public {
@@ -97,8 +96,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeployHubCore() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
@@ -161,8 +159,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeployHubMachine() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
@@ -223,8 +220,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeployPreDepositVault() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
@@ -261,8 +257,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScrip_DeployHubMachineFromPreDeposit() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
@@ -335,8 +330,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeploySpokeCore() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(BASE_CHAIN_ID).chainAlias});
 
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
@@ -399,8 +393,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeploySpokeCaliber() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_BASE);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(BASE_CHAIN_ID).chainAlias});
 
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
@@ -449,8 +442,7 @@ contract Deploy_Scripts_Test is Base_Test {
     }
 
     function testScript_DeployTimelockController() public {
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(ChainsInfo.CHAIN_ID_ETHEREUM);
-        vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Timelock Controller deployment
         deployTimelockController = new DeployTimelockController();

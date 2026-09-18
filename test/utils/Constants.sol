@@ -4,6 +4,9 @@ pragma solidity 0.8.28;
 abstract contract Constants {
     bytes32 internal constant TEST_DEPLOYMENT_SALT = keccak256("makina.salt.test");
 
+    uint256 internal constant ETHEREUM_CHAIN_ID = 1;
+    uint256 internal constant BASE_CHAIN_ID = 8453;
+
     uint256 internal constant DEFAULT_PF_STALE_THRSHLD = 2 hours;
 
     string internal constant DEFAULT_MACHINE_SHARE_TOKEN_NAME = "Machine Share";
