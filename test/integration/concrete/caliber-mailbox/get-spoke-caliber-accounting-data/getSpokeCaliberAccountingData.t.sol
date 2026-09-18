@@ -18,9 +18,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -44,9 +44,9 @@ contract GetSpokeCaliberAccountingData_Integration_Concrete_Test is CaliberMailb
         // create vault position
         deal(address(baseToken), address(caliber), bInputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), bInputAmount);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), bInputAmount));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 

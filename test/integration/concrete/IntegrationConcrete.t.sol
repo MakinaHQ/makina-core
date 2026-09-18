@@ -13,14 +13,16 @@ import {MockFlashLoanModule} from "test/mocks/MockFlashLoanModule.sol";
 import {MockSupplyModule} from "test/mocks/MockSupplyModule.sol";
 import {MockPool} from "test/mocks/MockPool.sol";
 import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
+import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {Machine} from "src/machine/Machine.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
 import {CaliberMailbox} from "src/caliber/CaliberMailbox.sol";
-import {VMInstructionHelper} from "test/utils/VMInstructionHelper.sol";
+import {InstructionHelper} from "test/utils/InstructionHelper.sol";
+import {RootfileHelper} from "test/utils/RootfileHelper.sol";
 
 import {Base_Test, Base_Hub_Test, Base_Spoke_Test} from "test/base/Base.t.sol";
 
-abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
+abstract contract Integration_Concrete_Test is Base_Test, InstructionHelper, RootfileHelper {
     /// @dev A denotes the accounting token, B denotes the base token
     /// and E is the reference currency of the oracle registry.
     uint256 internal constant PRICE_A_E = 150;
@@ -80,28 +82,48 @@ abstract contract Integration_Concrete_Test is Base_Test, VMInstructionHelper {
     ///
 
     function _setUpCaliberMerkleRoot(Caliber _caliber) internal {
-        MerkleTreeParams memory params = MerkleTreeParams({
-            caliber: address(_caliber),
-            mockAccountingToken: address(accountingToken),
-            mockBaseToken: address(baseToken),
-            mockVault: address(vault),
-            mockVaultPosId: VAULT_POS_ID,
-            mockSupplyModule: address(supplyModule),
-            mockSupplyModulePosId: SUPPLY_POS_ID,
-            mockBorrowModule: address(borrowModule),
-            mockBorrowModulePosId: BORROW_POS_ID,
-            mockPool: address(pool),
-            mockPoolPosId: POOL_POS_ID,
-            mockFlashLoanModule: address(flashLoanModule),
-            mockLoopPosId: LOOP_POS_ID,
-            lendingMarketPosGroupId: LENDING_MARKET_POS_GROUP_ID
-        });
-        // generate merkle tree for instructions involving mock contracts
-        allowedInstrMerkleRoot = _generateMerkleData(params);
+        _addInstructionLeaves(address(_caliber));
 
         vm.prank(riskManager);
-        _caliber.scheduleAllowedInstrRootUpdate(allowedInstrMerkleRoot);
+        _caliber.scheduleAllowedInstrRootUpdate(_rootfileRoot());
         skip(_caliber.timelockDuration());
+    }
+
+    function _addInstructionLeaves(address _caliber) internal {
+        _addLeaf(_build4626DepositInstruction(_caliber, VAULT_POS_ID, address(vault), 0));
+        _addLeaf(_build4626RedeemInstruction(_caliber, VAULT_POS_ID, address(vault), 0));
+        _addLeaf(_build4626AccountingInstruction(_caliber, VAULT_POS_ID, address(vault)));
+        _addLeaf(_buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), 0));
+        _addLeaf(_buildMockSupplyModuleWithdrawInstruction(SUPPLY_POS_ID, address(supplyModule), 0));
+        _addLeaf(
+            _buildMockSupplyModuleAccountingInstruction(
+                _caliber, SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            )
+        );
+        _addLeaf(_buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), 0));
+        _addLeaf(_buildMockBorrowModuleRepayInstruction(BORROW_POS_ID, address(borrowModule), 0));
+        _addLeaf(
+            _buildMockBorrowModuleAccountingInstruction(
+                _caliber, BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+            )
+        );
+        _addLeaf(_buildMockPoolAddLiquidityInstruction(POOL_POS_ID, address(pool), 0, 0));
+        _addLeaf(_buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), 0, false));
+        _addLeaf(_buildMockPoolAddLiquidityOneSideInstruction(POOL_POS_ID, address(pool), 0, true));
+        _addLeaf(_buildMockPoolRemoveLiquidityOneSideInstruction(POOL_POS_ID, address(pool), 0, false));
+        _addLeaf(_buildMockPoolRemoveLiquidityOneSideInstruction(POOL_POS_ID, address(pool), 0, true));
+        _addLeaf(_buildMockPoolAccountingInstruction(_caliber, POOL_POS_ID, address(pool), false));
+        _addLeaf(_buildMockPoolAccountingInstruction(_caliber, POOL_POS_ID, address(pool), true));
+        _addLeaf(_buildMockRewardTokenHarvestInstruction(_caliber, address(baseToken), 0));
+        // the flash loan request is a free state value: token, amount and nested instruction are not in the leaf
+        ICaliber.Instruction memory emptyInstruction;
+        _addLeaf(
+            _buildMockFlashLoanModuleDummyLoopInstruction(
+                LOOP_POS_ID, address(flashLoanModule), address(0), 0, emptyInstruction
+            )
+        );
+        _addLeaf(_buildMockFlashLoanModuleDummyAccountingInstruction(LOOP_POS_ID));
+        _addLeaf(_buildManageFlashLoanDummyInstruction(LOOP_POS_ID));
     }
 
     function _addLiquidityToMockPool(uint256 _amount1, uint256 _amount2) internal {

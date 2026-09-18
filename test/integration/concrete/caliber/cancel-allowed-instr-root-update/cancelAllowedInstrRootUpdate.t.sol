@@ -50,7 +50,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
     }
 
     function _test_CancelAllowedInstrRootUpdate(address caller) internal {
-        bytes32 currentRoot = allowedInstrMerkleRoot;
+        bytes32 currentRoot = _rootfileRoot();
 
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();

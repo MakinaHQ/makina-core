@@ -67,8 +67,6 @@ forge build
 
 Some tests involve network forking. To run them, the `MAINNET_RPC_URL` and `BASE_RPC_URL` variables must be set in a .env file located at the project root.
 
-Some tests also execute JavaScript scripts for Merkle root generation. These require Node.js v18 or later.
-
 ```shell
 forge test
 ```
