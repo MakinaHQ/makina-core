@@ -304,8 +304,10 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             );
         }
 
-        // Revoke roles from the deployer
-        accessManager.revokeRole(accessManager.ADMIN_ROLE(), address(deployer));
+        // Revoke roles from the deployer, unless it is the super admin
+        if (deployer != superAdminRoleGrant.account) {
+            accessManager.revokeRole(adminRole, deployer);
+        }
     }
 
     function setupHubCoreAMFunctionRoles(HubCore memory deployment) internal {

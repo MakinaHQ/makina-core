@@ -53,8 +53,10 @@ contract DeploySpokeCore is DeployCore {
             setupAccessManagerRoles(
                 _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.spokeCoreFactory), deployer
             );
-            transferAccessManagerOwnership(_core.accessManager);
         }
+
+        // Transfer the ownership of the AccessManager's proxy admin to the AccessManager itself.
+        transferAccessManagerOwnership(_core.accessManager);
     }
 
     function _deploySetupAfter() internal override {

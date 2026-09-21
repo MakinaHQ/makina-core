@@ -5,6 +5,10 @@ import {stdJson} from "forge-std/StdJson.sol";
 import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {
+    AccessManagerUpgradeable
+} from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
@@ -23,6 +27,9 @@ import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 
+import {MockCreForwarder} from "../mocks/MockCreForwarder.sol";
+
+import {Base} from "../base/Base.sol";
 import {Base_Test} from "../base/Base.t.sol";
 
 contract Deploy_Scripts_Test is Base_Test {
@@ -156,6 +163,9 @@ contract Deploy_Scripts_Test is Base_Test {
             assertTrue(isMember);
             assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
         }
+
+        // Check that the AccessManager owns its own ProxyAdmin
+        _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
     }
 
     function testScript_DeployHubMachine() public {
@@ -185,6 +195,9 @@ contract Deploy_Scripts_Test is Base_Test {
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
+
+        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
+        _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
 
         assertTrue(hubCoreDeployment.hubCoreFactory.isMachine(address(machine)));
         assertTrue(hubCoreDeployment.hubCoreFactory.isCaliber(address(hubCaliber)));
@@ -254,9 +267,15 @@ contract Deploy_Scripts_Test is Base_Test {
 
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
+
+        // Check that the output file is written
+        assertEq(
+            vm.parseJsonAddress(vm.readFile(deployPreDepositVault.outputPath()), ".preDepositVault"),
+            address(preDepositVault)
+        );
     }
 
-    function testScrip_DeployHubMachineFromPreDeposit() public {
+    function testScript_DeployHubMachineFromPreDeposit() public {
         vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
@@ -390,6 +409,9 @@ contract Deploy_Scripts_Test is Base_Test {
             assertTrue(isMember);
             assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
         }
+
+        // Check that the AccessManager owns its own ProxyAdmin
+        _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
     }
 
     function testScript_DeploySpokeCaliber() public {
@@ -413,6 +435,9 @@ contract Deploy_Scripts_Test is Base_Test {
             parseMakinaGovernableInitParams(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams");
         address accountingToken = vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".accountingToken");
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
+
+        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
+        _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
 
         assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliber(address(spokeCaliber)));
         assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
@@ -469,5 +494,23 @@ contract Deploy_Scripts_Test is Base_Test {
             assertTrue(timelockController.hasRole(timelockController.CANCELLER_ROLE(), additionalCancellers[i]));
         }
         assertEq(timelockController.getMinDelay(), initialMinDelay);
+    }
+
+    function test_SetupAccessManagerRoles_KeepsAdminRoleWhenDeployerIsSuperAdmin() public {
+        address admin = address(this);
+        // The `deployHubCore` script instance shadows the Base composer, hence the explicit base call
+        HubCore memory core = Base.deployHubCore(admin, address(new MockCreForwarder()));
+
+        AMRoleGrant memory superAdminRoleGrant = AMRoleGrant({roleId: 0, account: admin, executionDelay: 0});
+        setupAccessManagerRoles(
+            core.accessManager, superAdminRoleGrant, new AMRoleGrant[](0), address(core.hubCoreFactory), admin
+        );
+
+        (bool isMember,) = core.accessManager.hasRole(core.accessManager.ADMIN_ROLE(), admin);
+        assertTrue(isMember);
+    }
+
+    function _assertAccessManagerOwnsItsProxyAdmin(AccessManagerUpgradeable accessManager) internal view {
+        assertEq(Ownable(getProxyAdmin(address(accessManager))).owner(), address(accessManager));
     }
 }

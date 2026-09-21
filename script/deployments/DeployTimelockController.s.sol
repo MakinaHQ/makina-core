@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
+// solhint-disable gas-custom-errors, reason-string
+
 import {Script} from "forge-std/Script.sol";
 import {stdJson} from "forge-std/StdJson.sol";
 
@@ -51,11 +53,18 @@ contract DeployTimelockController is Script, CreateXUtils {
         address initialAdmin = additionalCancellers.length > 0 ? deployer : address(0);
 
         bytes memory constructorArgs = abi.encode(initialMinDelay, initialProposers, initialExecutors, initialAdmin);
+        bytes memory bytecode = abi.encodePacked(type(TimelockController).creationCode, constructorArgs);
         bytes32 salt = keccak256(constructorArgs);
 
-        deployedInstance = payable(_deployCodeCreateX(
-                abi.encodePacked(type(TimelockController).creationCode, constructorArgs), salt, deployer
-            ));
+        // The salt derives from the constructor arguments, so a same-parameter timelock already exists at this slot
+        address expected = _computeCreateXAddress(bytecode, salt, deployer);
+        require(
+            expected.code.length == 0,
+            string.concat("DeployTimelockController: CREATE3 target already has code: ", vm.toString(expected))
+        );
+
+        deployedInstance = payable(_deployCodeCreateX(bytecode, salt, deployer));
+        require(deployedInstance == expected, "DeployTimelockController: CreateX address mismatch");
 
         if (additionalCancellers.length > 0) {
             // Grant additional cancellers the CANCELLER_ROLE

@@ -64,6 +64,6 @@ contract DeployPreDepositVault is Base, Script {
 
         // Write to file
         string memory key = "key-deploy-pre-deposit-vault-output-file";
-        vm.serializeAddress(key, "preDepositVault", deployedInstance);
+        vm.writeJson(vm.serializeAddress(key, "preDepositVault", deployedInstance), outputPath);
     }
 }

@@ -89,7 +89,7 @@ forge script script/deployments/DeploySpokeCaliber.s.sol --rpc-url <network-alia
 
 Set the `TIMELOCK_CONTROLLER_INPUT_FILENAME` and `TIMELOCK_CONTROLLER_OUTPUT_FILENAME` values in your `.env` file to define the input and output JSON filenames, respectively. For example, for a deployment on Ethereum Mainnet, both of these files can be named `Mainnet.json`.
 
-1. Copy `script/deployments/inputs/spoke-calibers/TEMPLATE.json` to `script/deployments/inputs/timelock-controllers/{TIMELOCK_CONTROLLER_INPUT_FILENAME}` and fill in the required variables.
+1. Copy `script/deployments/inputs/timelock-controllers/TEMPLATE.json` to `script/deployments/inputs/timelock-controllers/{TIMELOCK_CONTROLLER_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/timelock-controllers/{TIMELOCK_CONTROLLER_OUTPUT_FILENAME}`.
 
 ```
