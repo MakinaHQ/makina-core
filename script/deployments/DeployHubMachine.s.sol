@@ -1,52 +1,27 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
-
-import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
-import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
+import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {DeployInstance} from "./DeployInstance.s.sol";
 
-contract DeployHubMachine is Base, Script {
-    using stdJson for string;
-
-    string private coreOutputJson;
-
-    string public inputJson;
-    string public outputPath;
-
-    address public deployedInstance;
-
-    constructor() {
-        string memory inputFilename = vm.envString("HUB_STRAT_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("HUB_STRAT_OUTPUT_FILENAME");
-
-        string memory coreOutputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/hub-machines/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/hub-machines/");
-        outputPath = string.concat(outputPath, outputFilename);
-
-        // load output from DeployHubCore script
-        string memory coreOutputPath = string.concat(basePath, "outputs/hub-cores/");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
-        coreOutputJson = vm.readFile(coreOutputPath);
-    }
-
-    function run() public {
+/// @notice Builds the `HubCoreFactory.createMachine` call for a new machine and its hub caliber, then broadcasts it
+///         or logs it. See `DeployInstance` for modes and env vars.
+///
+/// Env vars (unless `setParams` was called):
+///   HUB_CORE_OUTPUT_FILENAME  - hub core output file holding the HubCoreFactory address
+///                               (under script/deployments/outputs/hub-cores/)
+///   HUB_STRAT_INPUT_FILENAME  - machine init params input file (under script/deployments/inputs/hub-machines/)
+///   HUB_STRAT_OUTPUT_FILENAME - file to write the machine and hub caliber addresses to
+///                               (under script/deployments/outputs/hub-machines/, broadcast mode only)
+///   VIEW_MODE (optional)      - true for view mode, unset or false for broadcast mode
+contract DeployHubMachine is DeployInstance {
+    function _createCall() internal view override returns (Call memory) {
         IMachine.MachineInitParams memory mParams = parseMachineInitParams(inputJson, ".machineInitParams");
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
@@ -55,35 +30,43 @@ contract DeployHubMachine is Base, Script {
             parseSpokeSnapshotConsumerInitParams(inputJson, ".spokeSnapshotConsumerInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
-        address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
-        string memory shareTokenName = vm.parseJsonString(inputJson, ".shareTokenName");
-        string memory shareTokenSymbol = vm.parseJsonString(inputJson, ".shareTokenSymbol");
-        bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
-        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        IHubCoreFactory hubCoreFactory = IHubCoreFactory(vm.parseJsonAddress(coreOutputJson, ".HubCoreFactory"));
+        return Call({
+            label: "HubCoreFactory.createMachine",
+            target: coreFactory,
+            data: abi.encodeCall(
+                IHubCoreFactory.createMachine,
+                (
+                    mParams,
+                    cParams,
+                    mgParams,
+                    sscParams,
+                    baParams,
+                    vm.parseJsonAddress(inputJson, ".accountingToken"),
+                    vm.parseJsonString(inputJson, ".shareTokenName"),
+                    vm.parseJsonString(inputJson, ".shareTokenSymbol"),
+                    vm.parseJsonBytes32(inputJson, ".salt"),
+                    vm.parseJsonBool(inputJson, ".setupAMFunctionRoles")
+                )
+            )
+        });
+    }
 
-        // Deploy machine
-        vm.startBroadcast();
-
-        deployedInstance = hubCoreFactory.createMachine(
-            mParams,
-            cParams,
-            mgParams,
-            sscParams,
-            baParams,
-            accountingToken,
-            shareTokenName,
-            shareTokenSymbol,
-            salt,
-            setupAMFunctionRoles
-        );
-
-        vm.stopBroadcast();
-
-        // Write to file
+    function _writeOutput() internal override {
         string memory key = "key-deploy-hub-machine-output-file";
         vm.serializeAddress(key, "machine", deployedInstance);
         vm.writeJson(vm.serializeAddress(key, "hubCaliber", IMachine(deployedInstance).hubCaliber()), outputPath);
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "hub-machines";
+    }
+
+    function _loadParamsFromEnv() internal override {
+        setParams(
+            _coreFactoryFromRecord("hub-cores", vm.envString("HUB_CORE_OUTPUT_FILENAME"), ".HubCoreFactory"),
+            vm.envString("HUB_STRAT_INPUT_FILENAME"),
+            _outputFilenameFromEnv("HUB_STRAT_OUTPUT_FILENAME")
+        );
     }
 }

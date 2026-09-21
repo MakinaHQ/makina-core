@@ -2,7 +2,6 @@
 pragma solidity 0.8.28;
 
 import {stdJson} from "forge-std/StdJson.sol";
-import {stdStorage, StdStorage} from "forge-std/StdStorage.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -22,19 +21,31 @@ import {DeployTimelockController} from "script/deployments/DeployTimelockControl
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
 
 import {MockCreForwarder} from "../mocks/MockCreForwarder.sol";
-
 import {Base} from "../base/Base.sol";
 import {Base_Test} from "../base/Base.t.sol";
 
+/// @dev Exposes the Base AccessManager setup externally, so that its reverts can be asserted.
+contract BaseHarness is Base {
+    function setupRoles(
+        AccessManagerUpgradeable accessManager,
+        AMRoleGrant calldata superAdminRoleGrant,
+        AMRoleGrant[] calldata otherRoleGrants,
+        address coreFactory,
+        address deployer
+    ) external {
+        setupAccessManagerRoles(accessManager, superAdminRoleGrant, otherRoleGrants, coreFactory, deployer);
+    }
+}
+
 contract Deploy_Scripts_Test is Base_Test {
     using stdJson for string;
-    using stdStorage for StdStorage;
 
     // Scripts to test
     DeployHubCore public deployHubCore;
@@ -45,35 +56,31 @@ contract Deploy_Scripts_Test is Base_Test {
     DeploySpokeCaliber public deploySpokeCaliber;
     DeployTimelockController public deployTimelockController;
 
-    function setUp() public override {
-        string memory hubFilename = string.concat(getChain(ETHEREUM_CHAIN_ID).name, "-Test.json");
-
-        vm.setEnv("TIMELOCK_CONTROLLER_INPUT_FILENAME", hubFilename);
-        vm.setEnv("TIMELOCK_CONTROLLER_OUTPUT_FILENAME", hubFilename);
-
-        vm.setEnv("HUB_CORE_INPUT_FILENAME", hubFilename);
-        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", hubFilename);
-
-        vm.setEnv("HUB_STRAT_INPUT_FILENAME", hubFilename);
-        vm.setEnv("HUB_STRAT_OUTPUT_FILENAME", hubFilename);
-
-        string memory spokeFilename = string.concat(getChain(BASE_CHAIN_ID).name, "-Test.json");
-
-        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", spokeFilename);
-        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", spokeFilename);
-
-        vm.setEnv("SPOKE_STRAT_INPUT_FILENAME", spokeFilename);
-        vm.setEnv("SPOKE_STRAT_OUTPUT_FILENAME", spokeFilename);
-    }
-
     function test_LoadedState() public {
+        string memory hubFilename = _hubTestFilename();
+        string memory spokeFilename = _spokeTestFilename();
+
         deployTimelockController = new DeployTimelockController();
+        deployTimelockController.setFilenames(hubFilename, "");
+
         deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(hubFilename, "");
+
+        // no factory needed here, only the input files are inspected
         deployHubMachine = new DeployHubMachine();
+        deployHubMachine.setParams(address(0), hubFilename, "");
+
         deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
+        deployMachineFromPreDeposit.setParams(address(0), hubFilename, "");
+
         deployPreDepositVault = new DeployPreDepositVault();
+        deployPreDepositVault.setParams(address(0), hubFilename, "");
+
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setFilenames(spokeFilename, "");
+
         deploySpokeCaliber = new DeploySpokeCaliber();
+        deploySpokeCaliber.setParams(address(0), spokeFilename, "");
 
         address[] memory initialExecutors =
             vm.parseJsonAddressArray(deployTimelockController.inputJson(), ".initialExecutors");
@@ -107,6 +114,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
@@ -168,11 +176,40 @@ contract Deploy_Scripts_Test is Base_Test {
         _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
     }
 
+    function testScript_DeployHubCore_FromEnv_SkipAMSetup() public {
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
+
+        string memory scratchFilename = _hubScratchFilename();
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", _hubTestFilename());
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", scratchFilename);
+        vm.setEnv("SKIP_AM_SETUP", "true");
+
+        // Core deployment, with all params resolved from the env
+        deployHubCore = new DeployHubCore();
+        deployHubCore.run();
+
+        (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
+
+        // Check that the AM setup was skipped: the super admin was not granted the ADMIN_ROLE
+        assertTrue(deployHubCore.skipAMSetup());
+        address superAdmin = vm.parseJsonAddress(deployHubCore.inputJson(), ".superAdminRoleGrant.account");
+        (bool isMember,) =
+            hubCoreDeployment.accessManager.hasRole(hubCoreDeployment.accessManager.ADMIN_ROLE(), superAdmin);
+        assertFalse(isMember);
+
+        // Check that the output file is written
+        string memory outputJson = vm.readFile(deployHubCore.outputPath());
+        assertEq(vm.parseJsonAddress(outputJson, ".AccessManager"), address(hubCoreDeployment.accessManager));
+        assertEq(vm.parseJsonAddress(outputJson, ".HubCoreFactory"), address(hubCoreDeployment.hubCoreFactory));
+        vm.removeFile(deployHubCore.outputPath());
+    }
+
     function testScript_DeployHubMachine() public {
         vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
         deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
@@ -180,7 +217,11 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Machine deployment
         deployHubMachine = new DeployHubMachine();
+        deployHubMachine.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
         deployHubMachine.run();
+
+        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
+        _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
 
         // Check that Hub Machine is correctly set up
         IMachine.MachineInitParams memory mParams =
@@ -195,9 +236,6 @@ contract Deploy_Scripts_Test is Base_Test {
         IMachine machine = IMachine(deployHubMachine.deployedInstance());
         ICaliber hubCaliber = ICaliber(machine.hubCaliber());
         IMachineShare shareToken = IMachineShare(machine.shareToken());
-
-        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
-        _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
 
         assertTrue(hubCoreDeployment.hubCoreFactory.isMachine(address(machine)));
         assertTrue(hubCoreDeployment.hubCoreFactory.isCaliber(address(hubCaliber)));
@@ -232,18 +270,46 @@ contract Deploy_Scripts_Test is Base_Test {
         assertEq(shareToken.symbol(), shareTokenSymbol);
     }
 
-    function testScript_DeployPreDepositVault() public {
+    function testScript_DeployHubMachine_ViewMode() public {
         vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
         deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
 
-        // PreDeposit Vault deployment
+        // View mode: the calldata is logged, the factory is never called and nothing is deployed
+        deployHubMachine = new DeployHubMachine();
+        deployHubMachine.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
+        deployHubMachine.setViewMode(true);
+
+        vm.expectCall(
+            address(hubCoreDeployment.hubCoreFactory), abi.encodeWithSelector(IHubCoreFactory.createMachine.selector), 0
+        );
+        deployHubMachine.run();
+
+        assertEq(deployHubMachine.deployedInstance(), address(0));
+    }
+
+    function testScript_DeployPreDepositVault() public {
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
+
+        // Core deployment
+        deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
+        deployHubCore.setSkipAMSetup(true);
+        deployHubCore.run();
+
+        (HubCore memory hubCoreDeployment,) = deployHubCore.deployment();
+
+        // PreDeposit Vault deployment, writing the output file
         deployPreDepositVault = new DeployPreDepositVault();
+        deployPreDepositVault.setParams(
+            address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), _hubScratchFilename()
+        );
         deployPreDepositVault.run();
 
         // Check that PreDepositVault is correctly set up
@@ -273,6 +339,7 @@ contract Deploy_Scripts_Test is Base_Test {
             vm.parseJsonAddress(vm.readFile(deployPreDepositVault.outputPath()), ".preDepositVault"),
             address(preDepositVault)
         );
+        vm.removeFile(deployPreDepositVault.outputPath());
     }
 
     function testScript_DeployHubMachineFromPreDeposit() public {
@@ -280,6 +347,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Core deployment
         deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
         deployHubCore.setSkipAMSetup(true);
         deployHubCore.run();
 
@@ -287,13 +355,13 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // PreDeposit Vault deployment
         deployPreDepositVault = new DeployPreDepositVault();
+        deployPreDepositVault.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
         deployPreDepositVault.run();
 
         // PreDeposit Vault migration to Machine
         deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
-        stdstore.target(address(deployMachineFromPreDeposit))
-            .sig("preDepositVault()")
-            .checked_write(deployPreDepositVault.deployedInstance());
+        deployMachineFromPreDeposit.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
+        deployMachineFromPreDeposit.setPreDepositVault(deployPreDepositVault.deployedInstance());
         deployMachineFromPreDeposit.run();
 
         // Check that Hub Machine is correctly set up
@@ -353,6 +421,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setFilenames(_spokeTestFilename(), "");
         deploySpokeCore.run();
 
         (SpokeCore memory spokeCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
@@ -419,6 +488,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setFilenames(_spokeTestFilename(), "");
         deploySpokeCore.setSkipAMSetup(true);
         deploySpokeCore.run();
 
@@ -426,7 +496,11 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Caliber deployment
         deploySpokeCaliber = new DeploySpokeCaliber();
+        deploySpokeCaliber.setParams(address(spokeCoreDeployment.spokeCoreFactory), _spokeTestFilename(), "");
         deploySpokeCaliber.run();
+
+        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
+        _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
 
         // Check that Spoke Caliber is correctly set up
         ICaliber.CaliberInitParams memory cParams =
@@ -435,9 +509,6 @@ contract Deploy_Scripts_Test is Base_Test {
             parseMakinaGovernableInitParams(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams");
         address accountingToken = vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".accountingToken");
         ICaliber spokeCaliber = ICaliber(deploySpokeCaliber.deployedInstance());
-
-        // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
-        _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
 
         assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliber(address(spokeCaliber)));
         assertTrue(spokeCoreDeployment.spokeCoreFactory.isCaliberMailbox(spokeCaliber.hubMachineEndpoint()));
@@ -471,6 +542,7 @@ contract Deploy_Scripts_Test is Base_Test {
 
         // Timelock Controller deployment
         deployTimelockController = new DeployTimelockController();
+        deployTimelockController.setFilenames(_hubTestFilename(), "");
         deployTimelockController.run();
 
         // Check that Timelock Controller is correctly set up
@@ -508,6 +580,32 @@ contract Deploy_Scripts_Test is Base_Test {
 
         (bool isMember,) = core.accessManager.hasRole(core.accessManager.ADMIN_ROLE(), admin);
         assertTrue(isMember);
+    }
+
+    function test_SetupAccessManagerRoles_RevertWhen_ZeroRoleGrantAccount() public {
+        BaseHarness harness = new BaseHarness();
+        HubCore memory core = Base.deployHubCore(address(harness), address(new MockCreForwarder()));
+
+        AMRoleGrant memory superAdminRoleGrant = AMRoleGrant({roleId: 0, account: dao, executionDelay: 0});
+        AMRoleGrant[] memory otherRoleGrants = new AMRoleGrant[](1);
+        otherRoleGrants[0] = AMRoleGrant({roleId: 1, account: address(0), executionDelay: 0});
+
+        vm.expectRevert(bytes("Base: zero roleGrant account"));
+        harness.setupRoles(
+            core.accessManager, superAdminRoleGrant, otherRoleGrants, address(core.hubCoreFactory), address(harness)
+        );
+    }
+
+    function _hubTestFilename() internal returns (string memory) {
+        return string.concat(getChain(ETHEREUM_CHAIN_ID).name, "-Test.json");
+    }
+
+    function _hubScratchFilename() internal returns (string memory) {
+        return string.concat(getChain(ETHEREUM_CHAIN_ID).name, "-Test-Scratch.json");
+    }
+
+    function _spokeTestFilename() internal returns (string memory) {
+        return string.concat(getChain(BASE_CHAIN_ID).name, "-Test.json");
     }
 
     function _assertAccessManagerOwnsItsProxyAdmin(AccessManagerUpgradeable accessManager) internal view {

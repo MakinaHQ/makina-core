@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {stdJson} from "forge-std/StdJson.sol";
-
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
@@ -10,28 +8,19 @@ import {DeployCore} from "./DeployCore.s.sol";
 
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 
+/// @notice Deploys the Makina hub core and runs its registry and AccessManager setup in a single broadcast.
+///
+/// Env vars (unless `setFilenames` was called):
+///   HUB_CORE_INPUT_FILENAME  - hub core input file holding the deployment parameters
+///                              (under script/deployments/inputs/hub-cores/)
+///   HUB_CORE_OUTPUT_FILENAME - hub core output file to write the deployed contract addresses to
+///                              (under script/deployments/outputs/hub-cores/)
+///   SKIP_AM_SETUP (optional) - if true, skips the AccessManager function roles and role grants setup,
+///                              leaving the deployer as sole admin (for staging deployments)
 contract DeployHubCore is DeployCore {
-    using stdJson for string;
-
     HubCore private _core;
     UpgradeableBeacon[] private _bridgeAdapterBeacons;
     TransparentUpgradeableProxy[] private _bridgeConfigs;
-
-    constructor() {
-        string memory inputFilename = vm.envString("HUB_CORE_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/hub-cores/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/hub-cores/");
-        outputPath = string.concat(outputPath, outputFilename);
-    }
 
     function deployment() public view returns (HubCore memory, UpgradeableBeacon[] memory) {
         return (_core, _bridgeAdapterBeacons);
@@ -59,13 +48,9 @@ contract DeployHubCore is DeployCore {
         transferAccessManagerOwnership(_core.accessManager);
     }
 
-    function _deploySetupAfter() internal override {
-        // finish broadcasting transactions
-        vm.stopBroadcast();
-
+    function _writeOutput() internal override {
         string memory key = "key-deploy-makina-core-hub-output-file";
 
-        // write to file
         vm.serializeAddress(key, "AccessManager", address(_core.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_core.caliberBeacon));
         vm.serializeAddress(key, "MachineBeacon", address(_core.machineBeacon));
@@ -87,5 +72,13 @@ contract DeployHubCore is DeployCore {
         }
         vm.serializeString(key, "BridgeAdapterBeacons", bridgeAdapterBeaconList);
         vm.writeJson(vm.serializeString(key, "BridgeConfigs", bridgeConfigList), outputPath);
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "hub-cores";
+    }
+
+    function _loadFilenamesFromEnv() internal override {
+        setFilenames(vm.envString("HUB_CORE_INPUT_FILENAME"), vm.envString("HUB_CORE_OUTPUT_FILENAME"));
     }
 }

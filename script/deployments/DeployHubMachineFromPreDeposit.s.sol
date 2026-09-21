@@ -1,55 +1,35 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
-
-import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {DeployInstance} from "./DeployInstance.s.sol";
 
-contract DeployHubMachineFromPreDeposit is Base, Script {
-    using stdJson for string;
-
-    string private coreOutputJson;
-
-    string public inputJson;
-    string public outputPath;
-
+/// @notice Builds the `HubCoreFactory.createMachineFromPreDeposit` call migrating a pre-deposit vault into a new
+///         machine and its hub caliber, then broadcasts it or logs it. See `DeployInstance` for modes and env vars.
+///
+/// Env vars (unless `setParams` was called):
+///   HUB_CORE_OUTPUT_FILENAME  - hub core output file holding the HubCoreFactory address
+///                               (under script/deployments/outputs/hub-cores/)
+///   HUB_STRAT_INPUT_FILENAME  - migration params input file, including the pre-deposit vault address
+///                               (under script/deployments/inputs/pre-deposit-migrations/)
+///   HUB_STRAT_OUTPUT_FILENAME - file to write the machine and hub caliber addresses to
+///                               (under script/deployments/outputs/pre-deposit-migrations/, broadcast mode only)
+///   VIEW_MODE (optional)      - true for view mode, unset or false for broadcast mode
+contract DeployHubMachineFromPreDeposit is DeployInstance {
     address public preDepositVault;
-    address public deployedInstance;
 
-    constructor() {
-        string memory inputFilename = vm.envString("HUB_STRAT_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("HUB_STRAT_OUTPUT_FILENAME");
-
-        string memory coreOutputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/pre-deposit-migrations/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/pre-deposit-migrations/");
-        outputPath = string.concat(outputPath, outputFilename);
-
-        // load output from DeployHubCore script
-        string memory coreOutputPath = string.concat(basePath, "outputs/hub-cores/");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
-        coreOutputJson = vm.readFile(coreOutputPath);
-
-        preDepositVault = vm.parseJsonAddress(inputJson, ".preDepositVault");
+    /// @dev Test hook to set the pre-deposit vault explicitly, instead of reading it from the input file.
+    function setPreDepositVault(address _preDepositVault) public {
+        preDepositVault = _preDepositVault;
     }
 
-    function run() public {
+    function _createCall() internal view override returns (Call memory) {
         IMachine.MachineInitParams memory mParams = parseMachineInitParams(inputJson, ".machineInitParams");
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
@@ -58,23 +38,43 @@ contract DeployHubMachineFromPreDeposit is Base, Script {
             parseSpokeSnapshotConsumerInitParams(inputJson, ".spokeSnapshotConsumerInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
-        bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
-        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
+        address _preDepositVault =
+            preDepositVault != address(0) ? preDepositVault : vm.parseJsonAddress(inputJson, ".preDepositVault");
 
-        IHubCoreFactory hubCoreFactory = IHubCoreFactory(vm.parseJsonAddress(coreOutputJson, ".HubCoreFactory"));
+        return Call({
+            label: "HubCoreFactory.createMachineFromPreDeposit",
+            target: coreFactory,
+            data: abi.encodeCall(
+                IHubCoreFactory.createMachineFromPreDeposit,
+                (
+                    mParams,
+                    cParams,
+                    mgParams,
+                    sscParams,
+                    baParams,
+                    _preDepositVault,
+                    vm.parseJsonBytes32(inputJson, ".salt"),
+                    vm.parseJsonBool(inputJson, ".setupAMFunctionRoles")
+                )
+            )
+        });
+    }
 
-        // Deploy pre-deposit vault
-        vm.startBroadcast();
-
-        deployedInstance = hubCoreFactory.createMachineFromPreDeposit(
-            mParams, cParams, mgParams, sscParams, baParams, preDepositVault, salt, setupAMFunctionRoles
-        );
-
-        vm.stopBroadcast();
-
-        // Write to file
+    function _writeOutput() internal override {
         string memory key = "key-migrate-pre-deposit-output-file";
         vm.serializeAddress(key, "machine", deployedInstance);
         vm.writeJson(vm.serializeAddress(key, "hubCaliber", IMachine(deployedInstance).hubCaliber()), outputPath);
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "pre-deposit-migrations";
+    }
+
+    function _loadParamsFromEnv() internal override {
+        setParams(
+            _coreFactoryFromRecord("hub-cores", vm.envString("HUB_CORE_OUTPUT_FILENAME"), ".HubCoreFactory"),
+            vm.envString("HUB_STRAT_INPUT_FILENAME"),
+            _outputFilenameFromEnv("HUB_STRAT_OUTPUT_FILENAME")
+        );
     }
 }

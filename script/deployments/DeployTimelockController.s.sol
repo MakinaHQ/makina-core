@@ -4,15 +4,21 @@ pragma solidity 0.8.28;
 // solhint-disable gas-custom-errors, reason-string
 
 import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
 
 import {CreateXUtils} from "./utils/CreateXUtils.sol";
 
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
 
+/// @notice Deploys an OpenZeppelin `TimelockController` through CreateX, at an address bound to the deployer and to
+///         the constructor arguments. When additional cancellers are configured, the deployer is the temporary admin
+///         granting them the CANCELLER_ROLE, and renounces the admin role in the same broadcast.
+///
+/// Env vars (unless `setFilenames` was called):
+///   TIMELOCK_CONTROLLER_INPUT_FILENAME  - input file holding the timelock parameters
+///                                         (under script/deployments/inputs/timelock-controllers/)
+///   TIMELOCK_CONTROLLER_OUTPUT_FILENAME - file to write the timelock address to
+///                                         (under script/deployments/outputs/timelock-controllers/)
 contract DeployTimelockController is Script, CreateXUtils {
-    using stdJson for string;
-
     string public inputJson;
     string public outputPath;
 
@@ -23,23 +29,25 @@ contract DeployTimelockController is Script, CreateXUtils {
     bytes32 public constant TIMELOCK_CANCELLER_ROLE = keccak256("CANCELLER_ROLE");
     bytes32 public constant TIMELOCK_ADMIN_ROLE = 0x00;
 
-    constructor() {
-        string memory inputFilename = vm.envString("TIMELOCK_CONTROLLER_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("TIMELOCK_CONTROLLER_OUTPUT_FILENAME");
-
+    /// @dev Test hook to set the input and output filenames explicitly, instead of having `run` resolve them from
+    ///      the env vars. An empty output filename skips writing the output file.
+    function setFilenames(string memory inputFilename, string memory outputFilename) public {
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
 
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/timelock-controllers/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
+        inputJson = vm.readFile(string.concat(basePath, "inputs/timelock-controllers/", inputFilename));
 
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/timelock-controllers/");
-        outputPath = string.concat(outputPath, outputFilename);
+        outputPath = bytes(outputFilename).length == 0
+            ? ""
+            : string.concat(basePath, "outputs/timelock-controllers/", outputFilename);
     }
 
     function run() public {
+        if (bytes(inputJson).length == 0) {
+            setFilenames(
+                vm.envString("TIMELOCK_CONTROLLER_INPUT_FILENAME"), vm.envString("TIMELOCK_CONTROLLER_OUTPUT_FILENAME")
+            );
+        }
+
         uint256 initialMinDelay = vm.parseJsonUint(inputJson, ".initialMinDelay");
         address[] memory initialProposers = vm.parseJsonAddressArray(inputJson, ".initialProposers");
         address[] memory initialExecutors = vm.parseJsonAddressArray(inputJson, ".initialExecutors");
@@ -77,8 +85,9 @@ contract DeployTimelockController is Script, CreateXUtils {
 
         vm.stopBroadcast();
 
-        // Write to file
-        string memory key = "key-deploy-timelock-controller-output-file";
-        vm.writeJson(vm.serializeAddress(key, "timelockController", deployedInstance), outputPath);
+        if (bytes(outputPath).length != 0) {
+            string memory key = "key-deploy-timelock-controller-output-file";
+            vm.writeJson(vm.serializeAddress(key, "timelockController", deployedInstance), outputPath);
+        }
     }
 }

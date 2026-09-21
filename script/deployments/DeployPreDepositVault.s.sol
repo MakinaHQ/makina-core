@@ -1,69 +1,58 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
-
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IPreDepositVault} from "../../src/interfaces/IPreDepositVault.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {DeployInstance} from "./DeployInstance.s.sol";
 
-contract DeployPreDepositVault is Base, Script {
-    using stdJson for string;
-
-    string private coreOutputJson;
-
-    string public inputJson;
-    string public outputPath;
-
-    address public deployedInstance;
-
-    constructor() {
-        string memory inputFilename = vm.envString("HUB_STRAT_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("HUB_STRAT_OUTPUT_FILENAME");
-
-        string memory coreOutputFilename = vm.envString("HUB_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/pre-deposit-vaults/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/pre-deposit-vaults/");
-        outputPath = string.concat(outputPath, outputFilename);
-
-        // load output from DeployHubCore script
-        string memory coreOutputPath = string.concat(basePath, "outputs/hub-cores/");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
-        coreOutputJson = vm.readFile(coreOutputPath);
-    }
-
-    function run() public {
+/// @notice Builds the `HubCoreFactory.createPreDepositVault` call for a new pre-deposit vault, then broadcasts it or
+///         logs it. See `DeployInstance` for modes and env vars.
+///
+/// Env vars (unless `setParams` was called):
+///   HUB_CORE_OUTPUT_FILENAME  - hub core output file holding the HubCoreFactory address
+///                               (under script/deployments/outputs/hub-cores/)
+///   HUB_STRAT_INPUT_FILENAME  - pre-deposit vault init params input file
+///                               (under script/deployments/inputs/pre-deposit-vaults/)
+///   HUB_STRAT_OUTPUT_FILENAME - file to write the pre-deposit vault address to
+///                               (under script/deployments/outputs/pre-deposit-vaults/, broadcast mode only)
+///   VIEW_MODE (optional)      - true for view mode, unset or false for broadcast mode
+contract DeployPreDepositVault is DeployInstance {
+    function _createCall() internal view override returns (Call memory) {
         IPreDepositVault.PreDepositVaultInitParams memory pdvParams =
             parsePreDepositVaultInitParams(inputJson, ".preDepositVaultInitParams");
-        address depositToken = vm.parseJsonAddress(inputJson, ".depositToken");
-        address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
-        string memory shareTokenName = vm.parseJsonString(inputJson, ".shareTokenName");
-        string memory shareTokenSymbol = vm.parseJsonString(inputJson, ".shareTokenSymbol");
-        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        IHubCoreFactory hubCoreFactory = IHubCoreFactory(vm.parseJsonAddress(coreOutputJson, ".HubCoreFactory"));
+        return Call({
+            label: "HubCoreFactory.createPreDepositVault",
+            target: coreFactory,
+            data: abi.encodeCall(
+                IHubCoreFactory.createPreDepositVault,
+                (
+                    pdvParams,
+                    vm.parseJsonAddress(inputJson, ".depositToken"),
+                    vm.parseJsonAddress(inputJson, ".accountingToken"),
+                    vm.parseJsonString(inputJson, ".shareTokenName"),
+                    vm.parseJsonString(inputJson, ".shareTokenSymbol"),
+                    vm.parseJsonBool(inputJson, ".setupAMFunctionRoles")
+                )
+            )
+        });
+    }
 
-        // Deploy pre-deposit vault
-        vm.startBroadcast();
-
-        deployedInstance = hubCoreFactory.createPreDepositVault(
-            pdvParams, depositToken, accountingToken, shareTokenName, shareTokenSymbol, setupAMFunctionRoles
-        );
-
-        vm.stopBroadcast();
-
-        // Write to file
+    function _writeOutput() internal override {
         string memory key = "key-deploy-pre-deposit-vault-output-file";
         vm.writeJson(vm.serializeAddress(key, "preDepositVault", deployedInstance), outputPath);
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "pre-deposit-vaults";
+    }
+
+    function _loadParamsFromEnv() internal override {
+        setParams(
+            _coreFactoryFromRecord("hub-cores", vm.envString("HUB_CORE_OUTPUT_FILENAME"), ".HubCoreFactory"),
+            vm.envString("HUB_STRAT_INPUT_FILENAME"),
+            _outputFilenameFromEnv("HUB_STRAT_OUTPUT_FILENAME")
+        );
     }
 }

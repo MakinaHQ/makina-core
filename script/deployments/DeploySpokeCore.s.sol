@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {stdJson} from "forge-std/StdJson.sol";
-
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
@@ -10,28 +8,19 @@ import {DeployCore} from "./DeployCore.s.sol";
 
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 
+/// @notice Deploys the Makina spoke core and runs its registry and AccessManager setup in a single broadcast.
+///
+/// Env vars (unless `setFilenames` was called):
+///   SPOKE_CORE_INPUT_FILENAME  - spoke core input file holding the deployment parameters
+///                                (under script/deployments/inputs/spoke-cores/)
+///   SPOKE_CORE_OUTPUT_FILENAME - spoke core output file to write the deployed contract addresses to
+///                                (under script/deployments/outputs/spoke-cores/)
+///   SKIP_AM_SETUP (optional)   - if true, skips the AccessManager function roles and role grants setup,
+///                                leaving the deployer as sole admin (for staging deployments)
 contract DeploySpokeCore is DeployCore {
-    using stdJson for string;
-
     SpokeCore private _core;
     UpgradeableBeacon[] private _bridgeAdapterBeacons;
     TransparentUpgradeableProxy[] private _bridgeConfigs;
-
-    constructor() {
-        string memory inputFilename = vm.envString("SPOKE_CORE_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("SPOKE_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/spoke-cores/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/spoke-cores/");
-        outputPath = string.concat(outputPath, outputFilename);
-    }
 
     function deployment() public view returns (SpokeCore memory, UpgradeableBeacon[] memory) {
         return (_core, _bridgeAdapterBeacons);
@@ -59,13 +48,9 @@ contract DeploySpokeCore is DeployCore {
         transferAccessManagerOwnership(_core.accessManager);
     }
 
-    function _deploySetupAfter() internal override {
-        // finish broadcasting transactions
-        vm.stopBroadcast();
-
+    function _writeOutput() internal override {
         string memory key = "key-deploy-makina-core-spoke-output-file";
 
-        // write to file
         vm.serializeAddress(key, "AccessManager", address(_core.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_core.caliberBeacon));
         vm.serializeAddress(key, "SpokeCoreFactory", address(_core.spokeCoreFactory));
@@ -86,5 +71,13 @@ contract DeploySpokeCore is DeployCore {
         }
         vm.serializeString(key, "BridgeAdapterBeacons", bridgeAdapterBeaconList);
         vm.writeJson(vm.serializeString(key, "BridgeConfigs", bridgeConfigList), outputPath);
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "spoke-cores";
+    }
+
+    function _loadFilenamesFromEnv() internal override {
+        setFilenames(vm.envString("SPOKE_CORE_INPUT_FILENAME"), vm.envString("SPOKE_CORE_OUTPUT_FILENAME"));
     }
 }

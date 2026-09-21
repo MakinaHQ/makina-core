@@ -1,74 +1,65 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {Script} from "forge-std/Script.sol";
-import {stdJson} from "forge-std/StdJson.sol";
-
-import {IBridgeAdapterFactory} from "src/interfaces/IBridgeAdapterFactory.sol";
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
-import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
+import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {DeployInstance} from "./DeployInstance.s.sol";
 
-contract DeploySpokeCaliber is Base, Script {
-    using stdJson for string;
-
-    string private coreOutputJson;
-
-    string public inputJson;
-    string public outputPath;
-
-    address public deployedInstance;
-
-    constructor() {
-        string memory inputFilename = vm.envString("SPOKE_STRAT_INPUT_FILENAME");
-        string memory outputFilename = vm.envString("SPOKE_STRAT_OUTPUT_FILENAME");
-
-        string memory coreOutputFilename = vm.envString("SPOKE_CORE_OUTPUT_FILENAME");
-
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
-
-        // load input params
-        string memory inputPath = string.concat(basePath, "inputs/spoke-calibers/");
-        inputPath = string.concat(inputPath, inputFilename);
-        inputJson = vm.readFile(inputPath);
-
-        // output path to later save deployed contracts
-        outputPath = string.concat(basePath, "outputs/spoke-calibers/");
-        outputPath = string.concat(outputPath, outputFilename);
-
-        // load output from DeploySpokeCore script
-        string memory coreOutputPath = string.concat(basePath, "outputs/spoke-cores/");
-        coreOutputPath = string.concat(coreOutputPath, coreOutputFilename);
-        coreOutputJson = vm.readFile(coreOutputPath);
-    }
-
-    function run() public {
+/// @notice Builds the `SpokeCoreFactory.createCaliber` call for a new spoke caliber and its mailbox, then broadcasts
+///         it or logs it. See `DeployInstance` for modes and env vars.
+///
+/// Env vars (unless `setParams` was called):
+///   SPOKE_CORE_OUTPUT_FILENAME  - spoke core output file holding the SpokeCoreFactory address
+///                                 (under script/deployments/outputs/spoke-cores/)
+///   SPOKE_STRAT_INPUT_FILENAME  - caliber init params input file (under script/deployments/inputs/spoke-calibers/)
+///   SPOKE_STRAT_OUTPUT_FILENAME - file to write the caliber and mailbox addresses to
+///                                 (under script/deployments/outputs/spoke-calibers/, broadcast mode only)
+///   VIEW_MODE (optional)        - true for view mode, unset or false for broadcast mode
+contract DeploySpokeCaliber is DeployInstance {
+    function _createCall() internal view override returns (Call memory) {
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
         IMakinaGovernable.MakinaGovernableInitParams memory mgParams =
             parseMakinaGovernableInitParams(inputJson, ".makinaGovernableInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
-        address accountingToken = vm.parseJsonAddress(inputJson, ".accountingToken");
-        bytes32 salt = vm.parseJsonBytes32(inputJson, ".salt");
-        bool setupAMFunctionRoles = vm.parseJsonBool(inputJson, ".setupAMFunctionRoles");
 
-        ISpokeCoreFactory spokeCoreFactory = ISpokeCoreFactory(vm.parseJsonAddress(coreOutputJson, ".SpokeCoreFactory"));
+        return Call({
+            label: "SpokeCoreFactory.createCaliber",
+            target: coreFactory,
+            data: abi.encodeCall(
+                ISpokeCoreFactory.createCaliber,
+                (
+                    cParams,
+                    mgParams,
+                    baParams,
+                    vm.parseJsonAddress(inputJson, ".accountingToken"),
+                    vm.parseJsonBytes32(inputJson, ".salt"),
+                    vm.parseJsonBool(inputJson, ".setupAMFunctionRoles")
+                )
+            )
+        });
+    }
 
-        // Deploy caliber
-        vm.startBroadcast();
-
-        deployedInstance =
-            spokeCoreFactory.createCaliber(cParams, mgParams, baParams, accountingToken, salt, setupAMFunctionRoles);
-
-        vm.stopBroadcast();
-
-        // Write to file
+    function _writeOutput() internal override {
         string memory key = "key-deploy-spoke-caliber-output-file";
         vm.serializeAddress(key, "caliber", deployedInstance);
         vm.writeJson(
             vm.serializeAddress(key, "caliberMailbox", ICaliber(deployedInstance).hubMachineEndpoint()), outputPath
+        );
+    }
+
+    function _recordDir() internal pure override returns (string memory) {
+        return "spoke-calibers";
+    }
+
+    function _loadParamsFromEnv() internal override {
+        setParams(
+            _coreFactoryFromRecord("spoke-cores", vm.envString("SPOKE_CORE_OUTPUT_FILENAME"), ".SpokeCoreFactory"),
+            vm.envString("SPOKE_STRAT_INPUT_FILENAME"),
+            _outputFilenameFromEnv("SPOKE_STRAT_OUTPUT_FILENAME")
         );
     }
 }
