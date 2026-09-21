@@ -30,7 +30,7 @@ abstract contract SetBridgeAdapter_Integration_Concrete_Test is BridgeController
         bridgeController.setBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(0), DEFAULT_MAX_BRIDGE_LOSS_BPS);
     }
 
-    function test_SetBridgeAdapter_acrossV3() public {
+    function test_SetBridgeAdapter_AcrossV3() public {
         assertFalse(bridgeController.isBridgeSupported(ACROSS_V3_BRIDGE_ID));
 
         address beacon = address(_deployAcrossV3BridgeAdapterBeacon(address(accessManager), address(0), address(0)));

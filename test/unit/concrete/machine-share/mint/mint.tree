@@ -1,5 +1,5 @@
 mint.t.sol
-├── when caller is not the associated machine
-│  └── it should revert with NotMachine
-└── when caller is the associated machine
-    └── it should increase the share token balance of the receiver by given amount
+├── when caller is not the share token owner
+│  └── it should revert with OwnableUnauthorizedAccount
+└── when caller is the share token owner
+   └── it should increase the share token balance of the receiver by given amount

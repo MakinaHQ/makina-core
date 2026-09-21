@@ -11,7 +11,7 @@ contract GetHubBridgeAdapter_Integration_Concrete_Test is Unit_Concrete_Spoke_Te
         caliberMailbox.getHubBridgeAdapter(ACROSS_V3_BRIDGE_ID);
     }
 
-    function test_GetSpokeBridgeAdapter() public {
+    function test_GetHubBridgeAdapter() public {
         vm.prank(dao);
         caliberMailbox.setHubBridgeAdapter(ACROSS_V3_BRIDGE_ID, address(1));
 

@@ -3,5 +3,6 @@ getDetailedAum.t.sol
 │  └── it should revert
 └── when call is not reentrant
    ├── it should account for all base-token positions
+   ├── it should ignore balances of tokens that are not registered as base tokens
    ├── it should account for all positions, debt and non-debt
    └── it should return the caliber net AUM along with an array containing all encoded Caliber position IDs, their corresponding values, isDebt flags, and whether their accounting is stale

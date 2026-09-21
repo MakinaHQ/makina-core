@@ -5,7 +5,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 
 import {ISwapModule} from "src/interfaces/ISwapModule.sol";
 
-import {Unit_Concrete_Spoke_Test} from "../UnitConcrete.t.sol";
+import {Unit_Concrete_Spoke_Test} from "../../UnitConcrete.t.sol";
 
 contract SetSwapperTargets_Unit_Concrete_Test is Unit_Concrete_Spoke_Test {
     function test_RevertWhen_CallerWithoutRole() public {

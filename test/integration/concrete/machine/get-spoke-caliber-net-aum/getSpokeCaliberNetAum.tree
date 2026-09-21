@@ -1,0 +1,5 @@
+getSpokeCaliberNetAum.t.sol
+├── given no spoke caliber was registered in this contract for the provided chain ID
+│  └── it should revert with InvalidChainId
+└── given a spoke caliber was registered in this contract for the provided chain ID
+   └── it should return the net AUM and accounting timestamp of the spoke caliber on the provided chain ID

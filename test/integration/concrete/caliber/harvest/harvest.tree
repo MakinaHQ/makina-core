@@ -13,20 +13,20 @@ harvest.t.sol
    │        │  └── it should revert with InvalidInstructionProof
    │        └── when the instruction proof is valid against the merkle root set in the caliber
    │           ├── when there is no swap to execute
-   │           │  └── harvested token amounts should have been received by caliber
+   │           │  └── it should hold the harvested token amounts in the caliber
    │           └── when there are swaps to execute
    │              ├── given an output token is not a base token
    │              │  └── it should revert with InvalidOutputToken
    │              └── given all output tokens are base tokens
    │                 ├── given one of the swap orders fails to be executed
    │                 │  └── it should revert
-   │                 └── given the swap orders are successfuly executed
+   │                 └── given the swap orders are successfully executed
    │                    ├── given the value loss induced by one of the swaps is higher than maxSwapLossBps
    │                    │  └── it should revert with MaxValueLossExceeded
    │                    └── given no value loss induced by any of the swaps is higher than maxSwapLossBps
-   │                       ├── harvested token amounts should have been received by caliber
-   │                       ├── for each order execution, order.inputAmount of order.inputToken should have been spent in the caliber
-   │                       └── for each order execution, order.minOutputAmount of order.outputToken should have been received by the caliber
+   │                       ├── it should hold the harvested token amounts in the caliber
+   │                       ├── it should spend order.inputAmount of order.inputToken from the caliber for each executed order
+   │                       └── it should receive at least order.minOutputAmount of order.outputToken in the caliber for each executed order
    └── given recovery mode is on
       ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
@@ -38,16 +38,16 @@ harvest.t.sol
             │  └── it should revert with InvalidInstructionProof
             └── when the instruction proof is valid against the merkle root set in the caliber
                ├── when there is no swap to execute
-               │  └── harvested token amounts should be held by caliber
+               │  └── it should hold the harvested token amounts in the caliber
                └── when there are swaps to execute
                   ├── given one of the output tokens is not the accounting token
                   │  └── it should revert with RecoveryMode
-                  └── given all output tokens are base tokens
-                        ├── given one of the swap orders fails to be executed
-                        │  └── it should revert
-                        └── given the swap orders are all successfuly executed
-                           ├── given the value loss induced by one of the swaps is higher than maxSwapLossBps
-                           │  └── it should revert with MaxValueLossExceeded
-                           └── given no value loss induced by any of the swaps is higher than maxSwapLossBps
-                              ├── for each order execution, order.inputAmount of order.inputToken should have been spent in the caliber
-                              └── for each order execution, order.minOutputAmount of order.outputToken should have been received by the caliber
+                  └── given all output tokens are the accounting token
+                     ├── given one of the swap orders fails to be executed
+                     │  └── it should revert
+                     └── given the swap orders are all successfully executed
+                        ├── given the value loss induced by one of the swaps is higher than maxSwapLossBps
+                        │  └── it should revert with MaxValueLossExceeded
+                        └── given no value loss induced by any of the swaps is higher than maxSwapLossBps
+                           ├── it should spend order.inputAmount of order.inputToken from the caliber for each executed order
+                           └── it should receive at least order.minOutputAmount of order.outputToken in the caliber for each executed order

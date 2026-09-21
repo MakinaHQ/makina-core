@@ -1,0 +1,6 @@
+setSwapperTargets.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── it should associate the provided approval and execution targets to the provided swapper ID in contract storage
+   └── it should emit a SwapperTargetsSet event

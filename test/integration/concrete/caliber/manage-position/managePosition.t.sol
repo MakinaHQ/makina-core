@@ -46,7 +46,7 @@ contract ManagePosition_Integration_Concrete_Test is Caliber_Integration_Concret
     function test_RevertWhen_PositionIdZero() public {
         uint256 inputAmount = 3e18;
 
-        // instructions have different positionId
+        // instructions have a zero positionId
         ICaliber.Instruction memory mgmtInstruction =
             _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount));
         ICaliber.Instruction memory acctInstruction =

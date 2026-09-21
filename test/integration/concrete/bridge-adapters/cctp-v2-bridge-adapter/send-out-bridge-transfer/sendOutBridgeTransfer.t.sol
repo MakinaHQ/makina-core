@@ -132,6 +132,29 @@ contract SendOutBridgeTransfer_CctpV2BridgeAdapter_Integration_Concrete_Test is
         assertEq(token1.totalSupply(), supplyBefore - inputAmount);
     }
 
+    function test_RevertGiven_SpreadBelowMinFee() public {
+        // set fee rate to 1 bps
+        tokenMessenger.setMinFeeRate(CCTP_V2_FEE_MILLI_BPS);
+
+        uint256 inputAmount = 1e18;
+        uint256 fee = tokenMessenger.getMinFeeAmount(inputAmount);
+        uint256 minOutputAmount = inputAmount - fee + 1;
+
+        uint256 nextOutTransferId = bridgeAdapter1.nextOutTransferId();
+
+        deal(address(token1), address(bridgeController1), inputAmount, true);
+
+        vm.startPrank(address(bridgeController1));
+
+        token1.approve(address(bridgeAdapter1), inputAmount);
+        bridgeAdapter1.scheduleOutBridgeTransfer(
+            chainId2, address(bridgeAdapter2), address(token1), inputAmount, address(token2), minOutputAmount
+        );
+
+        vm.expectRevert(MockCctpV2TokenMessenger.InsufficientFee.selector);
+        bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(CCTP_V2_CONFIRMED_FINALITY_THRESHOLD));
+    }
+
     function test_SendOutBridgeTransfer_WithFee() public {
         // set fee rate to 1 bps
         tokenMessenger.setMinFeeRate(CCTP_V2_FEE_MILLI_BPS);

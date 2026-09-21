@@ -59,10 +59,7 @@ contract ResetBridgingState_Integration_Concrete_Test is Machine_Integration_Con
         assertTrue(machine.isIdleToken(address(accountingToken)));
     }
 
-    function test_RevertWhen_PositiveBalanceAndTokenNonPriceable_FromHubCaliber()
-        public
-        withBridgeAdapter(ACROSS_V3_BRIDGE_ID)
-    {
+    function test_RevertWhen_PositiveBalanceAndTokenNonPriceable() public withBridgeAdapter(ACROSS_V3_BRIDGE_ID) {
         MockERC20 baseToken2 = new MockERC20("baseToken2", "BT2", 18);
 
         address bridgeAdapterAddr = machine.getBridgeAdapter(ACROSS_V3_BRIDGE_ID);

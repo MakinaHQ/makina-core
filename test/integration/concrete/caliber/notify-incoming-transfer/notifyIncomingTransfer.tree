@@ -8,9 +8,12 @@ notifyIncomingTransfer.t.sol
       ├── given the token is not a registered base token in the caliber
       │  └── it should revert with NotBaseToken
       └── given the token is a registered base token in the caliber
-         ├── given caller has insufficient token allowance or balance
-         │  └── it should revert
-         └── given caller has sufficient token allowance and balance
-            ├── it should increase the caliber's token balance by amount
-            ├── it should decrease the hub machine endpoint's token balance by amount
-            └── it should emit an IncomingTransfer event
+         ├── given caller has insufficient token allowance
+         │  └── it should revert with ERC20InsufficientAllowance
+         └── given caller has sufficient token allowance
+            ├── given caller has insufficient token balance
+            │  └── it should revert with ERC20InsufficientBalance
+            └── given caller has sufficient token balance
+               ├── it should increase the caliber's token balance by amount
+               ├── it should decrease the hub machine endpoint's token balance by amount
+               └── it should emit an IncomingTransfer event

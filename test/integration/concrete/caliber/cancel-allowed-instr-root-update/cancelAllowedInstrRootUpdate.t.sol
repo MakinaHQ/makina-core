@@ -6,7 +6,7 @@ import {Errors} from "src/libraries/Errors.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
-contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+contract CancelAllowedInstrRootUpdate_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_CancelAllowedInstrRootUpdate_RevertWhen_CallerUnauthorized() public {
         vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.cancelAllowedInstrRootUpdate();

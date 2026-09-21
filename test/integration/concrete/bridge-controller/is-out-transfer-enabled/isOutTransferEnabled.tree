@@ -2,4 +2,4 @@ isOutTransferEnabled.t.sol
 ├── given no adapter for the provided bridge ID is registered in this contract
 │  └── it should return false
 └── given an adapter for the provided bridge ID is registered in this contract
-   └── it should return whether ougoing transfers are enabled for the given bridge ID
+   └── it should return whether outgoing transfers are enabled for the given bridge ID

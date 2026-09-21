@@ -6,4 +6,3 @@ getPosition.t.sol
    │  └── it should return the outdated accounting time and value
    └── given the position was accounted for since its value last changed
       └── it should return the updated accounting time and value
-      

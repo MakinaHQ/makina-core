@@ -16,7 +16,7 @@ createCaliber.t.sol
             └── given the caliber deployment succeeds
                ├── when the setupAMFunctionRoles flag is set to true
                │  ├── when the provided authority is not equal to current factory authority
-               │  │  └── it should revert with Create3ContractDeploymentFailed
+               │  │  └── it should revert with NotFactoryAuthority
                │  └── when the provided authority is equal to current factory authority
                │     ├── it should deploy a caliber instance, along with a caliber mailbox instance, and initialize them with provided parameters
                │     ├── it should assign the relevant roles to restricted functions on applicable instances

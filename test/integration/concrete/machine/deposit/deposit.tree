@@ -18,4 +18,3 @@ deposit.t.sol
                ├── it should mint shares to the receiver in exchange for the received assets, based on the conversion rate provided by convertToShares
                ├── it should increase the last AUM value by assets
                └── it should emit a Deposit event
-   

@@ -31,14 +31,14 @@ accountForPositionBatch.t.sol
                            └── when there is no missing instruction for one of the provided groups
                               ├── for each accounted position, given the new position value is zero
                               │  └── given the position value was previously positive
-                              │     └── the position should be closed, i.e erased from storage
+                              │     └── it should close the position and erase it from storage
                               └── for each accounted position, given the new position value is positive
                                  ├── given the position was just created
-                                 │  ├── the position ID should be stored in caliber
-                                 │  ├── it should set position.lastAccountingTime to current block timestmap
+                                 │  ├── it should register the position ID in the caliber
+                                 │  ├── it should set position.lastAccountingTime to current block timestamp
                                  │  ├── it should set position.value to the computed position value converted to accounting token
                                  │  └── it should return the new value and the value change since last accounting
                                  └── given the position already existed
-                                    ├── it should set position.lastAccountingTime to current block timestmap
+                                    ├── it should set position.lastAccountingTime to current block timestamp
                                     ├── it should set position.value to the computed position value converted to accounting token
                                     └── it should return the new value and the value change since last accounting

@@ -6,7 +6,7 @@ import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessMana
 import {MockPriceFeed} from "test/mocks/MockPriceFeed.sol";
 import {IOracleRegistry} from "src/interfaces/IOracleRegistry.sol";
 
-import {OracleRegistry_Unit_Concrete_Test} from "./OracleRegistry.t.sol";
+import {OracleRegistry_Unit_Concrete_Test} from "../OracleRegistry.t.sol";
 
 contract SetFeedStaleThreshold_Unit_Concrete_Test is OracleRegistry_Unit_Concrete_Test {
     MockPriceFeed internal priceFeed1;

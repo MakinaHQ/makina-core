@@ -55,7 +55,7 @@ contract SetSpokeCaliber_Integration_Concrete_Test is Machine_Integration_Concre
         machine.setSpokeCaliber(SPOKE_CHAIN_ID, makeAddr("spokeCaliberMailbox2"), bridges, spokeBridgeAdapters);
     }
 
-    function test_RevertWhen_MismatchedLength() public {
+    function test_RevertWhen_MismatchedLengths() public {
         bridges = new uint16[](1);
 
         vm.expectRevert(Errors.MismatchedLengths.selector);

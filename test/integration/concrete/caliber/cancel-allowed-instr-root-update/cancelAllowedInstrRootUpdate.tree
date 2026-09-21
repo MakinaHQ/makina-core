@@ -2,7 +2,7 @@ cancelAllowedInstrRootUpdate.t.sol
 ├── when caller is not in the set of root guardians
 │  └── it should revert with UnauthorizedCaller
 └── when caller is in the set of root guardians
-   ├── given there is no pending root update
+   ├── given there is no pending root update, or its timelock has already expired
    │  └── it should revert with NoPendingUpdate
    └── given there is a pending root update
       ├── it should reset the timelock expiry and pending root in the Caliber

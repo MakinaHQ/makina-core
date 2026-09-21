@@ -9,4 +9,4 @@ removeInstrRootGuardian.t.sol
       │  └── it should revert with NotRootGuardian
       └── given provided address is a root guardian
          ├── it should unset the provided address as a root guardian
-         └── it should emit a InstrRootGuardianRemoved event
+         └── it should emit an InstrRootGuardianRemoved event

@@ -16,4 +16,11 @@ contract GetOft_Unit_Concrete_Test is LayerZeroV2BridgeConfig_Unit_Concrete_Test
         vm.expectRevert(Errors.OftNotRegistered.selector);
         layerZeroV2BridgeConfig.getOft(address(mockOftAdapter));
     }
+
+    function test_GetOft() public {
+        vm.prank(dao);
+        layerZeroV2BridgeConfig.setOft(address(mockOftAdapter));
+
+        assertEq(layerZeroV2BridgeConfig.getOft(address(baseToken)), address(mockOftAdapter));
+    }
 }

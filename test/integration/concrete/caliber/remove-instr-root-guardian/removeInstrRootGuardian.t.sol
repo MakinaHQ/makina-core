@@ -14,7 +14,7 @@ contract RemoveInstrRootGuardian_Integration_Concrete_Test is Caliber_Integratio
         caliber.removeInstrRootGuardian(address(0));
     }
 
-    function test_RevertWhen_TargetIsAlreadyRootGuardian() public {
+    function test_RevertWhen_TargetIsNotRootGuardian() public {
         vm.expectRevert(Errors.NotRootGuardian.selector);
         vm.prank(dao);
         caliber.removeInstrRootGuardian(address(0));

@@ -114,6 +114,36 @@ contract ManageFlashLoan_Integration_Concrete_Test is Caliber_Integration_Concre
         caliber.managePosition(mgmtInstruction, acctInstruction);
     }
 
+    function test_RevertWhen_ProvidedInstructionProofInvalid() public {
+        MockERC20 token = new MockERC20("TOKEN", "TKN", 18);
+
+        uint256 flashLoanAmount = 1e18;
+        deal(address(token), address(flashLoanModule), flashLoanAmount, true);
+
+        // inner instruction leaf is tampered while keeping the proof of the registered leaf
+        ICaliber.Instruction memory flMgmtInstruction = _buildManageFlashLoanDummyInstruction(LOOP_POS_ID);
+        flMgmtInstruction.groupId = 1;
+        flMgmtInstruction.merkleProof = _proofOf(_buildManageFlashLoanDummyInstruction(LOOP_POS_ID));
+        ICaliber.Instruction memory mgmtInstruction = _withProof(
+            _buildMockFlashLoanModuleDummyLoopInstruction(
+                LOOP_POS_ID, address(flashLoanModule), address(token), flashLoanAmount, flMgmtInstruction
+            )
+        );
+        ICaliber.Instruction memory acctInstruction =
+            _withProof(_buildMockFlashLoanModuleDummyAccountingInstruction(LOOP_POS_ID));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                VM.ExecutionFailed.selector,
+                0,
+                address(flashLoanModule),
+                string(abi.encodePacked(Errors.InvalidInstructionProof.selector))
+            )
+        );
+        vm.prank(mechanic);
+        caliber.managePosition(mgmtInstruction, acctInstruction);
+    }
+
     function test_RevertWhen_InstructionsAreDebt() public {
         ICaliber.Instruction memory flMgmtInstruction = _withProof(_buildManageFlashLoanDummyInstruction(LOOP_POS_ID));
         flMgmtInstruction.isDebt = true;

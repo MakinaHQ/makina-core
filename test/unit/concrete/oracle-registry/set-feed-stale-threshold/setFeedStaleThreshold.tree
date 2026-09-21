@@ -1,0 +1,6 @@
+setFeedStaleThreshold.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── it should associate the provided staleness threshold to the provided feed in oracle registry storage
+   └── it should emit a FeedStaleThresholdChanged event

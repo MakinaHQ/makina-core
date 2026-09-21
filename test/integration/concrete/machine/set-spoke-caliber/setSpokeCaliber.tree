@@ -18,7 +18,7 @@ setSpokeCaliber.t.sol
                │  └── it should revert with ZeroSpokeCaliberMailboxAddress
                └── when the provided spoke caliber mailbox is not the zero address
                   ├── when the provided bridge ID list and adapter list do not have the same length
-                  │  └── it should revert with MismatchedLength
+                  │  └── it should revert with MismatchedLengths
                   └── when the provided bridge ID list and adapter list have the same length
                      ├── given an adapter address is already set for the provided chain ID and one of the bridge IDs
                      │  └── it should revert with SpokeBridgeAdapterAlreadySet
