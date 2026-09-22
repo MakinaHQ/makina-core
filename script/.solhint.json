@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "gas-custom-errors": "off",
+    "reason-string": ["warn", { "maxLength": 64 }],
+    "no-console": "off",
+    "no-empty-blocks": "off"
+  }
+}

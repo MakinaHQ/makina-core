@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-// solhint-disable gas-custom-errors, reason-string
-
 import {Script} from "forge-std/Script.sol";
 
 import {CreateXUtils} from "./utils/CreateXUtils.sol";

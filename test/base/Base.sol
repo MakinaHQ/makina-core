@@ -481,7 +481,6 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     }
 
     function _grantRole(AccessManagerUpgradeable accessManager, AMRoleGrant memory roleGrant) private {
-        // solhint-disable-next-line gas-custom-errors
         require(roleGrant.account != address(0), "Base: zero roleGrant account");
         accessManager.grantRole(roleGrant.roleId, roleGrant.account, roleGrant.executionDelay);
     }
