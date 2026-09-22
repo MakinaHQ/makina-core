@@ -54,10 +54,15 @@ abstract contract DeployInstance is Base, Script, AMGovCalldata {
         viewMode = _viewMode;
     }
 
+    /// @dev Reads `VIEW_MODE` and calls `setParams` with this script's env vars.
+    function loadParamsFromEnv() public {
+        viewMode = vm.envOr("VIEW_MODE", false);
+        _loadParamsFromEnv();
+    }
+
     function run() public {
         if (bytes(inputJson).length == 0) {
-            viewMode = vm.envOr("VIEW_MODE", false);
-            _loadParamsFromEnv();
+            loadParamsFromEnv();
         }
 
         Call memory call = _createCall();
@@ -86,7 +91,7 @@ abstract contract DeployInstance is Base, Script, AMGovCalldata {
     /// @dev Directory name of this script's input and output records, under `inputs/` and `outputs/`.
     function _recordDir() internal pure virtual returns (string memory);
 
-    /// @dev Calls `setParams` with this script's env vars.
+    /// @dev Calls `setParams` with this script's env vars, `viewMode` being already set.
     function _loadParamsFromEnv() internal virtual;
 
     /// @dev Core factory address read from a core output record.

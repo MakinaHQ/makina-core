@@ -51,10 +51,15 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
         skipAMSetup = _skip;
     }
 
+    /// @dev Reads `SKIP_AM_SETUP` and calls `setFilenames` with this script's env vars.
+    function loadParamsFromEnv() public {
+        skipAMSetup = vm.envOr("SKIP_AM_SETUP", false);
+        _loadFilenamesFromEnv();
+    }
+
     function run() public {
         if (bytes(inputJson).length == 0) {
-            _loadFilenamesFromEnv();
-            skipAMSetup = vm.envOr("SKIP_AM_SETUP", false);
+            loadParamsFromEnv();
         }
 
         _parseInputs();

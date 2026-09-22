@@ -41,11 +41,16 @@ contract DeployTimelockController is Script, CreateXUtils {
             : string.concat(basePath, "outputs/timelock-controllers/", outputFilename);
     }
 
+    /// @dev Calls `setFilenames` with this script's env vars.
+    function loadParamsFromEnv() public {
+        setFilenames(
+            vm.envString("TIMELOCK_CONTROLLER_INPUT_FILENAME"), vm.envString("TIMELOCK_CONTROLLER_OUTPUT_FILENAME")
+        );
+    }
+
     function run() public {
         if (bytes(inputJson).length == 0) {
-            setFilenames(
-                vm.envString("TIMELOCK_CONTROLLER_INPUT_FILENAME"), vm.envString("TIMELOCK_CONTROLLER_OUTPUT_FILENAME")
-            );
+            loadParamsFromEnv();
         }
 
         uint256 initialMinDelay = vm.parseJsonUint(inputJson, ".initialMinDelay");

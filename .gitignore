@@ -17,6 +17,3 @@ node_modules/
 
 # System files
 .DS_Store
-
-# Scratch output files written by the deploy script tests
-script/deployments/outputs/**/*-Scratch.json
