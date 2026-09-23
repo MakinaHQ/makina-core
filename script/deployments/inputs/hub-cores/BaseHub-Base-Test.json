@@ -1,0 +1,19 @@
+{
+  "mainCoreRegistry": "0x7a86474ac9637CE5DE5e42F72D0a7743DCe5e9AB",
+  "creForwarder": "0xF8344CFd5c43616a4366C34E3EEE75af79a74482",
+  "swappersTargets": [
+    {
+      "swapperId": 1,
+      "approvalTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1",
+      "executionTarget": "0x19cEeAd7105607Cd444F5ad10dd51356436095a1"
+    }
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 1,
+      "approvalTarget": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+      "executionTarget": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64",
+      "receiveSource": "0x09aea4b2242abC8bb4BB78D537A67a245A7bEC64"
+    }
+  ]
+}

@@ -9,8 +9,7 @@ import {Base} from "../../test/base/Base.sol";
 
 /// @notice Shared logic of the scripts deploying a core (hub or spoke) and running its registry and AccessManager
 ///         setup in a single broadcast.
-/// @dev Concrete scripts implement `_coreSetup`, `_writeOutput`, `_recordDir` and `_loadFilenamesFromEnv`.
-///      Deployments go through CreateX and are bound to the broadcasting address, see `_deployCode`.
+/// @dev Deployments go through CreateX and are bound to the broadcasting address, see `_deployCode`.
 ///
 /// Env vars (read by the concrete scripts, unless `setFilenames` was called):
 ///   <HUB|SPOKE>_CORE_INPUT_FILENAME  - core input file holding the deployment parameters
@@ -50,7 +49,7 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     }
 
     /// @dev Reads `SKIP_AM_SETUP` and calls `setFilenames` with this script's env vars.
-    function loadParamsFromEnv() public {
+    function loadParamsFromEnv() public virtual {
         skipAMSetup = vm.envOr("SKIP_AM_SETUP", false);
         _loadFilenamesFromEnv();
     }

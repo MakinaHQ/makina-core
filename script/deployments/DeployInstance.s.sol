@@ -11,8 +11,7 @@ import {Base} from "../../test/base/Base.sol";
 
 /// @notice Shared logic of the scripts creating strategy components (machine, caliber, pre-deposit vault) through a
 ///         core factory.
-/// @dev Concrete scripts implement `_createCall`, encoding the factory call to perform, and `_writeOutput`.
-///      The factory `create*` functions are restricted: broadcast from an account holding the
+/// @dev The factory `create*` functions are restricted: broadcast from an account holding the
 ///      STRATEGY_DEPLOYMENT_ROLE, or run in view mode to log the calldata for that account to submit.
 ///
 /// Modes, selected by the `VIEW_MODE` env var:

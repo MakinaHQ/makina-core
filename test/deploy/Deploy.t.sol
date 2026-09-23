@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {stdJson} from "forge-std/StdJson.sol";
 import {Test} from "forge-std/Test.sol";
 
 import {IAccessManaged} from "@openzeppelin/contracts/access/manager/IAccessManaged.sol";
+import {IAccessManager} from "@openzeppelin/contracts/access/manager/IAccessManager.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {
     AccessManagerUpgradeable
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {TimelockController} from "@openzeppelin/contracts/governance/TimelockController.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
+import {DeployForeignHubCore} from "script/deployments/DeployForeignHubCore.s.sol";
+import {DeployForeignSpokeCore} from "script/deployments/DeployForeignSpokeCore.s.sol";
 import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
 import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
 import {DeployHubMachineFromPreDeposit} from "script/deployments/DeployHubMachineFromPreDeposit.s.sol";
@@ -19,14 +22,21 @@ import {DeployPreDepositVault} from "script/deployments/DeployPreDepositVault.s.
 import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
 import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
 import {DeployTimelockController} from "script/deployments/DeployTimelockController.s.sol";
+import {SetupForeignHubCore} from "script/deployments/SetupForeignHubCore.s.sol";
+import {SetupForeignSpokeCore} from "script/deployments/SetupForeignSpokeCore.s.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
+import {ICoreRegistry} from "src/interfaces/ICoreRegistry.sol";
 import {IHubCoreFactory} from "src/interfaces/IHubCoreFactory.sol";
 import {IMachine} from "src/interfaces/IMachine.sol";
 import {IMachineShare} from "src/interfaces/IMachineShare.sol";
+import {IMakinaContext} from "src/interfaces/IMakinaContext.sol";
 import {IMakinaGovernable} from "src/interfaces/IMakinaGovernable.sol";
 import {IPreDepositVault} from "src/interfaces/IPreDepositVault.sol";
+import {ISpokeCoreFactory} from "src/interfaces/ISpokeCoreFactory.sol";
+import {ISwapModule} from "src/interfaces/ISwapModule.sol";
+import {Roles} from "src/libraries/Roles.sol";
 
 import {MockCreForwarder} from "../mocks/MockCreForwarder.sol";
 import {Constants} from "../utils/Constants.sol";
@@ -46,9 +56,6 @@ contract BaseHarness is Base {
 }
 
 contract Deploy_Scripts_Test is Base, Constants, Test {
-    using stdJson for string;
-
-    // Scripts to test
     DeployHubCore public deployHubCore;
     DeployPreDepositVault public deployPreDepositVault;
     DeployHubMachine public deployHubMachine;
@@ -56,6 +63,10 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
     DeploySpokeCore public deploySpokeCore;
     DeploySpokeCaliber public deploySpokeCaliber;
     DeployTimelockController public deployTimelockController;
+    DeployForeignHubCore public deployForeignHubCore;
+    DeployForeignSpokeCore public deployForeignSpokeCore;
+    SetupForeignHubCore public setupForeignHubCore;
+    SetupForeignSpokeCore public setupForeignSpokeCore;
 
     function test_LoadParamsFromEnv() public {
         string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
@@ -149,14 +160,62 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         address caliberMechanic =
             vm.parseJsonAddress(deploySpokeCaliber.inputJson(), ".makinaGovernableInitParams.initialMechanic");
         assertTrue(caliberMechanic != address(0));
+
+        // The foreign core scripts share the core env vars, and perform no AccessManager setup
+        string memory foreignHubFilename = _foreignHubTestFilename();
+        vm.setEnv("HUB_CORE_INPUT_FILENAME", foreignHubFilename);
+        vm.setEnv("HUB_CORE_OUTPUT_FILENAME", foreignHubFilename);
+        vm.setEnv("SKIP_AM_SETUP", "true");
+        deployForeignHubCore = new DeployForeignHubCore();
+        deployForeignHubCore.loadParamsFromEnv();
+
+        assertFalse(deployForeignHubCore.skipAMSetup());
+        assertEq(deployForeignHubCore.outputPath(), string.concat(basePath, "outputs/hub-cores/", foreignHubFilename));
+        assertEq(
+            vm.parseJsonAddress(deployForeignHubCore.inputJson(), ".mainCoreRegistry"),
+            vm.parseJsonAddress(spokeCoreOutputJson, ".SpokeCoreRegistry")
+        );
+        assertTrue(vm.parseJsonAddress(deployForeignHubCore.inputJson(), ".creForwarder") != address(0));
+
+        vm.setEnv("VIEW_MODE", "true");
+        setupForeignHubCore = new SetupForeignHubCore();
+        setupForeignHubCore.loadParamsFromEnv();
+
+        assertTrue(setupForeignHubCore.viewMode());
+        assertEq(setupForeignHubCore.inputJson(), deployForeignHubCore.inputJson());
+        assertTrue(vm.parseJsonAddress(setupForeignHubCore.outputJson(), ".HubCoreRegistry") != address(0));
+
+        string memory foreignSpokeFilename = _foreignSpokeTestFilename();
+        vm.setEnv("SPOKE_CORE_INPUT_FILENAME", foreignSpokeFilename);
+        vm.setEnv("SPOKE_CORE_OUTPUT_FILENAME", foreignSpokeFilename);
+        deployForeignSpokeCore = new DeployForeignSpokeCore();
+        deployForeignSpokeCore.loadParamsFromEnv();
+
+        assertFalse(deployForeignSpokeCore.skipAMSetup());
+        assertEq(
+            deployForeignSpokeCore.outputPath(), string.concat(basePath, "outputs/spoke-cores/", foreignSpokeFilename)
+        );
+        assertEq(
+            vm.parseJsonAddress(deployForeignSpokeCore.inputJson(), ".mainCoreRegistry"),
+            vm.parseJsonAddress(hubCoreOutputJson, ".HubCoreRegistry")
+        );
+        assertEq(vm.parseJsonUint(deployForeignSpokeCore.inputJson(), ".hubChainId"), BASE_CHAIN_ID);
+
+        vm.setEnv("VIEW_MODE", "false");
+        setupForeignSpokeCore = new SetupForeignSpokeCore();
+        setupForeignSpokeCore.loadParamsFromEnv();
+
+        assertFalse(setupForeignSpokeCore.viewMode());
+        assertEq(setupForeignSpokeCore.inputJson(), deployForeignSpokeCore.inputJson());
+        assertTrue(vm.parseJsonAddress(setupForeignSpokeCore.outputJson(), ".SpokeCoreRegistry") != address(0));
     }
 
     function testScript_DeployHubCore() public {
         vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
-        // Core deployment, writing the output file
+        // Core deployment
         deployHubCore = new DeployHubCore();
-        deployHubCore.setFilenames(_hubTestFilename(), _hubTestFilename());
+        deployHubCore.setFilenames(_hubTestFilename(), "");
         deployHubCore.run();
 
         (HubCore memory hubCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
@@ -217,8 +276,8 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         // Check that the AccessManager owns its own ProxyAdmin
         _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
 
-        // Check that the output file is written
-        string memory outputJson = vm.readFile(deployHubCore.outputPath());
+        // Check that the deployment matches the committed record
+        string memory outputJson = _record("hub-cores", _hubTestFilename());
         assertEq(vm.parseJsonAddress(outputJson, ".AccessManager"), address(hubCoreDeployment.accessManager));
         assertEq(vm.parseJsonAddress(outputJson, ".HubCoreFactory"), address(hubCoreDeployment.hubCoreFactory));
     }
@@ -236,7 +295,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
 
         // Machine deployment
         deployHubMachine = new DeployHubMachine();
-        deployHubMachine.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), _hubTestFilename());
+        deployHubMachine.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
         deployHubMachine.run();
 
         // Check that the AM setup was skipped: the super admin was not granted the ADMIN_ROLE
@@ -294,8 +353,8 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
 
-        // Check that the output file is written
-        assertEq(vm.parseJsonAddress(vm.readFile(deployHubMachine.outputPath()), ".machine"), address(machine));
+        // Check that the deployment matches the committed record
+        assertEq(vm.parseJsonAddress(_record("hub-machines", _hubTestFilename()), ".machine"), address(machine));
     }
 
     function testScript_DeployHubMachine_ViewMode() public {
@@ -335,9 +394,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
 
         // PreDeposit Vault deployment
         deployPreDepositVault = new DeployPreDepositVault();
-        deployPreDepositVault.setParams(
-            address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), _hubTestFilename()
-        );
+        deployPreDepositVault.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
         deployPreDepositVault.run();
 
         // Check that PreDepositVault is correctly set up
@@ -362,9 +419,9 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
 
-        // Check that the output file is written
+        // Check that the deployment matches the committed record
         assertEq(
-            vm.parseJsonAddress(vm.readFile(deployPreDepositVault.outputPath()), ".preDepositVault"),
+            vm.parseJsonAddress(_record("pre-deposit-vaults", _hubTestFilename()), ".preDepositVault"),
             address(preDepositVault)
         );
     }
@@ -387,9 +444,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
 
         // PreDeposit Vault migration to Machine
         deployMachineFromPreDeposit = new DeployHubMachineFromPreDeposit();
-        deployMachineFromPreDeposit.setParams(
-            address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), _hubTestFilename()
-        );
+        deployMachineFromPreDeposit.setParams(address(hubCoreDeployment.hubCoreFactory), _hubTestFilename(), "");
         deployMachineFromPreDeposit.setPreDepositVault(deployPreDepositVault.deployedInstance());
         deployMachineFromPreDeposit.run();
 
@@ -444,18 +499,18 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         assertEq(shareToken.name(), shareTokenName);
         assertEq(shareToken.symbol(), shareTokenSymbol);
 
-        // Check that the output file is written
+        // Check that the deployment matches the committed record
         assertEq(
-            vm.parseJsonAddress(vm.readFile(deployMachineFromPreDeposit.outputPath()), ".machine"), address(machine)
+            vm.parseJsonAddress(_record("pre-deposit-migrations", _hubTestFilename()), ".machine"), address(machine)
         );
     }
 
     function testScript_DeploySpokeCore() public {
         vm.createSelectFork({urlOrAlias: getChain(BASE_CHAIN_ID).chainAlias});
 
-        // Spoke Core deployment, writing the output file
+        // Spoke Core deployment
         deploySpokeCore = new DeploySpokeCore();
-        deploySpokeCore.setFilenames(_spokeTestFilename(), _spokeTestFilename());
+        deploySpokeCore.setFilenames(_spokeTestFilename(), "");
         deploySpokeCore.run();
 
         (SpokeCore memory spokeCoreDeployment, UpgradeableBeacon[] memory bridgeAdapterBeaconsDeployment) =
@@ -516,8 +571,8 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         // Check that the AccessManager owns its own ProxyAdmin
         _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
 
-        // Check that the output file is written
-        string memory outputJson = vm.readFile(deploySpokeCore.outputPath());
+        // Check that the deployment matches the committed record
+        string memory outputJson = _record("spoke-cores", _spokeTestFilename());
         assertEq(vm.parseJsonAddress(outputJson, ".AccessManager"), address(spokeCoreDeployment.accessManager));
         assertEq(vm.parseJsonAddress(outputJson, ".SpokeCoreFactory"), address(spokeCoreDeployment.spokeCoreFactory));
     }
@@ -535,9 +590,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
 
         // Caliber deployment
         deploySpokeCaliber = new DeploySpokeCaliber();
-        deploySpokeCaliber.setParams(
-            address(spokeCoreDeployment.spokeCoreFactory), _spokeTestFilename(), _spokeTestFilename()
-        );
+        deploySpokeCaliber.setParams(address(spokeCoreDeployment.spokeCoreFactory), _spokeTestFilename(), "");
         deploySpokeCaliber.run();
 
         // Check that the AccessManager owns its own ProxyAdmin even when the AM setup is skipped
@@ -577,16 +630,213 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         assertEq(spokeCaliber.getPositionsLength(), 0);
         assertEq(spokeCaliber.getBaseTokensLength(), 1);
 
-        // Check that the output file is written
-        assertEq(vm.parseJsonAddress(vm.readFile(deploySpokeCaliber.outputPath()), ".caliber"), address(spokeCaliber));
+        // Check that the deployment matches the committed record
+        assertEq(
+            vm.parseJsonAddress(_record("spoke-calibers", _spokeTestFilename()), ".caliber"), address(spokeCaliber)
+        );
+    }
+
+    function testScript_DeployForeignHubCore() public {
+        vm.createSelectFork({urlOrAlias: getChain(BASE_CHAIN_ID).chainAlias});
+
+        // Main instance: Base hosts a spoke core of the Ethereum hub. Its deployer keeps ADMIN_ROLE on the shared
+        // AccessManager, so that the foreign setup can be broadcast below.
+        deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setFilenames(_spokeTestFilename(), "");
+        deploySpokeCore.setSkipAMSetup(true);
+        deploySpokeCore.run();
+
+        (SpokeCore memory mainCore,) = deploySpokeCore.deployment();
+
+        // Foreign instance: Base is also the hub of its own instance
+        deployForeignHubCore = new DeployForeignHubCore();
+        deployForeignHubCore.setFilenames(_foreignHubTestFilename(), "");
+        deployForeignHubCore.run();
+
+        (HubCore memory core, UpgradeableBeacon[] memory bridgeAdapterBeacons) = deployForeignHubCore.deployment();
+
+        // Setup, broadcast from the deployer holding ADMIN_ROLE
+        setupForeignHubCore = new SetupForeignHubCore();
+        setupForeignHubCore.setFilenames(_foreignHubTestFilename(), _foreignHubTestFilename());
+        setupForeignHubCore.run();
+
+        // Check that the chain-scoped components are shared
+        assertEq(address(core.accessManager), address(mainCore.accessManager));
+        assertEq(address(core.oracleRegistry), address(mainCore.oracleRegistry));
+        assertEq(address(core.tokenRegistry), address(mainCore.tokenRegistry));
+        assertEq(
+            ICaliber(core.caliberBeacon.implementation()).weirollVm(),
+            ICaliber(mainCore.caliberBeacon.implementation()).weirollVm()
+        );
+
+        // Check that the instance-scoped components are new, owned by the shared AccessManager
+        assertNotEq(address(core.hubCoreRegistry), address(mainCore.spokeCoreRegistry));
+        assertNotEq(address(core.hubCoreFactory), address(mainCore.spokeCoreFactory));
+        assertNotEq(address(core.swapModule), address(mainCore.swapModule));
+        assertNotEq(address(core.caliberBeacon), address(mainCore.caliberBeacon));
+        assertEq(Ownable(getProxyAdmin(address(core.hubCoreRegistry))).owner(), address(core.accessManager));
+        assertEq(Ownable(getProxyAdmin(address(core.hubCoreFactory))).owner(), address(core.accessManager));
+        assertEq(Ownable(getProxyAdmin(address(core.swapModule))).owner(), address(core.accessManager));
+        assertEq(core.caliberBeacon.owner(), address(core.accessManager));
+        assertEq(core.machineBeacon.owner(), address(core.accessManager));
+        assertEq(core.preDepositVaultBeacon.owner(), address(core.accessManager));
+
+        // Check that the instance-scoped implementations are bound to the new registry
+        address registry = address(core.hubCoreRegistry);
+        assertEq(IMakinaContext(address(core.hubCoreFactory)).registry(), registry);
+        assertEq(IMakinaContext(address(core.swapModule)).registry(), registry);
+        _assertBoundTo(core.caliberBeacon, registry);
+        _assertBoundTo(core.machineBeacon, registry);
+        _assertBoundTo(core.preDepositVaultBeacon, registry);
+
+        // Check that HubCoreRegistry is correctly set up
+        assertEq(IAccessManaged(registry).authority(), address(core.accessManager));
+        assertEq(core.hubCoreRegistry.oracleRegistry(), address(core.oracleRegistry));
+        assertEq(core.hubCoreRegistry.tokenRegistry(), address(core.tokenRegistry));
+        assertEq(core.hubCoreRegistry.coreFactory(), address(core.hubCoreFactory));
+        assertEq(core.hubCoreRegistry.swapModule(), address(core.swapModule));
+        assertEq(core.hubCoreRegistry.caliberBeacon(), address(core.caliberBeacon));
+        assertEq(core.hubCoreRegistry.machineBeacon(), address(core.machineBeacon));
+        assertEq(core.hubCoreRegistry.preDepositVaultBeacon(), address(core.preDepositVaultBeacon));
+        _assertForeignBridgesSetup(
+            deployForeignHubCore.inputJson(), core.hubCoreRegistry, mainCore.spokeCoreRegistry, bridgeAdapterBeacons
+        );
+        _assertSwapModuleSetup(deployForeignHubCore.inputJson(), core.swapModule);
+
+        // Check that the AccessManager function roles are set up
+        _assertForeignCoreAMFunctionRoles(core.accessManager, registry, address(core.hubCoreFactory), core.swapModule);
+        _assertBeaconAMFunctionRole(core.accessManager, core.caliberBeacon);
+        _assertBeaconAMFunctionRole(core.accessManager, core.machineBeacon);
+        _assertBeaconAMFunctionRole(core.accessManager, core.preDepositVaultBeacon);
+        assertEq(
+            core.accessManager
+                .getTargetFunctionRole(address(core.hubCoreFactory), IHubCoreFactory.createMachine.selector),
+            Roles.STRATEGY_DEPLOYMENT_ROLE
+        );
+        assertEq(setupForeignHubCore.callsLength(), 19);
+
+        // Check that the deployment matches the committed record
+        string memory outputJson = _record("hub-cores", _foreignHubTestFilename());
+        assertEq(vm.parseJsonAddress(outputJson, ".HubCoreRegistry"), registry);
+        assertEq(vm.parseJsonAddress(outputJson, ".HubCoreFactory"), address(core.hubCoreFactory));
+    }
+
+    function testScript_DeployForeignSpokeCore() public {
+        vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
+
+        // Main instance: Ethereum is the hub. Its deployer keeps ADMIN_ROLE on the shared AccessManager.
+        deployHubCore = new DeployHubCore();
+        deployHubCore.setFilenames(_hubTestFilename(), "");
+        deployHubCore.setSkipAMSetup(true);
+        deployHubCore.run();
+
+        (HubCore memory mainCore,) = deployHubCore.deployment();
+
+        // Foreign instance: Ethereum is also a spoke of the Base hub
+        deployForeignSpokeCore = new DeployForeignSpokeCore();
+        deployForeignSpokeCore.setFilenames(_foreignSpokeTestFilename(), "");
+        deployForeignSpokeCore.run();
+
+        (SpokeCore memory core, UpgradeableBeacon[] memory bridgeAdapterBeacons) = deployForeignSpokeCore.deployment();
+
+        // Setup, broadcast from the deployer holding ADMIN_ROLE
+        setupForeignSpokeCore = new SetupForeignSpokeCore();
+        setupForeignSpokeCore.setFilenames(_foreignSpokeTestFilename(), _foreignSpokeTestFilename());
+        setupForeignSpokeCore.run();
+
+        // Check that the chain-scoped components are shared
+        assertEq(address(core.accessManager), address(mainCore.accessManager));
+        assertEq(address(core.oracleRegistry), address(mainCore.oracleRegistry));
+        assertEq(address(core.tokenRegistry), address(mainCore.tokenRegistry));
+        assertEq(
+            ICaliber(core.caliberBeacon.implementation()).weirollVm(),
+            ICaliber(mainCore.caliberBeacon.implementation()).weirollVm()
+        );
+
+        // Check that the instance-scoped components are new, owned by the shared AccessManager
+        assertNotEq(address(core.spokeCoreRegistry), address(mainCore.hubCoreRegistry));
+        assertNotEq(address(core.spokeCoreFactory), address(mainCore.hubCoreFactory));
+        assertNotEq(address(core.swapModule), address(mainCore.swapModule));
+        assertNotEq(address(core.caliberBeacon), address(mainCore.caliberBeacon));
+        assertEq(Ownable(getProxyAdmin(address(core.spokeCoreRegistry))).owner(), address(core.accessManager));
+        assertEq(Ownable(getProxyAdmin(address(core.spokeCoreFactory))).owner(), address(core.accessManager));
+        assertEq(Ownable(getProxyAdmin(address(core.swapModule))).owner(), address(core.accessManager));
+        assertEq(core.caliberBeacon.owner(), address(core.accessManager));
+        assertEq(core.caliberMailboxBeacon.owner(), address(core.accessManager));
+
+        // Check that the instance-scoped implementations are bound to the new registry, and the mailbox to the hub
+        address registry = address(core.spokeCoreRegistry);
+        assertEq(IMakinaContext(address(core.spokeCoreFactory)).registry(), registry);
+        assertEq(IMakinaContext(address(core.swapModule)).registry(), registry);
+        _assertBoundTo(core.caliberBeacon, registry);
+        _assertBoundTo(core.caliberMailboxBeacon, registry);
+        assertEq(ICaliberMailbox(core.caliberMailboxBeacon.implementation()).hubChainId(), BASE_CHAIN_ID);
+
+        // Check that SpokeCoreRegistry is correctly set up
+        assertEq(IAccessManaged(registry).authority(), address(core.accessManager));
+        assertEq(core.spokeCoreRegistry.oracleRegistry(), address(core.oracleRegistry));
+        assertEq(core.spokeCoreRegistry.tokenRegistry(), address(core.tokenRegistry));
+        assertEq(core.spokeCoreRegistry.coreFactory(), address(core.spokeCoreFactory));
+        assertEq(core.spokeCoreRegistry.swapModule(), address(core.swapModule));
+        assertEq(core.spokeCoreRegistry.caliberBeacon(), address(core.caliberBeacon));
+        assertEq(core.spokeCoreRegistry.caliberMailboxBeacon(), address(core.caliberMailboxBeacon));
+        _assertForeignBridgesSetup(
+            deployForeignSpokeCore.inputJson(), core.spokeCoreRegistry, mainCore.hubCoreRegistry, bridgeAdapterBeacons
+        );
+        _assertSwapModuleSetup(deployForeignSpokeCore.inputJson(), core.swapModule);
+
+        // Check that the AccessManager function roles are set up
+        _assertForeignCoreAMFunctionRoles(core.accessManager, registry, address(core.spokeCoreFactory), core.swapModule);
+        _assertBeaconAMFunctionRole(core.accessManager, core.caliberBeacon);
+        _assertBeaconAMFunctionRole(core.accessManager, core.caliberMailboxBeacon);
+        assertEq(
+            core.accessManager
+                .getTargetFunctionRole(address(core.spokeCoreFactory), ISpokeCoreFactory.createCaliber.selector),
+            Roles.STRATEGY_DEPLOYMENT_ROLE
+        );
+        assertEq(setupForeignSpokeCore.callsLength(), 17);
+
+        // Check that the deployment matches the committed record
+        string memory outputJson = _record("spoke-cores", _foreignSpokeTestFilename());
+        assertEq(vm.parseJsonAddress(outputJson, ".SpokeCoreRegistry"), registry);
+        assertEq(vm.parseJsonAddress(outputJson, ".SpokeCoreFactory"), address(core.spokeCoreFactory));
+    }
+
+    function testScript_SetupForeignHubCore_ViewMode() public {
+        vm.createSelectFork({urlOrAlias: getChain(BASE_CHAIN_ID).chainAlias});
+
+        deploySpokeCore = new DeploySpokeCore();
+        deploySpokeCore.setFilenames(_spokeTestFilename(), "");
+        deploySpokeCore.setSkipAMSetup(true);
+        deploySpokeCore.run();
+
+        deployForeignHubCore = new DeployForeignHubCore();
+        deployForeignHubCore.setFilenames(_foreignHubTestFilename(), "");
+        deployForeignHubCore.run();
+
+        (HubCore memory core,) = deployForeignHubCore.deployment();
+
+        // View mode: the calls are built and logged, nothing is sent
+        setupForeignHubCore = new SetupForeignHubCore();
+        setupForeignHubCore.setFilenames(_foreignHubTestFilename(), _foreignHubTestFilename());
+        setupForeignHubCore.setViewMode(true);
+
+        vm.expectCall(address(core.hubCoreRegistry), abi.encodeWithSelector(ICoreRegistry.setCoreFactory.selector), 0);
+        vm.expectCall(
+            address(core.accessManager), abi.encodeWithSelector(IAccessManager.setTargetFunctionRole.selector), 0
+        );
+        setupForeignHubCore.run();
+
+        assertEq(setupForeignHubCore.callsLength(), 19);
+        assertEq(core.hubCoreRegistry.coreFactory(), address(0));
     }
 
     function testScript_DeployTimelockController() public {
         vm.createSelectFork({urlOrAlias: getChain(ETHEREUM_CHAIN_ID).chainAlias});
 
-        // Timelock Controller deployment, writing the output file
+        // Timelock Controller deployment
         deployTimelockController = new DeployTimelockController();
-        deployTimelockController.setFilenames(_hubTestFilename(), _hubTestFilename());
+        deployTimelockController.setFilenames(_hubTestFilename(), "");
         deployTimelockController.run();
 
         // Check that Timelock Controller is correctly set up
@@ -611,16 +861,16 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         }
         assertEq(timelockController.getMinDelay(), initialMinDelay);
 
-        // Check that the output file is written
+        // Check that the deployment matches the committed record
         assertEq(
-            vm.parseJsonAddress(vm.readFile(deployTimelockController.outputPath()), ".timelockController"),
+            vm.parseJsonAddress(_record("timelock-controllers", _hubTestFilename()), ".timelockController"),
             address(timelockController)
         );
     }
 
     function test_SetupAccessManagerRoles_KeepsAdminRoleWhenDeployerIsSuperAdmin() public {
         address admin = address(this);
-        // The `deployHubCore` script instance shadows the Base composer, hence the explicit base call
+        // The `deployHubCore` script instance shadows `Base.deployHubCore`, hence the explicit base call
         HubCore memory core = Base.deployHubCore(admin, address(new MockCreForwarder()));
 
         AMRoleGrant memory superAdminRoleGrant = AMRoleGrant({roleId: 0, account: admin, executionDelay: 0});
@@ -655,7 +905,102 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
         return string.concat(getChain(BASE_CHAIN_ID).name, "-Test.json");
     }
 
+    /// @dev Hub core of the Base hub instance, on Base.
+    function _foreignHubTestFilename() internal returns (string memory) {
+        return string.concat("BaseHub-", getChain(BASE_CHAIN_ID).name, "-Test.json");
+    }
+
+    /// @dev Spoke core of the Base hub instance, on Ethereum.
+    function _foreignSpokeTestFilename() internal returns (string memory) {
+        return string.concat("BaseHub-", getChain(ETHEREUM_CHAIN_ID).name, "-Test.json");
+    }
+
     function _assertAccessManagerOwnsItsProxyAdmin(AccessManagerUpgradeable accessManager) internal view {
         assertEq(Ownable(getProxyAdmin(address(accessManager))).owner(), address(accessManager));
+    }
+
+    function _assertBoundTo(UpgradeableBeacon beacon, address registry) internal view {
+        assertEq(IMakinaContext(beacon.implementation()).registry(), registry);
+    }
+
+    /// @dev The foreign registry holds the new adapter beacons and the main registry's bridge configs.
+    function _assertForeignBridgesSetup(
+        string memory inputJson,
+        ICoreRegistry registry,
+        ICoreRegistry mainRegistry,
+        UpgradeableBeacon[] memory bridgeAdapterBeacons
+    ) internal view {
+        BridgeData[] memory _bridgesData = parseBridgesData(inputJson, ".bridgesTargets");
+        assertEq(bridgeAdapterBeacons.length, _bridgesData.length);
+        for (uint256 i; i < _bridgesData.length; ++i) {
+            uint16 bridgeId = _bridgesData[i].bridgeId;
+            assertEq(registry.bridgeAdapterBeacon(bridgeId), address(bridgeAdapterBeacons[i]));
+            assertEq(registry.bridgeConfig(bridgeId), mainRegistry.bridgeConfig(bridgeId));
+            _assertBoundTo(bridgeAdapterBeacons[i], address(registry));
+            IBridgeAdapter implementation = IBridgeAdapter(bridgeAdapterBeacons[i].implementation());
+            assertEq(implementation.approvalTarget(), _bridgesData[i].approvalTarget);
+            assertEq(implementation.executionTarget(), _bridgesData[i].executionTarget);
+            assertEq(implementation.receiveSource(), _bridgesData[i].receiveSource);
+            _assertBeaconAMFunctionRole(
+                AccessManagerUpgradeable(IAccessManaged(address(registry)).authority()), bridgeAdapterBeacons[i]
+            );
+        }
+    }
+
+    function _assertSwapModuleSetup(string memory inputJson, ISwapModule swapModule) internal view {
+        SwapperData[] memory _swappersData = parseSwappersData(inputJson, ".swappersTargets");
+        for (uint256 i; i < _swappersData.length; ++i) {
+            (address approvalTarget, address executionTarget) = swapModule.getSwapperTargets(_swappersData[i].swapperId);
+            assertEq(approvalTarget, _swappersData[i].approvalTarget);
+            assertEq(executionTarget, _swappersData[i].executionTarget);
+        }
+    }
+
+    /// @dev Function roles shared by the hub and spoke foreign cores, plus the factory's ADMIN_ROLE grant.
+    function _assertForeignCoreAMFunctionRoles(
+        AccessManagerUpgradeable accessManager,
+        address registry,
+        address factory,
+        ISwapModule swapModule
+    ) internal view {
+        assertEq(
+            accessManager.getTargetFunctionRole(getProxyAdmin(registry), ProxyAdmin.upgradeAndCall.selector),
+            Roles.INFRA_UPGRADE_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(getProxyAdmin(factory), ProxyAdmin.upgradeAndCall.selector),
+            Roles.INFRA_UPGRADE_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(getProxyAdmin(address(swapModule)), ProxyAdmin.upgradeAndCall.selector),
+            Roles.INFRA_UPGRADE_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(registry, ICoreRegistry.setCoreFactory.selector),
+            Roles.INFRA_UPGRADE_ROLE
+        );
+        assertEq(
+            accessManager.getTargetFunctionRole(address(swapModule), ISwapModule.setSwapperTargets.selector),
+            Roles.INFRA_CONFIG_ROLE
+        );
+        (bool isMember,) = accessManager.hasRole(accessManager.ADMIN_ROLE(), factory);
+        assertTrue(isMember);
+    }
+
+    function _assertBeaconAMFunctionRole(AccessManagerUpgradeable accessManager, UpgradeableBeacon beacon)
+        internal
+        view
+    {
+        assertEq(
+            accessManager.getTargetFunctionRole(address(beacon), UpgradeableBeacon.upgradeTo.selector),
+            Roles.INFRA_UPGRADE_ROLE
+        );
+    }
+
+    /// @dev A committed test record under `outputs/`. Test deployments are deterministic, so they match the records
+    ///      without rewriting them. A failing comparison means the record must be regenerated, by running the
+    ///      script with that output filename.
+    function _record(string memory dir, string memory filename) internal view returns (string memory) {
+        return vm.readFile(string.concat(vm.projectRoot(), "/script/deployments/outputs/", dir, "/", filename));
     }
 }

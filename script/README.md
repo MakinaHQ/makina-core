@@ -33,6 +33,31 @@ A deployment is either staging, where the deployer keeps sole control of the `Ac
 
 Set `SKIP_AM_SETUP=true` to skip the `AccessManager` setup (function roles and role grants). The deployer keeps the `ADMIN_ROLE` and runs the strategy instance scripts below directly. Leave unset (or `false`) for production.
 
+### Shared contracts of a foreign instance
+
+An instance is one hub core plus the spoke cores reporting to it, identified by its hub chain id. A chain already hosting a core of the main instance can host the core of a second, foreign instance: the chain-scoped contracts (`AccessManager`, `OracleRegistry`, `TokenRegistry`, `WeirollVM` and the bridge configs) are shared, and only the instance-scoped contracts are deployed, at deterministic addresses discriminated by the foreign instance's hub chain id.
+
+The shared contracts are read off the main instance's core registry on this chain, `mainCoreRegistry` in the input file. On the hub chain of a foreign instance, the main instance is a spoke, so that is its `SpokeCoreRegistry`.
+
+Uses the same `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` variables as above.
+
+1. Copy `script/deployments/inputs/hub-cores/Foreign-TEMPLATE.json` to `script/deployments/inputs/hub-cores/{HUB_CORE_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-cores/{HUB_CORE_OUTPUT_FILENAME}` containing the addresses of the contracts deployed by this script only.
+
+```
+forge script script/deployments/DeployForeignHubCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
+```
+
+3. Run the following command to log the calldata wiring the deployed contracts: the registry setters and swapper targets, then the `AccessManager` function roles and the `HubCoreFactory`'s `ADMIN_ROLE` grant. Every call is restricted to the `ADMIN_ROLE` of the shared `AccessManager`, and is logged alongside its `AccessManager.schedule` wrapper for roles with an execution delay, for the role holder to submit in this order.
+
+```
+VIEW_MODE=true forge script script/deployments/SetupForeignHubCore.s.sol --rpc-url <network-alias> -vvvv
+```
+
+Leave `VIEW_MODE` unset to broadcast the calls directly, from a wallet holding the `ADMIN_ROLE` (staging deployments).
+
+Strategy instances are then deployed with the scripts below, unchanged: they read the `HubCoreFactory` address from the output file.
+
 ### Strategy instances
 
 In addition to `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` set above for shared contracts deployments, set the `HUB_STRAT_INPUT_FILENAME` and `HUB_STRAT_OUTPUT_FILENAME` values in your `.env` file.
@@ -84,6 +109,23 @@ forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> 
 ```
 
 Note: Same as for hub chain shared contracts deployment, this script performs deterministic deployment based on the deployer wallet address via the [CreateX Factory contract](https://github.com/pcaversaccio/createx). The `SKIP_AM_SETUP` setting applies as described for the hub chain.
+
+### Shared contracts of a foreign instance
+
+Same as for the hub chain, with the spoke-side scripts and template. The input file names the foreign instance's `hubChainId`, and `mainCoreRegistry` is the main instance's core registry on this chain, hub or spoke depending on its role there. Uses the same `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` variables as above.
+
+1. Copy `script/deployments/inputs/spoke-cores/Foreign-TEMPLATE.json` to `script/deployments/inputs/spoke-cores/{SPOKE_CORE_INPUT_FILENAME}` and fill in the required variables.
+2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-cores/{SPOKE_CORE_OUTPUT_FILENAME}` containing the addresses of the contracts deployed by this script only.
+
+```
+forge script script/deployments/DeployForeignSpokeCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
+```
+
+3. Run the following command to log the calldata wiring the deployed contracts, as described for the hub chain.
+
+```
+VIEW_MODE=true forge script script/deployments/SetupForeignSpokeCore.s.sol --rpc-url <network-alias> -vvvv
+```
 
 ### Strategy instances
 

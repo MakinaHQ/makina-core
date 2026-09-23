@@ -1,0 +1,10 @@
+{
+  "BridgeAdapterBeacons": {
+    "1": "0x4Ec75cef20C82a2ec9Ce02a115762ab654fb5695"
+  },
+  "CaliberBeacon": "0x3DA3Ec64a714cd1a74e0ded1e4aD28f7cf4e3609",
+  "CaliberMailboxBeacon": "0xf19B7720108e2Dd27F837D9a95Ed7073Cc3F785e",
+  "SpokeCoreFactory": "0xe1129bcAfa91A83d9E02aBDFb4611ac54bBd16AF",
+  "SpokeCoreRegistry": "0xC3e24C6D803814e9abe2dD068F477Fdd4085e162",
+  "SwapModule": "0xB89dE925698a5ff0997BE7538C653CF75d85FFc8"
+}
