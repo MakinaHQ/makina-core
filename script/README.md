@@ -21,7 +21,7 @@ Set the `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` values in your 
 1. Copy `script/deployments/inputs/hub-cores/TEMPLATE.json` to `script/deployments/inputs/hub-cores/{HUB_CORE_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-cores/{HUB_CORE_OUTPUT_FILENAME}` containing the deployed contract addresses.
 
-```
+```shell
 forge script script/deployments/DeployHubCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -44,13 +44,13 @@ Uses the same `HUB_CORE_INPUT_FILENAME` and `HUB_CORE_OUTPUT_FILENAME` variables
 1. Copy `script/deployments/inputs/hub-cores/Foreign-TEMPLATE.json` to `script/deployments/inputs/hub-cores/{HUB_CORE_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-cores/{HUB_CORE_OUTPUT_FILENAME}` containing the addresses of the contracts deployed by this script only.
 
-```
+```shell
 forge script script/deployments/DeployForeignHubCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
 3. Run the following command to log the calldata wiring the deployed contracts: the registry setters and swapper targets, then the `AccessManager` function roles and the `HubCoreFactory`'s `ADMIN_ROLE` grant. Every call is restricted to the `ADMIN_ROLE` of the shared `AccessManager`, and is logged alongside its `AccessManager.schedule` wrapper for roles with an execution delay, for the role holder to submit in this order.
 
-```
+```shell
 VIEW_MODE=true forge script script/deployments/SetupForeignHubCore.s.sol --rpc-url <network-alias> -vvvv
 ```
 
@@ -73,7 +73,7 @@ In production, strategy instances are created from an account holding the `STRAT
 1. Copy `script/deployments/inputs/hub-machines/TEMPLATE.json` to `script/deployments/inputs/hub-machines/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/hub-machines/{HUB_STRAT_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeployHubMachine.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -82,7 +82,7 @@ forge script script/deployments/DeployHubMachine.s.sol --rpc-url <network-alias>
 1. Copy `script/deployments/inputs/pre-deposit-vaults/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-vaults/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-vaults/{HUB_STRAT_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeployPreDepositVault.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -91,7 +91,7 @@ forge script script/deployments/DeployPreDepositVault.s.sol --rpc-url <network-a
 1. Copy `script/deployments/inputs/pre-deposit-migrations/TEMPLATE.json` to `script/deployments/inputs/pre-deposit-migrations/{HUB_STRAT_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/pre-deposit-migrations/{HUB_STRAT_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeployHubMachineFromPreDeposit.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -104,7 +104,7 @@ Set the `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` values in y
 1. Copy `script/deployments/inputs/spoke-cores/TEMPLATE.json` to `script/deployments/inputs/spoke-cores/{SPOKE_CORE_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-cores/{SPOKE_CORE_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeploySpokeCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -117,13 +117,13 @@ Same as for the hub chain, with the spoke-side scripts and template. The input f
 1. Copy `script/deployments/inputs/spoke-cores/Foreign-TEMPLATE.json` to `script/deployments/inputs/spoke-cores/{SPOKE_CORE_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-cores/{SPOKE_CORE_OUTPUT_FILENAME}` containing the addresses of the contracts deployed by this script only.
 
-```
+```shell
 forge script script/deployments/DeployForeignSpokeCore.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
 3. Run the following command to log the calldata wiring the deployed contracts, as described for the hub chain.
 
-```
+```shell
 VIEW_MODE=true forge script script/deployments/SetupForeignSpokeCore.s.sol --rpc-url <network-alias> -vvvv
 ```
 
@@ -136,7 +136,7 @@ In addition to `SPOKE_CORE_INPUT_FILENAME` and `SPOKE_CORE_OUTPUT_FILENAME` set 
 1. Copy `script/deployments/inputs/spoke-calibers/TEMPLATE.json` to `script/deployments/inputs/spoke-calibers/{SPOKE_STRAT_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/spoke-calibers/{SPOKE_STRAT_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeploySpokeCaliber.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
@@ -147,7 +147,7 @@ Set the `TIMELOCK_CONTROLLER_INPUT_FILENAME` and `TIMELOCK_CONTROLLER_OUTPUT_FIL
 1. Copy `script/deployments/inputs/timelock-controllers/TEMPLATE.json` to `script/deployments/inputs/timelock-controllers/{TIMELOCK_CONTROLLER_INPUT_FILENAME}` and fill in the required variables.
 2. Run the following command to initiate the deployment. This will generate an output file at `script/deployments/outputs/timelock-controllers/{TIMELOCK_CONTROLLER_OUTPUT_FILENAME}`.
 
-```
+```shell
 forge script script/deployments/DeployTimelockController.s.sol --rpc-url <network-alias> <wallet-options> --slow --broadcast --verify -vvvv
 ```
 
