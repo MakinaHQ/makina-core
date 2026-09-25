@@ -1,0 +1,11 @@
+{
+  "BridgeAdapterBeacons": {
+    "1": "0x4Ec75cef20C82a2ec9Ce02a115762ab654fb5695"
+  },
+  "CaliberBeacon": "0x3DA3Ec64a714cd1a74e0ded1e4aD28f7cf4e3609",
+  "HubCoreFactory": "0xe1129bcAfa91A83d9E02aBDFb4611ac54bBd16AF",
+  "HubCoreRegistry": "0xC3e24C6D803814e9abe2dD068F477Fdd4085e162",
+  "MachineBeacon": "0xB5B5ec105282895272d9e3C3b4f7c66BF732B021",
+  "PreDepositVaultBeacon": "0xDDa1F391ADE931C9600a39b830a8174Ad85c131E",
+  "SwapModule": "0xB89dE925698a5ff0997BE7538C653CF75d85FFc8"
+}

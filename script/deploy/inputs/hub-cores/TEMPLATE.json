@@ -1,0 +1,45 @@
+{
+  "superAdminRoleGrant": {
+    "account": "0x0000000000000000000000000000000000000000",
+    "executionDelay": 0
+  },
+  "otherRoleGrants": [
+    {
+      "roleId": 0,
+      "account": "0x0000000000000000000000000000000000000000",
+      "executionDelay": 0
+    }
+  ],
+  "priceFeedRoutes": [
+    {
+      "token": "0x0000000000000000000000000000000000000000",
+      "feed1": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold1": 0,
+      "feed2": "0x0000000000000000000000000000000000000000",
+      "stalenessThreshold2": 0
+    }
+  ],
+  "foreignTokens": [
+    {
+      "localToken": "0x0000000000000000000000000000000000000000",
+      "foreignEvmChainId": 0,
+      "foreignToken": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+  "swappersTargets": [
+    {
+      "swapperId": 0,
+      "approvalTarget": "0x0000000000000000000000000000000000000000",
+      "executionTarget": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+  "bridgesTargets": [
+    {
+      "bridgeId": 0,
+      "approvalTarget": "0x0000000000000000000000000000000000000000",
+      "executionTarget": "0x0000000000000000000000000000000000000000",
+      "receiveSource": "0x0000000000000000000000000000000000000000"
+    }
+  ],
+  "creForwarder": "0x0000000000000000000000000000000000000000"
+}

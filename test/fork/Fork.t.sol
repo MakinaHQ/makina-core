@@ -6,7 +6,6 @@ import {Test} from "forge-std/Test.sol";
 import {Roles} from "../../src/libraries/Roles.sol";
 
 import {Constants} from "../utils/Constants.sol";
-import {ChainsInfo} from "../utils/ChainsInfo.sol";
 
 import {Base} from "../base/Base.sol";
 
@@ -42,13 +41,13 @@ abstract contract Fork_Test is Base, Test, Constants {
     function _setupChain(uint256 chainId) internal {
         ForkData storage forkData = forksData[chainId];
 
-        ChainsInfo.ChainInfo memory chainInfo = ChainsInfo.getChainInfo(chainId);
+        Chain memory chain = getChain(chainId);
 
         // create and select fork
-        forkData.forkId = vm.createSelectFork({urlOrAlias: chainInfo.foundryAlias});
+        forkData.forkId = vm.createSelectFork({urlOrAlias: chain.chainAlias});
 
         string memory inputPath = string.concat(vm.projectRoot(), "/test/fork/constants/");
-        string memory inputJson = vm.readFile(string.concat(inputPath, chainInfo.constantsFilename));
+        string memory inputJson = vm.readFile(string.concat(inputPath, chain.name, "-Test.json"));
 
         // read misc addresses from json
         forkData.dao = vm.parseJsonAddress(inputJson, ".dao");

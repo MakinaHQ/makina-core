@@ -37,4 +37,9 @@ abstract contract SaltDomains {
     bytes32 internal constant CCTP_V2_BRIDGE_ADAPTER_SALT_DOMAIN = keccak256("makina.salt.CctpV2BridgeAdapter");
 
     bytes32 internal constant CCTP_V2_BRIDGE_CONFIG_SALT_DOMAIN = keccak256("makina.salt.CctpV2BridgeConfig");
+
+    /// @dev Zero, the main instance, keeps the plain salt domain.
+    function _instanceSalt(bytes32 saltDomain, uint256 instanceId) internal pure returns (bytes32) {
+        return instanceId == 0 ? saltDomain : keccak256(abi.encode(saltDomain, instanceId));
+    }
 }

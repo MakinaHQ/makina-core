@@ -18,9 +18,9 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // deposit in vault
         deal(address(baseToken), address(caliber), amount1, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -39,9 +39,9 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // deposit in vault
         deal(address(baseToken), address(caliber), amount1, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount1));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -54,7 +54,8 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // increase position value
         uint256 amount2 = 3e18;
         deal(address(baseToken), address(caliber), amount2, true);
-        mgmtInstruction = _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount2);
+        mgmtInstruction =
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), amount2));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -81,7 +82,8 @@ contract GetPosition_Integration_Concrete_Test is Caliber_Integration_Concrete_T
         // decrease position value
         uint256 sharesToRedeem = vault.balanceOf(address(caliber)) / 3;
         uint256 amount3 = vault.previewRedeem(sharesToRedeem);
-        mgmtInstruction = _build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem);
+        mgmtInstruction =
+            _withProof(_build4626RedeemInstruction(address(caliber), VAULT_POS_ID, address(vault), sharesToRedeem));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 

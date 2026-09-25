@@ -3,7 +3,7 @@ setMaxBridgeLossBps.t.sol
 │  └── it should revert with UnauthorizedCaller
 └── when caller is the risk manager timelock
    ├── given no adapter for the provided bridge ID is registered in this contract
-   │  └── it should return false
+   │  └── it should revert with InvalidBridgeId
    └── given an adapter for the provided bridge ID is registered in this contract
       ├── it should set the max bridge loss basis point value associated with the provided bridge ID to the provided value
       └── it should emit a MaxBridgeLossBpsChanged event

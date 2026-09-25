@@ -11,7 +11,6 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {Caliber} from "../../src/caliber/Caliber.sol";
 import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
-import {ChainsInfo} from "../utils/ChainsInfo.sol";
 import {Constants} from "../utils/Constants.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
@@ -176,7 +175,7 @@ abstract contract Base_Spoke_Test is Base_Test {
 
     function setUp() public virtual override {
         Base_Test.setUp();
-        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
+        hubChainId = ETHEREUM_CHAIN_ID;
 
         SpokeCore memory deployment = deploySpokeCore(deployer, hubChainId);
         accessManager = deployment.accessManager;

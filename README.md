@@ -31,7 +31,7 @@ See `SPECIFICATIONS.md` and `PERMISSIONS.md` for more details.
 
 ## Installation
 
-Follow [this link](https://book.getfoundry.sh/getting-started/installation) to install the Foundry toolchain.
+Follow [this link](https://getfoundry.sh/introduction/installation) to install the Foundry toolchain.
 
 ## Submodules
 
@@ -51,7 +51,7 @@ yarn
 
 ### Build
 
-Run below command to compile contracts that require IR-based codegen (`src-ir/` and `test-ir/`)
+Run below command to compile contracts that require IR-based codegen (`src-ir/` and `test-ir/`). `forge test` does not build them, so run it before testing.
 
 ```shell
 yarn build:ir
@@ -66,8 +66,6 @@ forge build
 ### Test
 
 Some tests involve network forking. To run them, the `MAINNET_RPC_URL` and `BASE_RPC_URL` variables must be set in a .env file located at the project root.
-
-Some tests also execute JavaScript scripts for Merkle root generation. These require Node.js v18 or later.
 
 ```shell
 forge test

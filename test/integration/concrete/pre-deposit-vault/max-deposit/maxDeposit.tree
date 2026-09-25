@@ -1,0 +1,11 @@
+maxDeposit.t.sol
+├── given the vault has been migrated to a machine
+│  └── it should return zero
+└── given the vault has not been migrated to a machine
+   ├── given the share limit is set to the maximum uint256 value
+   │  └── it should return the maximum uint256 value
+   └── given the share limit is set to a finite value
+      ├── given the vault's deposit token balance is greater or equal than the asset value of the share limit
+      │  └── it should return zero
+      └── given the vault's deposit token balance is smaller than the asset value of the share limit
+         └── it should return the difference between the asset value of the share limit and the vault's deposit token balance

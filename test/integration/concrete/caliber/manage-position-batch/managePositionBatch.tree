@@ -9,12 +9,14 @@ managePositionBatch.t.sol
    │     ├── when management and accounting instruction list lengths are mismatched
    │     │  └── it should revert with MismatchedLengths
    │     └── when management and accounting instruction list lengths are matched
-   │        └── it should execute the instruction pairs sequentially
+   │        ├── it should execute the instruction pairs sequentially
+   │        └── it should emit a PositionCreated event for each newly created position
    └── given recovery mode is on
       ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
-      └── when caller is the Security Council  
+      └── when caller is the Security Council
          ├── when management and accounting instruction list lengths are mismatched
          │  └── it should revert with MismatchedLengths
          └── when management and accounting instruction list lengths are matched
-            └── it should execute the instruction pairs sequentially
+            ├── it should execute the instruction pairs sequentially
+            └── it should emit a PositionClosed event for each closed position

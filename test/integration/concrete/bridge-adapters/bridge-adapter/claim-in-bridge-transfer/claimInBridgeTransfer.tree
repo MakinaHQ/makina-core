@@ -5,8 +5,9 @@ claimInBridgeTransfer.t.sol
    ├── when caller is not the controller contract
    │  └── it should revert with NotController
    └── when caller is the controller contract
-      ├── given the provided transfer ID does not corresponds to an incoming transfer in adapter's storage
+      ├── given the provided transfer ID does not correspond to an incoming transfer in adapter's storage
       │  └── it should revert with InvalidTransferStatus
       └── given the provided transfer ID corresponds to an incoming transfer in adapter's storage
          ├── it should decrease the adapter's token balance by amount
-         └── it should emit a InBridgeTransferClaimed event
+         ├── it should notify the controller through manageTransfer with the claimed amount
+         └── it should emit an InBridgeTransferClaimed event

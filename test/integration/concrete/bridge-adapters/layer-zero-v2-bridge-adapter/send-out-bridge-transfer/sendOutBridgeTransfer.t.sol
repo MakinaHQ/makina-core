@@ -94,7 +94,7 @@ contract SendOutBridgeTransfer_LayerZeroV2BridgeAdapter_Integration_Concrete_Tes
         bridgeAdapter1.sendOutBridgeTransfer(nextOutTransferId, abi.encode(uint128(0), uint128(0), 0));
     }
 
-    function test_RevertWhen_UnsufficientGasBalance() public {
+    function test_RevertWhen_InsufficientGasBalance() public {
         mockLzSendLib.setVerifyGas(DEFAULT_LAYER_ZERO_V2_VERIFY_GAS);
 
         uint256 inputAmount = 1e18;

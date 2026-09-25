@@ -10,4 +10,4 @@ createBridgeAdapter.t.sol
       └── when the provided bridge ID is supported
          ├── it should deploy a bridge adapter instance
          ├── it should emit a BridgeAdapterCreated event
-         └── it should register the bridge adapter the provided machine
+         └── it should register the bridge adapter in the provided machine

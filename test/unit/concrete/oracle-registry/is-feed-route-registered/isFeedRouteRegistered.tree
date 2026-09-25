@@ -1,0 +1,5 @@
+isFeedRouteRegistered.t.sol
+├── given no feed route is registered for the provided token
+│  └── it should return false
+└── given a feed route is registered for the provided token
+   └── it should return true

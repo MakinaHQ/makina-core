@@ -4,6 +4,6 @@ authorizeInBridgeTransfer.t.sol
 │  │  └── it should revert with UnauthorizedCaller
 │  └── when caller is the Mechanic
 │     ├── it should mark the messageHash as authorized in corresponding adapter storage
-│     └── it should emit a InBridgeTransferAuthorized event
+│     └── it should emit an InBridgeTransferAuthorized event
 └── given recovery mode is on
    └── it should revert with RecoveryMode

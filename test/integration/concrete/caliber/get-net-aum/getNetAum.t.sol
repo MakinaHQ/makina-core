@@ -12,10 +12,13 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
     function test_RevertWhen_ReentrantCall() public withTokenAsBT(address(baseToken)) {
         uint256 supplyInputAmount = 1e18;
         deal(address(baseToken), address(caliber), supplyInputAmount, true);
-        ICaliber.Instruction memory supplyMgmtInstruction =
-            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), supplyInputAmount);
-        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+        ICaliber.Instruction memory supplyMgmtInstruction = _withProof(
+            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), supplyInputAmount)
+        );
+        ICaliber.Instruction memory supplyAcctInstruction = _withProof(
+            _buildMockSupplyModuleAccountingInstruction(
+                address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            )
         );
 
         baseToken.scheduleReenter(MockERC20.Type.Before, address(caliber), abi.encodeCall(ICaliber.getNetAum, ()));
@@ -30,9 +33,9 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 
@@ -76,9 +79,11 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
         deal(address(baseToken), address(caliber), inputAmount, true);
 
         ICaliber.Instruction memory mgmtInstruction =
-            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount);
-        ICaliber.Instruction memory acctInstruction = _buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            _withProof(_buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), inputAmount));
+        ICaliber.Instruction memory acctInstruction = _withProof(
+            _buildMockSupplyModuleAccountingInstruction(
+                address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            )
         );
 
         vm.prank(mechanic);
@@ -92,9 +97,11 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
         deal(address(baseToken), address(borrowModule), inputAmount, true);
 
         ICaliber.Instruction memory mgmtInstruction =
-            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount);
-        ICaliber.Instruction memory acctInstruction = _buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+            _withProof(_buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), inputAmount));
+        ICaliber.Instruction memory acctInstruction = _withProof(
+            _buildMockBorrowModuleAccountingInstruction(
+                address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+            )
         );
 
         // open debt position in caliber
@@ -125,18 +132,22 @@ contract GetNetAum_Integration_Concrete_Test is Caliber_Integration_Concrete_Tes
 
         // create debt position (should not modify net aum)
         ICaliber.Instruction memory borrowMgmtInstruction =
-            _buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), bInputAmount);
-        ICaliber.Instruction memory borrowAcctInstruction = _buildMockBorrowModuleAccountingInstruction(
-            address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+            _withProof(_buildMockBorrowModuleBorrowInstruction(BORROW_POS_ID, address(borrowModule), bInputAmount));
+        ICaliber.Instruction memory borrowAcctInstruction = _withProof(
+            _buildMockBorrowModuleAccountingInstruction(
+                address(caliber), BORROW_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(borrowModule)
+            )
         );
         vm.prank(mechanic);
         caliber.managePosition(borrowMgmtInstruction, borrowAcctInstruction);
 
         // create supply position (should not modify net aum)
         ICaliber.Instruction memory supplyMgmtInstruction =
-            _buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount);
-        ICaliber.Instruction memory supplyAcctInstruction = _buildMockSupplyModuleAccountingInstruction(
-            address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            _withProof(_buildMockSupplyModuleSupplyInstruction(SUPPLY_POS_ID, address(supplyModule), bInputAmount));
+        ICaliber.Instruction memory supplyAcctInstruction = _withProof(
+            _buildMockSupplyModuleAccountingInstruction(
+                address(caliber), SUPPLY_POS_ID, LENDING_MARKET_POS_GROUP_ID, address(supplyModule)
+            )
         );
         vm.prank(mechanic);
         caliber.managePosition(supplyMgmtInstruction, supplyAcctInstruction);

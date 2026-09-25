@@ -5,8 +5,7 @@ getPrice.t.sol
    ├── given one of the feed prices is negative
    │  └── it should revert with NegativeTokenPrice
    └── given all feed prices are non-negative
-      ├── given one of the feed price ages exceeds the staleness threshold 
+      ├── given one of the feed price ages exceeds the staleness threshold
       │  └── it should revert with PriceFeedStale
       └── given none of the feed price ages exceed the staleness threshold
          └── it should return the price of base token expressed in quote token, according to aggregated price feed route
-         

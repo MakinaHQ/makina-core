@@ -10,7 +10,7 @@ deposit.t.sol
       │  │  └── it should revert with UnauthorizedCaller
       │  └── when caller is whitelisted
       │     ├── given the deposited assets exceed the maximum allowed deposit amount
-      │     │  └── it should revert with ExceededMaxMint
+      │     │  └── it should revert with ExceededMaxDeposit
       │     └── given the deposited assets do not exceed the maximum allowed deposit amount
       │        ├── given output share amount is lower than provided minShares
       │        │  └── it should revert with SlippageProtection

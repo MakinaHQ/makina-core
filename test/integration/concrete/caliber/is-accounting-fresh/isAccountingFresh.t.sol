@@ -13,9 +13,9 @@ contract IsAccountingFresh_Integration_Concrete_Test is Caliber_Integration_Conc
         uint256 inputAmount = 3e18;
         deal(address(baseToken), address(caliber), inputAmount, true);
         ICaliber.Instruction memory mgmtInstruction =
-            _build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount);
+            _withProof(_build4626DepositInstruction(address(caliber), VAULT_POS_ID, address(vault), inputAmount));
         ICaliber.Instruction memory acctInstruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         vm.prank(mechanic);
         caliber.managePosition(mgmtInstruction, acctInstruction);
 

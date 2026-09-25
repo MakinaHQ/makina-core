@@ -1,5 +1,7 @@
 name: CI
 
+permissions: {}
+
 on:
   push:
     branches:
@@ -8,59 +10,52 @@ on:
   workflow_dispatch:
 
 env:
-  FOUNDRY_PROFILE: ci
   MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
   BASE_RPC_URL: ${{ secrets.BASE_RPC_URL }}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
-    strategy:
-      fail-fast: true
-
     name: Foundry project
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           submodules: recursive
 
       - name: Install modules
-        run: |
-          yarn
+        run: yarn install --frozen-lockfile
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
 
       - name: Show Forge version
-        run: |
-          forge --version
+        run: forge --version
 
-      - name: Run Forge fmt
-        run: |
-          forge fmt --check
-        id: fmt
+      - name: Run lint
+        run: yarn lint
 
       - name: Run Forge build with IR
-        run: |
-          FOUNDRY_PROFILE=ir forge build
-        id: build-via-ir
+        run: yarn build:ir
 
       - name: Run Forge build
-        run: |
-          forge build --sizes
-        id: build
+        run: forge build --sizes
 
       - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+        run: forge test -vvv
 
       - name: Run Forge coverage
-        run: |
-          FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --no-match-coverage '(script|test)' --report lcov
-        id: coverage
+        run: FOUNDRY_FUZZ_RUNS=32 FOUNDRY_INVARIANT_RUNS=32 forge coverage --no-match-coverage '(script|test)' --report lcov
 
       - name: Report coverage
+        if: github.event_name == 'pull_request'
         uses: romeovs/lcov-reporter-action@v0.4.0
         with:
           lcov-file: ./lcov.info

@@ -6,4 +6,4 @@ addInstrRootGuardian.t.sol
    │  └── it should revert with AlreadyRootGuardian
    └── given provided address is not already a root guardian
       ├── it should set the provided address as a root guardian
-      └── it should emit a InstrRootGuardianAdded event
+      └── it should emit an InstrRootGuardianAdded event

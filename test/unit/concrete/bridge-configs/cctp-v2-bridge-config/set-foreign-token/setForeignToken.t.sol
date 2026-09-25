@@ -45,7 +45,7 @@ contract SetForeignToken_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_
 
         assertEq(cctpV2BridgeConfig.getForeignToken(address(1), 2), address(2));
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.CctpForeignTokenNotRegistered.selector, address(2), 2));
+        vm.expectRevert(Errors.CctpForeignTokenNotRegistered.selector);
         cctpV2BridgeConfig.getForeignToken(address(2), 2);
     }
 
@@ -81,7 +81,7 @@ contract SetForeignToken_Unit_Concrete_Test is CctpV2BridgeConfig_Unit_Concrete_
 
         assertEq(cctpV2BridgeConfig.getForeignToken(address(2), 2), address(1));
 
-        vm.expectRevert(abi.encodeWithSelector(Errors.CctpForeignTokenNotRegistered.selector, address(1), 2));
+        vm.expectRevert(Errors.CctpForeignTokenNotRegistered.selector);
         cctpV2BridgeConfig.getForeignToken(address(1), 2);
     }
 }

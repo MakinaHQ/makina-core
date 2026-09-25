@@ -1,0 +1,13 @@
+setLzEndpointId.t.sol
+├── when caller does not have the relevant role
+│  └── it should revert with AccessManagedUnauthorized
+└── when caller has the relevant role
+   ├── when the provided EVM chain ID is equal to zero
+   │  └── it should revert with ZeroChainId
+   └── when the provided EVM chain ID is non-zero
+      ├── when the provided LZ endpoint ID is equal to zero
+      │  └── it should revert with ZeroLzEndpointId
+      └── when the provided LZ endpoint ID is non-zero
+         ├── it should associate both provided IDs in contract storage
+         ├── it should clean up any previous associations involving either ID
+         └── it should emit a LzEndpointIdRegistered event

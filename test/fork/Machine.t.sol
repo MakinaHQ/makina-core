@@ -12,7 +12,6 @@ import {ISpokeSnapshotConsumer} from "src/interfaces/ISpokeSnapshotConsumer.sol"
 import {Machine} from "src/machine/Machine.sol";
 import {MockFeeManager} from "test/mocks/MockFeeManager.sol";
 import {Caliber} from "src/caliber/Caliber.sol";
-import {ChainsInfo} from "test/utils/ChainsInfo.sol";
 
 import {Fork_Test} from "./Fork.t.sol";
 
@@ -44,12 +43,12 @@ contract Machine_Fork_Test is Fork_Test {
     }
 
     function test_fork_Hub_USDC() public {
-        hubChainId = ChainsInfo.CHAIN_ID_ETHEREUM;
-        spokeChainIds.push(ChainsInfo.CHAIN_ID_BASE);
+        hubChainId = ETHEREUM_CHAIN_ID;
+        spokeChainIds.push(BASE_CHAIN_ID);
         _setUp();
 
         ForkData memory ethForkData = forksData[hubChainId];
-        ForkData memory baseForkData = forksData[ChainsInfo.CHAIN_ID_BASE];
+        ForkData memory baseForkData = forksData[BASE_CHAIN_ID];
 
         ///
         /// SWITCH TO ETHEREUM
@@ -140,7 +139,7 @@ contract Machine_Fork_Test is Fork_Test {
         // deploy spoke caliber
         vm.prank(baseForkData.dao);
         spokeCaliber = Caliber(
-            spokeCores[ChainsInfo.CHAIN_ID_BASE].spokeCoreFactory
+            spokeCores[BASE_CHAIN_ID].spokeCoreFactory
                 .createCaliber(
                     ICaliber.CaliberInitParams({
                         initialPositionStaleThreshold: DEFAULT_CALIBER_POS_STALE_THRESHOLD,
@@ -157,7 +156,7 @@ contract Machine_Fork_Test is Fork_Test {
                         initialSecurityCouncil: baseForkData.securityCouncil,
                         initialRiskManager: address(0),
                         initialRiskManagerTimelock: address(0),
-                        initialAuthority: address(spokeCores[ChainsInfo.CHAIN_ID_BASE].accessManager),
+                        initialAuthority: address(spokeCores[BASE_CHAIN_ID].accessManager),
                         initialRestrictedAccountingMode: false,
                         initialAccountingAgents: new address[](0)
                     }),
@@ -190,7 +189,7 @@ contract Machine_Fork_Test is Fork_Test {
 
         // register spoke caliber mailbox in machine
         vm.prank(ethForkData.dao);
-        machine.setSpokeCaliber(ChainsInfo.CHAIN_ID_BASE, spokeCaliberMailbox, new uint16[](0), new address[](0));
+        machine.setSpokeCaliber(BASE_CHAIN_ID, spokeCaliberMailbox, new uint16[](0), new address[](0));
 
         // relay spoke caliber accounting data to the machine through the CRE forwarder
         ICreForwarder forwarder = ICreForwarder(machine.creForwarder());

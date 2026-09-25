@@ -6,7 +6,7 @@ import {Errors} from "src/libraries/Errors.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
-contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+contract CancelAllowedInstrRootUpdate_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_CancelAllowedInstrRootUpdate_RevertWhen_CallerUnauthorized() public {
         vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.cancelAllowedInstrRootUpdate();
@@ -50,7 +50,7 @@ contract CancelToHubMachine_Integration_Concrete_Test is Caliber_Integration_Con
     }
 
     function _test_CancelAllowedInstrRootUpdate(address caller) internal {
-        bytes32 currentRoot = allowedInstrMerkleRoot;
+        bytes32 currentRoot = _rootfileRoot();
 
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();

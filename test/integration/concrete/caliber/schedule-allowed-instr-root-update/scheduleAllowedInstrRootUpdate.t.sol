@@ -6,7 +6,7 @@ import {Errors} from "src/libraries/Errors.sol";
 
 import {Caliber_Integration_Concrete_Test} from "../Caliber.t.sol";
 
-contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
+contract ScheduleAllowedInstrRootUpdate_Integration_Concrete_Test is Caliber_Integration_Concrete_Test {
     function test_RevertWhen_CallerNotRM() public {
         vm.expectRevert(Errors.UnauthorizedCaller.selector);
         caliber.scheduleAllowedInstrRootUpdate(bytes32(0));
@@ -39,7 +39,7 @@ contract TransferToHubMachine_Integration_Concrete_Test is Caliber_Integration_C
     }
 
     function test_ScheduleAllowedInstrRootUpdate() public {
-        bytes32 currentRoot = allowedInstrMerkleRoot;
+        bytes32 currentRoot = _rootfileRoot();
 
         bytes32 newRoot = keccak256(abi.encodePacked("newRoot"));
         uint256 effectiveUpdateTime = block.timestamp + caliber.timelockDuration();

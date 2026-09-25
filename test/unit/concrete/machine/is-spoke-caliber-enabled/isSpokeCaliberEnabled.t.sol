@@ -6,7 +6,7 @@ import {Errors} from "src/libraries/Errors.sol";
 import {Machine_Unit_Concrete_Test} from "../Machine.t.sol";
 
 contract IsSpokeCaliberEnabled_Unit_Concrete_Test is Machine_Unit_Concrete_Test {
-    function test_RevertWhen_SpokeBridgeAdapterNotSet() public {
+    function test_RevertWhen_InvalidChainId() public {
         vm.expectRevert(Errors.InvalidChainId.selector);
         machine.isSpokeCaliberEnabled(SPOKE_CHAIN_ID);
     }

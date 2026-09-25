@@ -1,0 +1,5 @@
+getSpokeChainId.t.sol
+├── when the provided index is greater or equal than the number of registered spoke chain IDs
+│  └── it should revert
+└── when the provided index is smaller than the number of registered spoke chain IDs
+   └── it should return the chain ID of the index-th registered spoke caliber

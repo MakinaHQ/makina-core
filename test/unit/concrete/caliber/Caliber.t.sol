@@ -91,7 +91,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         caliber.setMaxPositionIncreaseLossBps(1000);
     }
 
-    function test_setMaxPositionIncreaseLossBps() public {
+    function test_SetMaxPositionIncreaseLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
         emit ICaliber.MaxPositionIncreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_INCREASE_LOSS_BPS, 1000);
         vm.prank(riskManagerTimelock);
@@ -104,7 +104,7 @@ contract Getters_Setters_Caliber_Unit_Concrete_Test is Caliber_Unit_Concrete_Tes
         caliber.setMaxPositionDecreaseLossBps(1000);
     }
 
-    function test_setMaxPositionDecreaseLossBps() public {
+    function test_SetMaxPositionDecreaseLossBps() public {
         vm.expectEmit(true, true, true, true, address(caliber));
         emit ICaliber.MaxPositionDecreaseLossBpsChanged(DEFAULT_CALIBER_MAX_POS_DECREASE_LOSS_BPS, 1000);
         vm.prank(riskManagerTimelock);

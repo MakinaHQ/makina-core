@@ -13,7 +13,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function test_RevertWhen_ReentrantCall() public {
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders;
 
         baseToken.scheduleReenter(
@@ -56,7 +56,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function test_RevertWhen_OutputTokenNonBaseToken() public {
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
         vm.expectRevert(Errors.InvalidOutputToken.selector);
@@ -103,7 +103,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function test_RevertWhen_OutputTokenNonAccountingToken_WhileInRecoveryMode() public whileInRecoveryMode {
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
 
         vm.expectRevert(Errors.RecoveryMode.selector);
@@ -139,7 +139,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
     function _test_RevertWhen_InstructionNonHarvestingType(address sender) internal {
         ICaliber.Instruction memory instruction =
-            _build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault));
+            _withProof(_build4626AccountingInstruction(address(caliber), VAULT_POS_ID, address(vault)));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
         vm.prank(sender);
         vm.expectRevert(Errors.InvalidInstructionType.selector);
@@ -155,23 +155,28 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         // use wrong reward contract
         instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        instruction.merkleProof =
+            _proofOf(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong commands
-        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        instruction =
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         delete instruction.commands[0];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong state
-        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        instruction =
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         delete instruction.state[0];
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
 
         // use wrong bitmap
-        instruction = _buildMockRewardTokenHarvestInstruction(address(caliber), address(accountingToken), harvestAmount);
+        instruction =
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         instruction.stateBitmap = 0;
         vm.expectRevert(Errors.InvalidInstructionProof.selector);
         caliber.harvest(instruction, swapOrders);
@@ -182,7 +187,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function _test_RevertGiven_WrongRoot(address sender) internal {
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
 
         vm.prank(sender);
@@ -205,7 +210,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
 
         // schedule root update with the correct root
         vm.prank(riskManager);
-        caliber.scheduleAllowedInstrRootUpdate(allowedInstrMerkleRoot);
+        caliber.scheduleAllowedInstrRootUpdate(_rootfileRoot());
 
         // instruction cannot be executed while the update is pending
         vm.prank(sender);
@@ -224,7 +229,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
     function _test_Harvest_NoSwap(address sender) internal {
         uint256 harvestAmount = 1e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](0);
 
         vm.prank(sender);
@@ -249,7 +254,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         // check cannot harvest and swap baseToken to accountingToken
         uint256 harvestAmount = 3e18;
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
         uint256 previewOutputAmount = pool.previewSwap(address(baseToken), harvestAmount);
         swapOrders[0] = ISwapModule.SwapOrder({
@@ -275,7 +280,7 @@ contract Harvest_Integration_Concrete_Test is Caliber_Integration_Concrete_Test 
         uint256 previewOutputAmount = pool.previewSwap(address(baseToken), harvestAmount);
 
         ICaliber.Instruction memory instruction =
-            _buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount);
+            _withProof(_buildMockRewardTokenHarvestInstruction(address(caliber), address(baseToken), harvestAmount));
         ISwapModule.SwapOrder[] memory swapOrders = new ISwapModule.SwapOrder[](1);
         swapOrders[0] = ISwapModule.SwapOrder({
             swapperId: ZEROX_SWAPPER_ID,

@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "gas-custom-errors": "off",
+    "reason-string": "off",
+    "check-send-result": "off",
+    "one-contract-per-file": "off",
+    "contract-name-capwords": "off",
+    "no-empty-blocks": "off"
+  }
+}

@@ -12,14 +12,17 @@ swap.t.sol
    │        ├── given output token is not a base token
    │        │  └── it should revert with InvalidOutputToken
    │        └── given output token is a base token
-   │           ├── given the swap order fails to be executed
-   │           │  └── it should revert
-   │           └── given the swap order is successfuly executed
-   │              ├── given the value loss induced by the swap is higher than maxSwapLossBps
-   │              │  └── it should revert with MaxValueLossExceeded
-   │              └── given the value loss induced by the swap is not higher than maxSwapLossBps
-   │                 ├── the input token balance of the caliber should be decreased by order.inputAmount
-   │                 └── the output token balance of the caliber should be increased by at least order.minOutputAmount
+   │           ├── given input token is a base token and there is an ongoing cooldown for base token swaps
+   │           │  └── it should revert with OngoingCooldown
+   │           └── given input token is not a base token or there is no ongoing cooldown for base token swaps
+   │              ├── given the swap order fails to be executed
+   │              │  └── it should revert
+   │              └── given the swap order is successfully executed
+   │                 ├── given the value loss induced by the swap is higher than maxSwapLossBps
+   │                 │  └── it should revert with MaxValueLossExceeded
+   │                 └── given the value loss induced by the swap is not higher than maxSwapLossBps
+   │                    ├── it should decrease the caliber's input token balance by order.inputAmount
+   │                    └── it should increase the caliber's output token balance by at least order.minOutputAmount
    └── given recovery mode is on
       ├── when caller is not the Security Council
       │  └── it should revert with UnauthorizedCaller
@@ -29,10 +32,9 @@ swap.t.sol
          └── given output token is the accounting token
             ├── given the swap order fails to be executed
             │  └── it should revert
-            └── given the swap order is successfuly executed
+            └── given the swap order is successfully executed
                ├── given the value loss induced by the swap is higher than maxSwapLossBps
                │  └── it should revert with MaxValueLossExceeded
                └── given the value loss induced by the swap is not higher than maxSwapLossBps
-                     ├── the accounting token balance of the caliber should be decreased by order.inputAmount
-                     └── the output token balance of the caliber should be increased by at least order.minOutputAmount
-                     
+                  ├── it should decrease the caliber's input token balance by order.inputAmount
+                  └── it should increase the caliber's output token balance by at least order.minOutputAmount

@@ -8,13 +8,13 @@ contract MaxWithdraw_Integration_Concrete_Test is Machine_Integration_Concrete_T
         assertEq(machine.maxWithdraw(), 0);
     }
 
-    function test_MaxMint_AssetsInMachine() public {
+    function test_MaxWithdraw_AssetsInMachine() public {
         uint256 inputAmount = 1e18;
         deal(address(accountingToken), address(machine), inputAmount, true);
         assertEq(machine.maxWithdraw(), inputAmount);
     }
 
-    function test_MaxMint_AssetsInMachineAndCaliber() public {
+    function test_MaxWithdraw_AssetsInMachineAndCaliber() public {
         uint256 inputAmount1 = 3e18;
         uint256 inputAmount2 = 1e18;
         deal(address(accountingToken), address(machine), inputAmount1, true);
