@@ -4,43 +4,43 @@ pragma solidity 0.8.28;
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {DeployCore} from "./DeployCore.s.sol";
+import {DeployCore} from "./base/DeployCore.s.sol";
 
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 
-/// @notice Deploys the Makina spoke core and runs its registry and AccessManager setup in a single broadcast.
+/// @notice Deploys the Makina hub core and runs its registry and AccessManager setup in a single broadcast.
 ///
 /// Env vars (unless `setFilenames` was called):
-///   SPOKE_CORE_INPUT_FILENAME  - spoke core input file holding the deployment parameters
-///                                (under script/deployments/inputs/spoke-cores/)
-///   SPOKE_CORE_OUTPUT_FILENAME - spoke core output file to write the deployed contract addresses to
-///                                (under script/deployments/outputs/spoke-cores/)
-///   SKIP_AM_SETUP (optional)   - if true, skips the AccessManager function roles and role grants setup,
-///                                leaving the deployer as sole admin (for staging deployments)
-contract DeploySpokeCore is DeployCore {
-    SpokeCore private _core;
+///   HUB_CORE_INPUT_FILENAME  - hub core input file holding the deployment parameters
+///                              (under script/deploy/inputs/hub-cores/)
+///   HUB_CORE_OUTPUT_FILENAME - hub core output file to write the deployed contract addresses to
+///                              (under script/deploy/outputs/hub-cores/)
+///   SKIP_AM_SETUP (optional) - if true, skips the AccessManager function roles and role grants setup,
+///                              leaving the deployer as sole admin (for staging deployments)
+contract DeployHubCore is DeployCore {
+    HubCore private _core;
     UpgradeableBeacon[] private _bridgeAdapterBeacons;
     TransparentUpgradeableProxy[] private _bridgeConfigs;
 
-    function deployment() public view returns (SpokeCore memory, UpgradeableBeacon[] memory) {
+    function deployment() public view returns (HubCore memory, UpgradeableBeacon[] memory) {
         return (_core, _bridgeAdapterBeacons);
     }
 
     function _coreSetup() internal override {
-        uint256 hubChainId = vm.parseJsonUint(inputJson, ".hubChainId");
-        _core = deploySpokeCore(deployer, hubChainId);
+        address creForwarder = vm.parseJsonAddress(inputJson, ".creForwarder");
+        _core = deployHubCore(deployer, creForwarder);
 
-        setupSpokeCoreRegistry(_core);
+        setupHubCoreRegistry(_core);
         setupOracleRegistry(_core.oracleRegistry, priceFeedRoutes);
         setupTokenRegistry(_core.tokenRegistry, tokensToRegister);
         setupSwapModule(_core.swapModule, swappersData);
         (_bridgeAdapterBeacons, _bridgeConfigs) =
-            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.spokeCoreRegistry)), bridgesData);
+            deployAndSetupBridges(_core.accessManager, ICoreRegistry(address(_core.hubCoreRegistry)), bridgesData);
 
         if (!skipAMSetup) {
-            setupSpokeCoreAMFunctionRoles(_core);
+            setupHubCoreAMFunctionRoles(_core);
             setupAccessManagerRoles(
-                _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.spokeCoreFactory), deployer
+                _core.accessManager, superAdminRoleGrant, otherRoleGrants, address(_core.hubCoreFactory), deployer
             );
         }
 
@@ -49,13 +49,14 @@ contract DeploySpokeCore is DeployCore {
     }
 
     function _writeOutput() internal override {
-        string memory key = "key-deploy-makina-core-spoke-output-file";
+        string memory key = "key-deploy-makina-core-hub-output-file";
 
         vm.serializeAddress(key, "AccessManager", address(_core.accessManager));
         vm.serializeAddress(key, "CaliberBeacon", address(_core.caliberBeacon));
-        vm.serializeAddress(key, "SpokeCoreFactory", address(_core.spokeCoreFactory));
-        vm.serializeAddress(key, "CaliberMailboxBeacon", address(_core.caliberMailboxBeacon));
-        vm.serializeAddress(key, "SpokeCoreRegistry", address(_core.spokeCoreRegistry));
+        vm.serializeAddress(key, "MachineBeacon", address(_core.machineBeacon));
+        vm.serializeAddress(key, "PreDepositVaultBeacon", address(_core.preDepositVaultBeacon));
+        vm.serializeAddress(key, "HubCoreFactory", address(_core.hubCoreFactory));
+        vm.serializeAddress(key, "HubCoreRegistry", address(_core.hubCoreRegistry));
         vm.serializeAddress(key, "OracleRegistry", address(_core.oracleRegistry));
         vm.serializeAddress(key, "TokenRegistry", address(_core.tokenRegistry));
         vm.serializeAddress(key, "SwapModule", address(_core.swapModule));
@@ -74,10 +75,10 @@ contract DeploySpokeCore is DeployCore {
     }
 
     function _recordDir() internal pure override returns (string memory) {
-        return "spoke-cores";
+        return "hub-cores";
     }
 
     function _loadFilenamesFromEnv() internal override {
-        setFilenames(vm.envString("SPOKE_CORE_INPUT_FILENAME"), vm.envString("SPOKE_CORE_OUTPUT_FILENAME"));
+        setFilenames(vm.envString("HUB_CORE_INPUT_FILENAME"), vm.envString("HUB_CORE_OUTPUT_FILENAME"));
     }
 }

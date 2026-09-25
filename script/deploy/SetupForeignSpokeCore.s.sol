@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.28;
 
-import {SetupForeignCore} from "./SetupForeignCore.s.sol";
+import {SetupForeignCore} from "./base/SetupForeignCore.s.sol";
 
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
 import {ISpokeCoreRegistry} from "../../src/interfaces/ISpokeCoreRegistry.sol";

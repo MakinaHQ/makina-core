@@ -3,7 +3,7 @@ pragma solidity 0.8.28;
 
 import {Test} from "forge-std/Test.sol";
 
-import {CreateXUtils} from "script/deployments/utils/CreateXUtils.sol";
+import {CreateXUtils} from "script/deploy/utils/CreateXUtils.sol";
 
 import {Constants} from "../utils/Constants.sol";
 

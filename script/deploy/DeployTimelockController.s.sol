@@ -13,9 +13,9 @@ import {TimelockController} from "@openzeppelin/contracts/governance/TimelockCon
 ///
 /// Env vars (unless `setFilenames` was called):
 ///   TIMELOCK_CONTROLLER_INPUT_FILENAME  - input file holding the timelock parameters
-///                                         (under script/deployments/inputs/timelock-controllers/)
+///                                         (under script/deploy/inputs/timelock-controllers/)
 ///   TIMELOCK_CONTROLLER_OUTPUT_FILENAME - file to write the timelock address to
-///                                         (under script/deployments/outputs/timelock-controllers/)
+///                                         (under script/deploy/outputs/timelock-controllers/)
 contract DeployTimelockController is Script, CreateXUtils {
     string public inputJson;
     string public outputPath;
@@ -30,7 +30,7 @@ contract DeployTimelockController is Script, CreateXUtils {
     /// @dev Test hook to set the input and output filenames explicitly, instead of having `run` resolve them from
     ///      the env vars. An empty output filename skips writing the output file.
     function setFilenames(string memory inputFilename, string memory outputFilename) public {
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deploy/");
 
         inputJson = vm.readFile(string.concat(basePath, "inputs/timelock-controllers/", inputFilename));
 

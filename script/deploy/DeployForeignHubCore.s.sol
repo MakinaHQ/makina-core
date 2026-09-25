@@ -3,15 +3,15 @@ pragma solidity 0.8.28;
 
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {DeployForeignCore} from "./DeployForeignCore.s.sol";
+import {DeployForeignCore} from "./base/DeployForeignCore.s.sol";
 
 /// @notice Deploys the hub core of a foreign instance, see `DeployForeignCore`.
 ///
 /// Env vars (unless `setFilenames` was called):
 ///   HUB_CORE_INPUT_FILENAME  - input file holding the deployment parameters
-///                              (under script/deployments/inputs/hub-cores/)
+///                              (under script/deploy/inputs/hub-cores/)
 ///   HUB_CORE_OUTPUT_FILENAME - output file to write the deployed contract addresses to
-///                              (under script/deployments/outputs/hub-cores/)
+///                              (under script/deploy/outputs/hub-cores/)
 contract DeployForeignHubCore is DeployForeignCore {
     HubCore private _core;
 

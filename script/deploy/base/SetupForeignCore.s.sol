@@ -9,13 +9,13 @@ import {
 } from "@openzeppelin/contracts-upgradeable/access/manager/AccessManagerUpgradeable.sol";
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-import {AMGovCalldata} from "./utils/AMGovCalldata.sol";
+import {AMGovCalldata} from "../utils/AMGovCalldata.sol";
 
-import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
-import {ISwapModule} from "../../src/interfaces/ISwapModule.sol";
-import {Roles} from "../../src/libraries/Roles.sol";
+import {ICoreRegistry} from "../../../src/interfaces/ICoreRegistry.sol";
+import {ISwapModule} from "../../../src/interfaces/ISwapModule.sol";
+import {Roles} from "../../../src/libraries/Roles.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {Base} from "../../../test/base/Base.sol";
 
 /// @notice Shared logic of the scripts wiring the core of a foreign instance: registry setters and swapper targets,
 ///         then AccessManager function roles and the core factory's ADMIN_ROLE grant.
@@ -42,7 +42,7 @@ abstract contract SetupForeignCore is Base, Script, AMGovCalldata {
     /// @dev Test hook to set the input and output filenames explicitly, instead of having `run` resolve them from
     ///      the env vars.
     function setFilenames(string memory inputFilename, string memory outputFilename) public {
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deploy/");
 
         inputJson = vm.readFile(string.concat(basePath, "inputs/", _recordDir(), "/", inputFilename));
         outputJson = vm.readFile(string.concat(basePath, "outputs/", _recordDir(), "/", outputFilename));

@@ -6,17 +6,17 @@ import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {ISpokeCoreFactory} from "../../src/interfaces/ISpokeCoreFactory.sol";
 
-import {DeployInstance} from "./DeployInstance.s.sol";
+import {DeployInstance} from "./base/DeployInstance.s.sol";
 
 /// @notice Builds the `SpokeCoreFactory.createCaliber` call for a new spoke caliber and its mailbox, then broadcasts
 ///         it or logs it. See `DeployInstance` for modes and env vars.
 ///
 /// Env vars (unless `setParams` was called):
 ///   SPOKE_CORE_OUTPUT_FILENAME  - spoke core output file holding the SpokeCoreFactory address
-///                                 (under script/deployments/outputs/spoke-cores/)
-///   SPOKE_STRAT_INPUT_FILENAME  - caliber init params input file (under script/deployments/inputs/spoke-calibers/)
+///                                 (under script/deploy/outputs/spoke-cores/)
+///   SPOKE_STRAT_INPUT_FILENAME  - caliber init params input file (under script/deploy/inputs/spoke-calibers/)
 ///   SPOKE_STRAT_OUTPUT_FILENAME - file to write the caliber and mailbox addresses to
-///                                 (under script/deployments/outputs/spoke-calibers/, broadcast mode only)
+///                                 (under script/deploy/outputs/spoke-calibers/, broadcast mode only)
 ///   VIEW_MODE (optional)        - true for view mode, unset or false for broadcast mode
 contract DeploySpokeCaliber is DeployInstance {
     function _createCall() internal view override returns (Call memory) {

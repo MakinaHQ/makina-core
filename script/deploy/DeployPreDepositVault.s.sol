@@ -4,18 +4,18 @@ pragma solidity 0.8.28;
 import {IHubCoreFactory} from "../../src/interfaces/IHubCoreFactory.sol";
 import {IPreDepositVault} from "../../src/interfaces/IPreDepositVault.sol";
 
-import {DeployInstance} from "./DeployInstance.s.sol";
+import {DeployInstance} from "./base/DeployInstance.s.sol";
 
 /// @notice Builds the `HubCoreFactory.createPreDepositVault` call for a new pre-deposit vault, then broadcasts it or
 ///         logs it. See `DeployInstance` for modes and env vars.
 ///
 /// Env vars (unless `setParams` was called):
 ///   HUB_CORE_OUTPUT_FILENAME  - hub core output file holding the HubCoreFactory address
-///                               (under script/deployments/outputs/hub-cores/)
+///                               (under script/deploy/outputs/hub-cores/)
 ///   HUB_STRAT_INPUT_FILENAME  - pre-deposit vault init params input file
-///                               (under script/deployments/inputs/pre-deposit-vaults/)
+///                               (under script/deploy/inputs/pre-deposit-vaults/)
 ///   HUB_STRAT_OUTPUT_FILENAME - file to write the pre-deposit vault address to
-///                               (under script/deployments/outputs/pre-deposit-vaults/, broadcast mode only)
+///                               (under script/deploy/outputs/pre-deposit-vaults/, broadcast mode only)
 ///   VIEW_MODE (optional)      - true for view mode, unset or false for broadcast mode
 contract DeployPreDepositVault is DeployInstance {
     function _createCall() internal view override returns (Call memory) {

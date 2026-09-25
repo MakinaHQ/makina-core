@@ -5,9 +5,9 @@ import {Script} from "forge-std/Script.sol";
 
 import {Address} from "@openzeppelin/contracts/utils/Address.sol";
 
-import {AMGovCalldata} from "./utils/AMGovCalldata.sol";
+import {AMGovCalldata} from "../utils/AMGovCalldata.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {Base} from "../../../test/base/Base.sol";
 
 /// @notice Shared logic of the scripts creating strategy components (machine, caliber, pre-deposit vault) through a
 ///         core factory.
@@ -40,7 +40,7 @@ abstract contract DeployInstance is Base, Script, AMGovCalldata {
     function setParams(address _coreFactory, string memory inputFilename, string memory outputFilename) public {
         coreFactory = _coreFactory;
 
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deploy/");
 
         inputJson = vm.readFile(string.concat(basePath, "inputs/", _recordDir(), "/", inputFilename));
 
@@ -100,7 +100,7 @@ abstract contract DeployInstance is Base, Script, AMGovCalldata {
         returns (address)
     {
         string memory recordPath =
-            string.concat(vm.projectRoot(), "/script/deployments/outputs/", coreRecordDir, "/", coreOutputFilename);
+            string.concat(vm.projectRoot(), "/script/deploy/outputs/", coreRecordDir, "/", coreOutputFilename);
         return vm.parseJsonAddress(vm.readFile(recordPath), key);
     }
 

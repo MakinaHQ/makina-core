@@ -8,19 +8,27 @@ import {IMachine} from "../../src/interfaces/IMachine.sol";
 import {IMakinaGovernable} from "../../src/interfaces/IMakinaGovernable.sol";
 import {ISpokeSnapshotConsumer} from "../../src/interfaces/ISpokeSnapshotConsumer.sol";
 
-import {DeployInstance} from "./DeployInstance.s.sol";
+import {DeployInstance} from "./base/DeployInstance.s.sol";
 
-/// @notice Builds the `HubCoreFactory.createMachine` call for a new machine and its hub caliber, then broadcasts it
-///         or logs it. See `DeployInstance` for modes and env vars.
+/// @notice Builds the `HubCoreFactory.createMachineFromPreDeposit` call migrating a pre-deposit vault into a new
+///         machine and its hub caliber, then broadcasts it or logs it. See `DeployInstance` for modes and env vars.
 ///
 /// Env vars (unless `setParams` was called):
 ///   HUB_CORE_OUTPUT_FILENAME  - hub core output file holding the HubCoreFactory address
-///                               (under script/deployments/outputs/hub-cores/)
-///   HUB_STRAT_INPUT_FILENAME  - machine init params input file (under script/deployments/inputs/hub-machines/)
+///                               (under script/deploy/outputs/hub-cores/)
+///   HUB_STRAT_INPUT_FILENAME  - migration params input file, including the pre-deposit vault address
+///                               (under script/deploy/inputs/pre-deposit-migrations/)
 ///   HUB_STRAT_OUTPUT_FILENAME - file to write the machine and hub caliber addresses to
-///                               (under script/deployments/outputs/hub-machines/, broadcast mode only)
+///                               (under script/deploy/outputs/pre-deposit-migrations/, broadcast mode only)
 ///   VIEW_MODE (optional)      - true for view mode, unset or false for broadcast mode
-contract DeployHubMachine is DeployInstance {
+contract DeployHubMachineFromPreDeposit is DeployInstance {
+    address public preDepositVault;
+
+    /// @dev Test hook to set the pre-deposit vault explicitly, instead of reading it from the input file.
+    function setPreDepositVault(address _preDepositVault) public {
+        preDepositVault = _preDepositVault;
+    }
+
     function _createCall() internal view override returns (Call memory) {
         IMachine.MachineInitParams memory mParams = parseMachineInitParams(inputJson, ".machineInitParams");
         ICaliber.CaliberInitParams memory cParams = parseCaliberInitParams(inputJson, ".caliberInitParams");
@@ -30,21 +38,21 @@ contract DeployHubMachine is DeployInstance {
             parseSpokeSnapshotConsumerInitParams(inputJson, ".spokeSnapshotConsumerInitParams");
         IBridgeAdapterFactory.BridgeAdapterInitParams[] memory baParams =
             parseBridgeAdaptersInitParams(inputJson, ".bridgeAdapterInitParams");
+        address _preDepositVault =
+            preDepositVault != address(0) ? preDepositVault : vm.parseJsonAddress(inputJson, ".preDepositVault");
 
         return Call({
-            label: "HubCoreFactory.createMachine",
+            label: "HubCoreFactory.createMachineFromPreDeposit",
             target: coreFactory,
             data: abi.encodeCall(
-                IHubCoreFactory.createMachine,
+                IHubCoreFactory.createMachineFromPreDeposit,
                 (
                     mParams,
                     cParams,
                     mgParams,
                     sscParams,
                     baParams,
-                    vm.parseJsonAddress(inputJson, ".accountingToken"),
-                    vm.parseJsonString(inputJson, ".shareTokenName"),
-                    vm.parseJsonString(inputJson, ".shareTokenSymbol"),
+                    _preDepositVault,
                     vm.parseJsonBytes32(inputJson, ".salt"),
                     vm.parseJsonBool(inputJson, ".setupAMFunctionRoles")
                 )
@@ -53,13 +61,13 @@ contract DeployHubMachine is DeployInstance {
     }
 
     function _writeOutput() internal override {
-        string memory key = "key-deploy-hub-machine-output-file";
+        string memory key = "key-migrate-pre-deposit-output-file";
         vm.serializeAddress(key, "machine", deployedInstance);
         vm.writeJson(vm.serializeAddress(key, "hubCaliber", IMachine(deployedInstance).hubCaliber()), outputPath);
     }
 
     function _recordDir() internal pure override returns (string memory) {
-        return "hub-machines";
+        return "pre-deposit-migrations";
     }
 
     function _loadParamsFromEnv() internal override {

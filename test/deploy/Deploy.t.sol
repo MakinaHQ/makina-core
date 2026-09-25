@@ -13,17 +13,17 @@ import {TimelockController} from "@openzeppelin/contracts/governance/TimelockCon
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
-import {DeployForeignHubCore} from "script/deployments/DeployForeignHubCore.s.sol";
-import {DeployForeignSpokeCore} from "script/deployments/DeployForeignSpokeCore.s.sol";
-import {DeployHubCore} from "script/deployments/DeployHubCore.s.sol";
-import {DeployHubMachine} from "script/deployments/DeployHubMachine.s.sol";
-import {DeployHubMachineFromPreDeposit} from "script/deployments/DeployHubMachineFromPreDeposit.s.sol";
-import {DeployPreDepositVault} from "script/deployments/DeployPreDepositVault.s.sol";
-import {DeploySpokeCaliber} from "script/deployments/DeploySpokeCaliber.s.sol";
-import {DeploySpokeCore} from "script/deployments/DeploySpokeCore.s.sol";
-import {DeployTimelockController} from "script/deployments/DeployTimelockController.s.sol";
-import {SetupForeignHubCore} from "script/deployments/SetupForeignHubCore.s.sol";
-import {SetupForeignSpokeCore} from "script/deployments/SetupForeignSpokeCore.s.sol";
+import {DeployForeignHubCore} from "script/deploy/DeployForeignHubCore.s.sol";
+import {DeployForeignSpokeCore} from "script/deploy/DeployForeignSpokeCore.s.sol";
+import {DeployHubCore} from "script/deploy/DeployHubCore.s.sol";
+import {DeployHubMachine} from "script/deploy/DeployHubMachine.s.sol";
+import {DeployHubMachineFromPreDeposit} from "script/deploy/DeployHubMachineFromPreDeposit.s.sol";
+import {DeployPreDepositVault} from "script/deploy/DeployPreDepositVault.s.sol";
+import {DeploySpokeCaliber} from "script/deploy/DeploySpokeCaliber.s.sol";
+import {DeploySpokeCore} from "script/deploy/DeploySpokeCore.s.sol";
+import {DeployTimelockController} from "script/deploy/DeployTimelockController.s.sol";
+import {SetupForeignHubCore} from "script/deploy/SetupForeignHubCore.s.sol";
+import {SetupForeignSpokeCore} from "script/deploy/SetupForeignSpokeCore.s.sol";
 import {IBridgeAdapter} from "src/interfaces/IBridgeAdapter.sol";
 import {ICaliber} from "src/interfaces/ICaliber.sol";
 import {ICaliberMailbox} from "src/interfaces/ICaliberMailbox.sol";
@@ -69,7 +69,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
     SetupForeignSpokeCore public setupForeignSpokeCore;
 
     function test_LoadParamsFromEnv() public {
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deploy/");
         string memory hubFilename = _hubTestFilename();
         string memory spokeFilename = _spokeTestFilename();
         string memory hubCoreOutputJson = vm.readFile(string.concat(basePath, "outputs/hub-cores/", hubFilename));
@@ -1001,6 +1001,6 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
     ///      without rewriting them. A failing comparison means the record must be regenerated, by running the
     ///      script with that output filename.
     function _record(string memory dir, string memory filename) internal view returns (string memory) {
-        return vm.readFile(string.concat(vm.projectRoot(), "/script/deployments/outputs/", dir, "/", filename));
+        return vm.readFile(string.concat(vm.projectRoot(), "/script/deploy/outputs/", dir, "/", filename));
     }
 }

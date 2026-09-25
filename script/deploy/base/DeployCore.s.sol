@@ -3,9 +3,9 @@ pragma solidity 0.8.28;
 
 import {Script} from "forge-std/Script.sol";
 
-import {CreateXUtils} from "./utils/CreateXUtils.sol";
+import {CreateXUtils} from "../utils/CreateXUtils.sol";
 
-import {Base} from "../../test/base/Base.sol";
+import {Base} from "../../../test/base/Base.sol";
 
 /// @notice Shared logic of the scripts deploying a core (hub or spoke) and running its registry and AccessManager
 ///         setup in a single broadcast.
@@ -34,7 +34,7 @@ abstract contract DeployCore is Base, Script, CreateXUtils {
     /// @dev Test hook to set the input and output filenames explicitly, instead of having `run` resolve them from
     ///      the env vars. An empty output filename skips writing the output file.
     function setFilenames(string memory inputFilename, string memory outputFilename) public {
-        string memory basePath = string.concat(vm.projectRoot(), "/script/deployments/");
+        string memory basePath = string.concat(vm.projectRoot(), "/script/deploy/");
 
         inputJson = vm.readFile(string.concat(basePath, "inputs/", _recordDir(), "/", inputFilename));
 
