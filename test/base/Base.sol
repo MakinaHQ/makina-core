@@ -20,6 +20,7 @@ import {SpokeCoreFactory} from "../../src/factories/SpokeCoreFactory.sol";
 import {CaliberMailbox} from "../../src/caliber/CaliberMailbox.sol";
 import {HubCoreRegistry} from "../../src/registries/HubCoreRegistry.sol";
 import {IAcrossV3BridgeConfig} from "../../src/interfaces/IAcrossV3BridgeConfig.sol";
+import {IBridgeAdapterFactory} from "../../src/interfaces/IBridgeAdapterFactory.sol";
 import {ICaliber} from "../../src/interfaces/ICaliber.sol";
 import {ICctpV2BridgeConfig} from "../../src/interfaces/ICctpV2BridgeConfig.sol";
 import {ICoreRegistry} from "../../src/interfaces/ICoreRegistry.sol";
@@ -630,15 +631,17 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     }
 
     function _hubCoreFactoryAMSelectors() internal pure returns (bytes4[] memory selectors) {
-        selectors = new bytes4[](3);
+        selectors = new bytes4[](4);
         selectors[0] = IHubCoreFactory.createPreDepositVault.selector;
         selectors[1] = IHubCoreFactory.createMachineFromPreDeposit.selector;
         selectors[2] = IHubCoreFactory.createMachine.selector;
+        selectors[3] = IBridgeAdapterFactory.createBridgeAdapter.selector;
     }
 
     function _spokeCoreFactoryAMSelectors() internal pure returns (bytes4[] memory selectors) {
-        selectors = new bytes4[](1);
+        selectors = new bytes4[](2);
         selectors[0] = ISpokeCoreFactory.createCaliber.selector;
+        selectors[1] = IBridgeAdapterFactory.createBridgeAdapter.selector;
     }
 
     function _grantRole(AccessManagerUpgradeable accessManager, AMRoleGrant memory roleGrant) private {
@@ -649,9 +652,10 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
     function _setupOracleRegistryAMFunctionRoles(AccessManagerUpgradeable accessManager, address _oracleRegistry)
         internal
     {
-        bytes4[] memory oracleRegistrySelectors = new bytes4[](2);
+        bytes4[] memory oracleRegistrySelectors = new bytes4[](3);
         oracleRegistrySelectors[0] = IOracleRegistry.setFeedRoute.selector;
-        oracleRegistrySelectors[1] = IOracleRegistry.setFeedStaleThreshold.selector;
+        oracleRegistrySelectors[1] = IOracleRegistry.clearFeedRoute.selector;
+        oracleRegistrySelectors[2] = IOracleRegistry.setFeedStaleThreshold.selector;
         accessManager.setTargetFunctionRole(_oracleRegistry, oracleRegistrySelectors, Roles.INFRA_CONFIG_ROLE);
     }
 

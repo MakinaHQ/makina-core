@@ -50,6 +50,7 @@ This is the list of role permissions in Makina Core contracts. These roles must 
 
 - `INFRA_CONFIG_ROLE` (roleId `1`)
   - Can set token price feed route.
+  - Can clear token price feed route.
   - Can set feeds staleness threshold.
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)
