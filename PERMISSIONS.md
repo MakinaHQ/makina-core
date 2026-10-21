@@ -11,6 +11,12 @@
 
 This is the list of role permissions in Makina Core contracts. These roles must be assigned to respective contracts at deployment.
 
+### Role Guardians
+
+- `GUARDIAN_ROLE` (roleId `7`)
+  - Is the guardian of roleIds `1` to `6`: can cancel operations scheduled under these roles during their execution delay.
+  - `ADMIN_ROLE` (roleId `0`) has no guardian.
+
 ### HubCoreRegistry
 
 - `INFRA_UPGRADE_ROLE` (roleId `6`)

@@ -455,6 +455,14 @@ abstract contract Base is IRCodeReader, ProxyUtils, JsonParser, SaltDomains, Int
             _grantRole(accessManager, otherRoleGrants[i]);
         }
 
+        // Set GUARDIAN_ROLE as guardian of the non-admin roles
+        accessManager.setRoleGuardian(Roles.INFRA_CONFIG_ROLE, Roles.GUARDIAN_ROLE);
+        accessManager.setRoleGuardian(Roles.STRATEGY_DEPLOYMENT_ROLE, Roles.GUARDIAN_ROLE);
+        accessManager.setRoleGuardian(Roles.STRATEGY_COMPONENTS_LINKING_ROLE, Roles.GUARDIAN_ROLE);
+        accessManager.setRoleGuardian(Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE, Roles.GUARDIAN_ROLE);
+        accessManager.setRoleGuardian(Roles.STRATEGY_FEE_CONFIG_ROLE, Roles.GUARDIAN_ROLE);
+        accessManager.setRoleGuardian(Roles.INFRA_UPGRADE_ROLE, Roles.GUARDIAN_ROLE);
+
         // Revoke roles from the deployer, unless it is the super admin
         if (deployer != superAdminRoleGrant.account) {
             accessManager.revokeRole(adminRole, deployer);

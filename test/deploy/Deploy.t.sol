@@ -272,6 +272,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
             assertTrue(isMember);
             assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
         }
+        _assertRoleGuardians(hubCoreDeployment.accessManager);
 
         // Check that the AccessManager owns its own ProxyAdmin
         _assertAccessManagerOwnsItsProxyAdmin(hubCoreDeployment.accessManager);
@@ -567,6 +568,7 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
             assertTrue(isMember);
             assertEq(executionDelay, _otherRoleGrants[i].executionDelay);
         }
+        _assertRoleGuardians(spokeCoreDeployment.accessManager);
 
         // Check that the AccessManager owns its own ProxyAdmin
         _assertAccessManagerOwnsItsProxyAdmin(spokeCoreDeployment.accessManager);
@@ -917,6 +919,15 @@ contract Deploy_Scripts_Test is Base, Constants, Test {
 
     function _assertAccessManagerOwnsItsProxyAdmin(AccessManagerUpgradeable accessManager) internal view {
         assertEq(Ownable(getProxyAdmin(address(accessManager))).owner(), address(accessManager));
+    }
+
+    function _assertRoleGuardians(AccessManagerUpgradeable accessManager) internal view {
+        assertEq(accessManager.getRoleGuardian(Roles.INFRA_CONFIG_ROLE), Roles.GUARDIAN_ROLE);
+        assertEq(accessManager.getRoleGuardian(Roles.STRATEGY_DEPLOYMENT_ROLE), Roles.GUARDIAN_ROLE);
+        assertEq(accessManager.getRoleGuardian(Roles.STRATEGY_COMPONENTS_LINKING_ROLE), Roles.GUARDIAN_ROLE);
+        assertEq(accessManager.getRoleGuardian(Roles.STRATEGY_MANAGEMENT_CONFIG_ROLE), Roles.GUARDIAN_ROLE);
+        assertEq(accessManager.getRoleGuardian(Roles.STRATEGY_FEE_CONFIG_ROLE), Roles.GUARDIAN_ROLE);
+        assertEq(accessManager.getRoleGuardian(Roles.INFRA_UPGRADE_ROLE), Roles.GUARDIAN_ROLE);
     }
 
     function _assertBoundTo(UpgradeableBeacon beacon, address registry) internal view {
