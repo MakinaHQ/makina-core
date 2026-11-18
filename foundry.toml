@@ -35,6 +35,7 @@ polygon = "${POLYGON_RPC_URL}"
 robinhood = "${ROBINHOOD_RPC_URL}"
 arc = "${ARC_RPC_URL}"
 tempo = "${TEMPO_RPC_URL}"
+xlayer = "${XLAYER_RPC_URL}"
 
 [etherscan]
 # Ink: Foundry's built-in URL (/api/v2) is not Etherscan-compatible
