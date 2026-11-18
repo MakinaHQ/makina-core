@@ -7,6 +7,7 @@ This README outlines the steps to deploy the Makina Core contracts.
 - Copy `.env.example` to `.env` and fill in the required RPC URLs and the Etherscan API key.
 - Build the project as described in the [root README](../README.md). `yarn build:ir` is required, as the scripts deploy `WeirollVM` from the IR build output.
 - Some networks are preconfigured in `foundry.toml` and only require the corresponding environment variables. More networks can be added following similar configuration.
+- Some chains are not supported by Etherscan and need a different verifier. For those, pass `--verifier <verifier>` to the commands below, plus `--verifier-url <api-url>` and `--etherscan-api-key <key>` if the verifier requires them, as forge does not read the verifier from `foundry.toml`.
 - Notation used in the commands:
   - `<wallet-options>` - the flags specifying the deployer wallet, e.g. `--account <keystore-name>` for a Foundry keystore. For other options, refer to the [Foundry docs](https://getfoundry.sh/forge/reference/script/)
   - `<network-alias>` - must match a network name declared in `foundry.toml`
